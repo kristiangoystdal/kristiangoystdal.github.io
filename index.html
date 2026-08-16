@@ -3,14 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Countdown</title>
+<title>Interrail Video Drop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --ink: #f4ede1;
+    --mustard: #e8a33d;
+    --rust: #c1502e;
+    --stamp: #8fae7e;
+    --paper: #f4ede1;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     height: 100%;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #000;
+    font-family: 'Space Mono', monospace;
+    background: #0c0c0a;
+    color: var(--ink);
   }
   .bg-video {
     position: fixed;
@@ -19,9 +29,17 @@
     width: auto; height: auto;
     transform: translate(-50%, -50%);
     object-fit: cover;
-    filter: blur(18px) brightness(0.55);
-    transform-origin: center;
+    filter: blur(22px) brightness(0.38) saturate(1.1);
     z-index: 0;
+  }
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 3px 3px;
+    mix-blend-mode: overlay;
   }
   .overlay {
     position: fixed;
@@ -30,44 +48,139 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 1;
-    color: #fff;
-    text-align: center;
-    padding: 20px;
+    z-index: 2;
+    padding: 24px;
   }
-  .label {
-    font-size: clamp(14px, 3vw, 22px);
+
+  .ticket {
+    position: relative;
+    width: min(560px, 92vw);
+    background: rgba(20, 18, 14, 0.55);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(244, 237, 225, 0.35);
+    border-radius: 4px;
+    padding: 36px clamp(20px, 5vw, 48px) 32px;
+    text-align: center;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    animation: rise 0.9s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .ticket::before, .ticket::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 26px; height: 26px;
+    background: #0c0c0a;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  .ticket::before { left: -13px; }
+  .ticket::after { right: -13px; }
+
+  .route {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: clamp(11px, 2.2vw, 13px);
     letter-spacing: 3px;
     text-transform: uppercase;
-    opacity: 0.85;
-    margin-bottom: 16px;
+    color: var(--mustard);
+    margin-bottom: 6px;
   }
+  .route .line {
+    flex: 1;
+    max-width: 40px;
+    height: 1px;
+    background: var(--mustard);
+    opacity: 0.6;
+  }
+
+  .headline {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(28px, 6.5vw, 46px);
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 6px 0 22px;
+  }
+  .headline span { color: var(--rust); }
+
+  .perf {
+    border-top: 2px dashed rgba(244,237,225,0.3);
+    margin: 4px 0 22px;
+  }
+
   .timer {
     display: flex;
-    gap: clamp(12px, 3vw, 28px);
+    justify-content: center;
+    gap: clamp(8px, 2.5vw, 22px);
   }
   .unit {
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-width: 56px;
   }
   .unit .num {
-    font-size: clamp(36px, 9vw, 90px);
-    font-weight: 700;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(30px, 8vw, 56px);
     line-height: 1;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
     font-variant-numeric: tabular-nums;
+    color: var(--paper);
   }
   .unit .unit-label {
-    font-size: clamp(10px, 2vw, 14px);
+    font-size: clamp(9px, 1.8vw, 11px);
     letter-spacing: 2px;
     text-transform: uppercase;
-    opacity: 0.75;
-    margin-top: 6px;
+    opacity: 0.65;
+    margin-top: 8px;
   }
-  .done {
-    font-size: clamp(28px, 6vw, 56px);
-    font-weight: 700;
+  .colon {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(24px, 6vw, 44px);
+    align-self: flex-start;
+    margin-top: 2px;
+    opacity: 0.4;
+  }
+
+  .stamp {
+    position: absolute;
+    bottom: 18px;
+    right: 22px;
+    border: 2px solid var(--stamp);
+    color: var(--stamp);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    border-radius: 50%;
+    transform: rotate(-14deg);
+    opacity: 0.85;
+  }
+
+  .footer-label {
+    margin-top: 22px;
+    font-size: clamp(10px, 2vw, 12px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  .done .headline { color: var(--stamp); }
+  .done-mark {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(32px, 7vw, 52px);
+    color: var(--stamp);
+    text-transform: uppercase;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticket { animation: none; }
   }
 </style>
 </head>
@@ -76,14 +189,24 @@
 <video class="bg-video" autoplay muted loop playsinline>
   <source src="YOUR_VIDEO_URL.mp4" type="video/mp4">
 </video>
+<div class="grain"></div>
 
 <div class="overlay">
-  <div class="label">Countdown to</div>
-  <div class="timer" id="timer">
-    <div class="unit"><div class="num" id="days">00</div><div class="unit-label">Days</div></div>
-    <div class="unit"><div class="num" id="hours">00</div><div class="unit-label">Hours</div></div>
-    <div class="unit"><div class="num" id="mins">00</div><div class="unit-label">Min</div></div>
-    <div class="unit"><div class="num" id="secs">00</div><div class="unit-label">Sec</div></div>
+  <div class="ticket">
+    <div class="route"><span class="line"></span>Boarding Pass<span class="line"></span></div>
+    <div class="headline">Interrail <span>Video</span> Drop</div>
+    <div class="perf"></div>
+    <div class="timer" id="timer">
+      <div class="unit"><div class="num" id="days">00</div><div class="unit-label">Days</div></div>
+      <div class="colon">:</div>
+      <div class="unit"><div class="num" id="hours">00</div><div class="unit-label">Hrs</div></div>
+      <div class="colon">:</div>
+      <div class="unit"><div class="num" id="mins">00</div><div class="unit-label">Min</div></div>
+      <div class="colon">:</div>
+      <div class="unit"><div class="num" id="secs">00</div><div class="unit-label">Sec</div></div>
+    </div>
+    <div class="footer-label">Departure · Friday 18:00</div>
+    <div class="stamp">All aboard</div>
   </div>
 </div>
 
@@ -98,7 +221,8 @@
     const diff = target - now;
 
     if (diff <= 0) {
-      document.getElementById('timer').innerHTML = '<div class="done">🎉 It\'s time! 🎉</div>';
+      document.querySelector('.ticket').classList.add('done');
+      document.getElementById('timer').outerHTML = '<div class="done-mark">🎬 Now Playing 🎬</div>';
       clearInterval(interval);
       return;
     }
