@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Pokédex Tracker</title>
+		<link
+			rel="icon"
+			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#127974;</text></svg>"
+		/>
+		<style>
+			:root {
+				--bg: #101317;
+				--panel: #171b21;
+				--panel-2: #1d2229;
+				--border: #2a303a;
+				--text: #e9edf2;
+				--muted: #8b95a3;
+				--accent: #e3350d;
+				--accent-2: #3b6ceb;
+				--caught: #3ba55d;
+				--missing: #3a4048;
+				--radius: 10px;
+			}
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family:
+					system-ui,
+					-apple-system,
+					"Segoe UI",
+					Roboto,
+					sans-serif;
+			}
+			body {
+				min-height: 100%;
+				padding-bottom: 60px;
+			}
+
+			header {
+				position: sticky;
+				top: 0;
+				z-index: 10;
+				background: rgba(16, 19, 23, 0.92);
+				backdrop-filter: blur(8px);
+				border-bottom: 1px solid var(--border);
+				padding: 18px clamp(14px, 4vw, 40px) 14px;
+			}
+			.title-row {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+			h1 {
+				font-size: clamp(20px, 3.5vw, 28px);
+				letter-spacing: 0.3px;
+			}
+			h1 span {
+				color: var(--accent);
+			}
+			.overall-stat {
+				color: var(--muted);
+				font-size: 14px;
+				font-variant-numeric: tabular-nums;
+			}
+			.overall-bar {
+				height: 6px;
+				border-radius: 4px;
+				background: var(--missing);
+				overflow: hidden;
+				margin-bottom: 14px;
+			}
+			.overall-bar-fill {
+				height: 100%;
+				background: linear-gradient(90deg, var(--accent), #ffb020);
+				width: 0%;
+				transition: width 0.4s ease;
+			}
+
+			.controls {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				align-items: center;
+			}
+			.search {
+				flex: 1 1 200px;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 9px 12px;
+				color: var(--text);
+				font-size: 14px;
+			}
+			.search:focus {
+				outline: 2px solid var(--accent-2);
+				outline-offset: -1px;
+			}
+			.toggle-btn {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				color: var(--text);
+				border-radius: 8px;
+				padding: 9px 14px;
+				font-size: 14px;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.toggle-btn.active {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+			}
+			.reset-btn {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				color: var(--muted);
+				border-radius: 8px;
+				padding: 9px 14px;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.reset-btn:hover {
+				color: var(--accent);
+				border-color: var(--accent);
+			}
+
+			.sync-btn {
+				background: var(--panel-2);
+				border: 1px solid var(--accent-2);
+				color: var(--accent-2);
+				border-radius: 8px;
+				padding: 9px 14px;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.sync-btn:hover {
+				background: var(--accent-2);
+				color: #fff;
+			}
+			.sync-panel {
+				margin-top: 12px;
+				padding: 14px;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				display: none;
+				flex-direction: column;
+				gap: 10px;
+			}
+			.sync-panel.open {
+				display: flex;
+			}
+			.sync-row {
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+			.sync-row input {
+				flex: 1 1 220px;
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 8px 10px;
+				color: var(--text);
+				font-size: 13px;
+			}
+			.sync-row input:focus {
+				outline: 2px solid var(--accent-2);
+				outline-offset: -1px;
+			}
+			.sync-actions {
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+			.sync-actions button {
+				background: var(--accent-2);
+				border: none;
+				color: #fff;
+				border-radius: 6px;
+				padding: 8px 14px;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.sync-actions button.secondary {
+				background: transparent;
+				border: 1px solid var(--border);
+				color: var(--text);
+			}
+			.sync-actions button:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+			.sync-hint {
+				font-size: 12px;
+				color: var(--muted);
+				line-height: 1.5;
+			}
+			.sync-hint a {
+				color: var(--accent-2);
+			}
+			.sync-status {
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.sync-status.ok {
+				color: var(--caught);
+			}
+			.sync-status.err {
+				color: var(--accent);
+			}
+
+			main {
+				padding: 20px clamp(14px, 4vw, 40px);
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+
+			.status {
+				color: var(--muted);
+				text-align: center;
+				padding: 60px 0;
+				font-size: 15px;
+			}
+
+			.gen-section {
+				margin-bottom: 26px;
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				overflow: hidden;
+			}
+			.gen-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 14px 18px;
+				cursor: pointer;
+				user-select: none;
+			}
+			.gen-header:hover {
+				background: var(--panel-2);
+			}
+			.gen-header-left {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.gen-chevron {
+				display: inline-block;
+				transition: transform 0.2s ease;
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.gen-section.collapsed .gen-chevron {
+				transform: rotate(-90deg);
+			}
+			.gen-title {
+				font-size: 16px;
+				font-weight: 600;
+			}
+			.gen-range {
+				color: var(--muted);
+				font-size: 13px;
+			}
+			.gen-count {
+				font-size: 13px;
+				color: var(--muted);
+				font-variant-numeric: tabular-nums;
+				white-space: nowrap;
+			}
+			.gen-bar {
+				height: 4px;
+				background: var(--missing);
+				border-radius: 3px;
+				overflow: hidden;
+				margin: 0 18px 14px;
+			}
+			.gen-bar-fill {
+				height: 100%;
+				background: var(--caught);
+				width: 0%;
+				transition: width 0.4s ease;
+			}
+			.gen-section.collapsed .gen-bar,
+			.gen-section.collapsed .gen-grid {
+				display: none;
+			}
+
+			.gen-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+				gap: 8px;
+				padding: 0 14px 16px;
+			}
+
+			.mon {
+				position: relative;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 8px 6px 7px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				cursor: pointer;
+				text-align: center;
+				transition:
+					transform 0.12s ease,
+					border-color 0.12s ease,
+					opacity 0.12s ease;
+			}
+			.mon:hover {
+				transform: translateY(-2px);
+				border-color: var(--accent-2);
+			}
+			.mon.caught {
+				border-color: var(--caught);
+			}
+			.mon.missing .mon-sprite {
+				filter: brightness(0) saturate(100%);
+				opacity: 0.45;
+			}
+			.mon.missing .mon-name {
+				opacity: 0.55;
+			}
+			.mon-num {
+				font-size: 10px;
+				color: var(--muted);
+				font-variant-numeric: tabular-nums;
+				align-self: flex-start;
+			}
+			.mon-sprite {
+				width: 56px;
+				height: 56px;
+				image-rendering: pixelated;
+			}
+			.mon-name {
+				font-size: 11px;
+				text-transform: capitalize;
+				line-height: 1.2;
+				margin-top: 2px;
+			}
+			.mon-check {
+				position: absolute;
+				top: 4px;
+				right: 5px;
+				width: 15px;
+				height: 15px;
+				border-radius: 50%;
+				border: 1.5px solid var(--muted);
+				background: transparent;
+			}
+			.mon.caught .mon-check {
+				background: var(--caught);
+				border-color: var(--caught);
+			}
+			.mon.caught .mon-check::after {
+				content: "";
+				position: absolute;
+				left: 4px;
+				top: 1px;
+				width: 4px;
+				height: 8px;
+				border: solid #fff;
+				border-width: 0 2px 2px 0;
+				transform: rotate(40deg);
+			}
+
+			.hidden {
+				display: none !important;
+			}
+
+			@media (max-width: 480px) {
+				.gen-grid {
+					grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+				}
+				.mon-sprite {
+					width: 48px;
+					height: 48px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="title-row">
+				<h1>Poké<span>dex</span> Tracker</h1>
+				<div class="overall-stat" id="overallStat">Loading…</div>
+			</div>
+			<div class="overall-bar">
+				<div class="overall-bar-fill" id="overallBarFill"></div>
+			</div>
+			<div class="controls">
+				<input
+					type="text"
+					class="search"
+					id="search"
+					placeholder="Search by name or number…"
+				/>
+				<button class="toggle-btn" id="missingToggle">
+					Show missing only
+				</button>
+				<button class="reset-btn" id="resetBtn">Reset progress</button>
+				<button class="sync-btn" id="syncToggleBtn">☁️ Cloud sync</button>
+			</div>
+			<div class="sync-panel" id="syncPanel">
+				<div class="sync-hint">
+					Progress syncs via a private GitHub Gist tied to your own account.
+					Create a
+					<a
+						href="https://github.com/settings/tokens/new?description=Pokedex%20Tracker&scopes=gist"
+						target="_blank"
+						rel="noopener"
+						>personal access token with the "gist" scope</a
+					>
+					and paste it below. The token is stored only in this browser's
+					localStorage and is sent directly to api.github.com — never to any
+					other server.
+				</div>
+				<div class="sync-row">
+					<input
+						type="password"
+						id="tokenInput"
+						placeholder="GitHub personal access token"
+					/>
+					<input
+						type="text"
+						id="gistIdInput"
+						placeholder="Gist ID (leave blank to create a new one)"
+					/>
+				</div>
+				<div class="sync-actions">
+					<button type="button" id="saveTokenBtn">Save settings</button>
+					<button type="button" id="pushBtn">Push progress to Gist</button>
+					<button type="button" id="pullBtn" class="secondary">Pull progress from Gist</button>
+					<button type="button" id="forgetBtn" class="secondary">Forget token</button>
+				</div>
+				<div class="sync-status" id="syncStatus"></div>
+			</div>
+		</header>
+
+		<main>
+			<div class="status" id="status">Loading Pokédex data…</div>
+			<div id="generations"></div>
+		</main>
+
+		<script>
+			const STORAGE_KEY = "pokedex-tracker-caught";
+			const CACHE_KEY = "pokedex-tracker-data-cache-v1";
+			const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+			const GENERATIONS = [
+				{ id: 1, name: "Generation I", range: [1, 151], region: "Kanto" },
+				{ id: 2, name: "Generation II", range: [152, 251], region: "Johto" },
+				{ id: 3, name: "Generation III", range: [252, 386], region: "Hoenn" },
+				{ id: 4, name: "Generation IV", range: [387, 493], region: "Sinnoh" },
+				{ id: 5, name: "Generation V", range: [494, 649], region: "Unova" },
+				{ id: 6, name: "Generation VI", range: [650, 721], region: "Kalos" },
+				{
+					id: 7,
+					name: "Generation VII",
+					range: [722, 809],
+					region: "Alola",
+				},
+				{
+					id: 8,
+					name: "Generation VIII",
+					range: [810, 905],
+					region: "Galar",
+				},
+				{
+					id: 9,
+					name: "Generation IX",
+					range: [906, 1025],
+					region: "Paldea",
+				},
+			];
+
+			function loadCaught() {
+				try {
+					return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
+				} catch {
+					return new Set();
+				}
+			}
+			function saveCaught(set) {
+				localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+			}
+			let caught = loadCaught();
+
+			function spriteUrl(num) {
+				return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${num}.png`;
+			}
+
+			async function fetchPokedex() {
+				const cached = localStorage.getItem(CACHE_KEY);
+				if (cached) {
+					try {
+						const parsed = JSON.parse(cached);
+						if (Date.now() - parsed.time < CACHE_TTL && parsed.entries?.length) {
+							return parsed.entries;
+						}
+					} catch {}
+				}
+
+				const res = await fetch("https://pokeapi.co/api/v2/pokedex/national/");
+				if (!res.ok) throw new Error("Failed to fetch national pokedex");
+				const data = await res.json();
+				const entries = data.pokemon_entries
+					.map((e) => ({
+						num: e.entry_number,
+						name: e.pokemon_species.name,
+					}))
+					.sort((a, b) => a.num - b.num);
+
+				try {
+					localStorage.setItem(
+						CACHE_KEY,
+						JSON.stringify({ time: Date.now(), entries }),
+					);
+				} catch {}
+
+				return entries;
+			}
+
+			function generationFor(num) {
+				return (
+					GENERATIONS.find((g) => num >= g.range[0] && num <= g.range[1]) ||
+					null
+				);
+			}
+
+			function updateStats() {
+				const total = allEntries.length;
+				const total_caught = allEntries.filter((e) => caught.has(e.num)).length;
+				document.getElementById("overallStat").textContent =
+					`${total_caught} / ${total} caught (${total ? Math.round((total_caught / total) * 100) : 0}%)`;
+				document.getElementById("overallBarFill").style.width =
+					`${total ? (total_caught / total) * 100 : 0}%`;
+
+				GENERATIONS.forEach((g) => {
+					const entries = allEntries.filter(
+						(e) => e.num >= g.range[0] && e.num <= g.range[1],
+					);
+					const c = entries.filter((e) => caught.has(e.num)).length;
+					const section = document.getElementById(`gen-${g.id}`);
+					if (!section) return;
+					section.querySelector(".gen-count").textContent =
+						`${c} / ${entries.length}`;
+					section.querySelector(".gen-bar-fill").style.width =
+						`${entries.length ? (c / entries.length) * 100 : 0}%`;
+				});
+			}
+
+			function toggleCaught(num) {
+				if (caught.has(num)) caught.delete(num);
+				else caught.add(num);
+				saveCaught(caught);
+				const el = document.querySelector(`.mon[data-num="${num}"]`);
+				if (el) {
+					el.classList.toggle("caught");
+					el.classList.toggle("missing");
+				}
+				applyFilters();
+				updateStats();
+			}
+
+			let allEntries = [];
+			let missingOnly = false;
+
+			function applyFilters() {
+				const q = document.getElementById("search").value.trim().toLowerCase();
+				document.querySelectorAll(".mon").forEach((el) => {
+					const num = el.dataset.num;
+					const name = el.dataset.name;
+					const isCaught = caught.has(Number(num));
+					let show = true;
+					if (missingOnly && isCaught) show = false;
+					if (q && !name.includes(q) && !num.includes(q)) show = false;
+					el.classList.toggle("hidden", !show);
+				});
+				document.querySelectorAll(".gen-section").forEach((section) => {
+					const anyVisible = section.querySelector(".mon:not(.hidden)");
+					section.classList.toggle("hidden", !anyVisible);
+				});
+			}
+
+			function render(entries) {
+				allEntries = entries;
+				const container = document.getElementById("generations");
+				container.innerHTML = "";
+
+				GENERATIONS.forEach((g) => {
+					const genEntries = entries.filter(
+						(e) => e.num >= g.range[0] && e.num <= g.range[1],
+					);
+					if (!genEntries.length) return;
+
+					const section = document.createElement("div");
+					section.className = "gen-section";
+					section.id = `gen-${g.id}`;
+
+					const header = document.createElement("div");
+					header.className = "gen-header";
+					header.innerHTML = `
+						<div class="gen-header-left">
+							<span class="gen-chevron">▼</span>
+							<span class="gen-title">${g.name} <span class="gen-range">— ${g.region} (#${String(g.range[0]).padStart(3, "0")}–#${String(g.range[1]).padStart(3, "0")})</span></span>
+						</div>
+						<span class="gen-count"></span>
+					`;
+					header.addEventListener("click", () => {
+						section.classList.toggle("collapsed");
+					});
+
+					const bar = document.createElement("div");
+					bar.className = "gen-bar";
+					bar.innerHTML = `<div class="gen-bar-fill"></div>`;
+
+					const grid = document.createElement("div");
+					grid.className = "gen-grid";
+
+					genEntries.forEach((e) => {
+						const isCaught = caught.has(e.num);
+						const card = document.createElement("div");
+						card.className = `mon ${isCaught ? "caught" : "missing"}`;
+						card.dataset.num = e.num;
+						card.dataset.name = e.name;
+						card.innerHTML = `
+							<span class="mon-num">#${String(e.num).padStart(3, "0")}</span>
+							<div class="mon-check"></div>
+							<img class="mon-sprite" src="${spriteUrl(e.num)}" alt="${e.name}" loading="lazy" />
+							<span class="mon-name">${e.name.replace(/-/g, " ")}</span>
+						`;
+						card.addEventListener("click", () => toggleCaught(e.num));
+						grid.appendChild(card);
+					});
+
+					section.appendChild(header);
+					section.appendChild(bar);
+					section.appendChild(grid);
+					container.appendChild(section);
+				});
+
+				updateStats();
+				applyFilters();
+			}
+
+			document.getElementById("search").addEventListener("input", applyFilters);
+			document.getElementById("missingToggle").addEventListener("click", (e) => {
+				missingOnly = !missingOnly;
+				e.currentTarget.classList.toggle("active", missingOnly);
+				e.currentTarget.textContent = missingOnly
+					? "Show all"
+					: "Show missing only";
+				applyFilters();
+			});
+			document.getElementById("resetBtn").addEventListener("click", () => {
+				if (!confirm("Clear all caught progress? This cannot be undone.")) return;
+				caught = new Set();
+				saveCaught(caught);
+				render(allEntries);
+			});
+
+			// --- Cloud sync via GitHub Gist ---
+			const TOKEN_KEY = "pokedex-tracker-gh-token";
+			const GIST_ID_KEY = "pokedex-tracker-gist-id";
+			const GIST_FILENAME = "pokedex-tracker-progress.json";
+
+			const syncPanel = document.getElementById("syncPanel");
+			const tokenInput = document.getElementById("tokenInput");
+			const gistIdInput = document.getElementById("gistIdInput");
+			const syncStatus = document.getElementById("syncStatus");
+
+			tokenInput.value = localStorage.getItem(TOKEN_KEY) || "";
+			gistIdInput.value = localStorage.getItem(GIST_ID_KEY) || "";
+
+			function setSyncStatus(message, type) {
+				syncStatus.textContent = message;
+				syncStatus.className = `sync-status ${type || ""}`.trim();
+			}
+
+			document.getElementById("syncToggleBtn").addEventListener("click", () => {
+				syncPanel.classList.toggle("open");
+			});
+
+			document.getElementById("saveTokenBtn").addEventListener("click", () => {
+				localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
+				localStorage.setItem(GIST_ID_KEY, gistIdInput.value.trim());
+				setSyncStatus("Settings saved in this browser.", "ok");
+			});
+
+			document.getElementById("forgetBtn").addEventListener("click", () => {
+				localStorage.removeItem(TOKEN_KEY);
+				localStorage.removeItem(GIST_ID_KEY);
+				tokenInput.value = "";
+				gistIdInput.value = "";
+				setSyncStatus("Token and Gist ID forgotten.", "");
+			});
+
+			function ghHeaders(token) {
+				return {
+					Authorization: `token ${token}`,
+					Accept: "application/vnd.github+json",
+					"Content-Type": "application/json",
+				};
+			}
+
+			async function pushToGist() {
+				const token = tokenInput.value.trim();
+				if (!token) {
+					setSyncStatus("Enter a GitHub token first.", "err");
+					return;
+				}
+				let gistId = gistIdInput.value.trim();
+				const body = {
+					description: "Pokédex Tracker progress",
+					files: {
+						[GIST_FILENAME]: {
+							content: JSON.stringify(
+								{ caught: [...caught], updatedAt: new Date().toISOString() },
+								null,
+								2,
+							),
+						},
+					},
+				};
+
+				setSyncStatus("Pushing…", "");
+				try {
+					let res;
+					if (gistId) {
+						res = await fetch(`https://api.github.com/gists/${gistId}`, {
+							method: "PATCH",
+							headers: ghHeaders(token),
+							body: JSON.stringify(body),
+						});
+					} else {
+						body.public = false;
+						res = await fetch("https://api.github.com/gists", {
+							method: "POST",
+							headers: ghHeaders(token),
+							body: JSON.stringify(body),
+						});
+					}
+					if (!res.ok) throw new Error(`GitHub API error (${res.status})`);
+					const data = await res.json();
+					gistId = data.id;
+					gistIdInput.value = gistId;
+					localStorage.setItem(TOKEN_KEY, token);
+					localStorage.setItem(GIST_ID_KEY, gistId);
+					setSyncStatus(
+						`Pushed ${caught.size} caught Pokémon to Gist ${gistId}.`,
+						"ok",
+					);
+				} catch (err) {
+					console.error(err);
+					setSyncStatus(`Push failed: ${err.message}`, "err");
+				}
+			}
+
+			async function pullFromGist() {
+				const token = tokenInput.value.trim();
+				const gistId = gistIdInput.value.trim();
+				if (!token || !gistId) {
+					setSyncStatus("Enter both a token and a Gist ID.", "err");
+					return;
+				}
+				setSyncStatus("Pulling…", "");
+				try {
+					const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+						headers: ghHeaders(token),
+					});
+					if (!res.ok) throw new Error(`GitHub API error (${res.status})`);
+					const data = await res.json();
+					const file = data.files[GIST_FILENAME];
+					if (!file) throw new Error(`No ${GIST_FILENAME} file in that Gist`);
+					const parsed = JSON.parse(file.content);
+					caught = new Set(parsed.caught || []);
+					saveCaught(caught);
+					localStorage.setItem(TOKEN_KEY, token);
+					localStorage.setItem(GIST_ID_KEY, gistId);
+					render(allEntries);
+					setSyncStatus(
+						`Pulled ${caught.size} caught Pokémon from Gist (saved ${parsed.updatedAt || "unknown time"}).`,
+						"ok",
+					);
+				} catch (err) {
+					console.error(err);
+					setSyncStatus(`Pull failed: ${err.message}`, "err");
+				}
+			}
+
+			document.getElementById("pushBtn").addEventListener("click", pushToGist);
+			document.getElementById("pullBtn").addEventListener("click", pullFromGist);
+
+			(async function init() {
+				try {
+					const entries = await fetchPokedex();
+					document.getElementById("status").remove();
+					render(entries);
+				} catch (err) {
+					document.getElementById("status").textContent =
+						"Couldn't load Pokédex data. Check your connection and reload.";
+					console.error(err);
+				}
+			})();
+		</script>
+	</body>
+</html>
