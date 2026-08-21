@@ -87,6 +87,36 @@
 				transition: width 0.4s ease;
 			}
 
+			.legend {
+				display: flex;
+				gap: 16px;
+				margin-bottom: 12px;
+			}
+			.legend-item {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.legend-dot {
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 9px;
+				line-height: 1;
+				border: 1.5px solid;
+			}
+			.legend-dot-caught {
+				border-color: var(--caught);
+			}
+			.legend-dot-jp {
+				border-color: var(--accent-2);
+			}
+
 			.controls {
 				display: flex;
 				flex-wrap: wrap;
@@ -327,7 +357,7 @@
 				transform: translateY(-2px);
 				border-color: var(--accent-2);
 			}
-			.mon.caught {
+			.mon.owned {
 				border-color: var(--caught);
 			}
 			.mon.missing .mon-sprite {
@@ -337,11 +367,21 @@
 			.mon.missing .mon-name {
 				opacity: 0.55;
 			}
+			.mon-top {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				width: 100%;
+				margin-bottom: 2px;
+			}
 			.mon-num {
 				font-size: 10px;
 				color: var(--muted);
 				font-variant-numeric: tabular-nums;
-				align-self: flex-start;
+			}
+			.mon-badges {
+				display: flex;
+				gap: 4px;
 			}
 			.mon-sprite {
 				width: 56px;
@@ -354,30 +394,36 @@
 				line-height: 1.2;
 				margin-top: 2px;
 			}
-			.mon-check {
-				position: absolute;
-				top: 4px;
-				right: 5px;
-				width: 15px;
-				height: 15px;
+			.mon-check,
+			.mon-jp-check {
+				position: relative;
+				width: 18px;
+				height: 18px;
 				border-radius: 50%;
-				border: 1.5px solid var(--muted);
-				background: transparent;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 10px;
+				line-height: 1;
+				border: 1.5px solid var(--border);
+				background: var(--panel);
+				flex-shrink: 0;
+				opacity: 0.4;
+				filter: grayscale(100%);
+				transition:
+					opacity 0.12s ease,
+					filter 0.12s ease,
+					border-color 0.12s ease;
 			}
 			.mon.caught .mon-check {
-				background: var(--caught);
+				opacity: 1;
+				filter: none;
 				border-color: var(--caught);
 			}
-			.mon.caught .mon-check::after {
-				content: "";
-				position: absolute;
-				left: 4px;
-				top: 1px;
-				width: 4px;
-				height: 8px;
-				border: solid #fff;
-				border-width: 0 2px 2px 0;
-				transform: rotate(40deg);
+			.mon.jp-card .mon-jp-check {
+				opacity: 1;
+				filter: none;
+				border-color: var(--accent-2);
 			}
 
 			.hidden {
@@ -403,6 +449,15 @@
 			</div>
 			<div class="overall-bar">
 				<div class="overall-bar-fill" id="overallBarFill"></div>
+			</div>
+			<div class="legend">
+				<span class="legend-item"
+					><span class="legend-dot legend-dot-caught">🇬🇧</span>English card /
+					caught</span
+				>
+				<span class="legend-item"
+					><span class="legend-dot legend-dot-jp">🇯🇵</span>Japanese card</span
+				>
 			</div>
 			<div class="controls">
 				<input
@@ -460,6 +515,7 @@
 
 		<script>
 			const STORAGE_KEY = "pokedex-tracker-caught";
+			const JP_STORAGE_KEY = "pokedex-tracker-jp-card";
 			const CACHE_KEY = "pokedex-tracker-data-cache-v1";
 			const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 
@@ -501,6 +557,20 @@
 				localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
 			}
 			let caught = loadCaught();
+
+			function loadJpCard() {
+				try {
+					return new Set(
+						JSON.parse(localStorage.getItem(JP_STORAGE_KEY) || "[]"),
+					);
+				} catch {
+					return new Set();
+				}
+			}
+			function saveJpCard(set) {
+				localStorage.setItem(JP_STORAGE_KEY, JSON.stringify([...set]));
+			}
+			let jpCard = loadJpCard();
 
 			function spriteUrl(num) {
 				return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${num}.png`;
@@ -544,19 +614,24 @@
 				);
 			}
 
+			function isOwned(num) {
+				return caught.has(num) || jpCard.has(num);
+			}
+
 			function updateStats() {
 				const total = allEntries.length;
-				const total_caught = allEntries.filter((e) => caught.has(e.num)).length;
+				const total_owned = allEntries.filter((e) => isOwned(e.num)).length;
+				const total_jp = allEntries.filter((e) => jpCard.has(e.num)).length;
 				document.getElementById("overallStat").textContent =
-					`${total_caught} / ${total} caught (${total ? Math.round((total_caught / total) * 100) : 0}%)`;
+					`${total_owned} / ${total} caught (${total ? Math.round((total_owned / total) * 100) : 0}%) · ${total_jp} Japanese cards`;
 				document.getElementById("overallBarFill").style.width =
-					`${total ? (total_caught / total) * 100 : 0}%`;
+					`${total ? (total_owned / total) * 100 : 0}%`;
 
 				GENERATIONS.forEach((g) => {
 					const entries = allEntries.filter(
 						(e) => e.num >= g.range[0] && e.num <= g.range[1],
 					);
-					const c = entries.filter((e) => caught.has(e.num)).length;
+					const c = entries.filter((e) => isOwned(e.num)).length;
 					const section = document.getElementById(`gen-${g.id}`);
 					if (!section) return;
 					section.querySelector(".gen-count").textContent =
@@ -566,6 +641,11 @@
 				});
 			}
 
+			function updateOwnedClass(el, num) {
+				el.classList.toggle("owned", isOwned(num));
+				el.classList.toggle("missing", !isOwned(num));
+			}
+
 			function toggleCaught(num) {
 				if (caught.has(num)) caught.delete(num);
 				else caught.add(num);
@@ -573,7 +653,20 @@
 				const el = document.querySelector(`.mon[data-num="${num}"]`);
 				if (el) {
 					el.classList.toggle("caught");
-					el.classList.toggle("missing");
+					updateOwnedClass(el, num);
+				}
+				applyFilters();
+				updateStats();
+			}
+
+			function toggleJpCard(num) {
+				if (jpCard.has(num)) jpCard.delete(num);
+				else jpCard.add(num);
+				saveJpCard(jpCard);
+				const el = document.querySelector(`.mon[data-num="${num}"]`);
+				if (el) {
+					el.classList.toggle("jp-card");
+					updateOwnedClass(el, num);
 				}
 				applyFilters();
 				updateStats();
@@ -587,9 +680,8 @@
 				document.querySelectorAll(".mon").forEach((el) => {
 					const num = el.dataset.num;
 					const name = el.dataset.name;
-					const isCaught = caught.has(Number(num));
 					let show = true;
-					if (missingOnly && isCaught) show = false;
+					if (missingOnly && isOwned(Number(num))) show = false;
 					if (q && !name.includes(q) && !num.includes(q)) show = false;
 					el.classList.toggle("hidden", !show);
 				});
@@ -636,17 +728,30 @@
 
 					genEntries.forEach((e) => {
 						const isCaught = caught.has(e.num);
+						const isJpCard = jpCard.has(e.num);
+						const owned = isCaught || isJpCard;
 						const card = document.createElement("div");
-						card.className = `mon ${isCaught ? "caught" : "missing"}`;
+						card.className = `mon ${owned ? "owned" : "missing"} ${isCaught ? "caught" : ""} ${isJpCard ? "jp-card" : ""}`;
 						card.dataset.num = e.num;
 						card.dataset.name = e.name;
 						card.innerHTML = `
-							<span class="mon-num">#${String(e.num).padStart(3, "0")}</span>
-							<div class="mon-check"></div>
+							<div class="mon-top">
+								<span class="mon-num">#${String(e.num).padStart(3, "0")}</span>
+								<div class="mon-badges">
+									<div class="mon-check" title="English card / caught">🇬🇧</div>
+									<div class="mon-jp-check" title="Japanese card">🇯🇵</div>
+								</div>
+							</div>
 							<img class="mon-sprite" src="${spriteUrl(e.num)}" alt="${e.name}" loading="lazy" />
 							<span class="mon-name">${e.name.replace(/-/g, " ")}</span>
 						`;
 						card.addEventListener("click", () => toggleCaught(e.num));
+						card
+							.querySelector(".mon-jp-check")
+							.addEventListener("click", (evt) => {
+								evt.stopPropagation();
+								toggleJpCard(e.num);
+							});
 						grid.appendChild(card);
 					});
 
@@ -672,7 +777,9 @@
 			document.getElementById("resetBtn").addEventListener("click", () => {
 				if (!confirm("Clear all caught progress? This cannot be undone.")) return;
 				caught = new Set();
+				jpCard = new Set();
 				saveCaught(caught);
+				saveJpCard(jpCard);
 				render(allEntries);
 			});
 
@@ -732,7 +839,11 @@
 					files: {
 						[GIST_FILENAME]: {
 							content: JSON.stringify(
-								{ caught: [...caught], updatedAt: new Date().toISOString() },
+								{
+									caught: [...caught],
+									jpCard: [...jpCard],
+									updatedAt: new Date().toISOString(),
+								},
 								null,
 								2,
 							),
@@ -764,7 +875,7 @@
 					localStorage.setItem(TOKEN_KEY, token);
 					localStorage.setItem(GIST_ID_KEY, gistId);
 					setSyncStatus(
-						`Pushed ${caught.size} caught Pokémon to Gist ${gistId}.`,
+						`Pushed ${caught.size} caught / ${jpCard.size} Japanese cards synced to Gist ${gistId}.`,
 						"ok",
 					);
 				} catch (err) {
@@ -791,7 +902,9 @@
 					if (!file) throw new Error(`No ${GIST_FILENAME} file in that Gist`);
 					const parsed = JSON.parse(file.content);
 					caught = new Set(parsed.caught || []);
+					jpCard = new Set(parsed.jpCard || []);
 					saveCaught(caught);
+					saveJpCard(jpCard);
 					localStorage.setItem(TOKEN_KEY, token);
 					localStorage.setItem(GIST_ID_KEY, gistId);
 					render(allEntries);
