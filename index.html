@@ -3,23 +3,21 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Interrail Video Drop</title>
+		<title>Kristian Gøystdal</title>
 		<link
 			rel="icon"
-			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚂</text></svg>"
-		/>
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
-			rel="stylesheet"
+			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128640;</text></svg>"
 		/>
 		<style>
 			:root {
-				--ink: #f4ede1;
-				--mustard: #e8a33d;
-				--rust: #c1502e;
-				--stamp: #8fae7e;
-				--paper: #f4ede1;
+				--bg: #101317;
+				--panel: #171b21;
+				--panel-2: #1d2229;
+				--border: #2a303a;
+				--text: #e9edf2;
+				--muted: #8b95a3;
+				--accent: #e3350d;
+				--accent-2: #3b6ceb;
 			}
 			* {
 				margin: 0;
@@ -29,649 +27,163 @@
 			html,
 			body {
 				height: 100%;
-				overflow: hidden;
-				font-family: "Space Mono", monospace;
-				background: #0c0c0a;
-				color: var(--ink);
 			}
-			.route-svg {
-				position: fixed;
-				inset: 0;
-				z-index: 0;
-				width: 100%;
-				height: 100%;
-				display: block;
-				overflow: hidden;
-			}
-			.route-loop-path {
-				fill: none;
-				stroke: var(--mustard);
-				stroke-width: 1.6;
-				stroke-linecap: round;
-				stroke-linejoin: round;
-				stroke-dasharray: 6 7;
-				opacity: 0.6;
-				animation: routeMarch 6s linear infinite;
-				will-change: stroke-dashoffset;
-			}
-			.route-dot {
-				fill: var(--paper);
-				stroke: var(--rust);
-				stroke-width: 2;
-			}
-			.route-label {
-				font-family: "Space Mono", monospace;
-				font-weight: 700;
-				font-size: clamp(10px, 2.6vw, 15px);
-				letter-spacing: 1px;
-				fill: var(--ink);
-				opacity: 0.95;
-				text-transform: uppercase;
-				text-anchor: middle;
-				paint-order: stroke;
-				stroke: #0c0c0a;
-				stroke-width: 3px;
-				stroke-linejoin: round;
-			}
-			.route-emoji {
-				font-size: clamp(15px, 4vw, 24px);
-				text-anchor: middle;
-			}
-			.route-train {
-				font-size: clamp(13px, 3.4vw, 20px);
-				transform-box: fill-box;
-				transform-origin: center;
-				transform: scaleX(-1);
-			}
-			@keyframes routeMarch {
-				to {
-					stroke-dashoffset: -26;
-				}
-			}
-			@media (prefers-reduced-motion: reduce) {
-				.route-loop-path {
-					animation: none;
-				}
-			}
-			.grain {
-				position: fixed;
-				inset: 0;
-				z-index: 5;
-				pointer-events: none;
-				background-image: radial-gradient(
-					rgba(255, 255, 255, 0.035) 1px,
-					transparent 1px
-				);
-				background-size: 3px 3px;
-				mix-blend-mode: overlay;
-			}
-			.overlay {
-				position: fixed;
-				inset: 0;
-				z-index: 2;
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family:
+					system-ui,
+					-apple-system,
+					"Segoe UI",
+					Roboto,
+					sans-serif;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				justify-content: center;
-				padding: 24px;
+				padding: clamp(32px, 8vh, 90px) 20px 40px;
 			}
 
-			.ticket {
-				position: relative;
-				width: min(560px, 92vw);
-				background: rgba(20, 18, 14, 0.55);
-				backdrop-filter: blur(6px);
-				border: 1px solid rgba(244, 237, 225, 0.35);
-				border-radius: 4px;
-				padding: 36px clamp(20px, 5vw, 48px) 32px;
+			header {
 				text-align: center;
-				box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
-				animation: rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+				margin-bottom: clamp(28px, 6vh, 56px);
 			}
-			.ticket::before,
-			.ticket::after {
-				content: "";
-				position: absolute;
-				top: 50%;
-				width: 26px;
-				height: 26px;
-				background: #0c0c0a;
-				border-radius: 50%;
-				transform: translateY(-50%);
+			h1 {
+				font-size: clamp(26px, 5vw, 38px);
+				letter-spacing: 0.3px;
 			}
-			.ticket::before {
-				left: -13px;
+			h1 span {
+				color: var(--accent);
 			}
-			.ticket::after {
-				right: -13px;
+			.subtitle {
+				color: var(--muted);
+				margin-top: 8px;
+				font-size: 15px;
 			}
 
-			.route {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				gap: 10px;
-				font-size: clamp(11px, 2.2vw, 13px);
-				letter-spacing: 3px;
-				text-transform: uppercase;
-				color: var(--mustard);
-				margin-bottom: 6px;
-			}
-			.route .line {
-				flex: 1;
-				max-width: 40px;
-				height: 1px;
-				background: var(--mustard);
-				opacity: 0.6;
-			}
-
-			.headline {
-				font-family: "Archivo Black", sans-serif;
-				font-size: clamp(28px, 6.5vw, 46px);
-				line-height: 1.05;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				margin: 6px 0 22px;
-			}
-			.headline span {
-				color: var(--rust);
-			}
-
-			.perf {
-				border-top: 2px dashed rgba(244, 237, 225, 0.3);
-				margin: 4px 0 22px;
-			}
-
-			.timer {
-				display: flex;
-				justify-content: center;
-				gap: clamp(8px, 2.5vw, 22px);
-			}
-			.unit {
+			.pages {
+				width: 100%;
+				max-width: 640px;
 				display: flex;
 				flex-direction: column;
+				gap: 14px;
+			}
+
+			.page-card {
+				display: flex;
 				align-items: center;
-				min-width: 56px;
-			}
-			.unit .num {
-				font-family: "Archivo Black", sans-serif;
-				font-size: clamp(30px, 8vw, 56px);
-				line-height: 1;
-				font-variant-numeric: tabular-nums;
-				color: var(--paper);
-				display: inline-block;
+				gap: 16px;
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 18px 20px;
+				text-decoration: none;
+				color: var(--text);
 				transition:
-					transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-					opacity 0.35s ease;
+					transform 0.15s ease,
+					border-color 0.15s ease,
+					background 0.15s ease;
 			}
-			.unit .num.tick-change {
-				transform: translateY(-6px);
-				opacity: 0.55;
+			.page-card:hover {
+				transform: translateY(-2px);
+				border-color: var(--accent-2);
+				background: var(--panel-2);
 			}
-			.unit .unit-label {
-				font-size: clamp(9px, 1.8vw, 11px);
-				letter-spacing: 2px;
-				text-transform: uppercase;
-				opacity: 0.65;
-				margin-top: 8px;
+			.page-emoji {
+				font-size: 30px;
+				line-height: 1;
+				flex-shrink: 0;
 			}
-			.colon {
-				font-family: "Archivo Black", sans-serif;
-				font-size: clamp(24px, 6vw, 44px);
-				align-self: flex-start;
-				margin-top: 2px;
-				opacity: 0.4;
+			.page-info {
+				flex: 1;
+				min-width: 0;
 			}
-
-			.stamp {
-				position: absolute;
-				bottom: 18px;
-				right: 22px;
-				border: 2px solid var(--stamp);
-				color: var(--stamp);
-				font-size: 10px;
-				letter-spacing: 1.5px;
-				text-transform: uppercase;
-				padding: 5px 9px;
-				border-radius: 50%;
-				transform: rotate(-14deg);
-				opacity: 0.85;
+			.page-title {
+				font-size: 17px;
+				font-weight: 600;
+			}
+			.page-desc {
+				color: var(--muted);
+				font-size: 13.5px;
+				margin-top: 3px;
+			}
+			.page-arrow {
+				color: var(--muted);
+				font-size: 18px;
+				flex-shrink: 0;
 			}
 
-			.footer-label {
-				margin-top: 22px;
-				font-size: clamp(10px, 2vw, 12px);
-				letter-spacing: 2px;
-				text-transform: uppercase;
-				opacity: 0.55;
+			footer {
+				margin-top: auto;
+				padding-top: 50px;
+				color: var(--muted);
+				font-size: 12.5px;
+				text-align: center;
 			}
-
-			.done .headline {
-				color: var(--stamp);
+			footer a {
+				color: var(--accent-2);
+				text-decoration: none;
 			}
-			.done-mark {
-				font-family: "Archivo Black", sans-serif;
-				font-size: clamp(32px, 7vw, 52px);
-				color: var(--stamp);
-				text-transform: uppercase;
-			}
-
-			@keyframes rise {
-				from {
-					opacity: 0;
-					transform: translateY(18px);
-				}
-				to {
-					opacity: 1;
-					transform: translateY(0);
-				}
-			}
-
-			@media (prefers-reduced-motion: reduce) {
-				.ticket {
-					animation: none;
-				}
+			footer a:hover {
+				text-decoration: underline;
 			}
 		</style>
 	</head>
 	<body>
-		<svg class="route-svg" id="routeSvg" aria-hidden="true">
-			<path class="route-loop-path" id="loopPath" />
-			<circle class="route-dot" r="3.5" />
-			<circle class="route-dot" r="3.5" />
-			<circle class="route-dot" r="3.5" />
-			<circle class="route-dot" r="3.5" />
-			<circle class="route-dot" r="3.5" />
-			<circle class="route-dot" r="3.5" />
-			<text class="route-emoji"></text>
-			<text class="route-emoji"></text>
-			<text class="route-emoji"></text>
-			<text class="route-emoji"></text>
-			<text class="route-emoji"></text>
-			<text class="route-emoji"></text>
-			<text class="route-label"></text>
-			<text class="route-label"></text>
-			<text class="route-label"></text>
-			<text class="route-label"></text>
-			<text class="route-label"></text>
-			<text class="route-label"></text>
-			<text class="route-train">
-				<animateMotion
-					dur="34s"
-					repeatCount="indefinite"
-					rotate="auto"
-					calcMode="linear"
-				/>
-				🚂
-			</text>
-		</svg>
+		<header>
+			<h1>Kristian <span>Gøystdal</span></h1>
+			<p class="subtitle">A small collection of pages</p>
+		</header>
 
-		<div class="overlay">
-			<div class="ticket">
-				<div class="route">
-					<span class="line"></span>Boarding Pass<span class="line"></span>
-				</div>
-				<div class="headline">Interrail <span>Video</span> Drop</div>
-				<div class="perf"></div>
-				<div class="timer" id="timer">
-					<div class="unit">
-						<div class="num" id="days">00</div>
-						<div class="unit-label">Days</div>
-					</div>
-					<div class="colon">:</div>
-					<div class="unit">
-						<div class="num" id="hours">00</div>
-						<div class="unit-label">Hrs</div>
-					</div>
-					<div class="colon">:</div>
-					<div class="unit">
-						<div class="num" id="mins">00</div>
-						<div class="unit-label">Min</div>
-					</div>
-					<div class="colon">:</div>
-					<div class="unit">
-						<div class="num" id="secs">00</div>
-						<div class="unit-label">Sec</div>
-					</div>
-				</div>
-				<div class="footer-label">Departure · Friday 18:00</div>
-				<div class="stamp">All aboard</div>
-			</div>
+		<div class="pages">
+			<a class="page-card" href="pokedex/">
+				<span class="page-emoji">📕</span>
+				<span class="page-info">
+					<span class="page-title">Pokédex Tracker</span>
+					<span class="page-desc"
+						>Track which Pokémon you've caught, grouped by generation, with
+						cloud sync.</span
+					>
+				</span>
+				<span class="page-arrow">→</span>
+			</a>
+
+			<a class="page-card" href="countdown/">
+				<span class="page-emoji">🚂</span>
+				<span class="page-info">
+					<span class="page-title" id="countdownTitle">Countdown</span>
+					<span class="page-desc" id="countdownDesc"
+						>Countdown to a video from an Interrail trip across Europe.</span
+					>
+				</span>
+				<span class="page-arrow">→</span>
+			</a>
 		</div>
-		<div class="grain"></div>
+
+		<footer>
+			<a href="https://github.com/kristiangoystdal" target="_blank" rel="noopener"
+				>github.com/kristiangoystdal</a
+			>
+		</footer>
 
 		<script>
-			const cities = [
-				{ name: "Berlin", emoji: "🏛️" },
-				{ name: "Amsterdam", emoji: "🚲" },
-				{ name: "Paris", emoji: "🗼" },
-				{ name: "Barcelona", emoji: "🎨" },
-				{ name: "Alicante", emoji: "🏖️" },
-				{ name: "Torrevieja", emoji: "⛱️" },
-			];
-
-			// Catmull-Rom -> cubic bezier conversion for a smooth closed loop.
-			// Control points are clamped so the curve itself never bulges off-screen,
-			// even though it passes exactly through the given points.
-			function catmullRomToBezierPath(points, clamp) {
-				const n = points.length;
-				if (n < 3) return "";
-				let d = `M ${points[0].x},${points[0].y}`;
-				for (let i = 0; i < n; i++) {
-					const p0 = points[(i - 1 + n) % n];
-					const p1 = points[i];
-					const p2 = points[(i + 1) % n];
-					const p3 = points[(i + 2) % n];
-
-					let c1x = p1.x + (p2.x - p0.x) / 6;
-					let c1y = p1.y + (p2.y - p0.y) / 6;
-					let c2x = p2.x - (p3.x - p1.x) / 6;
-					let c2y = p2.y - (p3.y - p1.y) / 6;
-
-					if (clamp) {
-						[c1x, c1y] = clamp(c1x, c1y);
-						[c2x, c2y] = clamp(c2x, c2y);
-					}
-
-					d += ` C ${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`;
-				}
-				return d;
-			}
-
-			let resizeRaf = null;
-
-			function keepInsideViewport(el, w, h, margin) {
-				const box = el.getBBox();
-				let dx = 0;
-				let dy = 0;
-				if (box.x < margin) dx = margin - box.x;
-				else if (box.x + box.width > w - margin)
-					dx = w - margin - (box.x + box.width);
-				if (box.y < margin) dy = margin - box.y;
-				else if (box.y + box.height > h - margin)
-					dy = h - margin - (box.y + box.height);
-				if (dx || dy) {
-					const x = parseFloat(el.getAttribute("x")) + dx;
-					const y = parseFloat(el.getAttribute("y")) + dy;
-					el.setAttribute("x", x);
-					el.setAttribute("y", y);
-				}
-			}
-
-			function layoutLoop() {
-				const svg = document.getElementById("routeSvg");
-				const ticket = document.querySelector(".ticket");
-				const w = window.innerWidth;
-				const h = window.innerHeight;
-				svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
-				const rect = ticket.getBoundingClientRect();
-				const shortSide = Math.min(w, h);
-				const isNarrow = w < 640;
-				const edgeMargin = Math.max(46, Math.min(90, shortSide * 0.14));
-				const ticketMargin = isNarrow ? 16 : 34;
-
-				const insideTicket = (x, y) =>
-					x > rect.left - ticketMargin &&
-					x < rect.right + ticketMargin &&
-					y > rect.top - ticketMargin &&
-					y < rect.bottom + ticketMargin;
-
-				const cx = (rect.left + rect.right) / 2;
-				const cy = (rect.top + rect.bottom) / 2;
-
-				// Give each city its own angular slice around the ticket, in travel
-				// order, so the loop visits them in the order listed above (looping
-				// back from the last city to the first) without ever crossing itself.
-				// Within its slice, each city's angle and distance from center are
-				// both randomized fairly widely so cities land all over the screen
-				// rather than clustering at a fixed radius (which reads as "corners").
-				// A minimum-distance check (with plenty of retries) is what actually
-				// guarantees markers never overlap — the angular slice just keeps the
-				// route order sane.
-				const n = cities.length;
-				const angleStep = (Math.PI * 2) / n;
-				const angleJitter = angleStep * 0.42;
-				const baseAngle = Math.random() * Math.PI * 2;
-				const halfW = w / 2 - edgeMargin;
-				const halfH = h / 2 - edgeMargin;
-				const minRadiusFactor = 0.38;
-				const maxRadiusFactor = 0.98;
-				const minCityDist = Math.min(w, h) * 0.22;
-
-				// Try to find a point at least `requiredDist` away from every city
-				// already placed (`existing`). Returns null if 200 random tries in
-				// this city's sector all fail — the caller then relaxes the distance
-				// and tries again, so we never fall back to a point that skips the
-				// distance check entirely.
-				function tryPlacePoint(sectorAngle, existing, requiredDist) {
-					for (let attempt = 0; attempt < 200; attempt++) {
-						const angle = sectorAngle + (Math.random() * 2 - 1) * angleJitter;
-						const rf =
-							minRadiusFactor +
-							Math.random() * (maxRadiusFactor - minRadiusFactor);
-						const x = Math.min(
-							Math.max(cx + Math.cos(angle) * halfW * rf, edgeMargin),
-							w - edgeMargin,
-						);
-						const y = Math.min(
-							Math.max(cy + Math.sin(angle) * halfH * rf, edgeMargin),
-							h - edgeMargin,
-						);
-						if (insideTicket(x, y)) continue;
-						const nearest = existing.reduce(
-							(m, p) => Math.min(m, Math.hypot(p.x - x, p.y - y)),
-							Infinity,
-						);
-						if (nearest >= requiredDist) return { x, y };
-					}
-					return null;
-				}
-
-				// Deterministic last resort: spiral outward from the middle of this
-				// city's sector, ring by ring, and return the spot with the largest
-				// distance to every already-placed city. Unlike random sampling this
-				// always terminates with a real answer, so two cities can never end
-				// up stuck sharing the same point even on a very cramped screen.
-				function spiralPlacePoint(sectorAngle, existing) {
-					const originX = cx + Math.cos(sectorAngle) * halfW * 0.7;
-					const originY = cy + Math.sin(sectorAngle) * halfH * 0.7;
-					let best = null;
-					let bestNearest = -Infinity;
-					const ringStep = Math.max(w, h) * 0.03;
-					for (let ring = 0; ring <= 60; ring++) {
-						const r = ring * ringStep;
-						const steps = ring === 0 ? 1 : 12;
-						for (let s = 0; s < steps; s++) {
-							const angle = sectorAngle + (s / steps) * Math.PI * 2;
-							const x = Math.min(
-								Math.max(originX + Math.cos(angle) * r, edgeMargin),
-								w - edgeMargin,
-							);
-							const y = Math.min(
-								Math.max(originY + Math.sin(angle) * r, edgeMargin),
-								h - edgeMargin,
-							);
-							if (insideTicket(x, y)) continue;
-							const nearest = existing.reduce(
-								(m, p) => Math.min(m, Math.hypot(p.x - x, p.y - y)),
-								Infinity,
-							);
-							if (nearest > bestNearest) {
-								bestNearest = nearest;
-								best = { x, y };
-							}
-							if (bestNearest >= minCityDist) return best;
-						}
-					}
-					return best;
-				}
-
-				// Store every already-placed city's position in `points` and require
-				// each new one to clear a minimum-distance "margin box" around all of
-				// them. If the sector is too cramped to satisfy the full minimum
-				// (e.g. a very small screen), fall back to the deterministic spiral
-				// search — which always returns the most-separated spot it can find —
-				// instead of ever placing a city without checking prior positions.
-				// That guarantees no two markers can ever land on the same point.
-				function placePoint(sectorAngle, existing) {
-					const found = tryPlacePoint(sectorAngle, existing, minCityDist);
-					return found || spiralPlacePoint(sectorAngle, existing);
-				}
-
-				const points = [];
-				cities.forEach((_, i) =>
-					points.push(placePoint(baseAngle + i * angleStep, points)),
-				);
-
-				// Points already follow travel order (Berlin -> ... -> Torrevieja ->
-				// back to Berlin), so no re-sorting is needed here.
-				const orderedPoints = points;
-				const orderedCities = cities;
-
-				// Push every point outward a touch so the smooth spline still clears the ticket.
-				function pushOutside(pt) {
-					const dx = pt.x - cx;
-					const dy = pt.y - cy;
-					const dist = Math.hypot(dx, dy) || 1;
-					const ux = dx / dist;
-					const uy = dy / dist;
-					const halfW = (rect.right - rect.left) / 2 + ticketMargin;
-					const halfH = (rect.bottom - rect.top) / 2 + ticketMargin;
-					const neededDist = Math.max(
-						halfW / (Math.abs(ux) || 1e-6),
-						halfH / (Math.abs(uy) || 1e-6),
-					);
-					if (dist >= neededDist) return pt;
-					return {
-						x: Math.min(
-							Math.max(cx + ux * neededDist, edgeMargin),
-							w - edgeMargin,
-						),
-						y: Math.min(
-							Math.max(cy + uy * neededDist, edgeMargin),
-							h - edgeMargin,
-						),
-					};
-				}
-				const clearedPoints = orderedPoints.map(pushOutside);
-
-				// Insert one waypoint between each pair of cities, nudged sideways off
-				// the straight line between them, so the route snakes a bit instead of
-				// bowing in a single smooth arc — while still passing exactly through
-				// every city marker. It's fine for this wiggle to dip under the ticket.
-				function addSnakeWaypoints(pts) {
-					const total = pts.length;
-					const out = [];
-					for (let i = 0; i < total; i++) {
-						const a = pts[i];
-						const b = pts[(i + 1) % total];
-						out.push(a);
-						const dx = b.x - a.x;
-						const dy = b.y - a.y;
-						const dist = Math.hypot(dx, dy) || 1;
-						const nx = -dy / dist;
-						const ny = dx / dist;
-						const mx = (a.x + b.x) / 2;
-						const my = (a.y + b.y) / 2;
-						const sign = Math.random() < 0.5 ? -1 : 1;
-						const magnitude = dist * (0.12 + Math.random() * 0.12);
-						out.push({
-							x: mx + nx * sign * magnitude,
-							y: my + ny * sign * magnitude,
-						});
-					}
-					return out;
-				}
-				const snakePoints = addSnakeWaypoints(clearedPoints);
-
-				const pathMargin = 4;
-				const clampToViewport = (x, y) => [
-					Math.min(Math.max(x, pathMargin), w - pathMargin),
-					Math.min(Math.max(y, pathMargin), h - pathMargin),
-				];
-				const d = catmullRomToBezierPath(snakePoints, clampToViewport);
-
-				const pathEl = document.getElementById("loopPath");
-				pathEl.setAttribute("d", d);
-				svg.querySelector("animateMotion").setAttribute("path", d);
-
-				const dots = svg.querySelectorAll(".route-dot");
-				const emojis = svg.querySelectorAll(".route-emoji");
-				const labels = svg.querySelectorAll(".route-label");
-
-				orderedCities.forEach((city, i) => {
-					const pt = clearedPoints[i];
-					const labelBelow = pt.y < 80;
-
-					dots[i].setAttribute("cx", pt.x);
-					dots[i].setAttribute("cy", pt.y);
-					emojis[i].setAttribute("x", pt.x);
-					emojis[i].setAttribute("y", pt.y + (labelBelow ? 26 : -14));
-					emojis[i].textContent = city.emoji;
-					labels[i].setAttribute("x", pt.x);
-					labels[i].setAttribute("y", pt.y + (labelBelow ? 42 : -30));
-					labels[i].textContent = city.name;
-				});
-
-				const textMargin = isNarrow ? 8 : 14;
-				labels.forEach((el) => keepInsideViewport(el, w, h, textMargin));
-				emojis.forEach((el) => keepInsideViewport(el, w, h, textMargin));
-			}
-
-			function scheduleLayout() {
-				if (resizeRaf) cancelAnimationFrame(resizeRaf);
-				resizeRaf = requestAnimationFrame(layoutLoop);
-			}
-
-			layoutLoop();
-			window.addEventListener("resize", scheduleLayout);
-			if (document.fonts) {
-				document.fonts.ready.then(layoutLoop);
-			}
-
-			// Set your target date/time here (ISO format, local time)
-			const target = new Date("2026-08-21T18:00:00").getTime();
-
-			function pad(n) {
-				return String(n).padStart(2, "0");
-			}
-
-			function animateDigit(el, newValue) {
-				if (el.textContent === newValue) return;
-				el.textContent = newValue;
-				el.classList.add("tick-change");
-				requestAnimationFrame(() => {
-					el.classList.remove("tick-change");
-				});
-			}
-
-			function tick() {
-				const now = Date.now();
-				const diff = target - now;
-
-				if (diff <= 0) {
-					document.querySelector(".ticket").classList.add("done");
-					document.getElementById("timer").outerHTML =
-						'<div class="done-mark">🎬 Now Playing 🎬</div>';
-					clearInterval(interval);
-					layoutLoop();
-					return;
-				}
-
-				const days = Math.floor(diff / 86400000);
-				const hours = Math.floor((diff % 86400000) / 3600000);
-				const mins = Math.floor((diff % 3600000) / 60000);
-				const secs = Math.floor((diff % 60000) / 1000);
-
-				animateDigit(document.getElementById("days"), pad(days));
-				animateDigit(document.getElementById("hours"), pad(hours));
-				animateDigit(document.getElementById("mins"), pad(mins));
-				animateDigit(document.getElementById("secs"), pad(secs));
-			}
-
-			tick();
-			const interval = setInterval(tick, 1000);
+			fetch("countdown/config.json")
+				.then((res) => (res.ok ? res.json() : null))
+				.then((config) => {
+					if (!config) return;
+					const plainHeadline = config.headline.replace(/<[^>]+>/g, "");
+					document.getElementById("countdownTitle").textContent =
+						plainHeadline;
+					const target = new Date(config.target);
+					const dateLabel = isNaN(target)
+						? config.footerLabel
+						: target.toLocaleString(undefined, {
+								dateStyle: "medium",
+								timeStyle: "short",
+							});
+					document.getElementById("countdownDesc").textContent =
+						`Counting down to ${dateLabel}.`;
+				})
+				.catch(() => {});
 		</script>
 	</body>
 </html>
