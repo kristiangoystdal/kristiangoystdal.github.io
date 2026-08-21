@@ -136,6 +136,9 @@
 				outline: 2px solid var(--accent-2);
 				outline-offset: -1px;
 			}
+			.search.invalid {
+				border-color: var(--accent);
+			}
 			.toggle-btn {
 				background: var(--panel-2);
 				border: 1px solid var(--border);
@@ -464,7 +467,7 @@
 					type="text"
 					class="search"
 					id="search"
-					placeholder="Search by name or number…"
+					placeholder="Search by name or number… (Enter marks an exact match caught)"
 				/>
 				<button class="toggle-btn" id="missingToggle">
 					Show missing only
@@ -765,7 +768,39 @@
 				applyFilters();
 			}
 
-			document.getElementById("search").addEventListener("input", applyFilters);
+			const searchInput = document.getElementById("search");
+			searchInput.addEventListener("input", applyFilters);
+			searchInput.addEventListener("keydown", (e) => {
+				if (e.key !== "Enter") return;
+				const raw = searchInput.value.trim();
+				if (!raw) return;
+
+				let entry;
+				if (/^\d+$/.test(raw)) {
+					const num = Number(raw);
+					entry = allEntries.find((x) => x.num === num);
+				} else {
+					const q = raw.toLowerCase();
+					entry = allEntries.find(
+						(x) =>
+							x.name.toLowerCase() === q ||
+							x.name.replace(/-/g, " ").toLowerCase() === q,
+					);
+				}
+
+				searchInput.classList.toggle("invalid", !entry);
+
+				if (entry) {
+					if (!caught.has(entry.num)) toggleCaught(entry.num);
+					const el = document.querySelector(`.mon[data-num="${entry.num}"]`);
+					if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+				}
+
+				searchInput.value = "";
+				applyFilters();
+				searchInput.focus();
+			});
+
 			document.getElementById("missingToggle").addEventListener("click", (e) => {
 				missingOnly = !missingOnly;
 				e.currentTarget.classList.toggle("active", missingOnly);
