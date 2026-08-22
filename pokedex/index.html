@@ -467,7 +467,7 @@
 					type="text"
 					class="search"
 					id="search"
-					placeholder="Search by name or number… (Enter marks an exact match caught)"
+					placeholder="Search… Enter = 🇬🇧 mark, Shift+Enter = 🇯🇵 mark"
 				/>
 				<button class="toggle-btn" id="missingToggle">
 					Show missing only
@@ -791,7 +791,11 @@
 				searchInput.classList.toggle("invalid", !entry);
 
 				if (entry) {
-					if (!caught.has(entry.num)) toggleCaught(entry.num);
+					if (e.shiftKey) {
+						if (!jpCard.has(entry.num)) toggleJpCard(entry.num);
+					} else {
+						if (!caught.has(entry.num)) toggleCaught(entry.num);
+					}
 					const el = document.querySelector(`.mon[data-num="${entry.num}"]`);
 					if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
 				}
