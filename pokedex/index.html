@@ -119,6 +119,38 @@
 				color: #fff;
 			}
 
+			.combined-stat {
+				font-size: 12.5px;
+				color: var(--muted);
+				margin-bottom: 12px;
+			}
+
+			.gen-nav {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+				margin-bottom: 14px;
+			}
+			.gen-nav a {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-width: 26px;
+				height: 26px;
+				padding: 0 6px;
+				border-radius: 6px;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				color: var(--muted);
+				font-size: 12px;
+				font-weight: 600;
+				text-decoration: none;
+			}
+			.gen-nav a:hover {
+				border-color: var(--accent-2);
+				color: var(--text);
+			}
+
 			.controls {
 				display: flex;
 				flex-wrap: wrap;
@@ -459,6 +491,8 @@
 					<span class="flag">🇯🇵</span>Japanese
 				</button>
 			</div>
+			<div class="combined-stat" id="combinedStat"></div>
+			<nav class="gen-nav" id="genNav" aria-label="Jump to generation"></nav>
 			<div class="controls">
 				<input
 					type="text"
@@ -650,6 +684,14 @@
 					section.querySelector(".gen-bar-fill").style.width =
 						`${entries.length ? (c / entries.length) * 100 : 0}%`;
 				});
+
+				const total_en = allEntries.filter((e) => caught.has(e.num)).length;
+				const total_jp = allEntries.filter((e) => jpCard.has(e.num)).length;
+				const total_either = allEntries.filter(
+					(e) => caught.has(e.num) || jpCard.has(e.num),
+				).length;
+				document.getElementById("combinedStat").textContent =
+					`${total_either} / ${total} owned in either language · 🇬🇧 ${total_en} · 🇯🇵 ${total_jp}`;
 			}
 
 			function toggleActive(num) {
@@ -744,8 +786,30 @@
 					container.appendChild(section);
 				});
 
+				const genNav = document.getElementById("genNav");
+				genNav.innerHTML = "";
+				GENERATIONS.forEach((g) => {
+					if (!document.getElementById(`gen-${g.id}`)) return;
+					const link = document.createElement("a");
+					link.href = `#gen-${g.id}`;
+					link.textContent = toRoman(g.id);
+					link.title = `${g.name} — ${g.region}`;
+					link.addEventListener("click", (evt) => {
+						evt.preventDefault();
+						const section = document.getElementById(`gen-${g.id}`);
+						section.classList.remove("collapsed");
+						section.scrollIntoView({ behavior: "smooth", block: "start" });
+					});
+					genNav.appendChild(link);
+				});
+
 				updateStats();
 				applyFilters();
+			}
+
+			function toRoman(n) {
+				const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+				return numerals[n - 1] || String(n);
 			}
 
 			function setActiveLang(lang) {
