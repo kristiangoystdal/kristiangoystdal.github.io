@@ -215,6 +215,87 @@
 				background: var(--accent-2);
 				color: #fff;
 			}
+			.import-lang {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				color: var(--text);
+				border-radius: 8px;
+				padding: 9px 10px;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.import-btn {
+				background: var(--panel-2);
+				border: 1px solid var(--caught);
+				color: var(--caught);
+				border-radius: 8px;
+				padding: 9px 14px;
+				font-size: 13px;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.import-btn:hover {
+				background: var(--caught);
+				color: #fff;
+			}
+			.import-status {
+				font-size: 12.5px;
+				color: var(--muted);
+				margin-top: 8px;
+			}
+			.import-status.ok {
+				color: var(--caught);
+			}
+			.import-status.warn {
+				color: #ffb020;
+			}
+			.import-status.err {
+				color: var(--accent);
+			}
+			.import-status-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-top: 8px;
+				flex-wrap: wrap;
+			}
+			.import-status-row .import-status {
+				margin-top: 0;
+			}
+			.import-log-btn {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				color: var(--text);
+				border-radius: 6px;
+				padding: 4px 10px;
+				font-size: 12px;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.import-log-btn:hover {
+				border-color: var(--accent-2);
+			}
+			.import-log {
+				margin-top: 8px;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 10px 12px;
+				max-height: 220px;
+				overflow-y: auto;
+				font-size: 12.5px;
+				color: var(--muted);
+			}
+			.import-log ul {
+				list-style: none;
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+				gap: 3px 10px;
+			}
+			.import-log li::before {
+				content: "• ";
+				color: var(--accent);
+			}
 			.sync-panel {
 				margin-top: 12px;
 				padding: 14px;
@@ -505,7 +586,26 @@
 				</button>
 				<button class="reset-btn" id="resetBtn">Reset progress</button>
 				<button class="sync-btn" id="syncToggleBtn">☁️ Cloud sync</button>
+				<select
+					class="import-lang"
+					id="importLang"
+					aria-label="Language to import CSV rows as"
+				>
+					<option value="en">Import as 🇬🇧 English</option>
+					<option value="jp">Import as 🇯🇵 Japanese</option>
+				</select>
+				<button class="import-btn" id="importBtn">📥 Import Collectr CSV</button>
+				<input type="file" id="csvFileInput" accept=".csv" hidden />
 			</div>
+			<div class="import-status-row">
+				<div class="import-status" id="importStatus"></div>
+				<button
+					type="button"
+					class="import-log-btn hidden"
+					id="importLogBtn"
+				></button>
+			</div>
+			<div class="import-log hidden" id="importLog"></div>
 			<div class="sync-panel" id="syncPanel">
 				<div class="sync-hint">
 					Progress syncs via a private GitHub Gist tied to your own account.
@@ -811,6 +911,272 @@
 				const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
 				return numerals[n - 1] || String(n);
 			}
+
+			// --- CSV import (Collectr export, or anything with a similar shape) ---
+
+			function parseCSV(text) {
+				const rows = [];
+				let row = [];
+				let field = "";
+				let inQuotes = false;
+				for (let i = 0; i < text.length; i++) {
+					const c = text[i];
+					if (inQuotes) {
+						if (c === '"') {
+							if (text[i + 1] === '"') {
+								field += '"';
+								i++;
+							} else {
+								inQuotes = false;
+							}
+						} else {
+							field += c;
+						}
+					} else if (c === '"') {
+						inQuotes = true;
+					} else if (c === ",") {
+						row.push(field);
+						field = "";
+					} else if (c === "\n" || c === "\r") {
+						if (c === "\r" && text[i + 1] === "\n") i++;
+						row.push(field);
+						field = "";
+						if (row.length > 1 || row[0] !== "") rows.push(row);
+						row = [];
+					} else {
+						field += c;
+					}
+				}
+				if (field !== "" || row.length) {
+					row.push(field);
+					rows.push(row);
+				}
+				return rows;
+			}
+
+			function findColumn(headers, candidates) {
+				const lower = headers.map((h) => h.trim().toLowerCase());
+				for (const cand of candidates) {
+					const idx = lower.indexOf(cand);
+					if (idx !== -1) return idx;
+				}
+				for (let i = 0; i < lower.length; i++) {
+					for (const cand of candidates) {
+						if (lower[i].includes(cand)) return i;
+					}
+				}
+				return -1;
+			}
+
+			function escapeRegExp(str) {
+				return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			}
+
+			function normalizeCardName(raw) {
+				return raw
+					.toLowerCase()
+					.replace(/['’]/g, "")
+					.replace(/[^a-z0-9]+/g, " ")
+					.trim();
+			}
+
+			let nameIndex = [];
+			function buildNameIndex() {
+				nameIndex = allEntries
+					.map((e) => ({ norm: e.name.replace(/-/g, " "), entry: e }))
+					.sort((a, b) => b.norm.length - a.norm.length);
+			}
+
+			function matchCsvName(rawName) {
+				const norm = normalizeCardName(rawName);
+				if (!norm) return null;
+				for (const { norm: entryNorm, entry } of nameIndex) {
+					const re = new RegExp(`\\b${escapeRegExp(entryNorm)}\\b`);
+					if (re.test(norm)) return entry;
+				}
+				return null;
+			}
+
+			function isTruthyCell(v) {
+				return /^(true|yes|1|x)$/i.test((v || "").trim());
+			}
+
+			const importStatusEl = document.getElementById("importStatus");
+			function setImportStatus(message, type) {
+				importStatusEl.textContent = message;
+				importStatusEl.className = `import-status ${type || ""}`.trim();
+			}
+
+			function importCollectrCsv(text) {
+				if (!allEntries.length) {
+					setImportStatus(
+						"Pokédex data is still loading — try again in a moment.",
+						"err",
+					);
+					return;
+				}
+				if (!nameIndex.length) buildNameIndex();
+
+				const rows = parseCSV(text).filter((r) =>
+					r.some((c) => c.trim() !== ""),
+				);
+				if (rows.length < 2) {
+					setImportStatus("That CSV looks empty.", "err");
+					return;
+				}
+
+				const headers = rows[0];
+				const dataRows = rows.slice(1);
+
+				const nameIdx = findColumn(headers, [
+					"product name",
+					"card name",
+					"pokemon name",
+					"pokémon",
+					"name",
+				]);
+				const qtyIdx = findColumn(headers, ["quantity", "qty", "count"]);
+				const watchlistIdx = findColumn(headers, ["watchlist"]);
+				const langIdx = findColumn(headers, ["language", "lang"]);
+				const categoryIdx = findColumn(headers, ["category"]);
+
+				if (nameIdx === -1) {
+					setImportStatus(
+						"Couldn't find a name column in that CSV (expected something like \"Product Name\").",
+						"err",
+					);
+					return;
+				}
+
+				const defaultLang = document.getElementById("importLang").value;
+
+				let added = 0;
+				let already = 0;
+				let unmatched = 0;
+				let skippedWatchlist = 0;
+				let skippedZeroQty = 0;
+				let skippedNonPokemon = 0;
+				const unmatchedNames = new Set();
+
+				dataRows.forEach((row) => {
+					const rawName = row[nameIdx] || "";
+					if (!rawName.trim()) return;
+
+					if (
+						categoryIdx !== -1 &&
+						row[categoryIdx] &&
+						row[categoryIdx].trim() &&
+						!/pok[eé]mon/i.test(row[categoryIdx])
+					) {
+						skippedNonPokemon++;
+						return;
+					}
+
+					if (watchlistIdx !== -1 && isTruthyCell(row[watchlistIdx])) {
+						skippedWatchlist++;
+						return;
+					}
+
+					if (qtyIdx !== -1) {
+						const qty = parseFloat(row[qtyIdx]);
+						if (!isNaN(qty) && qty <= 0) {
+							skippedZeroQty++;
+							return;
+						}
+					}
+
+					let lang = defaultLang;
+					if (langIdx !== -1 && row[langIdx] && row[langIdx].trim()) {
+						lang = /jp|japan/i.test(row[langIdx]) ? "jp" : "en";
+					}
+
+					const entry = matchCsvName(rawName);
+					if (!entry) {
+						unmatched++;
+						unmatchedNames.add(rawName.trim());
+						return;
+					}
+
+					const set = lang === "jp" ? jpCard : caught;
+					if (set.has(entry.num)) already++;
+					else {
+						set.add(entry.num);
+						added++;
+					}
+				});
+
+				saveCaught(caught);
+				saveJpCard(jpCard);
+				render(allEntries);
+
+				const sortedUnmatched = [...unmatchedNames].sort();
+				if (sortedUnmatched.length) {
+					console.warn(
+						"[Pokédex CSV import] Unrecognized card names:",
+						sortedUnmatched,
+					);
+				}
+				setUnmatchedList(sortedUnmatched);
+
+				const langLabel = defaultLang === "jp" ? "🇯🇵 Japanese" : "🇬🇧 English";
+				const parts = [`${added} newly marked (${langLabel})`];
+				if (already) parts.push(`${already} already owned`);
+				if (unmatched) parts.push(`${unmatched} not recognized`);
+				if (skippedWatchlist)
+					parts.push(`${skippedWatchlist} skipped (watchlist)`);
+				if (skippedZeroQty) parts.push(`${skippedZeroQty} skipped (0 qty)`);
+				if (skippedNonPokemon)
+					parts.push(`${skippedNonPokemon} skipped (non-Pokémon)`);
+
+				setImportStatus(
+					`Import done: ${parts.join(", ")}.`,
+					unmatched ? "warn" : "ok",
+				);
+			}
+
+			const importLogBtn = document.getElementById("importLogBtn");
+			const importLogEl = document.getElementById("importLog");
+
+			function setUnmatchedList(names) {
+				if (!names.length) {
+					importLogBtn.classList.add("hidden");
+					importLogEl.classList.add("hidden");
+					importLogEl.innerHTML = "";
+					return;
+				}
+				importLogBtn.classList.remove("hidden");
+				importLogBtn.textContent = `Show ${names.length} unrecognized name${names.length === 1 ? "" : "s"}`;
+				importLogBtn.dataset.open = "false";
+				importLogEl.classList.add("hidden");
+				importLogEl.innerHTML = `<ul>${names.map((n) => `<li>${n.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c])}</li>`).join("")}</ul>`;
+			}
+
+			importLogBtn.addEventListener("click", () => {
+				const open = importLogBtn.dataset.open === "true";
+				importLogBtn.dataset.open = String(!open);
+				importLogEl.classList.toggle("hidden", open);
+				const count = importLogEl.querySelectorAll("li").length;
+				importLogBtn.textContent = open
+					? `Show ${count} unrecognized name${count === 1 ? "" : "s"}`
+					: `Hide unrecognized names`;
+			});
+
+			const csvFileInput = document.getElementById("csvFileInput");
+			document.getElementById("importBtn").addEventListener("click", () => {
+				csvFileInput.click();
+			});
+			csvFileInput.addEventListener("change", async (e) => {
+				const file = e.target.files[0];
+				if (!file) return;
+				try {
+					const text = await file.text();
+					importCollectrCsv(text);
+				} catch (err) {
+					console.error(err);
+					setImportStatus(`Couldn't read that file: ${err.message}`, "err");
+				}
+				csvFileInput.value = "";
+			});
 
 			function setActiveLang(lang) {
 				activeLang = lang;
