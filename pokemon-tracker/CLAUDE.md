@@ -33,8 +33,10 @@ Stored as one JSON document in `localStorage["kortbok.v1"]`:
 }
 ```
 
-`sale.shipping` (NOK, optional) and each sale item's `soldPrice`/`fromCollection`/
-`removeFromCollection` (see below) are additive fields from the "Nytt salg"
+`sale.shipping` (NOK, optional — no UI control for it anymore; carried through
+unmodified when editing a sale that already has one) and each sale item's
+`soldPrice`/`fromCollection`/`removeFromCollection` (see below) are additive
+fields from the "Nytt salg"
 feature — absent on sales created before it, which still render and undo
 correctly (see Import semantics / Nytt salg sections).
 
@@ -176,15 +178,23 @@ edit-in-place mode.
 `sale.status` is `"draft"` or `"sold"`; missing (all pre-existing sales)
 counts as sold — see `isSoldSale(s)`. For the "packing cards up before the
 sale is confirmed" workflow: "Nytt salg" has both "Merk som solgt" (submit)
-and "Lagre som kladd" (`saveNewSale(status)` shared by both) — either one
-still applies `removeFromCollection` the same way, since packing a card
-physically sets it aside regardless of whether payment is confirmed yet. A
-draft only differs in that `salesTotals()` and Oversikt's "5 siste salg"
-skip it entirely (revenue/profit/cardsSold aren't counted until confirmed),
-and the Salg list shows it with a "Kladd" chip and a "Merk som
-solgt"/"Merk som kladd" toggle button (flips `status` only, no stock
-change — the stock effect already happened, or didn't, at save time).
-`undoSale`/`deleteSaleFromLog` work the same on drafts as on sold sales.
+and "Lagre som kladd" (`saveNewSale(status)` shared by both). Drafts are
+excluded from `salesTotals()` and Oversikt's "5 siste salg" (nothing is
+counted as revenue/profit/cardsSold until confirmed), and the Salg list
+shows one with a "Kladd" chip, an "Eksporter JSON" button
+(`exportDraftJSON`, downloads just that one sale), and a "Merk som
+solgt"/"Merk som kladd" toggle.
+
+**Collection removal is tied to "sold", not to saving.** `removeSaleStock(s,
+sale)` / `restoreSaleStock(s, sale)` are the only two places stock changes
+for a sale — called by: saving with `status === "sold"` (removes),
+re-editing a sale that *was* sold (restores the old items first, same
+`mutate()` as applying the new ones), `undoSale` (restores, only if
+`isSoldSale`), and the toggle button (removes going draft→sold, restores
+going sold→draft). Saving or editing a draft never touches `cards[]` — a
+packed-but-unconfirmed sale leaves the card right where it is. `restoreSaleStock`
+treats missing `fromCollection`/`removeFromCollection` as `true` (pre-existing
+sales); `removeSaleStock` requires both explicitly truthy.
 
 ## GitHub Gist sync
 
