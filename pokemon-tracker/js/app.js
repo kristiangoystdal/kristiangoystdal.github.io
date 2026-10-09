@@ -1446,7 +1446,7 @@
 			price: card.price,
 			soldPrice: null,
 			fromCollection: true,
-			removeFromCollection: false,
+			removeFromCollection: true,
 			maxQty: card.qty,
 		});
 		renderNewSaleItems();
@@ -1648,9 +1648,19 @@
 			updateNewSaleSummary();
 		});
 		document.getElementById("newSaleItems").addEventListener("change", (e) => {
-			if (!e.target.classList.contains("si-remove-chk")) return;
 			const row = newSaleItems.find((r) => r.rowId === e.target.dataset.rowId);
-			if (row) row.removeFromCollection = e.target.checked;
+			if (!row) return;
+			if (e.target.classList.contains("si-remove-chk")) {
+				row.removeFromCollection = e.target.checked;
+			} else if (e.target.classList.contains("si-cost")) {
+				// Round to 2 decimals once the user leaves the field.
+				if (row.cost != null) {
+					row.cost = Math.round(row.cost * 100) / 100;
+					e.target.value = row.cost.toFixed(2);
+					updateSaleRowCalc(row);
+					updateNewSaleSummary();
+				}
+			}
 		});
 		document.getElementById("newSaleItems").addEventListener("click", (e) => {
 			const btn = e.target.closest(".sale-item-remove");
