@@ -234,6 +234,11 @@
 				font-weight: 600;
 				margin: 24px 0 10px;
 			}
+			.section-title-count {
+				font-weight: 400;
+				font-size: 13px;
+				margin-left: 6px;
+			}
 			.panel {
 				background: var(--panel);
 				border: 1px solid var(--border);
@@ -1276,7 +1281,10 @@
 					</div>
 				</div>
 
-				<div class="section-title">Kort i salget</div>
+				<div class="section-title">
+					Kort i salget
+					<span class="muted section-title-count" id="newSaleItemCount"></span>
+				</div>
 				<div id="newSaleItems" class="sale-items-editor"></div>
 
 				<div class="dialog-field">

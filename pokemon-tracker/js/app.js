@@ -1213,12 +1213,17 @@
 	function updateNewSaleSummary() {
 		let totalSold = 0;
 		let totalCost = 0;
+		let totalQty = 0;
 		let anyCostUnknown = false;
 		newSaleItems.forEach((r) => {
 			totalSold += (r.soldPrice || 0) * r.qty;
+			totalQty += r.qty;
 			if (r.cost == null) anyCostUnknown = true;
 			else totalCost += r.cost * r.qty;
 		});
+		document.getElementById("newSaleItemCount").textContent = totalQty
+			? `— ${totalQty} kort lagt til (${newSaleItems.length} ${newSaleItems.length === 1 ? "rad" : "rader"})`
+			: "";
 		const shippingRaw = document.getElementById("newSaleShipping").value.trim();
 		const shipping = shippingRaw === "" ? 0 : parseFloat(shippingRaw.replace(",", ".")) || 0;
 
