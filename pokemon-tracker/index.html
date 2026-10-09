@@ -430,6 +430,7 @@
 			}
 			.sale-actions {
 				display: flex;
+				flex-wrap: wrap;
 				gap: 8px;
 			}
 
@@ -1262,10 +1263,6 @@
 						</select>
 					</div>
 					<div class="dialog-field">
-						<label for="newSaleShipping">Frakt (valgfritt, kr)</label>
-						<input type="number" id="newSaleShipping" min="0" step="0.01" />
-					</div>
-					<div class="dialog-field">
 						<label for="newSaleNote">Notat (valgfritt)</label>
 						<input type="text" id="newSaleNote" />
 					</div>
@@ -1316,7 +1313,7 @@
 				<div class="sell-computed sell-computed-4">
 					<div><div class="muted">Salgssum</div><div id="newSaleTotalPrice">0 kr</div></div>
 					<div><div class="muted">Kostpris</div><div id="newSaleTotalCost">0 kr</div></div>
-					<div><div class="muted">Frakt</div><div id="newSaleShippingDisplay">0 kr</div></div>
+					<div><div class="muted">Markedspris</div><div id="newSaleTotalMarket">0 kr</div></div>
 					<div><div class="muted">Fortjeneste</div><div id="newSaleTotalProfit">0 kr</div></div>
 				</div>
 

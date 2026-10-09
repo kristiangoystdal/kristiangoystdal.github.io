@@ -31,6 +31,7 @@
 	// "Nytt salg" dialog state.
 	let newSaleItems = []; // draft rows: { rowId, id, pf, set, name, no, rarity, variant, cond, added, qty, cost, price, soldPrice, fromCollection, removeFromCollection }
 	let editingSaleId = null; // sale id being edited via the new-sale dialog, or null when adding
+	let editingSaleShipping = null; // shipping carried through from an edited sale (no UI control for it anymore)
 	let editingManualSaleId = null; // sale id being edited via the no-card manual dialog, or null when adding
 
 	// ---------- storage ----------
@@ -187,6 +188,48 @@
 	// so explicitly; missing status (all pre-existing sales) means sold.
 	function isSoldSale(s) {
 		return s.status !== "draft";
+	}
+
+	// Subtracts stock for a sale's collection-sourced, remove-marked items.
+	// Caller decides whether this should run (only once a sale is "sold").
+	function removeSaleStock(s, sale) {
+		sale.items.forEach((item) => {
+			if (!item.fromCollection || !item.removeFromCollection) return;
+			const card = s.cards.find((c) => c.id === item.id);
+			if (!card) return;
+			card.qty -= item.qty;
+			if (card.qty <= 0) s.cards = s.cards.filter((c) => c.id !== item.id);
+		});
+	}
+
+	// Reverses removeSaleStock. Legacy items (no fromCollection/
+	// removeFromCollection flags) default to true, since they always came from
+	// the collection and were always removed under the old "Selg" flow.
+	function restoreSaleStock(s, sale) {
+		sale.items.forEach((item) => {
+			const wasRemoved =
+				item.fromCollection !== false && item.removeFromCollection !== false;
+			if (!wasRemoved) return;
+			const card = s.cards.find((c) => c.id === item.id);
+			if (card) {
+				card.qty += item.qty;
+			} else {
+				s.cards.push({
+					id: item.id,
+					pf: item.pf,
+					set: item.set,
+					name: item.name,
+					no: item.no,
+					rarity: item.rarity,
+					variant: item.variant,
+					cond: item.cond,
+					qty: item.qty,
+					cost: item.cost,
+					price: item.price,
+					added: item.added,
+				});
+			}
+		});
 	}
 
 	function salesTotals() {
@@ -1228,10 +1271,12 @@
 	function updateNewSaleSummary() {
 		let totalSold = 0;
 		let totalCost = 0;
+		let totalMarket = 0;
 		let totalQty = 0;
 		let anyCostUnknown = false;
 		newSaleItems.forEach((r) => {
 			totalSold += (r.soldPrice || 0) * r.qty;
+			totalMarket += (r.price || 0) * r.qty;
 			totalQty += r.qty;
 			if (r.cost == null) anyCostUnknown = true;
 			else totalCost += r.cost * r.qty;
@@ -1239,14 +1284,13 @@
 		document.getElementById("newSaleItemCount").textContent = totalQty
 			? `— ${totalQty} kort lagt til (${newSaleItems.length} ${newSaleItems.length === 1 ? "rad" : "rader"})`
 			: "";
-		const shippingRaw = document.getElementById("newSaleShipping").value.trim();
-		const shipping = shippingRaw === "" ? 0 : parseFloat(shippingRaw.replace(",", ".")) || 0;
+		const shipping = editingSaleShipping || 0;
 
 		document.getElementById("newSaleTotalPrice").textContent = fmtMoney2(totalSold);
 		document.getElementById("newSaleTotalCost").textContent = anyCostUnknown
 			? "delvis ukjent"
 			: fmtMoney2(totalCost);
-		document.getElementById("newSaleShippingDisplay").textContent = fmtMoney2(shipping);
+		document.getElementById("newSaleTotalMarket").textContent = fmtMoney2(totalMarket);
 		const profitEl = document.getElementById("newSaleTotalProfit");
 		if (anyCostUnknown) {
 			profitEl.textContent = "kost ukjent";
@@ -1528,7 +1572,7 @@
 					? sale.platform
 					: PLATFORMS[0];
 				document.getElementById("newSaleNote").value = sale.note || "";
-				document.getElementById("newSaleShipping").value = sale.shipping != null ? sale.shipping : "";
+				editingSaleShipping = sale.shipping != null ? sale.shipping : null;
 
 				const totalMarket = sale.items.reduce((sum, i) => sum + (i.price || 0) * i.qty, 0);
 				const totalQty = sale.items.reduce((sum, i) => sum + i.qty, 0) || 1;
@@ -1573,7 +1617,7 @@
 			document.getElementById("newSaleDate").value = todayLocalISO();
 			document.getElementById("newSalePlatform").value = PLATFORMS[0];
 			document.getElementById("newSaleNote").value = "";
-			document.getElementById("newSaleShipping").value = "";
+			editingSaleShipping = null;
 		}
 
 		renderNewSaleItems();
@@ -1669,7 +1713,6 @@
 			renderNewSaleItems();
 		});
 
-		document.getElementById("newSaleShipping").addEventListener("input", updateNewSaleSummary);
 		document.getElementById("distributeTotal").addEventListener("input", updateNewSaleSummary);
 		document.getElementById("distributeBtn").addEventListener("click", distributeSaleTotal);
 
@@ -1697,8 +1740,6 @@
 			const date = document.getElementById("newSaleDate").value || todayLocalISO();
 			const platform = document.getElementById("newSalePlatform").value;
 			const note = document.getElementById("newSaleNote").value.trim();
-			const shippingRaw = document.getElementById("newSaleShipping").value.trim();
-			const shipping = shippingRaw === "" ? null : parseFloat(shippingRaw.replace(",", "."));
 
 			const items = newSaleItems.map((r) => ({
 				id: r.id,
@@ -1729,7 +1770,7 @@
 				note,
 				price: totalPrice,
 				cost: totalCost,
-				shipping: shipping == null || isNaN(shipping) ? null : shipping,
+				shipping: editingSaleShipping,
 				status,
 				items,
 			};
@@ -1737,41 +1778,14 @@
 			mutate((s) => {
 				if (editingSaleId) {
 					const old = s.sales.find((x) => x.id === editingSaleId);
-					if (old) {
-						old.items.forEach((item) => {
-							const wasRemoved =
-								item.fromCollection !== false && item.removeFromCollection !== false;
-							if (!wasRemoved) return;
-							const card = s.cards.find((c) => c.id === item.id);
-							if (card) {
-								card.qty += item.qty;
-							} else {
-								s.cards.push({
-									id: item.id,
-									pf: item.pf,
-									set: item.set,
-									name: item.name,
-									no: item.no,
-									rarity: item.rarity,
-									variant: item.variant,
-									cond: item.cond,
-									qty: item.qty,
-									cost: item.cost,
-									price: item.price,
-									added: item.added,
-								});
-							}
-						});
-					}
+					// Only undo a stock effect that actually happened — a draft never
+					// removed anything, so there's nothing to restore for one.
+					if (old && isSoldSale(old)) restoreSaleStock(s, old);
 					s.sales = s.sales.filter((x) => x.id !== editingSaleId);
 				}
-				items.forEach((item) => {
-					if (!item.fromCollection || !item.removeFromCollection) return;
-					const card = s.cards.find((c) => c.id === item.id);
-					if (!card) return;
-					card.qty -= item.qty;
-					if (card.qty <= 0) s.cards = s.cards.filter((c) => c.id !== item.id);
-				});
+				// Removing from the collection only happens once a sale is marked
+				// sold, never while it's still a draft (e.g. cards being packed).
+				if (status === "sold") removeSaleStock(s, sale);
 				s.sales.push(sale);
 			});
 
@@ -1829,6 +1843,7 @@
 						</span>
 						<div class="sale-actions">
 							<button type="button" class="btn-sm toggle-status-btn" data-id="${escapeHTML(s.id)}">${draft ? "Merk som solgt" : "Merk som kladd"}</button>
+							${draft ? `<button type="button" class="btn-sm export-draft-btn" data-id="${escapeHTML(s.id)}">Eksporter JSON</button>` : ""}
 							<button type="button" class="btn-sm edit-sale-btn" data-id="${escapeHTML(s.id)}">Rediger</button>
 							<button type="button" class="btn-sm undo-sale-btn" data-id="${escapeHTML(s.id)}">Angre salg</button>
 							<button type="button" class="btn-sm danger delete-sale-btn" data-id="${escapeHTML(s.id)}">Slett fra loggen</button>
@@ -1843,32 +1858,8 @@
 		mutate((s) => {
 			const sale = s.sales.find((x) => x.id === saleId);
 			if (!sale) return;
-			sale.items.forEach((item) => {
-				// Legacy items (no fromCollection/removeFromCollection flags) always came
-				// from the collection and were always removed, so default both to true.
-				const wasRemoved =
-					item.fromCollection !== false && item.removeFromCollection !== false;
-				if (!wasRemoved) return;
-				const card = s.cards.find((c) => c.id === item.id);
-				if (card) {
-					card.qty += item.qty;
-				} else {
-					s.cards.push({
-						id: item.id,
-						pf: item.pf,
-						set: item.set,
-						name: item.name,
-						no: item.no,
-						rarity: item.rarity,
-						variant: item.variant,
-						cond: item.cond,
-						qty: item.qty,
-						cost: item.cost,
-						price: item.price,
-						added: item.added,
-					});
-				}
-			});
+			// A draft never removed anything, so there's nothing to restore.
+			if (isSoldSale(sale)) restoreSaleStock(s, sale);
 			s.sales = s.sales.filter((x) => x.id !== saleId);
 		});
 	}
@@ -1903,12 +1894,24 @@
 		document.getElementById("manualSaleDialog").showModal();
 	}
 
+	function exportDraftJSON(saleId) {
+		const sale = state.sales.find((x) => x.id === saleId);
+		if (!sale) return;
+		const shortId = sale.id.replace(/[^a-z0-9]/gi, "").slice(0, 8);
+		downloadFile(
+			`kortbok-kladd-${sale.date}-${shortId}.json`,
+			JSON.stringify(sale, null, 2),
+			"application/json",
+		);
+	}
+
 	function initSalgEvents() {
 		document.getElementById("salesList").addEventListener("click", async (e) => {
 			const undoBtn = e.target.closest(".undo-sale-btn");
 			const delBtn = e.target.closest(".delete-sale-btn");
 			const editBtn = e.target.closest(".edit-sale-btn");
 			const toggleBtn = e.target.closest(".toggle-status-btn");
+			const exportBtn = e.target.closest(".export-draft-btn");
 			if (undoBtn) {
 				const ok = await confirmDialog(
 					"Angre dette salget? Kortene legges tilbake i samlingen.",
@@ -1927,8 +1930,19 @@
 			} else if (toggleBtn) {
 				mutate((s) => {
 					const sale = s.sales.find((x) => x.id === toggleBtn.dataset.id);
-					if (sale) sale.status = isSoldSale(sale) ? "draft" : "sold";
+					if (!sale) return;
+					if (isSoldSale(sale)) {
+						// Sold -> draft: the removal already happened, so undo it.
+						restoreSaleStock(s, sale);
+						sale.status = "draft";
+					} else {
+						// Draft -> sold: this is the moment the collection is updated.
+						removeSaleStock(s, sale);
+						sale.status = "sold";
+					}
 				});
+			} else if (exportBtn) {
+				exportDraftJSON(exportBtn.dataset.id);
 			}
 		});
 
