@@ -17,6 +17,32 @@ Ligger på: `https://kristiangoystdal.github.io/pokemon-tracker/`
 5. Under **Import og data** kan du laste ned en JSON-sikkerhetskopi,
    gjenopprette fra en slik fil, eksportere samlingen som CSV, eller slette
    alt.
+6. Under **Samling** kan du trykke **Rediger** på en rad for å endre
+   kost/verdi/antall manuelt, eller **Legg til kort** for å søke opp et
+   engelsk Pokémon-kort og legge det inn med pris hentet fra TCGdex.
+
+### Søk og legg til kort (TCGdex)
+
+"Legg til kort" på Samling-fanen søker i [TCGdex](https://tcgdex.dev) (gratis,
+ingen nøkkel) etter navn, med valgfritt kortnummer (f.eks. «064/128» eller
+«064») for å smalne inn treffene. Når du velger et treff vises bildet, pris
+per variant i USD/EUR (fra TCGplayer, med Cardmarket i EUR som reserve når
+TCGplayer ikke har data) omregnet til NOK via en gratis valutakurs-API — du
+kan alltid overstyre prisen selv. **Prisen hentes kun i det øyeblikket du
+legger kortet til** og endres ikke automatisk etterpå; det er ingen
+bakgrunnsoppdatering eller live-pris. Kort importert fra Collectr-CSV er
+aldri påvirket av dette og endres aldri av TCGdex.
+
+Hvis kortet allerede finnes i samlingen (samme navn, nummer og variant, uansett
+hvordan settet er skrevet), spør siden om du vil øke antallet eller legge det
+til som en egen rad. Hvis søket ikke gir treff, eller TCGdex ikke svarer, kan
+du legge inn kortet helt manuelt i stedet.
+
+Søkene sender kun søketekst og TCGdex-kort-id til `api.tcgdex.net` og
+`api.frankfurter.dev` — aldri kostpriser, salg eller annen privat
+samlingsdata. Søkeresultater og kortdetaljer caches bare i minnet mens siden
+er åpen (ikke i `localStorage`), så ingenting av dette havner i
+sikkerhetskopier.
 
 ### Data og lagring
 
@@ -53,5 +79,7 @@ Ingen bygg-steg er nødvendig.
 
 - `index.html` — struktur, inline CSS, dialoger
 - `js/csv.js` — RFC 4180 CSV-parser + mapping av Collectr-eksport (`KB.csv`)
+- `js/tcgdex.js` — tynn klient mot TCGdex og valutakurs-APIet, med
+  minnecache (`KB.tcgdex`)
 - `js/app.js` — state, rendering, faner, dialoger, Gist-sync (`KB.app`)
 - `tests/sample.csv` — syntetiske testdata (ikke ekte kortdata)

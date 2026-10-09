@@ -558,6 +558,98 @@
 				font-size: 13px;
 				min-height: 16px;
 			}
+			.link-btn {
+				background: none;
+				border: none;
+				color: var(--accent-2);
+				font-size: 13px;
+				cursor: pointer;
+				padding: 0;
+				text-decoration: underline;
+			}
+			.import-status-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				flex-wrap: wrap;
+			}
+			.find-result-noimg {
+				width: 36px;
+				height: 50px;
+				border-radius: 4px;
+				background: var(--border);
+				flex-shrink: 0;
+			}
+			.find-actions {
+				justify-content: space-between;
+				align-items: center;
+			}
+			.find-results {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				max-height: 320px;
+				overflow-y: auto;
+				margin: 10px 0;
+			}
+			.find-result {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 8px 10px;
+				cursor: pointer;
+				text-align: left;
+				width: 100%;
+				color: var(--text);
+			}
+			.find-result:hover {
+				border-color: var(--accent-2);
+			}
+			.find-result img {
+				width: 36px;
+				height: 50px;
+				object-fit: cover;
+				border-radius: 4px;
+				background: var(--border);
+				flex-shrink: 0;
+			}
+			.find-result-info {
+				flex: 1;
+				min-width: 0;
+				font-size: 13px;
+			}
+			.find-result-name {
+				font-weight: 600;
+			}
+			.find-result-sub {
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.find-detail-head {
+				display: flex;
+				gap: 14px;
+				margin-bottom: 14px;
+			}
+			.find-detail-head img {
+				width: 110px;
+				height: auto;
+				border-radius: 8px;
+				flex-shrink: 0;
+			}
+			.find-detail-name {
+				font-weight: 700;
+				font-size: 16px;
+			}
+			.find-price-info {
+				margin-top: 8px;
+				font-size: 12.5px;
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+			}
 
 			/* Warning banner */
 			.warning-banner {
@@ -680,7 +772,7 @@
 						<option value="tap">Størst tap</option>
 						<option value="navn">Navn</option>
 					</select>
-					<button type="button" class="btn secondary" id="addCardBtn">
+					<button type="button" class="btn secondary" id="findCardBtn">
 						Legg til kort
 					</button>
 				</div>
@@ -818,6 +910,97 @@
 				</div>
 			</section>
 		</main>
+
+		<!-- Søk opp og legg til kort fra TCGdex -->
+		<dialog id="findCardDialog">
+			<h2>Legg til kort</h2>
+
+			<div id="findSearchStep">
+				<div class="dialog-field">
+					<label for="findNameInput">Navn</label>
+					<input type="text" id="findNameInput" placeholder="f.eks. Mewtwo ex" autocomplete="off" />
+				</div>
+				<div class="dialog-field">
+					<label for="findNoInput">Kortnummer (valgfritt)</label>
+					<input type="text" id="findNoInput" placeholder="f.eks. 064/128 eller 064" autocomplete="off" />
+				</div>
+				<div class="import-status-row">
+					<div id="findStatus" class="import-status"></div>
+					<button type="button" class="btn-sm hidden" id="findRetryBtn">Prøv igjen</button>
+				</div>
+				<div id="findResultsList" class="find-results"></div>
+				<button type="button" class="btn secondary hidden" id="findShowMoreBtn">
+					Vis flere
+				</button>
+				<div class="dialog-actions find-actions">
+					<button type="button" class="link-btn" id="findManualLink">
+						Legg til manuelt i stedet
+					</button>
+					<button type="button" class="btn secondary" id="findCancelBtn">
+						Avbryt
+					</button>
+				</div>
+			</div>
+
+			<div id="findDetailStep" class="hidden">
+				<button type="button" class="link-btn" id="findBackBtn">← Tilbake til søk</button>
+				<div class="find-detail-head">
+					<img id="findDetailImage" alt="" loading="lazy" />
+					<div>
+						<div id="findDetailName" class="find-detail-name"></div>
+						<div id="findDetailMeta" class="muted"></div>
+						<div id="findPriceInfo" class="find-price-info"></div>
+					</div>
+				</div>
+				<form id="findDetailForm">
+					<div class="dialog-field">
+						<label for="findVariant">Variant</label>
+						<select id="findVariant"></select>
+					</div>
+					<div class="dialog-field">
+						<label for="findCond">Tilstand</label>
+						<input type="text" id="findCond" value="Near Mint" />
+					</div>
+					<div class="dialog-field">
+						<label for="findQty">Antall</label>
+						<input type="number" id="findQty" min="1" step="1" value="1" />
+					</div>
+					<div class="dialog-field">
+						<label for="findPrice">Pris i NOK</label>
+						<input type="number" id="findPrice" min="0" step="0.01" />
+					</div>
+					<div class="dialog-field">
+						<label for="findCost">Kostpris i NOK (valgfritt)</label>
+						<input type="number" id="findCost" min="0" step="0.01" />
+					</div>
+					<div class="dialog-field">
+						<label for="findPf">Portefølje</label>
+						<select id="findPf"></select>
+						<input type="text" id="findPfNew" class="hidden" placeholder="Navn på ny portefølje" />
+					</div>
+					<div class="dialog-field">
+						<label for="findAdded">Dato</label>
+						<input type="date" id="findAdded" />
+					</div>
+					<div id="findDupNotice" class="backup-reminder hidden"></div>
+					<div class="dialog-error" id="findDetailError"></div>
+					<div class="dialog-actions">
+						<button type="button" class="btn secondary" id="findDetailCancelBtn">
+							Avbryt
+						</button>
+						<button type="button" class="btn secondary hidden" id="findIncreaseBtn">
+							Øk antall
+						</button>
+						<button type="button" class="btn secondary hidden" id="findAddAsNewBtn">
+							Legg til som egen rad
+						</button>
+						<button type="submit" class="btn" id="findAddBtn">
+							Legg til i samlingen
+						</button>
+					</div>
+				</form>
+			</div>
+		</dialog>
 
 		<!-- Legg til / rediger kort -->
 		<dialog id="cardDialog">
@@ -976,6 +1159,7 @@
 		<div class="warning-banner hidden" id="warningBanner"></div>
 
 		<script src="js/csv.js"></script>
+		<script src="js/tcgdex.js"></script>
 		<script src="js/app.js"></script>
 	</body>
 </html>

@@ -19,6 +19,15 @@
 	let sellContext = null; // array of card ids currently in the sell dialog
 	let editingCardId = null; // card id being edited in the card dialog, or null when adding
 
+	// TCGdex "Legg til kort" search dialog state.
+	let findResults = []; // brief search results for the current query
+	let findShowCount = 30;
+	let findLoadedDetailIds = new Set(); // tcgIds whose detail (set/rarity) is loaded or loading
+	let findSearchController = null; // AbortController for the in-flight search
+	let findDebounceTimer = null;
+	let findSelectedDetail = null; // full TCGdex detail for the chosen card
+	let findLastQuery = null; // { name, no } of the last search, for retry
+
 	// ---------- storage ----------
 
 	function defaultState() {
@@ -86,6 +95,13 @@
 	}
 
 	// ---------- helpers ----------
+
+	// Identifies "the same physical card" regardless of set naming or portfolio —
+	// used for TCGdex duplicate detection and for import matching cards that were
+	// added manually (whose set name may not match the CSV's spelling of it).
+	function cardSoftKey(c) {
+		return `${c.name}|${c.no}|${c.variant}`.toLowerCase();
+	}
 
 	function escapeHTML(str) {
 		return String(str).replace(
@@ -663,9 +679,6 @@
 	}
 
 	function initCardDialog() {
-		document.getElementById("addCardBtn").addEventListener("click", () => {
-			openCardDialog(null);
-		});
 		document.getElementById("cardCancelBtn").addEventListener("click", () => {
 			document.getElementById("cardDialog").close();
 		});
@@ -719,6 +732,416 @@
 
 			editingCardId = null;
 			document.getElementById("cardDialog").close();
+		});
+	}
+
+	// ---------- Legg til kort via TCGdex-søk ----------
+
+	function openFindCardDialog() {
+		findResults = [];
+		findShowCount = 30;
+		findLoadedDetailIds = new Set();
+		findSelectedDetail = null;
+		findLastQuery = null;
+		document.getElementById("findNameInput").value = "";
+		document.getElementById("findNoInput").value = "";
+		document.getElementById("findStatus").textContent = "";
+		document.getElementById("findStatus").className = "import-status";
+		document.getElementById("findRetryBtn").classList.add("hidden");
+		document.getElementById("findResultsList").innerHTML = "";
+		document.getElementById("findShowMoreBtn").classList.add("hidden");
+		document.getElementById("findSearchStep").classList.remove("hidden");
+		document.getElementById("findDetailStep").classList.add("hidden");
+		document.getElementById("findCardDialog").showModal();
+		document.getElementById("findNameInput").focus();
+	}
+
+	function scheduleFindSearch() {
+		clearTimeout(findDebounceTimer);
+		findDebounceTimer = setTimeout(runFindSearch, 300);
+	}
+
+	function runFindSearch() {
+		const name = document.getElementById("findNameInput").value.trim();
+		const noQuery = document.getElementById("findNoInput").value.trim();
+		const statusEl = document.getElementById("findStatus");
+		const listEl = document.getElementById("findResultsList");
+
+		if (findSearchController) findSearchController.abort();
+		findShowCount = 30;
+		findLoadedDetailIds = new Set();
+		findResults = [];
+		document.getElementById("findShowMoreBtn").classList.add("hidden");
+		document.getElementById("findRetryBtn").classList.add("hidden");
+
+		if (!name) {
+			statusEl.textContent = "";
+			statusEl.className = "import-status";
+			listEl.innerHTML = "";
+			return;
+		}
+
+		findLastQuery = { name, no: noQuery };
+		statusEl.textContent = "Søker…";
+		statusEl.className = "import-status";
+		listEl.innerHTML = "";
+
+		findSearchController = new AbortController();
+		window.KB.tcgdex
+			.searchCards(name, { signal: findSearchController.signal })
+			.then((rows) => {
+				let filtered = rows;
+				if (noQuery) {
+					const num = parseInt(noQuery, 10);
+					if (!isNaN(num)) {
+						filtered = rows.filter((r) => parseInt(r.localId, 10) === num);
+					}
+				}
+				findResults = filtered;
+				if (!filtered.length) {
+					statusEl.textContent = `Fant ingen treff for «${name}».`;
+					statusEl.className = "import-status";
+				} else {
+					statusEl.textContent = "";
+				}
+				renderFindResults();
+			})
+			.catch((err) => {
+				if (err.name === "AbortError") return;
+				if (err.status === 429) {
+					statusEl.textContent =
+						"For mange forespørsler mot TCGdex akkurat nå. Prøv igjen om litt.";
+				} else {
+					statusEl.textContent =
+						"Kunne ikke nå TCGdex. Sjekk nettforbindelsen og prøv igjen, eller legg til kortet manuelt.";
+				}
+				statusEl.className = "import-status err";
+				document.getElementById("findRetryBtn").classList.remove("hidden");
+				listEl.innerHTML = "";
+			});
+	}
+
+	function renderFindResults() {
+		const listEl = document.getElementById("findResultsList");
+		const visible = findResults.slice(0, findShowCount);
+		listEl.innerHTML = visible
+			.map((r) => {
+				const img = r.image
+					? `<img src="${escapeHTML(r.image + "/low.webp")}" alt="${escapeHTML(r.name)}" loading="lazy">`
+					: `<span class="find-result-noimg" aria-hidden="true"></span>`;
+				return `
+				<button type="button" class="find-result" data-id="${escapeHTML(r.id)}">
+					${img}
+					<span class="find-result-info">
+						<span class="find-result-name">${escapeHTML(r.name)}</span>
+						<span class="find-result-sub mono" data-detail-for="${escapeHTML(r.id)}">#${escapeHTML(r.localId)} · henter sett …</span>
+					</span>
+				</button>`;
+			})
+			.join("");
+		document
+			.getElementById("findShowMoreBtn")
+			.classList.toggle("hidden", findResults.length <= visible.length);
+		loadDetailsForVisible(visible);
+	}
+
+	function loadDetailsForVisible(visible) {
+		const toLoad = visible.filter((r) => !findLoadedDetailIds.has(r.id));
+		toLoad.forEach((r) => findLoadedDetailIds.add(r.id));
+		if (!toLoad.length) return;
+		window.KB.tcgdex
+			.mapWithConcurrency(toLoad, 4, (r) =>
+				window.KB.tcgdex
+					.getCardDetail(r.id)
+					.then((detail) => ({ id: r.id, detail }))
+					.catch((error) => ({ id: r.id, error })),
+			)
+			.then((results) => {
+				results.forEach((res) => {
+					if (!res) return;
+					const sub = document.querySelector(`[data-detail-for="${res.id}"]`);
+					if (!sub) return;
+					if (res.detail) {
+						const d = res.detail;
+						const official = d.set && d.set.cardCount && d.set.cardCount.official;
+						const no = official ? `${d.localId}/${official}` : d.localId;
+						const setName = d.set ? d.set.name : "Ukjent sett";
+						sub.textContent = `${setName} · #${no}${d.rarity ? " · " + d.rarity : ""}`;
+					} else {
+						sub.textContent = `#${visible.find((v) => v.id === res.id)?.localId ?? ""} · sett utilgjengelig`;
+					}
+				});
+			});
+	}
+
+	function priceLineText(v, usdRate, eurRate) {
+		if (v.usd != null && usdRate) return `${v.label}: $${v.usd.toFixed(2)} → ${fmtMoney2(v.usd * usdRate)}`;
+		if (v.usd != null) return `${v.label}: $${v.usd.toFixed(2)} (valutakurs ikke tilgjengig)`;
+		if (v.eur != null && eurRate) return `${v.label}: €${v.eur.toFixed(2)} → ${fmtMoney2(v.eur * eurRate)}`;
+		if (v.eur != null) return `${v.label}: €${v.eur.toFixed(2)} (valutakurs ikke tilgjengig)`;
+		return `${v.label}: pris ikke tilgjengig fra TCGdex`;
+	}
+
+	function priceForVariantLabel(label) {
+		const variants = (findSelectedDetail && findSelectedDetail._variants) || [];
+		const v = variants.find((x) => x.label === label);
+		if (!v) return null;
+		const { _usdRate: usdRate, _eurRate: eurRate } = findSelectedDetail;
+		if (v.usd != null && usdRate) return v.usd * usdRate;
+		if (v.eur != null && eurRate) return v.eur * eurRate;
+		return null;
+	}
+
+	function currentFindSoftKey() {
+		const variant = document.getElementById("findVariant").value;
+		return `${findSelectedDetail.name}|${findSelectedDetail._no}|${variant}`.toLowerCase();
+	}
+
+	function refreshFindDupUI() {
+		const key = currentFindSoftKey();
+		const dups = state.cards.filter((c) => cardSoftKey(c) === key);
+		const notice = document.getElementById("findDupNotice");
+		const addBtn = document.getElementById("findAddBtn");
+		const incBtn = document.getElementById("findIncreaseBtn");
+		const newBtn = document.getElementById("findAddAsNewBtn");
+		if (dups.length) {
+			const totalQty = dups.reduce((s, c) => s + c.qty, 0);
+			notice.textContent = `Du har allerede ${totalQty} av dette.`;
+			notice.classList.remove("hidden");
+			addBtn.classList.add("hidden");
+			incBtn.classList.remove("hidden");
+			newBtn.classList.remove("hidden");
+		} else {
+			notice.classList.add("hidden");
+			addBtn.classList.remove("hidden");
+			incBtn.classList.add("hidden");
+			newBtn.classList.add("hidden");
+		}
+	}
+
+	function populateFindPfSelect() {
+		const pfs = [...new Set(state.cards.map((c) => c.pf))].filter(
+			(p) => p && p !== "Manuelt",
+		).sort();
+		const options = ["Manuelt", ...pfs];
+		const selectEl = document.getElementById("findPf");
+		selectEl.innerHTML =
+			options.map((p) => `<option value="${escapeHTML(p)}">${escapeHTML(p)}</option>`).join("") +
+			`<option value="__new__">Ny …</option>`;
+		selectEl.value = "Manuelt";
+		document.getElementById("findPfNew").classList.add("hidden");
+		document.getElementById("findPfNew").value = "";
+	}
+
+	function selectFindCard(tcgId) {
+		const statusEl = document.getElementById("findStatus");
+		statusEl.textContent = "Henter kortdetaljer…";
+		statusEl.className = "import-status";
+		Promise.all([
+			window.KB.tcgdex.getCardDetail(tcgId),
+			window.KB.tcgdex.getUsdNokRate(),
+			window.KB.tcgdex.getEurNokRate(),
+		])
+			.then(([detail, usdRate, eurRate]) => {
+				const official = detail.set && detail.set.cardCount && detail.set.cardCount.official;
+				const no = official ? `${detail.localId}/${official}` : detail.localId;
+				const variants = window.KB.tcgdex.priceByVariant(detail);
+				findSelectedDetail = {
+					...detail,
+					_no: no,
+					_variants: variants,
+					_usdRate: usdRate,
+					_eurRate: eurRate,
+				};
+
+				const imgEl = document.getElementById("findDetailImage");
+				if (detail.image) {
+					imgEl.src = detail.image + "/low.webp";
+					imgEl.alt = detail.name;
+					imgEl.style.display = "";
+				} else {
+					imgEl.style.display = "none";
+				}
+				document.getElementById("findDetailName").textContent = detail.name;
+				document.getElementById("findDetailMeta").textContent =
+					`${detail.set ? detail.set.name : "Ukjent sett"} · #${no}${detail.rarity ? " · " + detail.rarity : ""}`;
+
+				const selectEl = document.getElementById("findVariant");
+				const infoEl = document.getElementById("findPriceInfo");
+				if (!variants.length) {
+					selectEl.innerHTML = `<option value="Normal">Normal</option>`;
+					infoEl.textContent = "Ingen variant- eller prisinformasjon fra TCGdex for dette kortet.";
+				} else {
+					selectEl.innerHTML = variants
+						.map((v) => `<option value="${escapeHTML(v.label)}">${escapeHTML(v.label)}</option>`)
+						.join("");
+					infoEl.innerHTML = variants
+						.map((v) => `<div>${escapeHTML(priceLineText(v, usdRate, eurRate))}</div>`)
+						.join("");
+				}
+
+				document.getElementById("findCond").value = "Near Mint";
+				document.getElementById("findQty").value = 1;
+				document.getElementById("findCost").value = "";
+				document.getElementById("findAdded").value = todayLocalISO();
+				document.getElementById("findDetailError").textContent = "";
+				const initialPrice = priceForVariantLabel(selectEl.value);
+				document.getElementById("findPrice").value = initialPrice != null ? initialPrice.toFixed(2) : "";
+				populateFindPfSelect();
+				refreshFindDupUI();
+
+				statusEl.textContent = "";
+				document.getElementById("findSearchStep").classList.add("hidden");
+				document.getElementById("findDetailStep").classList.remove("hidden");
+			})
+			.catch(() => {
+				statusEl.textContent =
+					"Kunne ikke hente kortdetaljer. Prøv igjen, eller legg til kortet manuelt.";
+				statusEl.className = "import-status err";
+				document.getElementById("findRetryBtn").classList.add("hidden");
+			});
+	}
+
+	function readFindForm() {
+		const pfSelect = document.getElementById("findPf").value;
+		const pf =
+			pfSelect === "__new__"
+				? document.getElementById("findPfNew").value.trim() || "Manuelt"
+				: pfSelect;
+		return {
+			variant: document.getElementById("findVariant").value,
+			cond: document.getElementById("findCond").value.trim() || "Near Mint",
+			qty: parseInt(document.getElementById("findQty").value, 10),
+			price: parseFloat(document.getElementById("findPrice").value.replace(",", ".")),
+			costRaw: document.getElementById("findCost").value.trim(),
+			pf,
+			added: document.getElementById("findAdded").value || todayLocalISO(),
+		};
+	}
+
+	function validateFindForm(f) {
+		if (isNaN(f.qty) || f.qty < 1) return "Oppgi et gyldig antall.";
+		if (isNaN(f.price) || f.price < 0) return "Oppgi en gyldig pris i NOK.";
+		if (
+			document.getElementById("findPf").value === "__new__" &&
+			!document.getElementById("findPfNew").value.trim()
+		)
+			return "Oppgi navn på den nye porteføljen.";
+		return null;
+	}
+
+	function buildFindCard(f) {
+		const cost = f.costRaw === "" ? null : parseFloat(f.costRaw.replace(",", "."));
+		const name = findSelectedDetail.name;
+		const no = findSelectedDetail._no;
+		const set_ = findSelectedDetail.set ? findSelectedDetail.set.name : "";
+		const rarity = findSelectedDetail.rarity || "";
+		const id = window.KB.csv.buildId(f.pf, set_, name, no, f.variant, f.cond);
+		return {
+			id,
+			pf: f.pf,
+			set: set_,
+			name,
+			no,
+			rarity,
+			variant: f.variant,
+			cond: f.cond,
+			qty: f.qty,
+			cost: cost == null || isNaN(cost) ? null : cost,
+			price: f.price,
+			added: f.added,
+		};
+	}
+
+	function addFindCardToCollection() {
+		const card = buildFindCard(readFindForm());
+		mutate((s) => {
+			const existing = s.cards.find((c) => c.id === card.id);
+			if (existing) mergeCardInto(existing, card);
+			else s.cards.push(card);
+		});
+	}
+
+	function initFindCardDialog() {
+		document.getElementById("findCardBtn").addEventListener("click", openFindCardDialog);
+		document.getElementById("findCancelBtn").addEventListener("click", () => {
+			document.getElementById("findCardDialog").close();
+		});
+		document.getElementById("findDetailCancelBtn").addEventListener("click", () => {
+			document.getElementById("findCardDialog").close();
+		});
+		document.getElementById("findRetryBtn").addEventListener("click", runFindSearch);
+		document.getElementById("findBackBtn").addEventListener("click", () => {
+			document.getElementById("findDetailStep").classList.add("hidden");
+			document.getElementById("findSearchStep").classList.remove("hidden");
+		});
+		document.getElementById("findManualLink").addEventListener("click", () => {
+			const typedName = document.getElementById("findNameInput").value.trim();
+			document.getElementById("findCardDialog").close();
+			openCardDialog(null);
+			if (typedName) document.getElementById("cardName").value = typedName;
+		});
+
+		["findNameInput", "findNoInput"].forEach((id) => {
+			document.getElementById(id).addEventListener("input", scheduleFindSearch);
+		});
+
+		document.getElementById("findResultsList").addEventListener("click", (e) => {
+			const btn = e.target.closest(".find-result");
+			if (btn) selectFindCard(btn.dataset.id);
+		});
+
+		document.getElementById("findShowMoreBtn").addEventListener("click", () => {
+			findShowCount += 30;
+			renderFindResults();
+		});
+
+		document.getElementById("findVariant").addEventListener("change", () => {
+			const price = priceForVariantLabel(document.getElementById("findVariant").value);
+			document.getElementById("findPrice").value = price != null ? price.toFixed(2) : "";
+			refreshFindDupUI();
+		});
+
+		document.getElementById("findPf").addEventListener("change", (e) => {
+			document.getElementById("findPfNew").classList.toggle("hidden", e.target.value !== "__new__");
+		});
+
+		document.getElementById("findDetailForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			const f = readFindForm();
+			const err = validateFindForm(f);
+			if (err) {
+				document.getElementById("findDetailError").textContent = err;
+				return;
+			}
+			addFindCardToCollection();
+			document.getElementById("findCardDialog").close();
+		});
+
+		document.getElementById("findIncreaseBtn").addEventListener("click", () => {
+			const f = readFindForm();
+			const err = validateFindForm(f);
+			if (err) {
+				document.getElementById("findDetailError").textContent = err;
+				return;
+			}
+			const key = currentFindSoftKey();
+			mutate((s) => {
+				const target = s.cards.find((c) => cardSoftKey(c) === key);
+				if (target) target.qty += f.qty;
+			});
+			document.getElementById("findCardDialog").close();
+		});
+
+		document.getElementById("findAddAsNewBtn").addEventListener("click", () => {
+			const f = readFindForm();
+			const err = validateFindForm(f);
+			if (err) {
+				document.getElementById("findDetailError").textContent = err;
+				return;
+			}
+			addFindCardToCollection();
+			document.getElementById("findCardDialog").close();
 		});
 	}
 
@@ -874,6 +1297,9 @@
 		const updatePrices = document.getElementById("updatePricesChk").checked;
 		const includeSold = document.getElementById("includeSoldChk").checked;
 		const existingIds = new Set(state.cards.map((c) => c.id));
+		// A card already in the collection under a different set spelling (e.g.
+		// added by hand via TCGdex search) still counts as "already have it".
+		const existingSoftKeys = new Set(state.cards.map(cardSoftKey));
 		const soldIds = new Set(
 			state.sales.flatMap((s) => s.items.map((i) => i.id)),
 		);
@@ -884,7 +1310,7 @@
 		let skippedSold = 0;
 
 		parsed.rows.forEach((r) => {
-			if (existingIds.has(r.id)) {
+			if (existingIds.has(r.id) || existingSoftKeys.has(cardSoftKey(r))) {
 				existingCount++;
 				if (updatePrices) toUpdatePrice.push(r);
 			} else if (soldIds.has(r.id) && !includeSold) {
@@ -981,7 +1407,9 @@
 			mutate((s) => {
 				preview.toAdd.forEach((r) => s.cards.push({ ...r }));
 				preview.toUpdatePrice.forEach((r) => {
-					const card = s.cards.find((c) => c.id === r.id);
+					const card =
+						s.cards.find((c) => c.id === r.id) ||
+						s.cards.find((c) => cardSoftKey(c) === cardSoftKey(r));
 					if (card) card.price = r.price;
 				});
 				s.meta.lastImport = new Date().toISOString();
@@ -1239,6 +1667,7 @@
 	initTabs();
 	initSamlingEvents();
 	initCardDialog();
+	initFindCardDialog();
 	initSellDialog();
 	initSalgEvents();
 	initImportEvents();
