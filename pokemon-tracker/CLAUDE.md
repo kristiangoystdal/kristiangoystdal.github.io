@@ -234,6 +234,18 @@ confirm dialog. This is optional — the page works fully offline via
    (`openNewSaleDialogWithCards`, "Sett kostpris").
 5. Store price history on each import and show what changed since the last
    one.
+6. ~~Bulk-move several selected Samling cards to a different portfolio at
+   once.~~ Done ("Flytt portefølje", `bulkMoveDialog`/`bulkMoveForm` in
+   `app.js`). Since `pf` is part of `id` (`buildId`), moving recomputes each
+   card's `id`; if that collides with another card already in the target
+   portfolio, the two are merged via `mergeCardInto` (same qty-sum +
+   cost-average rule as CSV import/manual edit) instead of ending up as two
+   rows with the same id.
+7. ~~Delete a card from the collection outright, not just via a sale.~~ Done
+   — a per-row "Slett" button and a selection-bar "Slett valgte" button, both
+   behind `confirmDialog` since there's no undo. This only removes the
+   `cards[]` entry; it never touches `sales[]` (a sale's `items[]` is already
+   an independent snapshot, so past sales are unaffected either way).
 
 **Note:** `#sellDialog`/`openSellDialog`/`initSellDialog` (the original
 single-total "Selg" dialog) are no longer wired to any button — Samling's

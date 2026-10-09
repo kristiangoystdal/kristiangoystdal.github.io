@@ -996,6 +996,7 @@
 								<th>Lagt til</th>
 								<th></th>
 								<th></th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody id="collectionBody"></tbody>
@@ -1010,6 +1011,12 @@
 					<div class="selection-bar-actions">
 						<button type="button" class="btn secondary" id="bulkCostBtn">
 							Sett kostpris
+						</button>
+						<button type="button" class="btn secondary" id="bulkMoveBtn">
+							Flytt portefølje
+						</button>
+						<button type="button" class="btn secondary" id="bulkDeleteBtn">
+							Slett valgte
 						</button>
 						<button type="button" class="btn" id="sellSelectedBtn">
 							Selg valgte
@@ -1472,6 +1479,26 @@
 						Avbryt
 					</button>
 					<button type="submit" class="btn">Sett kostpris</button>
+				</div>
+			</form>
+		</dialog>
+
+		<!-- Flytt flere kort til en annen portefølje samtidig -->
+		<dialog id="bulkMoveDialog">
+			<h2>Flytt portefølje</h2>
+			<form id="bulkMoveForm">
+				<p class="muted dialog-intro" id="bulkMoveCount"></p>
+				<div class="dialog-field">
+					<label for="bulkMoveValue">Ny portefølje</label>
+					<input type="text" id="bulkMoveValue" list="bulkMovePfOptions" required />
+					<datalist id="bulkMovePfOptions"></datalist>
+				</div>
+				<div class="dialog-error" id="bulkMoveError"></div>
+				<div class="dialog-actions">
+					<button type="button" class="btn secondary" id="bulkMoveCancelBtn">
+						Avbryt
+					</button>
+					<button type="submit" class="btn">Flytt</button>
 				</div>
 			</form>
 		</dialog>

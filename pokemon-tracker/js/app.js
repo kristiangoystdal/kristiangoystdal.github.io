@@ -627,6 +627,7 @@
 				<td class="mono">${fmtDate(c.added)}</td>
 				<td><button type="button" class="btn-sm edit-row-btn" data-id="${escapeHTML(c.id)}">Rediger</button></td>
 				<td><button type="button" class="btn-sm sell-row-btn" data-id="${escapeHTML(c.id)}">Selg</button></td>
+				<td><button type="button" class="btn-sm delete-row-btn" data-id="${escapeHTML(c.id)}">Slett</button></td>
 			</tr>`;
 			})
 			.join("");
@@ -693,7 +694,7 @@
 			renderSamling();
 		});
 
-		document.getElementById("collectionBody").addEventListener("click", (e) => {
+		document.getElementById("collectionBody").addEventListener("click", async (e) => {
 			const sellBtn = e.target.closest(".sell-row-btn");
 			if (sellBtn) {
 				openNewSaleDialogWithCards([sellBtn.dataset.id]);
@@ -702,6 +703,21 @@
 			const editBtn = e.target.closest(".edit-row-btn");
 			if (editBtn) {
 				openCardDialog(editBtn.dataset.id);
+				return;
+			}
+			const deleteBtn = e.target.closest(".delete-row-btn");
+			if (deleteBtn) {
+				const id = deleteBtn.dataset.id;
+				const card = state.cards.find((c) => c.id === id);
+				const ok = await confirmDialog(
+					`Slette ${card ? card.name : "kortet"} fra samlingen? Dette kan ikke angres.`,
+				);
+				if (!ok) return;
+				selectedIds.delete(id);
+				mutate((s) => {
+					const idx = s.cards.findIndex((c) => c.id === id);
+					if (idx !== -1) s.cards.splice(idx, 1);
+				});
 				return;
 			}
 			const chk = e.target.closest(".row-chk");
@@ -720,6 +736,18 @@
 
 		document.getElementById("sellSelectedBtn").addEventListener("click", () => {
 			openNewSaleDialogWithCards([...selectedIds]);
+			selectedIds.clear();
+		});
+
+		document.getElementById("bulkDeleteBtn").addEventListener("click", async () => {
+			const ids = [...selectedIds];
+			const ok = await confirmDialog(
+				`Slette ${ids.length} valgte kort fra samlingen? Dette kan ikke angres.`,
+			);
+			if (!ok) return;
+			mutate((s) => {
+				s.cards = s.cards.filter((c) => !ids.includes(c.id));
+			});
 			selectedIds.clear();
 		});
 
@@ -750,6 +778,58 @@
 				});
 			});
 			document.getElementById("bulkCostDialog").close();
+		});
+
+		document.getElementById("bulkMoveBtn").addEventListener("click", () => {
+			document.getElementById("bulkMoveCount").textContent =
+				`Flytter ${selectedIds.size} valgte kort.`;
+			document.getElementById("bulkMoveValue").value = "";
+			document.getElementById("bulkMoveError").textContent = "";
+			document.getElementById("bulkMovePfOptions").innerHTML = [
+				...new Set(state.cards.map((c) => c.pf)),
+			]
+				.sort()
+				.map((pf) => `<option value="${escapeHTML(pf)}"></option>`)
+				.join("");
+			document.getElementById("bulkMoveDialog").showModal();
+		});
+		document.getElementById("bulkMoveCancelBtn").addEventListener("click", () => {
+			document.getElementById("bulkMoveDialog").close();
+		});
+		document.getElementById("bulkMoveForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			const newPf = document.getElementById("bulkMoveValue").value.trim();
+			if (!newPf) {
+				document.getElementById("bulkMoveError").textContent =
+					"Oppgi en portefølje.";
+				return;
+			}
+			const ids = [...selectedIds];
+			mutate((s) => {
+				ids.forEach((id) => {
+					const idx = s.cards.findIndex((c) => c.id === id);
+					if (idx === -1) return;
+					const card = s.cards[idx];
+					if (card.pf === newPf) return;
+					const newId = window.KB.csv.buildId(
+						newPf,
+						card.set,
+						card.name,
+						card.no,
+						card.variant,
+						card.cond,
+					);
+					const other = s.cards.find((c, i) => i !== idx && c.id === newId);
+					if (other) {
+						mergeCardInto(other, card);
+						s.cards.splice(idx, 1);
+					} else {
+						card.pf = newPf;
+						card.id = newId;
+					}
+				});
+			});
+			document.getElementById("bulkMoveDialog").close();
 		});
 	}
 
