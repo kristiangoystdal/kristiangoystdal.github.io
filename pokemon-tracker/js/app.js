@@ -236,18 +236,22 @@
 	}
 
 	// Revenue the items in a sale would have fetched at their market-price
-	// snapshot, instead of what they actually sold for. 0 for a manual
-	// no-card sale (nothing to compute from) — callers that mix this with an
-	// actual-profit total should only do so for sales where saleMarketRevenue
-	// would be meaningful, i.e. items.length > 0.
+	// snapshot. 0 for a manual no-card sale (nothing to compute from).
 	function saleMarketRevenue(s) {
 		return s.items.reduce((sum, i) => sum + (i.price || 0) * i.qty, 0);
+	}
+
+	// What was actually earned minus what market price alone would have
+	// given — "how much over market value did I get", not a cost-based
+	// profit. 0 for a manual no-card sale.
+	function saleOverMarket(s) {
+		return s.items.length ? s.price - saleMarketRevenue(s) : 0;
 	}
 
 	function salesTotals() {
 		let revenue = 0,
 			profit = 0,
-			marketProfit = 0,
+			overMarket = 0,
 			spent = 0,
 			cardsSold = 0,
 			excluded = 0,
@@ -259,15 +263,14 @@
 			}
 			revenue += s.price || 0;
 			cardsSold += s.items.reduce((sum, i) => sum + i.qty, 0);
+			if (s.items.length) overMarket += saleOverMarket(s);
 			if (s.cost != null) {
-				const shipping = s.shipping || 0;
-				profit += s.price - s.cost - shipping;
+				profit += s.price - s.cost - (s.shipping || 0);
 				spent += s.cost;
-				if (s.items.length) marketProfit += saleMarketRevenue(s) - s.cost - shipping;
 			} else excluded++;
 		});
 		const count = state.sales.length - draftCount;
-		return { revenue, profit, marketProfit, spent, cardsSold, excluded, draftCount, count };
+		return { revenue, profit, overMarket, spent, cardsSold, excluded, draftCount, count };
 	}
 
 	function portfolioBreakdown() {
@@ -292,24 +295,26 @@
 	// manual no-card sale has no market price to compare against), so its
 	// line can diverge from the actual one by more than "what was sold for
 	// less/more than market" — it also simply excludes those manual sales.
+	// Two independent series sharing a date axis: "actual" needs a known cost
+	// (so it's a real profit figure), "overMarket" only needs items (so a
+	// sale can count toward one, the other, both, or neither).
 	function buildProfitSeries() {
 		const byDate = new Map();
 		state.sales.forEach((s) => {
-			if (!isSoldSale(s) || s.cost == null) return;
-			const shipping = s.shipping || 0;
-			const entry = byDate.get(s.date) || { actual: 0, market: 0 };
-			entry.actual += s.price - s.cost - shipping;
-			if (s.items.length) entry.market += saleMarketRevenue(s) - s.cost - shipping;
+			if (!isSoldSale(s)) return;
+			const entry = byDate.get(s.date) || { actual: 0, overMarket: 0 };
+			if (s.cost != null) entry.actual += s.price - s.cost - (s.shipping || 0);
+			if (s.items.length) entry.overMarket += saleOverMarket(s);
 			byDate.set(s.date, entry);
 		});
 		const dates = [...byDate.keys()].sort((a, b) => new Date(a) - new Date(b));
 		let runActual = 0;
-		let runMarket = 0;
+		let runOverMarket = 0;
 		return dates.map((date) => {
 			const e = byDate.get(date);
 			runActual += e.actual;
-			runMarket += e.market;
-			return { date, actual: runActual, market: runMarket };
+			runOverMarket += e.overMarket;
+			return { date, actual: runActual, overMarket: runOverMarket };
 		});
 	}
 
@@ -322,7 +327,7 @@
 			return;
 		}
 
-		const allValues = series.flatMap((p) => [p.actual, p.market]);
+		const allValues = series.flatMap((p) => [p.actual, p.overMarket]);
 		const minV = Math.min(0, ...allValues);
 		const maxV = Math.max(0, ...allValues);
 		const span = maxV - minV || 1;
@@ -339,24 +344,24 @@
 		const actualColor = series[series.length - 1].actual >= 0 ? "var(--gain)" : "var(--loss)";
 		const marketColor = "var(--accent-2)";
 		const actualPoints = series.map((p, i) => `${xAt(i)},${yAt(p.actual)}`).join(" ");
-		const marketPoints = series.map((p, i) => `${xAt(i)},${yAt(p.market)}`).join(" ");
+		const marketPoints = series.map((p, i) => `${xAt(i)},${yAt(p.overMarket)}`).join(" ");
 		const areaPoints =
 			`${xAt(0)},${zeroY} ` + actualPoints + ` ${xAt(series.length - 1)},${zeroY}`;
 
 		profitChartPoints = series.map((p, i) => ({
 			x: xAt(i),
 			yActual: yAt(p.actual),
-			yMarket: yAt(p.market),
+			yMarket: yAt(p.overMarket),
 			date: p.date,
 			actual: p.actual,
-			market: p.market,
+			overMarket: p.overMarket,
 		}));
 		const last = profitChartPoints[profitChartPoints.length - 1];
 
 		wrap.innerHTML = `
 			<div class="chart-legend">
 				<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:${actualColor}"></span>Faktisk fortjeneste</span>
-				<span class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch-dashed" style="border-color:${marketColor}"></span>Ved markedsverdi</span>
+				<span class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch-dashed" style="border-color:${marketColor}"></span>Over markedspris</span>
 			</div>
 			<svg viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="none" id="profitSvg">
 				<line x1="${CHART_PAD.left}" y1="${zeroY}" x2="${CHART_W - CHART_PAD.right}" y2="${zeroY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" />
@@ -411,7 +416,7 @@
 			dotMarket.classList.remove("hidden");
 			const tooltip = document.getElementById("profitTooltip");
 			tooltip.textContent =
-				`${fmtDate(nearest.date)} — faktisk: ${fmtMoney0(nearest.actual)} · markedsverdi: ${fmtMoney0(nearest.market)}`;
+				`${fmtDate(nearest.date)} — faktisk: ${fmtMoney0(nearest.actual)} · over markedspris: ${fmtMoney0(nearest.overMarket)}`;
 			tooltip.classList.remove("hidden");
 			tooltip.style.left = `${(nearest.x / CHART_W) * rect.width}px`;
 			tooltip.style.top = `${(Math.min(nearest.yActual, nearest.yMarket) / CHART_H) * rect.height}px`;
@@ -455,9 +460,9 @@
 			? `${st.excluded} salg uten kjent kost er ikke med i fortjenesten.`
 			: "Alle salg har kjent kost.";
 
-		const marketProfitEl = document.getElementById("statMarketProfit");
-		marketProfitEl.textContent = fmtMoney0(st.marketProfit);
-		marketProfitEl.className = `stat-value ${gainClass(st.marketProfit)}`;
+		const overMarketEl = document.getElementById("statOverMarket");
+		overMarketEl.textContent = fmtMoney0(st.overMarket);
+		overMarketEl.className = `stat-value ${gainClass(st.overMarket)}`;
 
 		document.getElementById("statRevenue").textContent = fmtMoney0(st.revenue);
 		document.getElementById("statSalesCount").textContent = String(st.count);
