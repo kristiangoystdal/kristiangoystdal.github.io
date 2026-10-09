@@ -17,6 +17,7 @@
 	let collectionPageSize = 100;
 	let lastParsed = null; // { rows, meta } from the last CSV picked for import
 	let sellContext = null; // array of card ids currently in the sell dialog
+	let editingCardId = null; // card id being edited in the card dialog, or null when adding
 
 	// ---------- storage ----------
 
@@ -359,6 +360,7 @@
 				<td class="mono num">${fmtMoney2(cardValue(c))}</td>
 				<td class="mono num ${gainClass(profit)}">${fmtMoney2(profit)}</td>
 				<td class="mono">${fmtDate(c.added)}</td>
+				<td><button type="button" class="btn-sm edit-row-btn" data-id="${escapeHTML(c.id)}">Rediger</button></td>
 				<td><button type="button" class="btn-sm sell-row-btn" data-id="${escapeHTML(c.id)}">Selg</button></td>
 			</tr>`;
 			})
@@ -423,6 +425,11 @@
 			const sellBtn = e.target.closest(".sell-row-btn");
 			if (sellBtn) {
 				openSellDialog([sellBtn.dataset.id]);
+				return;
+			}
+			const editBtn = e.target.closest(".edit-row-btn");
+			if (editBtn) {
+				openCardDialog(editBtn.dataset.id);
 				return;
 			}
 			const chk = e.target.closest(".row-chk");
@@ -613,6 +620,106 @@
 				selectedIds.clear();
 				document.getElementById("sellDialog").close();
 			});
+	}
+
+	// ---------- Legg til / rediger kort ----------
+
+	function openCardDialog(cardId) {
+		editingCardId = cardId || null;
+		const card = editingCardId
+			? state.cards.find((c) => c.id === editingCardId)
+			: null;
+
+		document.getElementById("cardDialogTitle").textContent = card
+			? "Rediger kort"
+			: "Legg til kort";
+		document.getElementById("cardName").value = card ? card.name : "";
+		document.getElementById("cardSet").value = card ? card.set : "";
+		document.getElementById("cardNo").value = card ? card.no : "";
+		document.getElementById("cardRarity").value = card ? card.rarity || "" : "";
+		document.getElementById("cardVariant").value = card ? card.variant : "";
+		document.getElementById("cardCond").value = card ? card.cond : "";
+		document.getElementById("cardPf").value = card ? card.pf : "Main";
+		document.getElementById("cardQty").value = card ? card.qty : 1;
+		document.getElementById("cardCost").value =
+			card && card.cost != null ? card.cost : "";
+		document.getElementById("cardPrice").value = card ? card.price : "";
+		document.getElementById("cardAdded").value = card ? card.added : todayLocalISO();
+		document.getElementById("cardError").textContent = "";
+		document.getElementById("cardDialog").showModal();
+	}
+
+	// Sums qty and takes a quantity-weighted average of cost, same rule as CSV import merges.
+	function mergeCardInto(target, extra) {
+		const totalQty = target.qty + extra.qty;
+		const targetCost = target.cost == null ? 0 : target.cost;
+		const extraCost = extra.cost == null ? 0 : extra.cost;
+		target.cost =
+			target.cost == null && extra.cost == null
+				? null
+				: (targetCost * target.qty + extraCost * extra.qty) / totalQty;
+		target.qty = totalQty;
+		target.price = extra.price;
+	}
+
+	function initCardDialog() {
+		document.getElementById("addCardBtn").addEventListener("click", () => {
+			openCardDialog(null);
+		});
+		document.getElementById("cardCancelBtn").addEventListener("click", () => {
+			document.getElementById("cardDialog").close();
+		});
+
+		document.getElementById("cardDialogForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			const name = document.getElementById("cardName").value.trim();
+			const set_ = document.getElementById("cardSet").value.trim();
+			const no = document.getElementById("cardNo").value.trim();
+			const rarity = document.getElementById("cardRarity").value.trim();
+			const variant = document.getElementById("cardVariant").value.trim();
+			const cond = document.getElementById("cardCond").value.trim();
+			const pf = document.getElementById("cardPf").value.trim();
+			const qty = parseInt(document.getElementById("cardQty").value, 10);
+			const costRaw = document.getElementById("cardCost").value.trim();
+			const cost = costRaw === "" ? null : parseFloat(costRaw.replace(",", "."));
+			const priceRaw = document.getElementById("cardPrice").value.trim();
+			const price = parseFloat(priceRaw.replace(",", "."));
+			const added = document.getElementById("cardAdded").value || todayLocalISO();
+
+			if (!name || isNaN(qty) || qty < 1 || isNaN(price) || price < 0) {
+				document.getElementById("cardError").textContent =
+					"Oppgi navn, et gyldig antall og en gyldig verdi.";
+				return;
+			}
+
+			const id = window.KB.csv.buildId(pf, set_, name, no, variant, cond);
+			const newData = { id, pf, set: set_, name, no, rarity, variant, cond, qty, cost, price, added };
+
+			mutate((s) => {
+				if (editingCardId) {
+					const idx = s.cards.findIndex((c) => c.id === editingCardId);
+					if (idx === -1) return;
+					if (id !== editingCardId) {
+						const other = s.cards.find((c) => c.id === id);
+						if (other) {
+							mergeCardInto(other, newData);
+							s.cards.splice(idx, 1);
+						} else {
+							s.cards[idx] = newData;
+						}
+					} else {
+						s.cards[idx] = newData;
+					}
+				} else {
+					const existing = s.cards.find((c) => c.id === id);
+					if (existing) mergeCardInto(existing, newData);
+					else s.cards.push(newData);
+				}
+			});
+
+			editingCardId = null;
+			document.getElementById("cardDialog").close();
+		});
 	}
 
 	// ---------- render: Salg ----------
@@ -1131,6 +1238,7 @@
 
 	initTabs();
 	initSamlingEvents();
+	initCardDialog();
 	initSellDialog();
 	initSalgEvents();
 	initImportEvents();

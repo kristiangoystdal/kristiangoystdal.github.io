@@ -680,6 +680,9 @@
 						<option value="tap">Størst tap</option>
 						<option value="navn">Navn</option>
 					</select>
+					<button type="button" class="btn secondary" id="addCardBtn">
+						Legg til kort
+					</button>
 				</div>
 				<div class="collection-summary" id="collectionSummary"></div>
 				<div class="table-scroll">
@@ -695,6 +698,7 @@
 								<th>Verdi</th>
 								<th>Profitt</th>
 								<th>Lagt til</th>
+								<th></th>
 								<th></th>
 							</tr>
 						</thead>
@@ -814,6 +818,68 @@
 				</div>
 			</section>
 		</main>
+
+		<!-- Legg til / rediger kort -->
+		<dialog id="cardDialog">
+			<h2 id="cardDialogTitle">Legg til kort</h2>
+			<form id="cardDialogForm">
+				<div class="dialog-field">
+					<label for="cardName">Navn</label>
+					<input type="text" id="cardName" required />
+				</div>
+				<div class="dialog-field">
+					<label for="cardSet">Sett</label>
+					<input type="text" id="cardSet" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardNo">Kortnummer</label>
+					<input type="text" id="cardNo" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardRarity">Rarity (valgfritt)</label>
+					<input type="text" id="cardRarity" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardVariant">Variant</label>
+					<input
+						type="text"
+						id="cardVariant"
+						placeholder="Normal, Holofoil, Reverse Holofoil …"
+					/>
+				</div>
+				<div class="dialog-field">
+					<label for="cardCond">Tilstand</label>
+					<input type="text" id="cardCond" placeholder="Near Mint …" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardPf">Portefølje</label>
+					<input type="text" id="cardPf" value="Main" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardQty">Antall</label>
+					<input type="number" id="cardQty" min="1" step="1" value="1" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardCost">Kostpris per kort (valgfritt, kr)</label>
+					<input type="number" id="cardCost" min="0" step="0.01" />
+				</div>
+				<div class="dialog-field">
+					<label for="cardPrice">Verdi per kort (kr)</label>
+					<input type="number" id="cardPrice" min="0" step="0.01" required />
+				</div>
+				<div class="dialog-field">
+					<label for="cardAdded">Lagt til</label>
+					<input type="date" id="cardAdded" />
+				</div>
+				<div class="dialog-error" id="cardError"></div>
+				<div class="dialog-actions">
+					<button type="button" class="btn secondary" id="cardCancelBtn">
+						Avbryt
+					</button>
+					<button type="submit" class="btn">Lagre kort</button>
+				</div>
+			</form>
+		</dialog>
 
 		<!-- Selg-dialog -->
 		<dialog id="sellDialog">
