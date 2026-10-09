@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="no">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Pokémon Bulk-pakker</title>
+		<meta name="robots" content="noindex, nofollow" />
+		<link
+			rel="icon"
+			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128176;</text></svg>"
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #101317;
+				--panel: #171b21;
+				--panel-2: #1d2229;
+				--border: #2a303a;
+				--text: #e9edf2;
+				--muted: #8b95a3;
+				--accent: #3ba55d;
+				--accent-2: #3b6ceb;
+				--warn: #ffb020;
+				--danger: #e3350d;
+				--radius: 10px;
+			}
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+			}
+			body {
+				min-height: 100%;
+				padding-bottom: 60px;
+			}
+			h1,
+			h2,
+			h3 {
+				font-family: "Fraunces", Georgia, serif;
+				font-weight: 600;
+			}
+
+			header {
+				position: sticky;
+				top: 0;
+				z-index: 10;
+				background: rgba(16, 19, 23, 0.94);
+				-webkit-backdrop-filter: blur(8px);
+				backdrop-filter: blur(8px);
+				border-bottom: 1px solid var(--border);
+				padding: 20px clamp(14px, 4vw, 40px) 16px;
+			}
+			h1 {
+				font-size: clamp(20px, 3.2vw, 27px);
+				letter-spacing: 0.2px;
+			}
+			h1 span {
+				color: var(--accent);
+			}
+			.subtitle {
+				color: var(--muted);
+				font-size: 13.5px;
+				margin-top: 4px;
+			}
+			.privacy-note {
+				color: var(--muted);
+				font-size: 12px;
+				margin-top: 8px;
+				border-left: 2px solid var(--border);
+				padding-left: 8px;
+			}
+
+			main {
+				padding: 24px clamp(14px, 4vw, 40px);
+				max-width: 1300px;
+				margin: 0 auto;
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+			}
+
+			.panel {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				padding: 18px 20px;
+			}
+			.panel h2 {
+				font-size: 16px;
+				margin-bottom: 4px;
+			}
+			.panel .hint {
+				color: var(--muted);
+				font-size: 12.5px;
+				margin-bottom: 14px;
+			}
+
+			.row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px;
+				align-items: flex-end;
+			}
+			.field {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+			}
+			.field label {
+				font-size: 12px;
+				color: var(--muted);
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.03em;
+			}
+			.field input,
+			.field select {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 9px 11px;
+				color: var(--text);
+				font-size: 14px;
+				font-family: inherit;
+				width: 140px;
+			}
+			.field input:focus,
+			.field select:focus {
+				outline: 2px solid var(--accent-2);
+				outline-offset: -1px;
+			}
+			.field.wide input {
+				width: 220px;
+			}
+
+			button {
+				font-family: inherit;
+				cursor: pointer;
+				border-radius: 8px;
+				border: 1px solid var(--border);
+				background: var(--panel-2);
+				color: var(--text);
+				padding: 9px 16px;
+				font-size: 14px;
+				font-weight: 600;
+			}
+			button:hover {
+				border-color: var(--accent-2);
+			}
+			button.primary {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #0c130f;
+			}
+			button.primary:hover {
+				filter: brightness(1.08);
+			}
+			button.secondary {
+				border-color: var(--accent-2);
+				color: var(--accent-2);
+				background: transparent;
+			}
+			button.secondary:hover {
+				background: var(--accent-2);
+				color: #fff;
+			}
+			button.ghost {
+				background: transparent;
+				border-color: var(--border);
+				color: var(--muted);
+			}
+			button:disabled {
+				opacity: 0.45;
+				cursor: not-allowed;
+			}
+			button.danger-ghost {
+				background: transparent;
+				border-color: var(--border);
+				color: var(--muted);
+				font-weight: 500;
+				padding: 5px 10px;
+				font-size: 12.5px;
+			}
+			button.danger-ghost:hover {
+				color: var(--danger);
+				border-color: var(--danger);
+			}
+
+			#csvFileInput {
+				display: none;
+			}
+
+			.import-status {
+				margin-top: 12px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+			.import-status.ok {
+				color: var(--accent);
+			}
+			.import-status.err {
+				color: var(--danger);
+			}
+
+			.inventory-summary {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				margin-top: 14px;
+			}
+			.inv-chip {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 8px 14px;
+				font-size: 13px;
+				display: flex;
+				gap: 8px;
+				align-items: baseline;
+			}
+			.inv-chip .n {
+				font-family: "Fraunces", serif;
+				font-size: 17px;
+				font-weight: 600;
+				color: var(--text);
+			}
+			.inv-chip .l {
+				color: var(--muted);
+			}
+			.inv-chip.holo .n {
+				color: var(--warn);
+			}
+			.inv-chip.energy .n {
+				color: var(--accent-2);
+			}
+			.inv-chip.vanlig .n {
+				color: var(--text);
+			}
+			.inv-chip.trainer .n {
+				color: #c77dff;
+			}
+
+			.manual-form {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px;
+				align-items: flex-end;
+			}
+
+			.results-header {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 14px;
+			}
+			.results-stats {
+				display: flex;
+				gap: 18px;
+				flex-wrap: wrap;
+				font-size: 13px;
+				color: var(--muted);
+			}
+			.results-stats b {
+				color: var(--text);
+				font-variant-numeric: tabular-nums;
+			}
+			.export-actions {
+				display: flex;
+				gap: 8px;
+			}
+
+			.table-scroll {
+				overflow-x: auto;
+				border: 1px solid var(--border);
+				border-radius: 8px;
+			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+				min-width: 820px;
+				font-size: 13.5px;
+			}
+			thead th {
+				text-align: left;
+				background: var(--panel-2);
+				color: var(--muted);
+				font-size: 11.5px;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+				font-weight: 700;
+				padding: 10px 14px;
+				border-bottom: 1px solid var(--border);
+				white-space: nowrap;
+			}
+			tbody td {
+				padding: 10px 14px;
+				border-bottom: 1px solid var(--border);
+				vertical-align: top;
+			}
+			tbody tr:last-child td {
+				border-bottom: none;
+			}
+			tbody tr:hover {
+				background: var(--panel-2);
+			}
+			td.num {
+				font-variant-numeric: tabular-nums;
+				white-space: nowrap;
+				text-align: right;
+			}
+			td.profit-pos {
+				color: var(--accent);
+			}
+			td.profit-neg {
+				color: var(--danger);
+			}
+			.composition {
+				max-width: 420px;
+				line-height: 1.5;
+			}
+			.composition .cat-label {
+				color: var(--muted);
+				font-size: 11.5px;
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.03em;
+			}
+			.composition .cat-line {
+				margin-bottom: 3px;
+			}
+			.pack-badge {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-width: 24px;
+				height: 24px;
+				padding: 0 6px;
+				border-radius: 6px;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				font-weight: 700;
+				font-size: 12.5px;
+			}
+			.pack-badge.manual {
+				border-color: var(--warn);
+				color: var(--warn);
+			}
+			.status-select {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 6px 8px;
+				color: var(--text);
+				font-size: 12.5px;
+				font-family: inherit;
+			}
+			.status-select[data-status="Klar"] {
+				border-color: var(--accent-2);
+				color: var(--accent-2);
+			}
+			.status-select[data-status="Solgt"] {
+				border-color: var(--accent);
+				color: var(--accent);
+			}
+
+			.empty-state {
+				color: var(--muted);
+				text-align: center;
+				padding: 40px 0;
+				font-size: 14px;
+			}
+
+			.hidden {
+				display: none !important;
+			}
+
+			.manual-list {
+				margin-top: 12px;
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+			}
+			.manual-list-item {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				font-size: 13px;
+				color: var(--muted);
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 6px 10px;
+			}
+			.manual-list-item b {
+				color: var(--text);
+			}
+
+			@media (max-width: 640px) {
+				.field input,
+				.field select {
+					width: 100%;
+				}
+				.row {
+					gap: 10px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Pokémon <span>Bulk-pakker</span></h1>
+			<div class="subtitle">
+				Internt planleggingsverktøy for å sette sammen og prise
+				bulk-salgspakker fra en Collectr-eksport.
+			</div>
+			<div class="privacy-note">
+				Alt kjøres i nettleseren din. Ingenting lastes opp eller lagres noe
+				sted — lukker du fanen er dataene borte.
+			</div>
+		</header>
+
+		<main>
+			<section class="panel">
+				<h2>1. Last opp Collectr-eksport</h2>
+				<div class="hint">
+					Forventer kolonner som "Product Name", "Variance", "Average Cost
+					Paid", "Quantity" og en "Market Price…"-kolonne. Kort som ikke
+					matcher en Pokémon-art (hentet fra PokeAPI) regnes som
+					Trainer/support.
+				</div>
+				<div class="row">
+					<button type="button" class="primary" id="importBtn" disabled>
+						📥 Velg CSV-fil
+					</button>
+					<input type="file" id="csvFileInput" accept=".csv" />
+					<button type="button" class="ghost" id="clearCsvBtn" disabled>
+						Fjern data
+					</button>
+				</div>
+				<div class="import-status" id="importStatus"></div>
+				<div class="inventory-summary" id="inventorySummary"></div>
+			</section>
+
+			<section class="panel">
+				<h2>2. Legg til enkeltkort</h2>
+				<div class="hint">
+					Legg til kort manuelt — f.eks. kort du ikke har i Collectr-eksporten,
+					eller kort som ikke kostet deg noe.
+				</div>
+				<div class="manual-form">
+					<div class="field wide">
+						<label for="cardName">Kortnavn</label>
+						<input type="text" id="cardName" placeholder="F.eks. «Pikachu»" />
+					</div>
+					<div class="field">
+						<label for="cardCategory">Kategori</label>
+						<select id="cardCategory">
+							<option value="vanlig">Vanlig</option>
+							<option value="holo">Holo</option>
+							<option value="trainer">Trainer/support</option>
+							<option value="energy">Energi</option>
+						</select>
+					</div>
+					<div class="field">
+						<label for="cardCost">Kostbasis (kr)</label>
+						<input type="number" id="cardCost" min="0" step="0.01" value="0" />
+					</div>
+					<div class="field">
+						<label for="cardQty">Antall</label>
+						<input type="number" id="cardQty" min="1" value="1" />
+					</div>
+					<button type="button" class="secondary" id="addCardBtn">
+						➕ Legg til kort
+					</button>
+				</div>
+			</section>
+
+			<section class="panel">
+				<h2>3. Pakkeoppsett</h2>
+				<div class="hint">
+					Velg salgsmodus: sett sammen pakker, eller selg hvert kort enkeltvis
+					for en fast pris.
+				</div>
+				<div class="row">
+					<div class="field">
+						<label for="saleMode">Salgsmodus</label>
+						<select id="saleMode">
+							<option value="packs">Pakker</option>
+							<option value="single">Enkeltkort</option>
+						</select>
+					</div>
+				</div>
+				<div class="row" id="packCountFields">
+					<div class="field">
+						<label for="holoCount">Holo per pakke</label>
+						<input type="number" id="holoCount" min="0" value="1" />
+					</div>
+					<div class="field">
+						<label for="energyCount">Energi per pakke</label>
+						<input type="number" id="energyCount" min="0" value="1" />
+					</div>
+					<div class="field">
+						<label for="vanligCount">Vanlige per pakke</label>
+						<input type="number" id="vanligCount" min="0" value="8" />
+					</div>
+					<div class="field">
+						<label for="trainerCount">Trainer/support per pakke</label>
+						<input type="number" id="trainerCount" min="0" value="1" />
+					</div>
+				</div>
+				<div class="row">
+					<div class="field">
+						<label for="salePrice" id="salePriceLabel">Salgspris (kr)</label>
+						<input type="number" id="salePrice" min="0" step="1" value="100" />
+					</div>
+					<button type="button" class="primary" id="generateBtn" disabled>
+						⚙️ Generer pakker
+					</button>
+				</div>
+			</section>
+
+			<section class="panel">
+				<h2>4. Manuelle pakker</h2>
+				<div class="hint">
+					Legg til fysiske pakker du har utenom Collectr-samlingen.
+				</div>
+				<div class="manual-form">
+					<div class="field wide">
+						<label for="manualName">Navn / beskrivelse</label>
+						<input
+							type="text"
+							id="manualName"
+							placeholder="F.eks. «Diverse bulk boks A»"
+						/>
+					</div>
+					<div class="field">
+						<label for="manualCost">Kostbasis (kr)</label>
+						<input type="number" id="manualCost" min="0" step="1" value="0" />
+					</div>
+					<div class="field">
+						<label for="manualQty">Antall pakker</label>
+						<input type="number" id="manualQty" min="1" value="1" />
+					</div>
+					<button type="button" class="secondary" id="addManualBtn">
+						➕ Legg til
+					</button>
+				</div>
+				<div class="manual-list" id="manualList"></div>
+			</section>
+
+			<section class="panel" id="resultsPanel">
+				<div class="results-header">
+					<div>
+						<h2>Resultat</h2>
+						<div class="hint" style="margin-bottom: 0">
+							Pakkeliste med kostnad, markedsverdi og profitt.
+						</div>
+					</div>
+					<div class="results-stats" id="resultsStats"></div>
+					<div class="export-actions">
+						<button type="button" class="ghost" id="exportCsvBtn" disabled>
+							⬇ CSV
+						</button>
+						<button type="button" class="ghost" id="exportJsonBtn" disabled>
+							⬇ JSON
+						</button>
+					</div>
+				</div>
+				<div class="table-scroll">
+					<table id="resultsTable">
+						<thead>
+							<tr>
+								<th id="packColHeader">Pakke</th>
+								<th>Sammensetning</th>
+								<th>Kostbasis</th>
+								<th>Markedsverdi</th>
+								<th>Profitt</th>
+								<th>Status</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody id="resultsBody"></tbody>
+					</table>
+				</div>
+				<div class="empty-state" id="emptyState">
+					Ingen pakker ennå. Last opp en CSV og trykk «Generer pakker», eller
+					legg til en manuell pakke.
+				</div>
+			</section>
+		</main>
+
+		<script>
+			// --- State ---
+			let categorized = { holo: [], energy: [], vanlig: [], trainer: [] };
+			let generatedPacks = []; // { cards: [{name,cost,market,category}], costBasis, marketValue, status, type:'generated' }
+			let manualPacks = []; // { name, costBasis, status, type:'manual' }
+			let csvLoaded = false;
+
+			const STATUS_OPTIONS = ["Ikke laget", "Klar", "Solgt"];
+			const NON_ENERGY_WORDS = /\b(coin|recycler|retrieval|sticker|capsule)\b/i;
+
+			// --- Pokémon species index (used to tell Pokémon cards apart from Trainer/support cards) ---
+			let pokemonNameIndex = [];
+			let pokedexReady = false;
+
+			function normalizeCardName(raw) {
+				return raw
+					.toLowerCase()
+					.replace(/['’]/g, "")
+					.replace(/[^a-z0-9]+/g, " ")
+					.trim();
+			}
+
+			async function loadPokedexNames() {
+				const res = await fetch("https://pokeapi.co/api/v2/pokedex/national/");
+				if (!res.ok) throw new Error("Failed to fetch national pokedex");
+				const data = await res.json();
+				pokemonNameIndex = data.pokemon_entries
+					.map((e) => e.pokemon_species.name.replace(/-/g, " "))
+					.sort((a, b) => b.length - a.length);
+				pokedexReady = true;
+			}
+
+			function isPokemonCard(rawName) {
+				const norm = normalizeCardName(rawName);
+				if (!norm) return false;
+				return pokemonNameIndex.some((species) =>
+					new RegExp(`\\b${species.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(
+						norm,
+					),
+				);
+			}
+
+			// --- CSV parsing (RFC4180-ish, handles quoted fields) ---
+			function parseCSV(text) {
+				const rows = [];
+				let row = [];
+				let field = "";
+				let inQuotes = false;
+				for (let i = 0; i < text.length; i++) {
+					const c = text[i];
+					if (inQuotes) {
+						if (c === '"') {
+							if (text[i + 1] === '"') {
+								field += '"';
+								i++;
+							} else {
+								inQuotes = false;
+							}
+						} else {
+							field += c;
+						}
+					} else if (c === '"') {
+						inQuotes = true;
+					} else if (c === ",") {
+						row.push(field);
+						field = "";
+					} else if (c === "\n" || c === "\r") {
+						if (c === "\r" && text[i + 1] === "\n") i++;
+						row.push(field);
+						field = "";
+						if (row.length > 1 || row[0] !== "") rows.push(row);
+						row = [];
+					} else {
+						field += c;
+					}
+				}
+				if (field !== "" || row.length) {
+					row.push(field);
+					rows.push(row);
+				}
+				return rows;
+			}
+
+			function findColumnExact(headers, candidates) {
+				const lower = headers.map((h) => h.trim().toLowerCase());
+				for (const cand of candidates) {
+					const idx = lower.indexOf(cand);
+					if (idx !== -1) return idx;
+				}
+				return -1;
+			}
+
+			function findColumnStartsWith(headers, prefix) {
+				const lower = headers.map((h) => h.trim().toLowerCase());
+				return lower.findIndex((h) => h.startsWith(prefix));
+			}
+
+			function parseMoney(raw) {
+				if (raw == null) return 0;
+				let s = String(raw).trim();
+				if (!s) return 0;
+				const negative = /^-/.test(s) || /^\(.*\)$/.test(s);
+				s = s.replace(/[^0-9.,]/g, "");
+				if (!s) return 0;
+
+				const lastComma = s.lastIndexOf(",");
+				const lastDot = s.lastIndexOf(".");
+				if (lastComma !== -1 && lastDot !== -1) {
+					// Both separators present — the rightmost one is the decimal mark.
+					if (lastComma > lastDot) {
+						s = s.replace(/\./g, "").replace(",", ".");
+					} else {
+						s = s.replace(/,/g, "");
+					}
+				} else if (lastComma !== -1) {
+					// Only comma: decimal separator if 1-2 digits follow, otherwise thousands.
+					const decimals = s.length - lastComma - 1;
+					s =
+						decimals === 1 || decimals === 2
+							? s.replace(",", ".")
+							: s.replace(/,/g, "");
+				}
+				// Only dot, or no separators: parseFloat already handles it correctly.
+
+				const n = parseFloat(s);
+				if (isNaN(n)) return 0;
+				return negative ? -Math.abs(n) : n;
+			}
+
+			function categorizeCard(name, variance) {
+				const trimmed = name.trim();
+				const isEnergy =
+					/Energy$/.test(trimmed) &&
+					!trimmed.includes("(") &&
+					!NON_ENERGY_WORDS.test(trimmed);
+				if (isEnergy) return "energy";
+				if (!isPokemonCard(trimmed)) return "trainer";
+				const v = (variance || "").trim().toLowerCase();
+				if (v === "normal" || v === "") return "vanlig";
+				return "holo";
+			}
+
+			function formatKr(n) {
+				return (
+					n.toLocaleString("nb-NO", {
+						minimumFractionDigits: 2,
+						maximumFractionDigits: 2,
+					}) + " kr"
+				);
+			}
+
+			// --- CSV import ---
+			const importStatusEl = document.getElementById("importStatus");
+			function setImportStatus(msg, type) {
+				importStatusEl.textContent = msg;
+				importStatusEl.className = `import-status ${type || ""}`.trim();
+			}
+
+			function importCsv(text) {
+				if (!pokedexReady) {
+					setImportStatus(
+						"Pokémon-artsdata lastes fortsatt — prøv igjen om et øyeblikk.",
+						"err",
+					);
+					return;
+				}
+				const rows = parseCSV(text).filter((r) =>
+					r.some((c) => c.trim() !== ""),
+				);
+				if (rows.length < 2) {
+					setImportStatus("Filen ser tom ut.", "err");
+					return;
+				}
+				const headers = rows[0];
+				const dataRows = rows.slice(1);
+
+				const nameIdx = findColumnExact(headers, ["product name"]);
+				const varianceIdx = findColumnExact(headers, ["variance"]);
+				const costIdx = findColumnExact(headers, ["average cost paid"]);
+				const qtyIdx = findColumnExact(headers, ["quantity"]);
+				const marketIdx = findColumnStartsWith(headers, "market price");
+
+				if (nameIdx === -1) {
+					setImportStatus(
+						'Fant ikke kolonnen "Product Name" i denne CSV-en.',
+						"err",
+					);
+					return;
+				}
+
+				categorized = { holo: [], energy: [], vanlig: [], trainer: [] };
+				let rowCount = 0;
+				let skippedNoName = 0;
+				let skippedZeroQty = 0;
+
+				dataRows.forEach((row) => {
+					const rawName = (row[nameIdx] || "").trim();
+					if (!rawName) {
+						skippedNoName++;
+						return;
+					}
+					const qty = qtyIdx !== -1 ? parseInt(row[qtyIdx], 10) || 0 : 1;
+					if (qty <= 0) {
+						skippedZeroQty++;
+						return;
+					}
+					const cost = costIdx !== -1 ? parseMoney(row[costIdx]) : 0;
+					const market = marketIdx !== -1 ? parseMoney(row[marketIdx]) : 0;
+					const variance = varianceIdx !== -1 ? row[varianceIdx] : "";
+					const category = categorizeCard(rawName, variance);
+
+					for (let i = 0; i < qty; i++) {
+						categorized[category].push({
+							name: rawName,
+							cost,
+							market,
+							category,
+						});
+					}
+					rowCount++;
+				});
+
+				csvLoaded = true;
+				document.getElementById("clearCsvBtn").disabled = false;
+				updateGenerateAvailability();
+				renderInventorySummary();
+
+				const parts = [`${rowCount} kortlinjer lest`];
+				if (skippedNoName) parts.push(`${skippedNoName} uten navn hoppet over`);
+				if (skippedZeroQty)
+					parts.push(`${skippedZeroQty} med 0 i antall hoppet over`);
+				setImportStatus(`Import ferdig: ${parts.join(", ")}.`, "ok");
+			}
+
+			function renderInventorySummary() {
+				const el = document.getElementById("inventorySummary");
+				el.innerHTML = "";
+				const defs = [
+					{ key: "holo", label: "Holo", cls: "holo" },
+					{ key: "energy", label: "Energi", cls: "energy" },
+					{ key: "vanlig", label: "Vanlige", cls: "vanlig" },
+					{ key: "trainer", label: "Trainer/support", cls: "trainer" },
+				];
+				defs.forEach((d) => {
+					const chip = document.createElement("div");
+					chip.className = `inv-chip ${d.cls}`;
+					chip.innerHTML = `<span class="n">${categorized[d.key].length}</span><span class="l">${d.label}</span>`;
+					el.appendChild(chip);
+				});
+			}
+
+			function updateGenerateAvailability() {
+				const total =
+					categorized.holo.length +
+					categorized.energy.length +
+					categorized.vanlig.length +
+					categorized.trainer.length;
+				document.getElementById("generateBtn").disabled = total === 0;
+			}
+
+			document.getElementById("addCardBtn").addEventListener("click", () => {
+				const name = document.getElementById("cardName").value.trim();
+				const category = document.getElementById("cardCategory").value;
+				const cost = parseFloat(document.getElementById("cardCost").value) || 0;
+				const qty = Math.max(
+					1,
+					parseInt(document.getElementById("cardQty").value, 10) || 1,
+				);
+				if (!name) {
+					document.getElementById("cardName").focus();
+					return;
+				}
+				for (let i = 0; i < qty; i++) {
+					categorized[category].push({ name, cost, market: 0, category });
+				}
+				document.getElementById("cardName").value = "";
+				document.getElementById("cardCost").value = "0";
+				document.getElementById("cardQty").value = "1";
+				renderInventorySummary();
+				updateGenerateAvailability();
+				setImportStatus(
+					`La til ${qty} kort («${name}») i kategorien ${category}.`,
+					"ok",
+				);
+			});
+
+			const saleModeSelect = document.getElementById("saleMode");
+			function applySaleModeUI() {
+				const single = saleModeSelect.value === "single";
+				document.getElementById("packCountFields").classList.toggle(
+					"hidden",
+					single,
+				);
+				document.getElementById("salePriceLabel").textContent = single
+					? "Salgspris per kort (kr)"
+					: "Salgspris per pakke (kr)";
+				document.getElementById("generateBtn").textContent = single
+					? "⚙️ List alle kort"
+					: "⚙️ Generer pakker";
+				document.getElementById("packColHeader").textContent = single
+					? "Kort"
+					: "Pakke";
+			}
+			saleModeSelect.addEventListener("change", applySaleModeUI);
+			applySaleModeUI();
+
+			document.getElementById("importBtn").addEventListener("click", () => {
+				document.getElementById("csvFileInput").click();
+			});
+			document
+				.getElementById("csvFileInput")
+				.addEventListener("change", async (e) => {
+					const file = e.target.files[0];
+					if (!file) return;
+					try {
+						const text = await file.text();
+						importCsv(text);
+					} catch (err) {
+						console.error(err);
+						setImportStatus(`Kunne ikke lese filen: ${err.message}`, "err");
+					}
+					e.target.value = "";
+				});
+			document.getElementById("clearCsvBtn").addEventListener("click", () => {
+				categorized = { holo: [], energy: [], vanlig: [], trainer: [] };
+				csvLoaded = false;
+				document.getElementById("clearCsvBtn").disabled = true;
+				updateGenerateAvailability();
+				document.getElementById("inventorySummary").innerHTML = "";
+				setImportStatus("Data fjernet.", "");
+				generatedPacks = [];
+				renderResults();
+			});
+
+			// --- Pack generation ---
+			function generatePacks() {
+				const holoPerPack = Math.max(
+					0,
+					parseInt(document.getElementById("holoCount").value, 10) || 0,
+				);
+				const energyPerPack = Math.max(
+					0,
+					parseInt(document.getElementById("energyCount").value, 10) || 0,
+				);
+				const vanligPerPack = Math.max(
+					0,
+					parseInt(document.getElementById("vanligCount").value, 10) || 0,
+				);
+				const trainerPerPack = Math.max(
+					0,
+					parseInt(document.getElementById("trainerCount").value, 10) || 0,
+				);
+
+				const perPack = {
+					holo: holoPerPack,
+					energy: energyPerPack,
+					vanlig: vanligPerPack,
+					trainer: trainerPerPack,
+				};
+				const categories = ["holo", "energy", "vanlig", "trainer"];
+
+				const activeCategories = categories.filter((c) => perPack[c] > 0);
+				if (!activeCategories.length) {
+					setImportStatus(
+						"Sett minst ett kort per pakke for holo, energi eller vanlige.",
+						"err",
+					);
+					return;
+				}
+
+				let packCount = Infinity;
+				activeCategories.forEach((c) => {
+					packCount = Math.min(
+						packCount,
+						Math.floor(categorized[c].length / perPack[c]),
+					);
+				});
+				if (!isFinite(packCount) || packCount <= 0) {
+					generatedPacks = [];
+					renderResults();
+					setImportStatus(
+						"Ikke nok kort til å lage noen komplette pakker med dette oppsettet.",
+						"err",
+					);
+					return;
+				}
+
+				const packs = Array.from({ length: packCount }, () => ({
+					cards: [],
+					names: new Set(),
+					counts: { holo: 0, energy: 0, vanlig: 0, trainer: 0 },
+					costBasis: 0,
+					marketValue: 0,
+					status: "Ikke laget",
+					type: "generated",
+				}));
+
+				categories.forEach((cat) => {
+					if (perPack[cat] <= 0) return;
+					const sorted = [...categorized[cat]].sort(
+						(a, b) => b.market - a.market,
+					);
+					sorted.forEach((card) => {
+						const eligible = packs.filter(
+							(p) => p.counts[cat] < perPack[cat] && !p.names.has(card.name),
+						);
+						if (!eligible.length) return; // leftover, unused
+						eligible.sort((a, b) => a.marketValue - b.marketValue);
+						const target = eligible[0];
+						target.cards.push(card);
+						target.names.add(card.name);
+						target.counts[cat]++;
+						target.costBasis += card.cost;
+						target.marketValue += card.market;
+					});
+				});
+
+				generatedPacks = packs;
+				renderResults();
+				setImportStatus(`${packCount} pakke(r) generert.`, "ok");
+			}
+
+			// --- Single-card listing (sell every card individually, ignoring pack setup) ---
+			function generateSingleCardListing() {
+				const allCards = [
+					...categorized.holo,
+					...categorized.energy,
+					...categorized.vanlig,
+					...categorized.trainer,
+				];
+				if (!allCards.length) {
+					generatedPacks = [];
+					renderResults();
+					setImportStatus("Ingen kort å liste. Importer en CSV eller legg til kort.", "err");
+					return;
+				}
+
+				generatedPacks = allCards.map((card) => ({
+					cards: [card],
+					names: new Set([card.name]),
+					counts: { holo: 0, energy: 0, vanlig: 0, trainer: 0 },
+					costBasis: card.cost,
+					marketValue: card.market,
+					status: "Ikke laget",
+					type: "generated",
+				}));
+				renderResults();
+				setImportStatus(`${allCards.length} kort listet enkeltvis.`, "ok");
+			}
+
+			document.getElementById("generateBtn").addEventListener("click", () => {
+				if (saleModeSelect.value === "single") generateSingleCardListing();
+				else generatePacks();
+			});
+
+			// --- Manual packs ---
+			function renderManualList() {
+				const el = document.getElementById("manualList");
+				el.innerHTML = "";
+				manualPacks.forEach((p, i) => {
+					const row = document.createElement("div");
+					row.className = "manual-list-item";
+					row.innerHTML = `<b>${escapeHtml(p.name)}</b><span>— ${formatKr(p.costBasis)}</span>`;
+					const removeBtn = document.createElement("button");
+					removeBtn.className = "danger-ghost";
+					removeBtn.type = "button";
+					removeBtn.textContent = "Fjern";
+					removeBtn.addEventListener("click", () => {
+						manualPacks.splice(i, 1);
+						renderManualList();
+						renderResults();
+					});
+					row.appendChild(removeBtn);
+					el.appendChild(row);
+				});
+			}
+
+			document.getElementById("addManualBtn").addEventListener("click", () => {
+				const name = document.getElementById("manualName").value.trim();
+				const cost =
+					parseFloat(document.getElementById("manualCost").value) || 0;
+				const qty = Math.max(
+					1,
+					parseInt(document.getElementById("manualQty").value, 10) || 1,
+				);
+				if (!name) {
+					document.getElementById("manualName").focus();
+					return;
+				}
+				for (let i = 0; i < qty; i++) {
+					manualPacks.push({
+						name,
+						costBasis: cost,
+						marketValue: null,
+						status: "Ikke laget",
+						type: "manual",
+					});
+				}
+				document.getElementById("manualName").value = "";
+				document.getElementById("manualCost").value = "0";
+				document.getElementById("manualQty").value = "1";
+				renderManualList();
+				renderResults();
+			});
+
+			function escapeHtml(str) {
+				return String(str).replace(
+					/[<>&"]/g,
+					(c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c],
+				);
+			}
+
+			// --- Results table ---
+			function allPacks() {
+				return [...generatedPacks, ...manualPacks];
+			}
+
+			function compositionHtml(pack) {
+				if (pack.type === "manual") {
+					return `<span class="cat-line">${escapeHtml(pack.name)}</span>`;
+				}
+				const labels = {
+					holo: "Holo",
+					energy: "Energi",
+					vanlig: "Vanlig",
+					trainer: "Trainer/support",
+				};
+				const lines = [];
+				["holo", "energy", "vanlig", "trainer"].forEach((cat) => {
+					const names = pack.cards
+						.filter((c) => c.category === cat)
+						.map((c) => c.name);
+					if (!names.length) return;
+					lines.push(
+						`<div class="cat-line"><span class="cat-label">${labels[cat]}:</span> ${names.map(escapeHtml).join(", ")}</div>`,
+					);
+				});
+				return lines.join("");
+			}
+
+			function renderResults() {
+				const tbody = document.getElementById("resultsBody");
+				const emptyState = document.getElementById("emptyState");
+				const packs = allPacks();
+				const salePrice =
+					parseFloat(document.getElementById("salePrice").value) || 0;
+
+				tbody.innerHTML = "";
+
+				if (!packs.length) {
+					document.getElementById("resultsTable").style.display = "none";
+					emptyState.style.display = "block";
+					document.getElementById("exportCsvBtn").disabled = true;
+					document.getElementById("exportJsonBtn").disabled = true;
+					document.getElementById("resultsStats").textContent = "";
+					return;
+				}
+
+				document.getElementById("resultsTable").style.display = "table";
+				emptyState.style.display = "none";
+				document.getElementById("exportCsvBtn").disabled = false;
+				document.getElementById("exportJsonBtn").disabled = false;
+
+				let totalCost = 0;
+				let totalMarket = 0;
+				let totalProfit = 0;
+
+				packs.forEach((pack, i) => {
+					const profit = salePrice - pack.costBasis;
+					totalCost += pack.costBasis;
+					if (pack.marketValue != null) totalMarket += pack.marketValue;
+					totalProfit += profit;
+
+					const tr = document.createElement("tr");
+					const badgeCls = pack.type === "manual" ? "pack-badge manual" : "pack-badge";
+
+					const tdNum = document.createElement("td");
+					tdNum.innerHTML = `<span class="${badgeCls}">${i + 1}</span>`;
+					tr.appendChild(tdNum);
+
+					const tdComp = document.createElement("td");
+					tdComp.className = "composition";
+					tdComp.innerHTML = compositionHtml(pack);
+					tr.appendChild(tdComp);
+
+					const tdCost = document.createElement("td");
+					tdCost.className = "num";
+					tdCost.textContent = formatKr(pack.costBasis);
+					tr.appendChild(tdCost);
+
+					const tdMarket = document.createElement("td");
+					tdMarket.className = "num";
+					tdMarket.textContent =
+						pack.marketValue != null ? formatKr(pack.marketValue) : "—";
+					tr.appendChild(tdMarket);
+
+					const tdProfit = document.createElement("td");
+					tdProfit.className = `num ${profit >= 0 ? "profit-pos" : "profit-neg"}`;
+					tdProfit.textContent = formatKr(profit);
+					tr.appendChild(tdProfit);
+
+					const tdStatus = document.createElement("td");
+					const select = document.createElement("select");
+					select.className = "status-select";
+					select.dataset.status = pack.status;
+					STATUS_OPTIONS.forEach((opt) => {
+						const o = document.createElement("option");
+						o.value = opt;
+						o.textContent = opt;
+						if (opt === pack.status) o.selected = true;
+						select.appendChild(o);
+					});
+					select.addEventListener("change", () => {
+						pack.status = select.value;
+						select.dataset.status = select.value;
+					});
+					tdStatus.appendChild(select);
+					tr.appendChild(tdStatus);
+
+					const tdActions = document.createElement("td");
+					if (pack.type === "manual") {
+						const removeBtn = document.createElement("button");
+						removeBtn.className = "danger-ghost";
+						removeBtn.type = "button";
+						removeBtn.textContent = "Fjern";
+						removeBtn.addEventListener("click", () => {
+							const idx = manualPacks.indexOf(pack);
+							if (idx !== -1) manualPacks.splice(idx, 1);
+							renderManualList();
+							renderResults();
+						});
+						tdActions.appendChild(removeBtn);
+					}
+					tr.appendChild(tdActions);
+
+					tbody.appendChild(tr);
+				});
+
+				document.getElementById("resultsStats").innerHTML =
+					`<span>${packs.length} pakker</span>` +
+					`<span>Kostbasis: <b>${formatKr(totalCost)}</b></span>` +
+					`<span>Markedsverdi: <b>${formatKr(totalMarket)}</b></span>` +
+					`<span>Profitt: <b>${formatKr(totalProfit)}</b></span>`;
+			}
+
+			document.getElementById("salePrice").addEventListener("input", renderResults);
+
+			// --- Export ---
+			function downloadFile(filename, content, mime) {
+				const blob = new Blob([content], { type: mime });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement("a");
+				a.href = url;
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				URL.revokeObjectURL(url);
+			}
+
+			function csvEscape(v) {
+				const s = String(v ?? "");
+				if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+				return s;
+			}
+
+			function packComposition(pack) {
+				if (pack.type === "manual") return pack.name;
+				return ["holo", "energy", "vanlig", "trainer"]
+					.flatMap((cat) => pack.cards.filter((c) => c.category === cat).map((c) => c.name))
+					.join(" | ");
+			}
+
+			document.getElementById("exportCsvBtn").addEventListener("click", () => {
+				const salePrice =
+					parseFloat(document.getElementById("salePrice").value) || 0;
+				const packs = allPacks();
+				const header = [
+					"Pakke",
+					"Type",
+					"Sammensetning",
+					"Kostbasis",
+					"Markedsverdi",
+					"Profitt",
+					"Status",
+				];
+				const lines = [header.map(csvEscape).join(",")];
+				packs.forEach((pack, i) => {
+					lines.push(
+						[
+							i + 1,
+							pack.type === "manual" ? "Manuell" : "Generert",
+							packComposition(pack),
+							pack.costBasis.toFixed(2),
+							pack.marketValue != null ? pack.marketValue.toFixed(2) : "",
+							(salePrice - pack.costBasis).toFixed(2),
+							pack.status,
+						]
+							.map(csvEscape)
+							.join(","),
+					);
+				});
+				downloadFile(
+					"pokemon-bulk-pakker.csv",
+					lines.join("\n"),
+					"text/csv;charset=utf-8",
+				);
+			});
+
+			document.getElementById("exportJsonBtn").addEventListener("click", () => {
+				const salePrice =
+					parseFloat(document.getElementById("salePrice").value) || 0;
+				const packs = allPacks().map((pack, i) => ({
+					pakke: i + 1,
+					type: pack.type,
+					sammensetning:
+						pack.type === "manual"
+							? pack.name
+							: pack.cards.map((c) => ({ navn: c.name, kategori: c.category, kost: c.cost, markedsverdi: c.market })),
+					kostbasis: pack.costBasis,
+					markedsverdi: pack.marketValue,
+					profitt: salePrice - pack.costBasis,
+					status: pack.status,
+				}));
+				downloadFile(
+					"pokemon-bulk-pakker.json",
+					JSON.stringify({ salgspris: salePrice, pakker: packs }, null, 2),
+					"application/json",
+				);
+			});
+
+			renderResults();
+
+			(async function initPokedex() {
+				setImportStatus("Laster Pokémon-artsdata fra PokeAPI…", "");
+				try {
+					await loadPokedexNames();
+					document.getElementById("importBtn").disabled = false;
+					setImportStatus(
+						"Klar. Velg en CSV-fil for å komme i gang.",
+						"ok",
+					);
+				} catch (err) {
+					console.error(err);
+					setImportStatus(
+						`Kunne ikke laste Pokémon-artsdata (${err.message}). Last siden på nytt for å prøve igjen.`,
+						"err",
+					);
+				}
+			})();
+		</script>
+	</body>
+</html>

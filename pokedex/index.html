@@ -581,9 +581,7 @@
 					id="search"
 					placeholder="Search by name or number… (Enter marks an exact match)"
 				/>
-				<button class="toggle-btn" id="missingToggle">
-					Show missing only
-				</button>
+				<button class="toggle-btn" id="missingToggle">Show missing only</button>
 				<button class="reset-btn" id="resetBtn">Reset progress</button>
 				<button class="sync-btn" id="syncToggleBtn">☁️ Cloud sync</button>
 				<select
@@ -594,7 +592,9 @@
 					<option value="en">Import as 🇬🇧 English</option>
 					<option value="jp">Import as 🇯🇵 Japanese</option>
 				</select>
-				<button class="import-btn" id="importBtn">📥 Import Collectr CSV</button>
+				<button class="import-btn" id="importBtn">
+					📥 Import Collectr CSV
+				</button>
 				<input type="file" id="csvFileInput" accept=".csv" hidden />
 			</div>
 			<div class="import-status-row">
@@ -635,8 +635,12 @@
 				<div class="sync-actions">
 					<button type="button" id="saveTokenBtn">Save settings</button>
 					<button type="button" id="pushBtn">Push progress to Gist</button>
-					<button type="button" id="pullBtn" class="secondary">Pull progress from Gist</button>
-					<button type="button" id="forgetBtn" class="secondary">Forget token</button>
+					<button type="button" id="pullBtn" class="secondary">
+						Pull progress from Gist
+					</button>
+					<button type="button" id="forgetBtn" class="secondary">
+						Forget token
+					</button>
 				</div>
 				<div class="sync-status" id="syncStatus"></div>
 			</div>
@@ -715,7 +719,10 @@
 				if (cached) {
 					try {
 						const parsed = JSON.parse(cached);
-						if (Date.now() - parsed.time < CACHE_TTL && parsed.entries?.length) {
+						if (
+							Date.now() - parsed.time < CACHE_TTL &&
+							parsed.entries?.length
+						) {
 							return parsed.entries;
 						}
 					} catch {}
@@ -908,7 +915,17 @@
 			}
 
 			function toRoman(n) {
-				const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+				const numerals = [
+					"I",
+					"II",
+					"III",
+					"IV",
+					"V",
+					"VI",
+					"VII",
+					"VIII",
+					"IX",
+				];
 				return numerals[n - 1] || String(n);
 			}
 
@@ -1042,7 +1059,7 @@
 
 				if (nameIdx === -1) {
 					setImportStatus(
-						"Couldn't find a name column in that CSV (expected something like \"Product Name\").",
+						'Couldn\'t find a name column in that CSV (expected something like "Product Name").',
 						"err",
 					);
 					return;
@@ -1233,14 +1250,16 @@
 				searchInput.focus();
 			});
 
-			document.getElementById("missingToggle").addEventListener("click", (e) => {
-				missingOnly = !missingOnly;
-				e.currentTarget.classList.toggle("active", missingOnly);
-				e.currentTarget.textContent = missingOnly
-					? "Show all"
-					: "Show missing only";
-				applyFilters();
-			});
+			document
+				.getElementById("missingToggle")
+				.addEventListener("click", (e) => {
+					missingOnly = !missingOnly;
+					e.currentTarget.classList.toggle("active", missingOnly);
+					e.currentTarget.textContent = missingOnly
+						? "Show all"
+						: "Show missing only";
+					applyFilters();
+				});
 			document.getElementById("resetBtn").addEventListener("click", () => {
 				const label = activeLang === "en" ? "English" : "Japanese";
 				if (
@@ -1391,7 +1410,9 @@
 			}
 
 			document.getElementById("pushBtn").addEventListener("click", pushToGist);
-			document.getElementById("pullBtn").addEventListener("click", pullFromGist);
+			document
+				.getElementById("pullBtn")
+				.addEventListener("click", pullFromGist);
 
 			(async function init() {
 				try {
