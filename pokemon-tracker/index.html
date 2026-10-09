@@ -310,6 +310,27 @@
 				font-size: 12px;
 			}
 
+			.chart-wrap {
+				position: relative;
+			}
+			.chart-wrap svg {
+				display: block;
+				width: 100%;
+				height: 200px;
+			}
+			.chart-tooltip {
+				position: absolute;
+				pointer-events: none;
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 5px 9px;
+				font-size: 12px;
+				white-space: nowrap;
+				transform: translate(-50%, -115%);
+				font-variant-numeric: tabular-nums;
+			}
+
 			/* Samling */
 			.collection-controls {
 				display: flex;
@@ -396,6 +417,12 @@
 				align-items: center;
 				justify-content: space-between;
 				gap: 12px;
+				flex-wrap: wrap;
+			}
+			.selection-bar-actions {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
 			}
 
 			/* Salg */
@@ -519,6 +546,9 @@
 			dialog h2 {
 				font-size: 17px;
 				margin-bottom: 14px;
+			}
+			.dialog-intro {
+				margin-bottom: 12px;
 			}
 			.dialog-field {
 				display: flex;
@@ -879,6 +909,12 @@
 						</div>
 					</div>
 
+					<div class="section-title">Fortjeneste over tid</div>
+					<div class="panel chart-wrap" id="profitChartWrap">
+						<div id="profitChart"></div>
+						<div class="chart-tooltip hidden" id="profitTooltip"></div>
+					</div>
+
 					<div class="section-title">Verdi per portefølje</div>
 					<div class="panel" id="portfolioBars"></div>
 
@@ -939,9 +975,14 @@
 
 				<div class="selection-bar hidden" id="selectionBar">
 					<span id="selectionSummary"></span>
-					<button type="button" class="btn" id="sellSelectedBtn">
-						Selg valgte
-					</button>
+					<div class="selection-bar-actions">
+						<button type="button" class="btn secondary" id="bulkCostBtn">
+							Sett kostpris
+						</button>
+						<button type="button" class="btn" id="sellSelectedBtn">
+							Selg valgte
+						</button>
+					</div>
 				</div>
 			</section>
 
@@ -1366,6 +1407,25 @@
 						Avbryt
 					</button>
 					<button type="submit" class="btn">Lagre salg</button>
+				</div>
+			</form>
+		</dialog>
+
+		<!-- Sett kostpris på flere kort samtidig -->
+		<dialog id="bulkCostDialog">
+			<h2>Sett kostpris</h2>
+			<form id="bulkCostForm">
+				<p class="muted dialog-intro" id="bulkCostCount"></p>
+				<div class="dialog-field">
+					<label for="bulkCostValue">Kostpris per kort (kr)</label>
+					<input type="number" id="bulkCostValue" min="0" step="0.01" required />
+				</div>
+				<div class="dialog-error" id="bulkCostError"></div>
+				<div class="dialog-actions">
+					<button type="button" class="btn secondary" id="bulkCostCancelBtn">
+						Avbryt
+					</button>
+					<button type="submit" class="btn">Sett kostpris</button>
 				</div>
 			</form>
 		</dialog>

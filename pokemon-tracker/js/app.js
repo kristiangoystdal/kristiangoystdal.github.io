@@ -266,6 +266,122 @@
 		return [...map.entries()].sort((a, b) => b[1] - a[1]);
 	}
 
+	// ---------- "Fortjeneste over tid" chart ----------
+
+	const CHART_W = 600;
+	const CHART_H = 200;
+	const CHART_PAD = { left: 56, right: 12, top: 14, bottom: 26 };
+	let profitChartPoints = []; // [{x, y, date, cumulative}] in SVG coordinate space, for hover lookup
+
+	// One point per sale date with a known-cost sold sale; a day with several
+	// such sales is folded into one step, same "by sale date" grouping as the
+	// backlog asked for.
+	function buildProfitSeries() {
+		const byDate = new Map();
+		state.sales.forEach((s) => {
+			if (!isSoldSale(s) || s.cost == null) return;
+			const profit = s.price - s.cost - (s.shipping || 0);
+			byDate.set(s.date, (byDate.get(s.date) || 0) + profit);
+		});
+		const dates = [...byDate.keys()].sort((a, b) => new Date(a) - new Date(b));
+		let running = 0;
+		return dates.map((date) => {
+			running += byDate.get(date);
+			return { date, cumulative: running };
+		});
+	}
+
+	function renderProfitChart() {
+		const wrap = document.getElementById("profitChart");
+		const series = buildProfitSeries();
+		profitChartPoints = [];
+		if (series.length < 2) {
+			wrap.innerHTML = `<p class="muted">Ikke nok salg med kjent kost til å vise en graf enda.</p>`;
+			return;
+		}
+
+		const values = series.map((p) => p.cumulative);
+		const minV = Math.min(0, ...values);
+		const maxV = Math.max(0, ...values);
+		const span = maxV - minV || 1;
+		const domainMin = minV - span * 0.1;
+		const domainMax = maxV + span * 0.1;
+
+		const innerW = CHART_W - CHART_PAD.left - CHART_PAD.right;
+		const innerH = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
+		const xAt = (i) => CHART_PAD.left + (i / (series.length - 1)) * innerW;
+		const yAt = (v) =>
+			CHART_PAD.top + innerH - ((v - domainMin) / (domainMax - domainMin)) * innerH;
+
+		const zeroY = yAt(0);
+		const lineColor = series[series.length - 1].cumulative >= 0 ? "var(--gain)" : "var(--loss)";
+		const linePoints = series.map((p, i) => `${xAt(i)},${yAt(p.cumulative)}`).join(" ");
+		const areaPoints =
+			`${xAt(0)},${zeroY} ` +
+			series.map((p, i) => `${xAt(i)},${yAt(p.cumulative)}`).join(" ") +
+			` ${xAt(series.length - 1)},${zeroY}`;
+
+		profitChartPoints = series.map((p, i) => ({
+			x: xAt(i),
+			y: yAt(p.cumulative),
+			date: p.date,
+			cumulative: p.cumulative,
+		}));
+		const last = profitChartPoints[profitChartPoints.length - 1];
+
+		wrap.innerHTML = `
+			<svg viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="none" id="profitSvg">
+				<line x1="${CHART_PAD.left}" y1="${zeroY}" x2="${CHART_W - CHART_PAD.right}" y2="${zeroY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" />
+				<text x="${CHART_PAD.left - 8}" y="${zeroY + 4}" text-anchor="end" font-size="10" fill="var(--muted)">0 kr</text>
+				<polygon points="${areaPoints}" fill="${lineColor}" opacity="0.12" />
+				<polyline points="${linePoints}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+				<circle cx="${last.x}" cy="${last.y}" r="4" fill="${lineColor}" />
+				<line id="profitCrosshair" x1="${last.x}" y1="${CHART_PAD.top}" x2="${last.x}" y2="${CHART_H - CHART_PAD.bottom}" stroke="var(--muted)" stroke-width="1" class="hidden" />
+				<circle id="profitHoverDot" cx="${last.x}" cy="${last.y}" r="4" fill="${lineColor}" class="hidden" />
+				<text x="${CHART_PAD.left}" y="${CHART_H - 6}" font-size="10" fill="var(--muted)">${fmtDate(series[0].date)}</text>
+				<text x="${CHART_W - CHART_PAD.right}" y="${CHART_H - 6}" text-anchor="end" font-size="10" fill="var(--muted)">${fmtDate(series[series.length - 1].date)}</text>
+			</svg>
+		`;
+	}
+
+	function initProfitChartHover() {
+		const container = document.getElementById("profitChartWrap");
+		function hide() {
+			document.getElementById("profitCrosshair")?.classList.add("hidden");
+			document.getElementById("profitHoverDot")?.classList.add("hidden");
+			document.getElementById("profitTooltip")?.classList.add("hidden");
+		}
+		container.addEventListener("mousemove", (e) => {
+			const svg = document.getElementById("profitSvg");
+			if (!svg || profitChartPoints.length < 2) return;
+			const rect = svg.getBoundingClientRect();
+			const mouseX = ((e.clientX - rect.left) / rect.width) * CHART_W;
+			let nearest = profitChartPoints[0];
+			let bestDist = Infinity;
+			profitChartPoints.forEach((p) => {
+				const d = Math.abs(p.x - mouseX);
+				if (d < bestDist) {
+					bestDist = d;
+					nearest = p;
+				}
+			});
+			const crosshair = document.getElementById("profitCrosshair");
+			const dot = document.getElementById("profitHoverDot");
+			crosshair.setAttribute("x1", nearest.x);
+			crosshair.setAttribute("x2", nearest.x);
+			crosshair.classList.remove("hidden");
+			dot.setAttribute("cx", nearest.x);
+			dot.setAttribute("cy", nearest.y);
+			dot.classList.remove("hidden");
+			const tooltip = document.getElementById("profitTooltip");
+			tooltip.textContent = `${fmtDate(nearest.date)}: ${fmtMoney0(nearest.cumulative)}`;
+			tooltip.classList.remove("hidden");
+			tooltip.style.left = `${(nearest.x / CHART_W) * rect.width}px`;
+			tooltip.style.top = `${(nearest.y / CHART_H) * rect.height}px`;
+		});
+		container.addEventListener("mouseleave", hide);
+	}
+
 	// ---------- tabs ----------
 
 	function initTabs() {
@@ -333,6 +449,8 @@
 		document.getElementById("statPriceDate").textContent = state.meta.priceDate
 			? fmtDate(state.meta.priceDate)
 			: "–";
+
+		renderProfitChart();
 
 		const breakdown = portfolioBreakdown();
 		const maxVal = Math.max(1, ...breakdown.map((b) => b[1]));
@@ -525,7 +643,7 @@
 		document.getElementById("collectionBody").addEventListener("click", (e) => {
 			const sellBtn = e.target.closest(".sell-row-btn");
 			if (sellBtn) {
-				openSellDialog([sellBtn.dataset.id]);
+				openNewSaleDialogWithCards([sellBtn.dataset.id]);
 				return;
 			}
 			const editBtn = e.target.closest(".edit-row-btn");
@@ -548,7 +666,37 @@
 		});
 
 		document.getElementById("sellSelectedBtn").addEventListener("click", () => {
-			openSellDialog([...selectedIds]);
+			openNewSaleDialogWithCards([...selectedIds]);
+			selectedIds.clear();
+		});
+
+		document.getElementById("bulkCostBtn").addEventListener("click", () => {
+			document.getElementById("bulkCostCount").textContent =
+				`Setter kostpris på ${selectedIds.size} valgte kort.`;
+			document.getElementById("bulkCostValue").value = "";
+			document.getElementById("bulkCostError").textContent = "";
+			document.getElementById("bulkCostDialog").showModal();
+		});
+		document.getElementById("bulkCostCancelBtn").addEventListener("click", () => {
+			document.getElementById("bulkCostDialog").close();
+		});
+		document.getElementById("bulkCostForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			const raw = document.getElementById("bulkCostValue").value.trim();
+			const value = round2(parseFloat(raw.replace(",", ".")));
+			if (raw === "" || isNaN(value) || value < 0) {
+				document.getElementById("bulkCostError").textContent =
+					"Oppgi en gyldig kostpris.";
+				return;
+			}
+			const ids = [...selectedIds];
+			mutate((s) => {
+				ids.forEach((id) => {
+					const card = s.cards.find((c) => c.id === id);
+					if (card) card.cost = value;
+				});
+			});
+			document.getElementById("bulkCostDialog").close();
 		});
 	}
 
@@ -1627,6 +1775,13 @@
 		document.getElementById("newSaleDialog").showModal();
 	}
 
+	// Opens a fresh "Nytt salg" dialog with the given collection cards already
+	// added as rows — what Samling's "Selg"/"Selg valgte" buttons use.
+	function openNewSaleDialogWithCards(cardIds) {
+		openNewSaleDialog(null);
+		cardIds.forEach((id) => addCollectionCardToSale(id));
+	}
+
 	function distributeSaleTotal() {
 		const raw = document.getElementById("distributeTotal").value.trim();
 		const target = parseFloat(raw.replace(",", "."));
@@ -2380,6 +2535,7 @@
 	);
 
 	initTabs();
+	initProfitChartHover();
 	initSamlingEvents();
 	initCardDialog();
 	initFindCardDialog();
