@@ -2219,6 +2219,12 @@
 	function computeImportPreview(parsed) {
 		const updatePrices = document.getElementById("updatePricesChk").checked;
 		const includeSold = document.getElementById("includeSoldChk").checked;
+		const addAsNewRow = document.getElementById("addAsNewRowChk").checked;
+		const costOverrideRaw = document.getElementById("importCostInput").value;
+		const costOverride =
+			costOverrideRaw.trim() === ""
+				? null
+				: window.KB.csv.parseNumber(costOverrideRaw);
 		const existingIds = new Set(state.cards.map((c) => c.id));
 		// A card already in the collection under a different set spelling (e.g.
 		// added by hand via TCGdex search) still counts as "already have it".
@@ -2227,7 +2233,11 @@
 			state.sales.flatMap((s) => s.items.map((i) => i.id)),
 		);
 
+		const withCost = (r) =>
+			costOverride == null ? r : { ...r, cost: costOverride };
+
 		const toAdd = [];
+		const toAddAsNew = [];
 		const toUpdatePrice = [];
 		let existingCount = 0;
 		let skippedSold = 0;
@@ -2235,17 +2245,22 @@
 		parsed.rows.forEach((r) => {
 			if (existingIds.has(r.id) || existingSoftKeys.has(cardSoftKey(r))) {
 				existingCount++;
-				if (updatePrices) toUpdatePrice.push(r);
+				if (addAsNewRow) {
+					toAddAsNew.push(withCost(r));
+				} else if (updatePrices) {
+					toUpdatePrice.push(r);
+				}
 			} else if (soldIds.has(r.id) && !includeSold) {
 				skippedSold++;
 			} else {
-				toAdd.push(r);
+				toAdd.push(withCost(r));
 			}
 		});
 
 		return {
 			fileCount: parsed.rows.length,
 			toAdd,
+			toAddAsNew,
 			toUpdatePrice,
 			existingCount,
 			skippedSold,
@@ -2264,12 +2279,14 @@
 		document.getElementById("csvPreviewText").innerHTML = `
 			<p>${preview.fileCount} kort i filen.</p>
 			<p>${preview.toAdd.length} nye kort legges til.</p>
-			<p>${preview.existingCount} kort finnes allerede${preview.toUpdatePrice.length ? ` (${preview.toUpdatePrice.length} får ny pris)` : ""}.</p>
+			<p>${preview.existingCount} kort finnes allerede${preview.toAddAsNew.length ? ` (${preview.toAddAsNew.length} legges til som egen rad)` : preview.toUpdatePrice.length ? ` (${preview.toUpdatePrice.length} får ny pris)` : ""}.</p>
 			<p>${preview.skippedSold} kort hoppet over (solgt tidligere).</p>
 		`;
 		document.getElementById("importBtn").classList.toggle(
 			"hidden",
-			preview.toAdd.length === 0 && preview.toUpdatePrice.length === 0,
+			preview.toAdd.length === 0 &&
+				preview.toAddAsNew.length === 0 &&
+				preview.toUpdatePrice.length === 0,
 		);
 	}
 
@@ -2323,12 +2340,27 @@
 
 		document.getElementById("updatePricesChk").addEventListener("change", renderImportPreview);
 		document.getElementById("includeSoldChk").addEventListener("change", renderImportPreview);
+		document.getElementById("addAsNewRowChk").addEventListener("change", renderImportPreview);
+		document.getElementById("importCostInput").addEventListener("input", renderImportPreview);
 
 		document.getElementById("importBtn").addEventListener("click", () => {
 			if (!lastParsed) return;
 			const preview = computeImportPreview(lastParsed);
 			mutate((s) => {
 				preview.toAdd.forEach((r) => s.cards.push({ ...r }));
+				// Existing cards re-imported as a new row get a disambiguated id so
+				// edit/sell/select (all keyed on card.id) still target the right row.
+				const usedIds = new Set(s.cards.map((c) => c.id));
+				preview.toAddAsNew.forEach((r) => {
+					let id = r.id;
+					let n = 2;
+					while (usedIds.has(id)) {
+						id = `${r.id}#${n}`;
+						n++;
+					}
+					usedIds.add(id);
+					s.cards.push({ ...r, id });
+				});
 				preview.toUpdatePrice.forEach((r) => {
 					const card =
 						s.cards.find((c) => c.id === r.id) ||
@@ -2339,7 +2371,8 @@
 				if (lastParsed.meta.priceDate) s.meta.priceDate = lastParsed.meta.priceDate;
 			});
 			const resultBox = document.getElementById("importResult");
-			resultBox.textContent = `Importert: ${preview.toAdd.length} nye, ${preview.toUpdatePrice.length} priser oppdatert.`;
+			const added = preview.toAdd.length + preview.toAddAsNew.length;
+			resultBox.textContent = `Importert: ${added} nye, ${preview.toUpdatePrice.length} priser oppdatert.`;
 			resultBox.className = "import-status ok";
 			lastParsed = null;
 			renderImportPreview();

@@ -76,11 +76,26 @@ correctly (see Import semantics / Nytt salg sections).
 ## Import semantics
 
 Default import only adds cards whose `id` isn't already in `cards[]`.
-Two checkboxes change that:
+Checkboxes change that:
 - "Oppdater pris" — also updates `price` on cards that already exist.
 - "Ta også med solgte" — cards whose `id` appears in any `sales[].items` are
   normally skipped (so re-importing a stale export doesn't resurrect sold
   cards); this checkbox includes them as new again.
+- "Legg ... som egen rad" — cards that already exist are pushed as a brand
+  new, separate `cards[]` entry instead of being skipped/price-updated (lets
+  you track a second purchase batch of the same card with its own cost,
+  rather than it being averaged into the existing row via `mergeCardInto`).
+  Takes priority over "Oppdater pris" for the rows it matches. Since `id` is
+  relied on as a unique key everywhere (edit/sell/select all do
+  `cards.find(c => c.id === x)`), the new row's id is disambiguated with a
+  `#2`, `#3`, ... suffix at import time (`computeImportPreview`/the
+  `importBtn` handler in `app.js`) when it would otherwise collide.
+
+A text input ("Kostpris for alle") optionally overrides `cost` on every row
+about to be newly added (both plain new cards and "egen rad" rows) to one
+typed value, ignoring whatever "Average Cost Paid" the CSV had. Only affects
+rows being pushed as new entries — never touches `toUpdatePrice`, which only
+ever changes `price` on an existing row.
 
 ## TCGdex search-and-add ("Legg til kort")
 
