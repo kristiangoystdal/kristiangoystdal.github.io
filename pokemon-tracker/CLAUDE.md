@@ -28,10 +28,15 @@ Stored as one JSON document in `localStorage["kortbok.v1"]`:
 ```
 {
   cards: [{ id, pf, set, name, no, rarity, variant, cond, qty, cost, price, added }],
-  sales: [{ id, date, title, platform, note, price, cost, items: [...] }],
+  sales: [{ id, date, title, platform, note, price, cost, shipping, items: [...] }],
   meta: { lastImport, lastBackup, priceDate }
 }
 ```
+
+`sale.shipping` (NOK, optional) and each sale item's `soldPrice`/`fromCollection`/
+`removeFromCollection` (see below) are additive fields from the "Nytt salg"
+feature — absent on sales created before it, which still render and undo
+correctly (see Import semantics / Nytt salg sections).
 
 - `id` = `[pf, set, name, no, variant, cond]` lower-cased, joined by `|`.
   Rarity and grade are intentionally excluded from the id.
@@ -53,10 +58,18 @@ Stored as one JSON document in `localStorage["kortbok.v1"]`:
 ## Definitions
 
 - Card profit = `(price - cost) * qty`, treating a `null` cost as 0.
-- "Tjent så langt" (profit so far) = sum of `(price - cost)` over sales where
-  `cost != null`. Sales with unknown cost count toward revenue but not
-  profit; the UI reports how many were excluded.
+- "Tjent så langt" (profit so far) = sum of `(price - cost - (shipping||0))`
+  over sales where `cost != null`. Sales with unknown cost count toward
+  revenue but not profit; the UI reports how many were excluded.
 - "Ikke realisert" (unrealized) = collection value − collection cost.
+- "Brukt vs. tjent" (Oversikt) = sum of `cost` over sales with known cost,
+  vs. sum of `price` (revenue) over *all* sales — a coarser, always-available
+  comparison than the shipping-aware profit above.
+- Per sale item (Nytt salg): line sum = `soldPrice * qty`; line profit =
+  `(soldPrice - cost) * qty` (null if `cost` is null); multiplier = `soldPrice
+  / price` (null if `price` is 0 or null) — "price" here means the one-time
+  market-price snapshot, same field CSV import and TCGdex add already use,
+  not a separate field.
 
 ## Import semantics
 
@@ -101,6 +114,63 @@ CSV import rows are never touched by this feature or its pricing — a card's
 `price` only changes via CSV import's "Oppdater pris" checkbox, manual edit,
 or at creation time here.
 
+## Nytt salg ("Salg" tab)
+
+`openNewSaleDialog`/`initNewSaleDialog` in `app.js`. A third, independent
+entry point into creating a sale — the simpler "Selg" (from Samling) and
+"Legg til salg uten kort" flows are unchanged. This one supports a single
+sale mixing cards already in the collection with cards that are *not* (and
+never get added to it).
+
+One search box drives two parallel, independently rendered result lists:
+`searchCollectionForSale` (synchronous substring match over `state.cards`)
+and `KB.tcgdex.searchCards` (same debounce/abort pattern as the TCGdex
+add-card dialog, `splitNameAndNumber` doing the same trailing-number-token
+split). Both can show a match for the same physical card — the user always
+picks which "Legg til" to click, nothing is auto-deduped between the two
+groups.
+
+Each added card becomes a draft row (`newSaleItems`, dialog-local, not
+persisted until submit) with independently editable `qty`, `cost`,
+`price` (the market-price snapshot — fetched once from TCGdex for
+API-sourced rows, copied from the card for collection-sourced rows) and
+`soldPrice` (always blank until typed or distributed). A collection-sourced
+row also carries `fromCollection: true` and a `removeFromCollection`
+checkbox (default off); an API-sourced row is `fromCollection: false` and is
+never written into `cards[]`, regardless of that checkbox.
+
+"Fordel total" (`distributeSaleTotal`) splits one entered target number
+across every row's `soldPrice` proportionally to `price * qty` (falling back
+to an even split per unit if no row has a market price), then nudges the
+last row by the rounding remainder so the allocated sum ties out to the
+cent. The diff line (`updateNewSaleSummary`) compares the live sum of
+`soldPrice * qty` against that same target number on every edit, so manual
+tweaks after distributing stay visible until they match again.
+
+On submit, `sale.price`/`sale.cost` are *computed* from the rows (sum of
+`soldPrice*qty`, and sum of `cost*qty` unless any row's cost is unknown) —
+unlike the older "Selg" dialog, where the total is what the user types.
+Collection quantities are only touched for rows where
+`fromCollection && removeFromCollection`, in one `mutate()` alongside pushing
+the sale.
+
+Editing (`openNewSaleDialog(saleId)`, from "Rediger" in the Salg list) works
+for any sale with `items.length > 0`, including ones from the older "Selg"
+flow — those get `fromCollection`/`removeFromCollection` defaulted to `true`
+(matching their actual original behavior) and a one-time `soldPrice`
+estimate from distributing the sale's stored total by market-value share.
+Saving an edit restores the *old* sale's collection effects first, then
+reapplies the *new* ones, in the same `mutate()` call as replacing the sale
+record — so toggling "Fjern fra samling" during an edit correctly adjusts
+stock either direction. `undoSale` mirrors this: it only restores a card for
+items where `fromCollection !== false && removeFromCollection !== false`
+(true for old-style items, since both flags are `undefined` there), so it
+never wrongly "restores" a card that was never removed, or recreates a
+TCGdex-only card into the collection. A sale with `items.length === 0`
+(manual, no-card) is edited through the existing `#manualSaleDialog`
+instead (`openManualSaleDialog(saleId)`), which gained the same optional
+edit-in-place mode.
+
 ## GitHub Gist sync
 
 Same pattern as `pokedex/index.html`: a personal access token (`gist`
@@ -114,8 +184,10 @@ confirm dialog. This is optional — the page works fully offline via
 
 1. ~~Manually edit a card's cost/value; add a single card without a CSV.~~ Done
    (manual edit/add dialog, plus TCGdex search-and-add).
-2. Overview chart of accumulated profit by sale date.
-3. Store price history on each import and show what changed since the last
+2. ~~A sale covering cards outside the collection, with its own search and
+   per-card pricing.~~ Done ("Nytt salg").
+3. Overview chart of accumulated profit by sale date.
+4. Store price history on each import and show what changed since the last
    one.
 
 Ask before changing the `kortbok.v1` data model — write a migration if it's

@@ -651,6 +651,94 @@
 				gap: 2px;
 			}
 
+			/* Nytt salg dialog */
+			#newSaleDialog {
+				max-width: 680px;
+			}
+			.sale-search-results {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 12px;
+				margin-bottom: 14px;
+			}
+			.sale-search-group-title {
+				font-size: 12px;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.3px;
+				margin-bottom: 6px;
+			}
+			.sale-result {
+				justify-content: space-between;
+				cursor: default;
+			}
+			.sale-result .sale-add-btn {
+				flex-shrink: 0;
+			}
+			.sale-items-editor {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				margin-bottom: 14px;
+			}
+			.sale-item-row {
+				background: var(--panel-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 10px 12px;
+			}
+			.sale-item-row-head {
+				display: flex;
+				justify-content: space-between;
+				align-items: baseline;
+				gap: 10px;
+				margin-bottom: 8px;
+				font-size: 13.5px;
+				font-weight: 600;
+			}
+			.sale-item-row-fields {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 8px;
+			}
+			.sale-item-row-fields label {
+				display: flex;
+				flex-direction: column;
+				gap: 3px;
+				font-size: 11.5px;
+			}
+			.sale-item-row-fields input {
+				width: 100%;
+				padding: 6px 8px;
+				font-size: 13px;
+			}
+			.sale-item-row-remove-chk {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 12px;
+				margin-top: 8px;
+			}
+			.sale-item-row-calc {
+				margin-top: 8px;
+				font-size: 12px;
+			}
+			.sale-fordel-row {
+				display: flex;
+				gap: 8px;
+			}
+			.sell-computed-4 {
+				grid-template-columns: repeat(4, 1fr);
+			}
+			@media (max-width: 480px) {
+				.sale-search-results {
+					grid-template-columns: 1fr;
+				}
+				.sale-item-row-fields {
+					grid-template-columns: 1fr 1fr;
+				}
+			}
+
 			/* Warning banner */
 			.warning-banner {
 				position: fixed;
@@ -718,10 +806,21 @@
 							<div class="stat-value" id="statSalesCount">0</div>
 						</div>
 						<div class="stat-card">
+							<div class="stat-label">Antall solgte kort</div>
+							<div class="stat-value" id="statCardsSold">0</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">Kostpris (salg)</div>
+							<div class="stat-value" id="statSpent">0 kr</div>
+						</div>
+						<div class="stat-card">
 							<div class="stat-label">Kort igjen</div>
 							<div class="stat-value" id="statCardsLeft">0</div>
 						</div>
 					</div>
+
+					<div class="section-title">Brukt vs. tjent</div>
+					<div class="panel" id="usedVsEarned"></div>
 
 					<div class="section-title">Samlingen nå</div>
 					<div class="stats-grid">
@@ -811,7 +910,8 @@
 
 			<!-- Salg -->
 			<section id="view-salg" class="view">
-				<div style="margin-bottom: 14px">
+				<div style="margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap">
+					<button type="button" class="btn" id="newSaleBtn">Nytt salg</button>
 					<button type="button" class="btn secondary" id="addManualSaleBtn">
 						Legg til salg uten kort
 					</button>
@@ -1081,6 +1181,7 @@
 					<label for="sellPlatform">Plattform</label>
 					<select id="sellPlatform">
 						<option>Finn</option>
+						<option>Facebook</option>
 						<option>Vipps / lokalt</option>
 						<option>Cardmarket</option>
 						<option>Annet</option>
@@ -1105,9 +1206,92 @@
 			</form>
 		</dialog>
 
+		<!-- Nytt salg (kort fra samlingen og/eller nye kort fra søk) -->
+		<dialog id="newSaleDialog">
+			<h2 id="newSaleDialogTitle">Nytt salg</h2>
+			<form id="newSaleForm">
+				<div class="dialog-field">
+					<label for="newSaleDate">Dato</label>
+					<input type="date" id="newSaleDate" />
+				</div>
+				<div class="dialog-field">
+					<label for="newSalePlatform">Plattform</label>
+					<select id="newSalePlatform">
+						<option>Finn</option>
+						<option>Facebook</option>
+						<option>Vipps / lokalt</option>
+						<option>Cardmarket</option>
+						<option>Annet</option>
+					</select>
+				</div>
+				<div class="dialog-field">
+					<label for="newSaleNote">Notat (valgfritt)</label>
+					<textarea id="newSaleNote" rows="2"></textarea>
+				</div>
+				<div class="dialog-field">
+					<label for="newSaleShipping">Frakt (valgfritt, kr)</label>
+					<input type="number" id="newSaleShipping" min="0" step="0.01" />
+				</div>
+
+				<div class="dialog-field">
+					<label for="saleSearchInput">Søk kort (navn, sett eller nummer)</label>
+					<input
+						type="text"
+						id="saleSearchInput"
+						placeholder="f.eks. Charizard eller 004/102"
+						autocomplete="off"
+					/>
+				</div>
+				<div id="saleSearchStatus" class="import-status"></div>
+				<div class="sale-search-results">
+					<div class="sale-search-group">
+						<div class="sale-search-group-title">I samlingen min</div>
+						<div id="saleCollectionResults" class="find-results"></div>
+					</div>
+					<div class="sale-search-group">
+						<div class="sale-search-group-title">Nytt kort fra søk</div>
+						<div id="saleApiResults" class="find-results"></div>
+					</div>
+				</div>
+
+				<div class="section-title">Kort i salget</div>
+				<div id="newSaleItems" class="sale-items-editor"></div>
+
+				<div class="dialog-field">
+					<label for="distributeTotal">Fordel total (valgfritt)</label>
+					<div class="sale-fordel-row">
+						<input
+							type="number"
+							id="distributeTotal"
+							min="0"
+							step="0.01"
+							placeholder="f.eks. 325"
+						/>
+						<button type="button" class="btn-sm" id="distributeBtn">Fordel</button>
+					</div>
+				</div>
+				<div id="newSaleDiff" class="import-status"></div>
+
+				<div class="sell-computed sell-computed-4">
+					<div><div class="muted">Salgssum</div><div id="newSaleTotalPrice">0 kr</div></div>
+					<div><div class="muted">Kostpris</div><div id="newSaleTotalCost">0 kr</div></div>
+					<div><div class="muted">Frakt</div><div id="newSaleShippingDisplay">0 kr</div></div>
+					<div><div class="muted">Fortjeneste</div><div id="newSaleTotalProfit">0 kr</div></div>
+				</div>
+
+				<div class="dialog-error" id="newSaleError"></div>
+				<div class="dialog-actions">
+					<button type="button" class="btn secondary" id="newSaleCancelBtn">
+						Avbryt
+					</button>
+					<button type="submit" class="btn">Lagre salg</button>
+				</div>
+			</form>
+		</dialog>
+
 		<!-- Legg til salg uten kort -->
 		<dialog id="manualSaleDialog">
-			<h2>Legg til salg uten kort</h2>
+			<h2 id="manualSaleDialogTitle">Legg til salg uten kort</h2>
 			<form id="manualSaleForm">
 				<div class="dialog-field">
 					<label for="manualSaleDesc">Beskrivelse</label>
@@ -1129,6 +1313,7 @@
 					<label for="manualSalePlatform">Plattform</label>
 					<select id="manualSalePlatform">
 						<option>Finn</option>
+						<option>Facebook</option>
 						<option>Vipps / lokalt</option>
 						<option>Cardmarket</option>
 						<option>Annet</option>

@@ -9,7 +9,7 @@
 	const TOKEN_KEY = "kortbok-gh-token";
 	const GIST_ID_KEY = "kortbok-gist-id";
 	const GIST_FILENAME = "kortbok-data.json";
-	const PLATFORMS = ["Finn", "Vipps / lokalt", "Cardmarket", "Annet"];
+	const PLATFORMS = ["Finn", "Facebook", "Vipps / lokalt", "Cardmarket", "Annet"];
 
 	let storageOk = true;
 	let state = loadState();
@@ -27,6 +27,11 @@
 	let findDebounceTimer = null;
 	let findSelectedDetail = null; // full TCGdex detail for the chosen card
 	let findLastQuery = null; // { name, no } of the last search, for retry
+
+	// "Nytt salg" dialog state.
+	let newSaleItems = []; // draft rows: { rowId, id, pf, set, name, no, rarity, variant, cond, added, qty, cost, price, soldPrice, fromCollection, removeFromCollection }
+	let editingSaleId = null; // sale id being edited via the new-sale dialog, or null when adding
+	let editingManualSaleId = null; // sale id being edited via the no-card manual dialog, or null when adding
 
 	// ---------- storage ----------
 
@@ -181,13 +186,18 @@
 	function salesTotals() {
 		let revenue = 0,
 			profit = 0,
+			spent = 0,
+			cardsSold = 0,
 			excluded = 0;
 		state.sales.forEach((s) => {
 			revenue += s.price || 0;
-			if (s.cost != null) profit += s.price - s.cost;
-			else excluded++;
+			cardsSold += s.items.reduce((sum, i) => sum + i.qty, 0);
+			if (s.cost != null) {
+				profit += s.price - s.cost - (s.shipping || 0);
+				spent += s.cost;
+			} else excluded++;
 		});
-		return { revenue, profit, excluded, count: state.sales.length };
+		return { revenue, profit, spent, cardsSold, excluded, count: state.sales.length };
 	}
 
 	function portfolioBreakdown() {
@@ -236,7 +246,23 @@
 
 		document.getElementById("statRevenue").textContent = fmtMoney0(st.revenue);
 		document.getElementById("statSalesCount").textContent = String(st.count);
+		document.getElementById("statCardsSold").textContent = String(st.cardsSold);
+		document.getElementById("statSpent").textContent = fmtMoney0(st.spent);
 		document.getElementById("statCardsLeft").textContent = String(ct.qty);
+
+		const maxUsedEarned = Math.max(1, st.spent, st.revenue);
+		document.getElementById("usedVsEarned").innerHTML = `
+			<div class="pf-bar-row">
+				<span class="pf-bar-label">Brukt (kostpris)</span>
+				<div class="pf-bar-track"><div class="pf-bar-fill" style="width:${(st.spent / maxUsedEarned) * 100}%; background: var(--loss)"></div></div>
+				<span class="pf-bar-value">${fmtMoney0(st.spent)}</span>
+			</div>
+			<div class="pf-bar-row">
+				<span class="pf-bar-label">Tjent (salgssum)</span>
+				<div class="pf-bar-track"><div class="pf-bar-fill" style="width:${(st.revenue / maxUsedEarned) * 100}%; background: var(--gain)"></div></div>
+				<span class="pf-bar-value">${fmtMoney0(st.revenue)}</span>
+			</div>
+		`;
 
 		document.getElementById("statValue").textContent = fmtMoney0(ct.value);
 		document.getElementById("statCost").textContent = fmtMoney0(ct.cost);
@@ -1145,6 +1171,580 @@
 		});
 	}
 
+	// ---------- Nytt salg (cards from the collection and/or new cards from search) ----------
+
+	function saleRowMultiplier(row) {
+		if (row.price == null || row.price <= 0 || row.soldPrice == null) return null;
+		return row.soldPrice / row.price;
+	}
+
+	function saleItemRowHTML(r) {
+		const sub = r.fromCollection
+			? `<label class="sale-item-row-remove-chk"><input type="checkbox" class="si-remove-chk" data-row-id="${r.rowId}" ${r.removeFromCollection ? "checked" : ""}> Fjern fra samling (har ${r.maxQty ?? "?"} stk)</label>`
+			: `<span class="muted" style="font-size: 12px">Nytt kort — legges ikke i samlingen</span>`;
+		return `
+			<div class="sale-item-row" data-row-id="${r.rowId}">
+				<div class="sale-item-row-head">
+					<span>${escapeHTML(r.name)} <span class="muted">${escapeHTML(r.set || "")} · #${escapeHTML(r.no || "")}</span></span>
+					<button type="button" class="link-btn sale-item-remove" data-row-id="${r.rowId}">Fjern</button>
+				</div>
+				<div class="sale-item-row-fields">
+					<label>Antall<input type="number" class="si-qty" min="1" step="1" value="${r.qty}" data-row-id="${r.rowId}"></label>
+					<label>Kost/stk (kr)<input type="number" class="si-cost" min="0" step="0.01" value="${r.cost ?? ""}" data-row-id="${r.rowId}"></label>
+					<label>Markedspris/stk (kr)<input type="number" class="si-market" min="0" step="0.01" value="${r.price ?? ""}" data-row-id="${r.rowId}"></label>
+					<label>Salgspris/stk (kr)<input type="number" class="si-sold" min="0" step="0.01" value="${r.soldPrice ?? ""}" data-row-id="${r.rowId}"></label>
+				</div>
+				${sub}
+				<div class="sale-item-row-calc muted" id="calc-${r.rowId}"></div>
+			</div>`;
+	}
+
+	function updateSaleRowCalc(row) {
+		const el = document.getElementById(`calc-${row.rowId}`);
+		if (!el) return;
+		const lineSold = (row.soldPrice || 0) * row.qty;
+		const lineCost = row.cost == null ? null : row.cost * row.qty;
+		const lineProfit = lineCost == null ? null : lineSold - lineCost;
+		const mult = saleRowMultiplier(row);
+		const parts = [`Sum: ${fmtMoney2(lineSold)}`];
+		parts.push(lineProfit == null ? "kost ukjent" : `Profitt: ${fmtMoney2(lineProfit)}`);
+		if (mult != null) parts.push(`${mult.toFixed(2)}x markedsverdi`);
+		el.textContent = parts.join(" · ");
+	}
+
+	function updateNewSaleSummary() {
+		let totalSold = 0;
+		let totalCost = 0;
+		let anyCostUnknown = false;
+		newSaleItems.forEach((r) => {
+			totalSold += (r.soldPrice || 0) * r.qty;
+			if (r.cost == null) anyCostUnknown = true;
+			else totalCost += r.cost * r.qty;
+		});
+		const shippingRaw = document.getElementById("newSaleShipping").value.trim();
+		const shipping = shippingRaw === "" ? 0 : parseFloat(shippingRaw.replace(",", ".")) || 0;
+
+		document.getElementById("newSaleTotalPrice").textContent = fmtMoney2(totalSold);
+		document.getElementById("newSaleTotalCost").textContent = anyCostUnknown
+			? "delvis ukjent"
+			: fmtMoney2(totalCost);
+		document.getElementById("newSaleShippingDisplay").textContent = fmtMoney2(shipping);
+		const profitEl = document.getElementById("newSaleTotalProfit");
+		if (anyCostUnknown) {
+			profitEl.textContent = "kost ukjent";
+			profitEl.className = "";
+		} else {
+			const profit = totalSold - totalCost - shipping;
+			profitEl.textContent = fmtMoney2(profit);
+			profitEl.className = gainClass(profit);
+		}
+
+		const targetRaw = document.getElementById("distributeTotal").value.trim();
+		const diffEl = document.getElementById("newSaleDiff");
+		if (targetRaw === "") {
+			diffEl.textContent = "";
+			diffEl.className = "import-status";
+		} else {
+			const target = parseFloat(targetRaw.replace(",", "."));
+			if (isNaN(target)) {
+				diffEl.textContent = "";
+			} else {
+				const diff = target - totalSold;
+				if (Math.abs(diff) < 0.005) {
+					diffEl.textContent = `Summen stemmer med oppgitt total (${fmtMoney2(target)}).`;
+					diffEl.className = "import-status ok";
+				} else {
+					diffEl.textContent = `Differanse: ${fmtMoney2(diff)} (oppgitt total ${fmtMoney2(target)}, nåværende sum ${fmtMoney2(totalSold)}).`;
+					diffEl.className = "import-status";
+				}
+			}
+		}
+	}
+
+	function renderNewSaleItems() {
+		const el = document.getElementById("newSaleItems");
+		el.innerHTML = newSaleItems.length
+			? newSaleItems.map(saleItemRowHTML).join("")
+			: `<p class="muted">Ingen kort lagt til ennå. Søk ovenfor for å legge til.</p>`;
+		newSaleItems.forEach(updateSaleRowCalc);
+		updateNewSaleSummary();
+	}
+
+	function searchCollectionForSale(query) {
+		const q = query.toLowerCase();
+		return state.cards
+			.filter(
+				(c) =>
+					c.name.toLowerCase().includes(q) ||
+					c.set.toLowerCase().includes(q) ||
+					c.no.toLowerCase().includes(q) ||
+					(c.rarity || "").toLowerCase().includes(q),
+			)
+			.slice(0, 8);
+	}
+
+	function renderSaleCollectionResults(results) {
+		const el = document.getElementById("saleCollectionResults");
+		el.innerHTML = results.length
+			? results
+					.map(
+						(c) => `
+				<div class="find-result sale-result" data-kind="collection" data-id="${escapeHTML(c.id)}">
+					<span class="find-result-noimg" aria-hidden="true"></span>
+					<span class="find-result-info">
+						<span class="find-result-name">${escapeHTML(c.name)}</span>
+						<span class="find-result-sub">${escapeHTML(c.set)} · #${escapeHTML(c.no)} · ${c.qty} stk · kost ${c.cost == null ? "–" : fmtMoney2(c.cost)}</span>
+					</span>
+					<button type="button" class="btn-sm sale-add-btn" data-kind="collection" data-id="${escapeHTML(c.id)}">Legg til</button>
+				</div>`,
+					)
+					.join("")
+			: `<p class="muted" style="font-size: 12.5px">Ingen treff i samlingen.</p>`;
+	}
+
+	// Splits a combined "navn 064/128" query into a name part and a trailing
+	// number part, same heuristic spirit as the TCGdex add-card dialog.
+	function splitNameAndNumber(query) {
+		const m = query.match(/^(.*?)\s*(\d{1,4}[A-Za-z]*(?:\s*\/\s*\d+)?)\s*$/);
+		if (!m) return { name: query.trim(), no: "" };
+		return { name: m[1].trim(), no: m[2].trim() };
+	}
+
+	function fillSaleApiDetailSubtexts(results) {
+		window.KB.tcgdex
+			.mapWithConcurrency(results, 4, (r) =>
+				window.KB.tcgdex
+					.getCardDetail(r.id)
+					.then((detail) => ({ id: r.id, detail }))
+					.catch((error) => ({ id: r.id, error })),
+			)
+			.then((resolved) => {
+				resolved.forEach((res) => {
+					if (!res) return;
+					const sub = document.querySelector(`[data-sale-detail-for="${res.id}"]`);
+					if (!sub) return;
+					if (res.detail) {
+						const d = res.detail;
+						const official = d.set && d.set.cardCount && d.set.cardCount.official;
+						const no = official ? `${d.localId}/${official}` : d.localId;
+						sub.textContent = `${d.set ? d.set.name : "Ukjent sett"} · #${no}${d.rarity ? " · " + d.rarity : ""}`;
+					} else {
+						sub.textContent = "sett utilgjengelig";
+					}
+				});
+			});
+	}
+
+	function renderSaleApiResults(results) {
+		const el = document.getElementById("saleApiResults");
+		el.innerHTML = results.length
+			? results
+					.map((r) => {
+						const img = r.image
+							? `<img src="${escapeHTML(r.image + "/low.webp")}" alt="${escapeHTML(r.name)}" loading="lazy">`
+							: `<span class="find-result-noimg" aria-hidden="true"></span>`;
+						return `
+				<div class="find-result sale-result" data-kind="api" data-id="${escapeHTML(r.id)}">
+					${img}
+					<span class="find-result-info">
+						<span class="find-result-name">${escapeHTML(r.name)}</span>
+						<span class="find-result-sub mono" data-sale-detail-for="${escapeHTML(r.id)}">#${escapeHTML(r.localId)} · henter sett …</span>
+					</span>
+					<button type="button" class="btn-sm sale-add-btn" data-kind="api" data-id="${escapeHTML(r.id)}">Legg til</button>
+				</div>`;
+					})
+					.join("")
+			: `<p class="muted" style="font-size: 12.5px">Ingen treff fra kortsøket.</p>`;
+		fillSaleApiDetailSubtexts(results);
+	}
+
+	let saleSearchController = null;
+	let saleSearchDebounceTimer = null;
+
+	function runSaleSearch() {
+		const query = document.getElementById("saleSearchInput").value.trim();
+		const statusEl = document.getElementById("saleSearchStatus");
+		if (saleSearchController) saleSearchController.abort();
+
+		if (!query) {
+			statusEl.textContent = "";
+			statusEl.className = "import-status";
+			document.getElementById("saleCollectionResults").innerHTML = "";
+			document.getElementById("saleApiResults").innerHTML = "";
+			return;
+		}
+
+		renderSaleCollectionResults(searchCollectionForSale(query));
+
+		const { name, no } = splitNameAndNumber(query);
+		const searchName = name || query;
+		statusEl.textContent = "Søker i kortdatabasen…";
+		statusEl.className = "import-status";
+		saleSearchController = new AbortController();
+		window.KB.tcgdex
+			.searchCards(searchName, { signal: saleSearchController.signal })
+			.then((rows) => {
+				let filtered = rows;
+				if (no) {
+					const num = parseInt(no, 10);
+					if (!isNaN(num)) filtered = rows.filter((r) => parseInt(r.localId, 10) === num);
+				}
+				statusEl.textContent = "";
+				renderSaleApiResults(filtered.slice(0, 8));
+			})
+			.catch((err) => {
+				if (err.name === "AbortError") return;
+				statusEl.textContent =
+					err.status === 429
+						? "For mange forespørsler mot TCGdex akkurat nå. Prøv igjen om litt."
+						: "Kunne ikke nå TCGdex for kortsøket. Sjekk nettforbindelsen.";
+				statusEl.className = "import-status err";
+				document.getElementById("saleApiResults").innerHTML = "";
+			});
+	}
+
+	function addCollectionCardToSale(cardId) {
+		const existing = newSaleItems.find((r) => r.fromCollection && r.id === cardId);
+		if (existing) {
+			existing.qty += 1;
+			renderNewSaleItems();
+			return;
+		}
+		const card = state.cards.find((c) => c.id === cardId);
+		if (!card) return;
+		newSaleItems.push({
+			rowId: uid(),
+			id: card.id,
+			pf: card.pf,
+			set: card.set,
+			name: card.name,
+			no: card.no,
+			rarity: card.rarity,
+			variant: card.variant,
+			cond: card.cond,
+			added: card.added,
+			qty: 1,
+			cost: card.cost,
+			price: card.price,
+			soldPrice: null,
+			fromCollection: true,
+			removeFromCollection: false,
+			maxQty: card.qty,
+		});
+		renderNewSaleItems();
+	}
+
+	function addApiCardToSale(tcgId) {
+		const existing = newSaleItems.find((r) => !r.fromCollection && r.id === tcgId);
+		if (existing) {
+			existing.qty += 1;
+			renderNewSaleItems();
+			return;
+		}
+		Promise.all([
+			window.KB.tcgdex.getCardDetail(tcgId),
+			window.KB.tcgdex.getUsdNokRate(),
+			window.KB.tcgdex.getEurNokRate(),
+		])
+			.then(([detail, usdRate, eurRate]) => {
+				const official = detail.set && detail.set.cardCount && detail.set.cardCount.official;
+				const no = official ? `${detail.localId}/${official}` : detail.localId;
+				const variants = window.KB.tcgdex.priceByVariant(detail);
+				let variantLabel = "Normal";
+				let marketPrice = null;
+				if (variants.length) {
+					const withPrice =
+						variants.find((v) => (v.usd != null && usdRate) || (v.eur != null && eurRate)) ||
+						variants[0];
+					variantLabel = withPrice.label;
+					if (withPrice.usd != null && usdRate) marketPrice = withPrice.usd * usdRate;
+					else if (withPrice.eur != null && eurRate) marketPrice = withPrice.eur * eurRate;
+				}
+				newSaleItems.push({
+					rowId: uid(),
+					id: tcgId,
+					pf: "",
+					set: detail.set ? detail.set.name : "",
+					name: detail.name,
+					no,
+					rarity: detail.rarity || "",
+					variant: variantLabel,
+					cond: "Near Mint",
+					added: todayLocalISO(),
+					qty: 1,
+					cost: null,
+					price: marketPrice,
+					soldPrice: null,
+					fromCollection: false,
+					removeFromCollection: false,
+					maxQty: null,
+				});
+				renderNewSaleItems();
+			})
+			.catch(() => {
+				const statusEl = document.getElementById("saleSearchStatus");
+				statusEl.textContent = "Kunne ikke hente dette kortet. Prøv igjen.";
+				statusEl.className = "import-status err";
+			});
+	}
+
+	function openNewSaleDialog(editSaleId) {
+		editingSaleId = editSaleId || null;
+		newSaleItems = [];
+		document.getElementById("newSaleError").textContent = "";
+		document.getElementById("saleSearchInput").value = "";
+		document.getElementById("saleSearchStatus").textContent = "";
+		document.getElementById("saleCollectionResults").innerHTML = "";
+		document.getElementById("saleApiResults").innerHTML = "";
+		document.getElementById("distributeTotal").value = "";
+
+		if (editingSaleId) {
+			const sale = state.sales.find((s) => s.id === editingSaleId);
+			if (sale) {
+				document.getElementById("newSaleDialogTitle").textContent = "Rediger salg";
+				document.getElementById("newSaleDate").value = sale.date || todayLocalISO();
+				document.getElementById("newSalePlatform").value = PLATFORMS.includes(sale.platform)
+					? sale.platform
+					: PLATFORMS[0];
+				document.getElementById("newSaleNote").value = sale.note || "";
+				document.getElementById("newSaleShipping").value = sale.shipping != null ? sale.shipping : "";
+
+				const totalMarket = sale.items.reduce((sum, i) => sum + (i.price || 0) * i.qty, 0);
+				const totalQty = sale.items.reduce((sum, i) => sum + i.qty, 0) || 1;
+				newSaleItems = sale.items.map((i) => {
+					let soldPrice = i.soldPrice;
+					if (soldPrice == null) {
+						// Legacy sale: approximate a per-item sold price from the sale total.
+						const lineMarket = (i.price || 0) * i.qty;
+						soldPrice =
+							totalMarket > 0
+								? Math.round(((lineMarket / totalMarket) * sale.price) / i.qty * 100) / 100
+								: Math.round((sale.price / totalQty) * 100) / 100;
+					}
+					const card = state.cards.find((c) => c.id === i.id);
+					return {
+						rowId: uid(),
+						id: i.id,
+						pf: i.pf,
+						set: i.set,
+						name: i.name,
+						no: i.no,
+						rarity: i.rarity,
+						variant: i.variant,
+						cond: i.cond,
+						added: i.added,
+						qty: i.qty,
+						cost: i.cost,
+						price: i.price,
+						soldPrice,
+						fromCollection: i.fromCollection !== false,
+						removeFromCollection: i.removeFromCollection !== false,
+						maxQty: card ? card.qty + (i.fromCollection !== false && i.removeFromCollection !== false ? i.qty : 0) : null,
+					};
+				});
+			}
+		} else {
+			document.getElementById("newSaleDialogTitle").textContent = "Nytt salg";
+			document.getElementById("newSaleDate").value = todayLocalISO();
+			document.getElementById("newSalePlatform").value = PLATFORMS[0];
+			document.getElementById("newSaleNote").value = "";
+			document.getElementById("newSaleShipping").value = "";
+		}
+
+		renderNewSaleItems();
+		document.getElementById("newSaleDialog").showModal();
+	}
+
+	function distributeSaleTotal() {
+		const raw = document.getElementById("distributeTotal").value.trim();
+		const target = parseFloat(raw.replace(",", "."));
+		if (isNaN(target) || !newSaleItems.length) return;
+		const totalMarket = newSaleItems.reduce((sum, r) => sum + (r.price || 0) * r.qty, 0);
+		let allocated = 0;
+		if (totalMarket > 0) {
+			newSaleItems.forEach((r) => {
+				const lineMarket = (r.price || 0) * r.qty;
+				const lineShare = (lineMarket / totalMarket) * target;
+				r.soldPrice = Math.round((lineShare / r.qty) * 100) / 100;
+				allocated += r.soldPrice * r.qty;
+			});
+		} else {
+			const totalQty = newSaleItems.reduce((sum, r) => sum + r.qty, 0) || 1;
+			const perUnit = Math.round((target / totalQty) * 100) / 100;
+			newSaleItems.forEach((r) => {
+				r.soldPrice = perUnit;
+				allocated += perUnit * r.qty;
+			});
+		}
+		// Nudge the last row so the allocated sum ties out exactly with the target.
+		const remainder = Math.round((target - allocated) * 100) / 100;
+		if (Math.abs(remainder) >= 0.01) {
+			const last = newSaleItems[newSaleItems.length - 1];
+			last.soldPrice = Math.round(((last.soldPrice * last.qty + remainder) / last.qty) * 100) / 100;
+		}
+		renderNewSaleItems();
+	}
+
+	function initNewSaleDialog() {
+		document.getElementById("saleSearchInput").addEventListener("input", () => {
+			clearTimeout(saleSearchDebounceTimer);
+			saleSearchDebounceTimer = setTimeout(runSaleSearch, 300);
+		});
+
+		document.getElementById("saleCollectionResults").addEventListener("click", (e) => {
+			const btn = e.target.closest(".sale-add-btn");
+			if (btn) addCollectionCardToSale(btn.dataset.id);
+		});
+		document.getElementById("saleApiResults").addEventListener("click", (e) => {
+			const btn = e.target.closest(".sale-add-btn");
+			if (btn) addApiCardToSale(btn.dataset.id);
+		});
+
+		document.getElementById("newSaleItems").addEventListener("input", (e) => {
+			const rowId = e.target.dataset.rowId;
+			if (!rowId) return;
+			const row = newSaleItems.find((r) => r.rowId === rowId);
+			if (!row) return;
+			if (e.target.classList.contains("si-qty")) {
+				row.qty = Math.max(1, parseInt(e.target.value, 10) || 1);
+			} else if (e.target.classList.contains("si-cost")) {
+				const v = e.target.value.trim();
+				row.cost = v === "" ? null : parseFloat(v.replace(",", "."));
+			} else if (e.target.classList.contains("si-market")) {
+				const v = e.target.value.trim();
+				row.price = v === "" ? null : parseFloat(v.replace(",", "."));
+			} else if (e.target.classList.contains("si-sold")) {
+				const v = e.target.value.trim();
+				row.soldPrice = v === "" ? null : parseFloat(v.replace(",", "."));
+			} else {
+				return;
+			}
+			updateSaleRowCalc(row);
+			updateNewSaleSummary();
+		});
+		document.getElementById("newSaleItems").addEventListener("change", (e) => {
+			if (!e.target.classList.contains("si-remove-chk")) return;
+			const row = newSaleItems.find((r) => r.rowId === e.target.dataset.rowId);
+			if (row) row.removeFromCollection = e.target.checked;
+		});
+		document.getElementById("newSaleItems").addEventListener("click", (e) => {
+			const btn = e.target.closest(".sale-item-remove");
+			if (!btn) return;
+			newSaleItems = newSaleItems.filter((r) => r.rowId !== btn.dataset.rowId);
+			renderNewSaleItems();
+		});
+
+		document.getElementById("newSaleShipping").addEventListener("input", updateNewSaleSummary);
+		document.getElementById("distributeTotal").addEventListener("input", updateNewSaleSummary);
+		document.getElementById("distributeBtn").addEventListener("click", distributeSaleTotal);
+
+		document.getElementById("newSaleCancelBtn").addEventListener("click", () => {
+			document.getElementById("newSaleDialog").close();
+		});
+
+		document.getElementById("newSaleForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			const errEl = document.getElementById("newSaleError");
+			if (!newSaleItems.length) {
+				errEl.textContent = "Legg til minst ett kort.";
+				return;
+			}
+			for (const r of newSaleItems) {
+				if (isNaN(r.qty) || r.qty < 1) {
+					errEl.textContent = `Ugyldig antall for ${r.name}.`;
+					return;
+				}
+				if (r.soldPrice == null || isNaN(r.soldPrice) || r.soldPrice < 0) {
+					errEl.textContent = `Oppgi en gyldig salgspris for ${r.name}.`;
+					return;
+				}
+			}
+
+			const date = document.getElementById("newSaleDate").value || todayLocalISO();
+			const platform = document.getElementById("newSalePlatform").value;
+			const note = document.getElementById("newSaleNote").value.trim();
+			const shippingRaw = document.getElementById("newSaleShipping").value.trim();
+			const shipping = shippingRaw === "" ? null : parseFloat(shippingRaw.replace(",", "."));
+
+			const items = newSaleItems.map((r) => ({
+				id: r.id,
+				pf: r.pf,
+				set: r.set,
+				name: r.name,
+				no: r.no,
+				rarity: r.rarity,
+				variant: r.variant,
+				cond: r.cond,
+				added: r.added,
+				qty: r.qty,
+				cost: r.cost,
+				price: r.price,
+				soldPrice: r.soldPrice,
+				fromCollection: r.fromCollection,
+				removeFromCollection: r.fromCollection ? !!r.removeFromCollection : false,
+			}));
+			const anyCostUnknown = items.some((i) => i.cost == null);
+			const totalPrice = items.reduce((sum, i) => sum + i.soldPrice * i.qty, 0);
+			const totalCost = anyCostUnknown ? null : items.reduce((sum, i) => sum + i.cost * i.qty, 0);
+
+			const sale = {
+				id: editingSaleId || uid(),
+				date,
+				title: saleTitle(items),
+				platform,
+				note,
+				price: totalPrice,
+				cost: totalCost,
+				shipping: shipping == null || isNaN(shipping) ? null : shipping,
+				items,
+			};
+
+			mutate((s) => {
+				if (editingSaleId) {
+					const old = s.sales.find((x) => x.id === editingSaleId);
+					if (old) {
+						old.items.forEach((item) => {
+							const wasRemoved =
+								item.fromCollection !== false && item.removeFromCollection !== false;
+							if (!wasRemoved) return;
+							const card = s.cards.find((c) => c.id === item.id);
+							if (card) {
+								card.qty += item.qty;
+							} else {
+								s.cards.push({
+									id: item.id,
+									pf: item.pf,
+									set: item.set,
+									name: item.name,
+									no: item.no,
+									rarity: item.rarity,
+									variant: item.variant,
+									cond: item.cond,
+									qty: item.qty,
+									cost: item.cost,
+									price: item.price,
+									added: item.added,
+								});
+							}
+						});
+					}
+					s.sales = s.sales.filter((x) => x.id !== editingSaleId);
+				}
+				items.forEach((item) => {
+					if (!item.fromCollection || !item.removeFromCollection) return;
+					const card = s.cards.find((c) => c.id === item.id);
+					if (!card) return;
+					card.qty -= item.qty;
+					if (card.qty <= 0) s.cards = s.cards.filter((c) => c.id !== item.id);
+				});
+				s.sales.push(sale);
+			});
+
+			editingSaleId = null;
+			document.getElementById("newSaleDialog").close();
+		});
+	}
+
 	// ---------- render: Salg ----------
 
 	function renderSalg() {
@@ -1158,11 +1758,12 @@
 		}
 		list.innerHTML = sorted
 			.map((s) => {
-				const profit = s.cost == null ? null : s.price - s.cost;
+				const profit = s.cost == null ? null : s.price - s.cost - (s.shipping || 0);
 				const itemsLine = s.items.length
 					? s.items.map((i) => `${escapeHTML(i.name)} ×${i.qty}`).join(", ")
 					: "(salg uten kort)";
 				const metaBits = [fmtDate(s.date), s.platform];
+				if (s.shipping) metaBits.push(`frakt ${fmtMoney2(s.shipping)}`);
 				if (s.note) metaBits.push(s.note);
 				return `
 				<div class="sale-card" data-sale-id="${escapeHTML(s.id)}">
@@ -1177,6 +1778,7 @@
 							${profit == null ? "kost ukjent" : "Fortjeneste: " + fmtMoney2(profit)}
 						</span>
 						<div class="sale-actions">
+							<button type="button" class="btn-sm edit-sale-btn" data-id="${escapeHTML(s.id)}">Rediger</button>
 							<button type="button" class="btn-sm undo-sale-btn" data-id="${escapeHTML(s.id)}">Angre salg</button>
 							<button type="button" class="btn-sm danger delete-sale-btn" data-id="${escapeHTML(s.id)}">Slett fra loggen</button>
 						</div>
@@ -1191,6 +1793,11 @@
 			const sale = s.sales.find((x) => x.id === saleId);
 			if (!sale) return;
 			sale.items.forEach((item) => {
+				// Legacy items (no fromCollection/removeFromCollection flags) always came
+				// from the collection and were always removed, so default both to true.
+				const wasRemoved =
+					item.fromCollection !== false && item.removeFromCollection !== false;
+				if (!wasRemoved) return;
 				const card = s.cards.find((c) => c.id === item.id);
 				if (card) {
 					card.qty += item.qty;
@@ -1221,10 +1828,35 @@
 		});
 	}
 
+	function openManualSaleDialog(editSaleId) {
+		editingManualSaleId = editSaleId || null;
+		document.getElementById("manualSaleForm").reset();
+		document.getElementById("manualSaleError").textContent = "";
+		if (editingManualSaleId) {
+			const sale = state.sales.find((x) => x.id === editingManualSaleId);
+			if (sale) {
+				document.getElementById("manualSaleDialogTitle").textContent = "Rediger salg";
+				document.getElementById("manualSaleDesc").value = sale.title;
+				document.getElementById("manualSalePrice").value = sale.price;
+				document.getElementById("manualSaleCost").value = sale.cost == null ? "" : sale.cost;
+				document.getElementById("manualSaleDate").value = sale.date;
+				document.getElementById("manualSalePlatform").value = PLATFORMS.includes(sale.platform)
+					? sale.platform
+					: PLATFORMS[0];
+			}
+		} else {
+			document.getElementById("manualSaleDialogTitle").textContent = "Legg til salg uten kort";
+			document.getElementById("manualSaleDate").value = todayLocalISO();
+			document.getElementById("manualSalePlatform").value = PLATFORMS[0];
+		}
+		document.getElementById("manualSaleDialog").showModal();
+	}
+
 	function initSalgEvents() {
 		document.getElementById("salesList").addEventListener("click", async (e) => {
 			const undoBtn = e.target.closest(".undo-sale-btn");
 			const delBtn = e.target.closest(".delete-sale-btn");
+			const editBtn = e.target.closest(".edit-sale-btn");
 			if (undoBtn) {
 				const ok = await confirmDialog(
 					"Angre dette salget? Kortene legges tilbake i samlingen.",
@@ -1235,17 +1867,21 @@
 					"Slette dette salget fra loggen? Kortene legges ikke tilbake.",
 				);
 				if (ok) deleteSaleFromLog(delBtn.dataset.id);
+			} else if (editBtn) {
+				const sale = state.sales.find((x) => x.id === editBtn.dataset.id);
+				if (!sale) return;
+				if (sale.items.length) openNewSaleDialog(sale.id);
+				else openManualSaleDialog(sale.id);
 			}
+		});
+
+		document.getElementById("newSaleBtn").addEventListener("click", () => {
+			openNewSaleDialog(null);
 		});
 
 		document
 			.getElementById("addManualSaleBtn")
-			.addEventListener("click", () => {
-				document.getElementById("manualSaleForm").reset();
-				document.getElementById("manualSaleDate").value = todayLocalISO();
-				document.getElementById("manualSalePlatform").value = PLATFORMS[0];
-				document.getElementById("manualSaleDialog").showModal();
-			});
+			.addEventListener("click", () => openManualSaleDialog(null));
 
 		document
 			.getElementById("manualSaleCancelBtn")
@@ -1276,8 +1912,8 @@
 				}
 
 				mutate((s) => {
-					s.sales.push({
-						id: uid(),
+					const saleData = {
+						id: editingManualSaleId || uid(),
 						date,
 						title: desc,
 						platform,
@@ -1285,8 +1921,13 @@
 						price,
 						cost: cost == null || isNaN(cost) ? null : cost,
 						items: [],
-					});
+					};
+					if (editingManualSaleId) {
+						s.sales = s.sales.filter((x) => x.id !== editingManualSaleId);
+					}
+					s.sales.push(saleData);
 				});
+				editingManualSaleId = null;
 				document.getElementById("manualSaleDialog").close();
 			});
 	}
@@ -1669,6 +2310,7 @@
 	initCardDialog();
 	initFindCardDialog();
 	initSellDialog();
+	initNewSaleDialog();
 	initSalgEvents();
 	initImportEvents();
 	renderAll();

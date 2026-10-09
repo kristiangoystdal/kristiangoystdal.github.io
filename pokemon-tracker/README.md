@@ -21,6 +21,29 @@ Ligger på: `https://kristiangoystdal.github.io/pokemon-tracker/`
    kost/verdi/antall manuelt, eller **Legg til kort** for å søke opp et
    engelsk Pokémon-kort og legge det inn med pris hentet fra TCGdex.
 
+### Nytt salg
+
+Knappen **Nytt salg** i Salg-fanen er den fulle salgsflyten: ett salg kan
+inneholde kort fra samlingen din OG kort du aldri har registrert (f.eks. en
+Finn-pakke med en blanding). Søkeboksen i dialogen søker samtidig i
+samlingen din og i TCGdex, og viser to separate lister — **I samlingen min**
+og **Nytt kort fra søk** — slik at du selv velger kilde hvis et kort finnes i
+begge. Et kort fra søk legges aldri inn i samlingen; markedsprisen hentes kun
+én gang når du trykker «Legg til».
+
+For hvert kort i salget kan du redigere antall, kostpris per stk,
+markedspris per stk og salgspris per stk fritt. **Fordel total** fyller
+salgsprisfeltene proporsjonalt etter markedspris fra én oppgitt totalsum —
+juster deretter enkeltfelter fritt, og differansen mot den oppgitte totalen
+vises løpende til den stemmer. For kort som kom fra samlingen kan du krysse
+av **Fjern fra samling** (av som standard) hvis salget faktisk skal redusere
+antallet du har igjen. Frakt er valgfritt og trekkes fra fortjenesten.
+
+Alle salg (uansett hvordan de ble registrert) kan redigeres eller slettes
+senere fra Salg-fanen — **Rediger** åpner samme dialog forhåndsutfylt (eller
+det enkle skjemaet for salg uten kort), og lagring oppdaterer samlingens
+antall riktig selv om du endrer hva som skal fjernes.
+
 ### Søk og legg til kort (TCGdex)
 
 "Legg til kort" på Samling-fanen søker i [TCGdex](https://tcgdex.dev) (gratis,
