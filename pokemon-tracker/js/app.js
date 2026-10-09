@@ -631,6 +631,13 @@
 			renderSamling();
 		});
 
+		document.getElementById("selectNoCostBtn").addEventListener("click", () => {
+			filteredSortedCards()
+				.filter((c) => c.cost == null)
+				.forEach((c) => selectedIds.add(c.id));
+			renderSamling();
+		});
+
 		document.getElementById("selectAllChk").addEventListener("change", (e) => {
 			const visible = filteredSortedCards().slice(0, collectionPageSize);
 			visible.forEach((c) => {
