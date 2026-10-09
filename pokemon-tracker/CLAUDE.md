@@ -211,9 +211,20 @@ confirm dialog. This is optional — the page works fully offline via
    (manual edit/add dialog, plus TCGdex search-and-add).
 2. ~~A sale covering cards outside the collection, with its own search and
    per-card pricing.~~ Done ("Nytt salg").
-3. Overview chart of accumulated profit by sale date.
-4. Store price history on each import and show what changed since the last
+3. ~~Overview chart of accumulated profit by sale date.~~ Done
+   ("Fortjeneste over tid", inline SVG, `buildProfitSeries`/`renderProfitChart`
+   in `app.js`).
+4. ~~Sell straight from a Samling selection using the full Nytt salg flow,
+   and bulk-set cost on several selected cards at once.~~ Done
+   (`openNewSaleDialogWithCards`, "Sett kostpris").
+5. Store price history on each import and show what changed since the last
    one.
+
+**Note:** `#sellDialog`/`openSellDialog`/`initSellDialog` (the original
+single-total "Selg" dialog) are no longer wired to any button — Samling's
+"Selg" and "Selg valgte" both open "Nytt salg" now. The old dialog's markup
+and JS are still in the files, just dead code; ask before deleting them in
+case something still depends on it being there.
 
 Ask before changing the `kortbok.v1` data model — write a migration if it's
 needed.
