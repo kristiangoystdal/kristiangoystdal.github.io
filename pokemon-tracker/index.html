@@ -330,6 +330,30 @@
 				transform: translate(-50%, -115%);
 				font-variant-numeric: tabular-nums;
 			}
+			.chart-legend {
+				display: flex;
+				gap: 16px;
+				flex-wrap: wrap;
+				font-size: 12.5px;
+				color: var(--muted);
+				margin-bottom: 6px;
+			}
+			.chart-legend-item {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+			}
+			.chart-legend-swatch {
+				width: 14px;
+				height: 2px;
+				border-radius: 2px;
+				display: inline-block;
+			}
+			.chart-legend-swatch-dashed {
+				background: none;
+				height: 0;
+				border-top: 2px dashed;
+			}
 
 			/* Samling */
 			.collection-controls {
@@ -862,6 +886,11 @@
 							<div class="stat-label">Tjent så langt</div>
 							<div class="stat-value" id="statProfit">0 kr</div>
 							<div class="stat-note" id="statProfitNote"></div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">Fortjeneste ved markedsverdi</div>
+							<div class="stat-value" id="statMarketProfit">0 kr</div>
+							<div class="stat-note">Hvis alt var solgt for markedspris</div>
 						</div>
 						<div class="stat-card">
 							<div class="stat-label">Omsatt</div>

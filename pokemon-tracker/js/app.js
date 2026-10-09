@@ -235,9 +235,19 @@
 		});
 	}
 
+	// Revenue the items in a sale would have fetched at their market-price
+	// snapshot, instead of what they actually sold for. 0 for a manual
+	// no-card sale (nothing to compute from) — callers that mix this with an
+	// actual-profit total should only do so for sales where saleMarketRevenue
+	// would be meaningful, i.e. items.length > 0.
+	function saleMarketRevenue(s) {
+		return s.items.reduce((sum, i) => sum + (i.price || 0) * i.qty, 0);
+	}
+
 	function salesTotals() {
 		let revenue = 0,
 			profit = 0,
+			marketProfit = 0,
 			spent = 0,
 			cardsSold = 0,
 			excluded = 0,
@@ -250,12 +260,14 @@
 			revenue += s.price || 0;
 			cardsSold += s.items.reduce((sum, i) => sum + i.qty, 0);
 			if (s.cost != null) {
-				profit += s.price - s.cost - (s.shipping || 0);
+				const shipping = s.shipping || 0;
+				profit += s.price - s.cost - shipping;
 				spent += s.cost;
+				if (s.items.length) marketProfit += saleMarketRevenue(s) - s.cost - shipping;
 			} else excluded++;
 		});
 		const count = state.sales.length - draftCount;
-		return { revenue, profit, spent, cardsSold, excluded, draftCount, count };
+		return { revenue, profit, marketProfit, spent, cardsSold, excluded, draftCount, count };
 	}
 
 	function portfolioBreakdown() {
@@ -276,18 +288,28 @@
 	// One point per sale date with a known-cost sold sale; a day with several
 	// such sales is folded into one step, same "by sale date" grouping as the
 	// backlog asked for.
+	// Market-value profit only reflects sales that actually have items (a
+	// manual no-card sale has no market price to compare against), so its
+	// line can diverge from the actual one by more than "what was sold for
+	// less/more than market" — it also simply excludes those manual sales.
 	function buildProfitSeries() {
 		const byDate = new Map();
 		state.sales.forEach((s) => {
 			if (!isSoldSale(s) || s.cost == null) return;
-			const profit = s.price - s.cost - (s.shipping || 0);
-			byDate.set(s.date, (byDate.get(s.date) || 0) + profit);
+			const shipping = s.shipping || 0;
+			const entry = byDate.get(s.date) || { actual: 0, market: 0 };
+			entry.actual += s.price - s.cost - shipping;
+			if (s.items.length) entry.market += saleMarketRevenue(s) - s.cost - shipping;
+			byDate.set(s.date, entry);
 		});
 		const dates = [...byDate.keys()].sort((a, b) => new Date(a) - new Date(b));
-		let running = 0;
+		let runActual = 0;
+		let runMarket = 0;
 		return dates.map((date) => {
-			running += byDate.get(date);
-			return { date, cumulative: running };
+			const e = byDate.get(date);
+			runActual += e.actual;
+			runMarket += e.market;
+			return { date, actual: runActual, market: runMarket };
 		});
 	}
 
@@ -300,9 +322,9 @@
 			return;
 		}
 
-		const values = series.map((p) => p.cumulative);
-		const minV = Math.min(0, ...values);
-		const maxV = Math.max(0, ...values);
+		const allValues = series.flatMap((p) => [p.actual, p.market]);
+		const minV = Math.min(0, ...allValues);
+		const maxV = Math.max(0, ...allValues);
 		const span = maxV - minV || 1;
 		const domainMin = minV - span * 0.1;
 		const domainMax = maxV + span * 0.1;
@@ -314,30 +336,39 @@
 			CHART_PAD.top + innerH - ((v - domainMin) / (domainMax - domainMin)) * innerH;
 
 		const zeroY = yAt(0);
-		const lineColor = series[series.length - 1].cumulative >= 0 ? "var(--gain)" : "var(--loss)";
-		const linePoints = series.map((p, i) => `${xAt(i)},${yAt(p.cumulative)}`).join(" ");
+		const actualColor = series[series.length - 1].actual >= 0 ? "var(--gain)" : "var(--loss)";
+		const marketColor = "var(--accent-2)";
+		const actualPoints = series.map((p, i) => `${xAt(i)},${yAt(p.actual)}`).join(" ");
+		const marketPoints = series.map((p, i) => `${xAt(i)},${yAt(p.market)}`).join(" ");
 		const areaPoints =
-			`${xAt(0)},${zeroY} ` +
-			series.map((p, i) => `${xAt(i)},${yAt(p.cumulative)}`).join(" ") +
-			` ${xAt(series.length - 1)},${zeroY}`;
+			`${xAt(0)},${zeroY} ` + actualPoints + ` ${xAt(series.length - 1)},${zeroY}`;
 
 		profitChartPoints = series.map((p, i) => ({
 			x: xAt(i),
-			y: yAt(p.cumulative),
+			yActual: yAt(p.actual),
+			yMarket: yAt(p.market),
 			date: p.date,
-			cumulative: p.cumulative,
+			actual: p.actual,
+			market: p.market,
 		}));
 		const last = profitChartPoints[profitChartPoints.length - 1];
 
 		wrap.innerHTML = `
+			<div class="chart-legend">
+				<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:${actualColor}"></span>Faktisk fortjeneste</span>
+				<span class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch-dashed" style="border-color:${marketColor}"></span>Ved markedsverdi</span>
+			</div>
 			<svg viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="none" id="profitSvg">
 				<line x1="${CHART_PAD.left}" y1="${zeroY}" x2="${CHART_W - CHART_PAD.right}" y2="${zeroY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" />
 				<text x="${CHART_PAD.left - 8}" y="${zeroY + 4}" text-anchor="end" font-size="10" fill="var(--muted)">0 kr</text>
-				<polygon points="${areaPoints}" fill="${lineColor}" opacity="0.12" />
-				<polyline points="${linePoints}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-				<circle cx="${last.x}" cy="${last.y}" r="4" fill="${lineColor}" />
+				<polygon points="${areaPoints}" fill="${actualColor}" opacity="0.12" />
+				<polyline points="${marketPoints}" fill="none" stroke="${marketColor}" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round" />
+				<polyline points="${actualPoints}" fill="none" stroke="${actualColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+				<circle cx="${last.x}" cy="${last.yActual}" r="4" fill="${actualColor}" />
+				<circle cx="${last.x}" cy="${last.yMarket}" r="4" fill="${marketColor}" />
 				<line id="profitCrosshair" x1="${last.x}" y1="${CHART_PAD.top}" x2="${last.x}" y2="${CHART_H - CHART_PAD.bottom}" stroke="var(--muted)" stroke-width="1" class="hidden" />
-				<circle id="profitHoverDot" cx="${last.x}" cy="${last.y}" r="4" fill="${lineColor}" class="hidden" />
+				<circle id="profitHoverDotActual" cx="${last.x}" cy="${last.yActual}" r="4" fill="${actualColor}" class="hidden" />
+				<circle id="profitHoverDotMarket" cx="${last.x}" cy="${last.yMarket}" r="4" fill="${marketColor}" class="hidden" />
 				<text x="${CHART_PAD.left}" y="${CHART_H - 6}" font-size="10" fill="var(--muted)">${fmtDate(series[0].date)}</text>
 				<text x="${CHART_W - CHART_PAD.right}" y="${CHART_H - 6}" text-anchor="end" font-size="10" fill="var(--muted)">${fmtDate(series[series.length - 1].date)}</text>
 			</svg>
@@ -348,7 +379,8 @@
 		const container = document.getElementById("profitChartWrap");
 		function hide() {
 			document.getElementById("profitCrosshair")?.classList.add("hidden");
-			document.getElementById("profitHoverDot")?.classList.add("hidden");
+			document.getElementById("profitHoverDotActual")?.classList.add("hidden");
+			document.getElementById("profitHoverDotMarket")?.classList.add("hidden");
 			document.getElementById("profitTooltip")?.classList.add("hidden");
 		}
 		container.addEventListener("mousemove", (e) => {
@@ -366,18 +398,23 @@
 				}
 			});
 			const crosshair = document.getElementById("profitCrosshair");
-			const dot = document.getElementById("profitHoverDot");
+			const dotActual = document.getElementById("profitHoverDotActual");
+			const dotMarket = document.getElementById("profitHoverDotMarket");
 			crosshair.setAttribute("x1", nearest.x);
 			crosshair.setAttribute("x2", nearest.x);
 			crosshair.classList.remove("hidden");
-			dot.setAttribute("cx", nearest.x);
-			dot.setAttribute("cy", nearest.y);
-			dot.classList.remove("hidden");
+			dotActual.setAttribute("cx", nearest.x);
+			dotActual.setAttribute("cy", nearest.yActual);
+			dotActual.classList.remove("hidden");
+			dotMarket.setAttribute("cx", nearest.x);
+			dotMarket.setAttribute("cy", nearest.yMarket);
+			dotMarket.classList.remove("hidden");
 			const tooltip = document.getElementById("profitTooltip");
-			tooltip.textContent = `${fmtDate(nearest.date)}: ${fmtMoney0(nearest.cumulative)}`;
+			tooltip.textContent =
+				`${fmtDate(nearest.date)} — faktisk: ${fmtMoney0(nearest.actual)} · markedsverdi: ${fmtMoney0(nearest.market)}`;
 			tooltip.classList.remove("hidden");
 			tooltip.style.left = `${(nearest.x / CHART_W) * rect.width}px`;
-			tooltip.style.top = `${(nearest.y / CHART_H) * rect.height}px`;
+			tooltip.style.top = `${(Math.min(nearest.yActual, nearest.yMarket) / CHART_H) * rect.height}px`;
 		});
 		container.addEventListener("mouseleave", hide);
 	}
@@ -417,6 +454,10 @@
 		document.getElementById("statProfitNote").textContent = st.excluded
 			? `${st.excluded} salg uten kjent kost er ikke med i fortjenesten.`
 			: "Alle salg har kjent kost.";
+
+		const marketProfitEl = document.getElementById("statMarketProfit");
+		marketProfitEl.textContent = fmtMoney0(st.marketProfit);
+		marketProfitEl.className = `stat-value ${gainClass(st.marketProfit)}`;
 
 		document.getElementById("statRevenue").textContent = fmtMoney0(st.revenue);
 		document.getElementById("statSalesCount").textContent = String(st.count);
