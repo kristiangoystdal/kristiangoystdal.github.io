@@ -653,7 +653,18 @@
 
 			/* Nytt salg dialog */
 			#newSaleDialog {
-				max-width: 680px;
+				max-width: 1100px;
+				width: 95vw;
+				max-height: 92vh;
+			}
+			.sale-top-fields {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+				gap: 10px 14px;
+				margin-bottom: 14px;
+			}
+			.sale-top-fields .dialog-field {
+				margin-bottom: 0;
 			}
 			.sale-search-results {
 				display: grid;
@@ -676,10 +687,14 @@
 				flex-shrink: 0;
 			}
 			.sale-items-editor {
-				display: flex;
-				flex-direction: column;
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
 				gap: 10px;
 				margin-bottom: 14px;
+				align-items: start;
+			}
+			.sale-items-editor p.muted {
+				grid-column: 1 / -1;
 			}
 			.sale-item-row {
 				background: var(--panel-2);
@@ -729,6 +744,11 @@
 			}
 			.sell-computed-4 {
 				grid-template-columns: repeat(4, 1fr);
+			}
+			@media (max-width: 760px) {
+				.sale-items-editor {
+					grid-template-columns: 1fr;
+				}
 			}
 			@media (max-width: 480px) {
 				.sale-search-results {
@@ -1210,27 +1230,29 @@
 		<dialog id="newSaleDialog">
 			<h2 id="newSaleDialogTitle">Nytt salg</h2>
 			<form id="newSaleForm">
-				<div class="dialog-field">
-					<label for="newSaleDate">Dato</label>
-					<input type="date" id="newSaleDate" />
-				</div>
-				<div class="dialog-field">
-					<label for="newSalePlatform">Plattform</label>
-					<select id="newSalePlatform">
-						<option>Finn</option>
-						<option>Facebook</option>
-						<option>Vipps / lokalt</option>
-						<option>Cardmarket</option>
-						<option>Annet</option>
-					</select>
-				</div>
-				<div class="dialog-field">
-					<label for="newSaleNote">Notat (valgfritt)</label>
-					<textarea id="newSaleNote" rows="2"></textarea>
-				</div>
-				<div class="dialog-field">
-					<label for="newSaleShipping">Frakt (valgfritt, kr)</label>
-					<input type="number" id="newSaleShipping" min="0" step="0.01" />
+				<div class="sale-top-fields">
+					<div class="dialog-field">
+						<label for="newSaleDate">Dato</label>
+						<input type="date" id="newSaleDate" />
+					</div>
+					<div class="dialog-field">
+						<label for="newSalePlatform">Plattform</label>
+						<select id="newSalePlatform">
+							<option>Finn</option>
+							<option>Facebook</option>
+							<option>Vipps / lokalt</option>
+							<option>Cardmarket</option>
+							<option>Annet</option>
+						</select>
+					</div>
+					<div class="dialog-field">
+						<label for="newSaleShipping">Frakt (valgfritt, kr)</label>
+						<input type="number" id="newSaleShipping" min="0" step="0.01" />
+					</div>
+					<div class="dialog-field">
+						<label for="newSaleNote">Notat (valgfritt)</label>
+						<input type="text" id="newSaleNote" />
+					</div>
 				</div>
 
 				<div class="dialog-field">

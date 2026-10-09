@@ -300,9 +300,7 @@
 			)
 			.join("");
 
-		const recent = [...state.sales]
-			.sort((a, b) => new Date(b.date) - new Date(a.date))
-			.slice(0, 5);
+		const recent = sortSalesNewestFirst(state.sales).slice(0, 5);
 		document.getElementById("recentSales").innerHTML = recent.length
 			? recent
 					.map(
@@ -1412,7 +1410,7 @@
 		}
 		const card = state.cards.find((c) => c.id === cardId);
 		if (!card) return;
-		newSaleItems.push({
+		newSaleItems.unshift({
 			rowId: uid(),
 			id: card.id,
 			pf: card.pf,
@@ -1460,7 +1458,7 @@
 					if (withPrice.usd != null && usdRate) marketPrice = withPrice.usd * usdRate;
 					else if (withPrice.eur != null && eurRate) marketPrice = withPrice.eur * eurRate;
 				}
-				newSaleItems.push({
+				newSaleItems.unshift({
 					rowId: uid(),
 					id: tcgId,
 					pf: "",
@@ -1542,6 +1540,9 @@
 						maxQty: card ? card.qty + (i.fromCollection !== false && i.removeFromCollection !== false ? i.qty : 0) : null,
 					};
 				});
+				// sale.items is stored oldest-added-first; show newest first, same as
+				// newly-added cards (addCollectionCardToSale/addApiCardToSale unshift).
+				newSaleItems.reverse();
 			}
 		} else {
 			document.getElementById("newSaleDialogTitle").textContent = "Nytt salg";
@@ -1747,10 +1748,16 @@
 
 	// ---------- render: Salg ----------
 
+	// Newest date first; same-date sales are ordered by when they were last
+	// added/edited (sales[] is append-order, so reversing before the stable
+	// sort keeps that recency within a tied date instead of leaving oldest-
+	// added-today on top).
+	function sortSalesNewestFirst(sales) {
+		return [...sales].reverse().sort((a, b) => new Date(b.date) - new Date(a.date));
+	}
+
 	function renderSalg() {
-		const sorted = [...state.sales].sort(
-			(a, b) => new Date(b.date) - new Date(a.date),
-		);
+		const sorted = sortSalesNewestFirst(state.sales);
 		const list = document.getElementById("salesList");
 		if (!sorted.length) {
 			list.innerHTML = `<p class="muted">Ingen salg registrert.</p>`;
