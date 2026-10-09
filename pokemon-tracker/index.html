@@ -365,6 +365,16 @@
 				background: var(--panel-2);
 				border: 1px solid var(--border);
 			}
+			.chip-draft {
+				background: rgba(255, 176, 32, 0.15);
+				border-color: #ffb020;
+				color: #ffb020;
+				font-weight: 600;
+				margin-right: 6px;
+			}
+			.sale-card-draft {
+				border-color: #ffb020;
+			}
 			.chip-holo {
 				background: linear-gradient(120deg, #3b6ceb, #9b5de5, #3ba55d);
 				color: #fff;
@@ -829,6 +839,7 @@
 						<div class="stat-card">
 							<div class="stat-label">Antall salg</div>
 							<div class="stat-value" id="statSalesCount">0</div>
+							<div class="stat-note" id="statDraftNote"></div>
 						</div>
 						<div class="stat-card">
 							<div class="stat-label">Antall solgte kort</div>
@@ -1314,7 +1325,10 @@
 					<button type="button" class="btn secondary" id="newSaleCancelBtn">
 						Avbryt
 					</button>
-					<button type="submit" class="btn">Lagre salg</button>
+					<button type="button" class="btn secondary" id="newSaleDraftBtn">
+						Lagre som kladd
+					</button>
+					<button type="submit" class="btn" id="newSaleSubmitBtn">Merk som solgt</button>
 				</div>
 			</form>
 		</dialog>

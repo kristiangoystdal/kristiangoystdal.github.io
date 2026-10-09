@@ -183,13 +183,24 @@
 		return { value, cost, unrealized: value - cost, qty };
 	}
 
+	// A sale is a draft (packed/reserved but not yet confirmed) only when marked
+	// so explicitly; missing status (all pre-existing sales) means sold.
+	function isSoldSale(s) {
+		return s.status !== "draft";
+	}
+
 	function salesTotals() {
 		let revenue = 0,
 			profit = 0,
 			spent = 0,
 			cardsSold = 0,
-			excluded = 0;
+			excluded = 0,
+			draftCount = 0;
 		state.sales.forEach((s) => {
+			if (!isSoldSale(s)) {
+				draftCount++;
+				return;
+			}
 			revenue += s.price || 0;
 			cardsSold += s.items.reduce((sum, i) => sum + i.qty, 0);
 			if (s.cost != null) {
@@ -197,7 +208,8 @@
 				spent += s.cost;
 			} else excluded++;
 		});
-		return { revenue, profit, spent, cardsSold, excluded, count: state.sales.length };
+		const count = state.sales.length - draftCount;
+		return { revenue, profit, spent, cardsSold, excluded, draftCount, count };
 	}
 
 	function portfolioBreakdown() {
@@ -248,6 +260,9 @@
 		document.getElementById("statSalesCount").textContent = String(st.count);
 		document.getElementById("statCardsSold").textContent = String(st.cardsSold);
 		document.getElementById("statSpent").textContent = fmtMoney0(st.spent);
+		document.getElementById("statDraftNote").textContent = st.draftCount
+			? `+ ${st.draftCount} kladd${st.draftCount === 1 ? "" : "er"} (ikke med her)`
+			: "";
 		document.getElementById("statCardsLeft").textContent = String(ct.qty);
 
 		const maxUsedEarned = Math.max(1, st.spent, st.revenue);
@@ -300,7 +315,7 @@
 			)
 			.join("");
 
-		const recent = sortSalesNewestFirst(state.sales).slice(0, 5);
+		const recent = sortSalesNewestFirst(state.sales.filter(isSoldSale)).slice(0, 5);
 		document.getElementById("recentSales").innerHTML = recent.length
 			? recent
 					.map(
@@ -1505,6 +1520,9 @@
 			const sale = state.sales.find((s) => s.id === editingSaleId);
 			if (sale) {
 				document.getElementById("newSaleDialogTitle").textContent = "Rediger salg";
+				document.getElementById("newSaleSubmitBtn").textContent = isSoldSale(sale)
+					? "Lagre endringer"
+					: "Merk som solgt";
 				document.getElementById("newSaleDate").value = sale.date || todayLocalISO();
 				document.getElementById("newSalePlatform").value = PLATFORMS.includes(sale.platform)
 					? sale.platform
@@ -1551,6 +1569,7 @@
 			}
 		} else {
 			document.getElementById("newSaleDialogTitle").textContent = "Nytt salg";
+			document.getElementById("newSaleSubmitBtn").textContent = "Merk som solgt";
 			document.getElementById("newSaleDate").value = todayLocalISO();
 			document.getElementById("newSalePlatform").value = PLATFORMS[0];
 			document.getElementById("newSaleNote").value = "";
@@ -1648,8 +1667,7 @@
 			document.getElementById("newSaleDialog").close();
 		});
 
-		document.getElementById("newSaleForm").addEventListener("submit", (e) => {
-			e.preventDefault();
+		function saveNewSale(status) {
 			const errEl = document.getElementById("newSaleError");
 			if (!newSaleItems.length) {
 				errEl.textContent = "Legg til minst ett kort.";
@@ -1702,6 +1720,7 @@
 				price: totalPrice,
 				cost: totalCost,
 				shipping: shipping == null || isNaN(shipping) ? null : shipping,
+				status,
 				items,
 			};
 
@@ -1748,6 +1767,14 @@
 
 			editingSaleId = null;
 			document.getElementById("newSaleDialog").close();
+		}
+
+		document.getElementById("newSaleForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			saveNewSale("sold");
+		});
+		document.getElementById("newSaleDraftBtn").addEventListener("click", () => {
+			saveNewSale("draft");
 		});
 	}
 
@@ -1770,6 +1797,7 @@
 		}
 		list.innerHTML = sorted
 			.map((s) => {
+				const draft = !isSoldSale(s);
 				const profit = s.cost == null ? null : s.price - s.cost - (s.shipping || 0);
 				const itemsLine = s.items.length
 					? s.items.map((i) => `${escapeHTML(i.name)} ×${i.qty}`).join(", ")
@@ -1778,18 +1806,19 @@
 				if (s.shipping) metaBits.push(`frakt ${fmtMoney2(s.shipping)}`);
 				if (s.note) metaBits.push(s.note);
 				return `
-				<div class="sale-card" data-sale-id="${escapeHTML(s.id)}">
+				<div class="sale-card ${draft ? "sale-card-draft" : ""}" data-sale-id="${escapeHTML(s.id)}">
 					<div class="sale-head">
-						<span class="sale-title">${escapeHTML(s.title)}</span>
+						<span class="sale-title">${draft ? `<span class="chip chip-draft">Kladd</span> ` : ""}${escapeHTML(s.title)}</span>
 						<span class="sale-price mono">${fmtMoney0(s.price)}</span>
 					</div>
 					<div class="sale-meta">${metaBits.map(escapeHTML).join(" · ")}</div>
 					<div class="sale-items">${itemsLine}</div>
 					<div class="sale-foot">
 						<span class="${profit == null ? "muted" : gainClass(profit)}">
-							${profit == null ? "kost ukjent" : "Fortjeneste: " + fmtMoney2(profit)}
+							${draft ? "Ikke bekreftet solgt enda" : profit == null ? "kost ukjent" : "Fortjeneste: " + fmtMoney2(profit)}
 						</span>
 						<div class="sale-actions">
+							<button type="button" class="btn-sm toggle-status-btn" data-id="${escapeHTML(s.id)}">${draft ? "Merk som solgt" : "Merk som kladd"}</button>
 							<button type="button" class="btn-sm edit-sale-btn" data-id="${escapeHTML(s.id)}">Rediger</button>
 							<button type="button" class="btn-sm undo-sale-btn" data-id="${escapeHTML(s.id)}">Angre salg</button>
 							<button type="button" class="btn-sm danger delete-sale-btn" data-id="${escapeHTML(s.id)}">Slett fra loggen</button>
@@ -1869,6 +1898,7 @@
 			const undoBtn = e.target.closest(".undo-sale-btn");
 			const delBtn = e.target.closest(".delete-sale-btn");
 			const editBtn = e.target.closest(".edit-sale-btn");
+			const toggleBtn = e.target.closest(".toggle-status-btn");
 			if (undoBtn) {
 				const ok = await confirmDialog(
 					"Angre dette salget? Kortene legges tilbake i samlingen.",
@@ -1884,6 +1914,11 @@
 				if (!sale) return;
 				if (sale.items.length) openNewSaleDialog(sale.id);
 				else openManualSaleDialog(sale.id);
+			} else if (toggleBtn) {
+				mutate((s) => {
+					const sale = s.sales.find((x) => x.id === toggleBtn.dataset.id);
+					if (sale) sale.status = isSoldSale(sale) ? "draft" : "sold";
+				});
 			}
 		});
 

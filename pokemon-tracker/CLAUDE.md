@@ -171,6 +171,21 @@ TCGdex-only card into the collection. A sale with `items.length === 0`
 instead (`openManualSaleDialog(saleId)`), which gained the same optional
 edit-in-place mode.
 
+### Draft vs. sold
+
+`sale.status` is `"draft"` or `"sold"`; missing (all pre-existing sales)
+counts as sold — see `isSoldSale(s)`. For the "packing cards up before the
+sale is confirmed" workflow: "Nytt salg" has both "Merk som solgt" (submit)
+and "Lagre som kladd" (`saveNewSale(status)` shared by both) — either one
+still applies `removeFromCollection` the same way, since packing a card
+physically sets it aside regardless of whether payment is confirmed yet. A
+draft only differs in that `salesTotals()` and Oversikt's "5 siste salg"
+skip it entirely (revenue/profit/cardsSold aren't counted until confirmed),
+and the Salg list shows it with a "Kladd" chip and a "Merk som
+solgt"/"Merk som kladd" toggle button (flips `status` only, no stock
+change — the stock effect already happened, or didn't, at save time).
+`undoSale`/`deleteSaleFromLog` work the same on drafts as on sold sales.
+
 ## GitHub Gist sync
 
 Same pattern as `pokedex/index.html`: a personal access token (`gist`
