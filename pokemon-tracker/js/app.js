@@ -136,6 +136,9 @@
 	function fmtMoney2(n) {
 		return `${fmt2.format(n || 0)} kr`;
 	}
+	function round2(n) {
+		return n == null ? n : Math.round(n * 100) / 100;
+	}
 	function fmtDate(d) {
 		if (!d) return "–";
 		const dt = new Date(d);
@@ -1752,9 +1755,9 @@
 				cond: r.cond,
 				added: r.added,
 				qty: r.qty,
-				cost: r.cost,
-				price: r.price,
-				soldPrice: r.soldPrice,
+				cost: round2(r.cost),
+				price: round2(r.price),
+				soldPrice: round2(r.soldPrice),
 				fromCollection: r.fromCollection,
 				removeFromCollection: r.fromCollection ? !!r.removeFromCollection : false,
 			}));
