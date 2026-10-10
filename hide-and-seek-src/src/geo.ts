@@ -235,12 +235,16 @@ export function startArea(settings: Pick<Settings, 'playArea'>): Area {
   return ring && ring.length >= 3 ? polygon([[...ring, ring[0]]]) : WORLD
 }
 
+/** Hvor langt utenfor de ytterste stasjonene auto-området går. */
+export const AUTO_MARGIN_M = 2000
+
 /**
- * Spillområde laget fra stasjonene: den minste konvekse rammen rundt sonene til
- * alle stasjoner på linjene som er med.
+ * Spillområde laget fra stasjonene: den minste konvekse rammen som ligger et par
+ * kilometer utenfor alle stasjoner på linjene som er med.
  */
 export function autoPlayArea(stations: Station[], settings: Pick<Settings, 'lines' | 'zoneRadius'>): LngLat[] | null {
-  const zones = stations.filter((s) => s.lines.some((l) => settings.lines.includes(l))).map((s) => disc(stationPos(s), settings.zoneRadius, 24))
+  const margin = Math.max(AUTO_MARGIN_M, settings.zoneRadius)
+  const zones = stations.filter((s) => s.lines.some((l) => settings.lines.includes(l))).map((s) => disc(stationPos(s), margin, 24))
   const hull = zones.length ? convex(featureCollection(zones)) : null
   // Siste punkt i ringen gjentar det første. playArea lagres uten.
   return hull ? (hull.geometry.coordinates[0].slice(0, -1) as LngLat[]) : null
@@ -283,7 +287,7 @@ export interface Step {
 }
 
 export interface Result {
-  /** Det gyldige området: hele sonen til hver stasjon som står igjen, eller i endgame det som er igjen av den ene sonen. */
+  /** Det som vises som gyldig: området svarene peker ut, eller i endgame det som er igjen av den ene sonen. */
   area: Area | null
   stations: Station[]
   steps: Step[]
@@ -317,10 +321,13 @@ export function solve(questions: Question[], data: GeoData, settings: Settings, 
       (base === WORLD || booleanIntersects(disc(stationPos(s), settings.zoneRadius, 32), base)),
   )
   const counts = new Map<string, number>()
+  // Området svarene peker ut til sammen. Det er dette seeker ser frem til endgame.
+  let asked: Area | null = base
   for (const q of roaming) {
     const region = regionOf(q, data)
     left = left.filter((s) => stationFits(s, q, data, settings.zoneRadius) && zoneFits(s, q, region, settings.zoneRadius))
     counts.set(q.id, left.length)
+    asked = applyQuestion(asked, q, data)
   }
 
   if (target) {
@@ -334,10 +341,13 @@ export function solve(questions: Question[], data: GeoData, settings: Settings, 
     return { area, stations: area ? [target] : [], steps: steps(questions, counts, left.length) }
   }
 
-  // Så lenge en stasjon er mulig, er hele sonen dens gyldig.
-  const zones = left.map((s) => disc(stationPos(s), settings.zoneRadius, 48))
-  const area = roaming.length === 0 ? base : zones.length === 0 ? null : zones.length === 1 ? zones[0] : union(featureCollection(zones))
-  return { area, stations: left, steps: steps(questions, counts, data.stations.length) }
+  // Svarene kan utelukke hverandre på kartet selv om stasjoner står igjen, fordi hider kan ha
+  // flyttet seg i sonen mellom spørsmålene. Da vises sonene til stasjonene som er igjen.
+  if (!asked && left.length > 0) {
+    const zones = left.map((s) => disc(stationPos(s), settings.zoneRadius, 48))
+    asked = zones.length === 1 ? zones[0] : union(featureCollection(zones))
+  }
+  return { area: left.length ? asked : null, stations: left, steps: steps(questions, counts, data.stations.length) }
 }
 
 /** Antall stasjoner etter hvert spørsmål. Ubesvarte spørsmål endrer ingenting. */

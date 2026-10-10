@@ -51,7 +51,7 @@ function EndgameControl({ result }: { result: Result }) {
           Start endgame
         </button>
       </div>
-      <p className="mt-1 text-xs text-muted">Start når dere er fremme i sonen. Da er bare den sonen gyldig, og hider må stå stille.</p>
+      <p className="mt-1 text-xs text-muted">Start når dere er fremme ved stasjonen. Først da vises sonen på kartet, og hider må stå stille.</p>
     </Section>
   )
 }
@@ -62,6 +62,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   const settings = useGame((s) => s.settings)
   const setSettings = useGame((s) => s.setSettings)
   const hiderView = useGame((s) => s.mode === 'hider')
+  const endgame = useGame((s) => !!s.round.endgame)
   const lineColor = Object.fromEntries(data.lines.features.map((f) => [f.properties.line, f.properties.color]))
 
   return (
@@ -69,7 +70,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
       {!hiderView && <EndgameControl result={result} />}
       <Section title="Kartlag">
         <div className="flex flex-wrap gap-1.5">
-          {LAYERS.map((l) => (
+          {LAYERS.filter((l) => l.key !== 'zones' || hiderView || endgame).map((l) => (
             <button key={l.key} className={`btn ${layers[l.key] ? 'btn-on' : ''}`} aria-pressed={layers[l.key]} onClick={() => toggleLayer(l.key)}>
               {l.label}
             </button>
@@ -535,7 +536,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
           )}
         </div>
         <p className="mt-1 text-xs text-muted">
-          «Auto» legger en ramme rundt sonene til alle stasjoner på linjene som er med. Trykk på nytt hvis du endrer linjer eller sonestørrelse. Stasjoner der hele sonen ligger utenfor området er utelukket fra start, og området følger med når du deler spillet.
+          «Auto» legger en ramme et par kilometer utenfor de ytterste stasjonene på linjene som er med. Trykk på nytt hvis du endrer linjer eller sonestørrelse. Stasjoner der hele sonen ligger utenfor området er utelukket fra start, og området følger med når du deler spillet.
         </p>
       </Section>
 

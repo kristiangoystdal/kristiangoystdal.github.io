@@ -150,7 +150,8 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     for (const s of data.stations) {
       if (!s.lines.some((l) => settings.lines.includes(l))) continue
       const on = possible.has(s.id)
-      if (layers.zones && (on || !hiderView)) {
+      // Seeker ser ikke stasjonssonene før endgame er markert. Hider ser bare sin egen.
+      if (layers.zones && on && (hiderView || endgame)) {
         L.circle([s.lat, s.lon], {
           radius: settings.zoneRadius,
           interactive: false,
@@ -173,7 +174,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
         .bindPopup(`<b>${s.name}</b><br>Linje ${dots}<br>${hiderView ? '' : `${on ? 'Mulig' : 'Utelukket'} · `}${rate.toFixed(1)} avganger/t`)
         .addTo(st)
     }
-  }, [ready, data, possible, hiderView, layers.zones, settings, lineColor])
+  }, [ready, data, possible, hiderView, endgame, layers.zones, settings, lineColor])
 
   // Når et svar krymper området, zoomes kartet inn på stasjonene som står igjen.
   useEffect(() => {

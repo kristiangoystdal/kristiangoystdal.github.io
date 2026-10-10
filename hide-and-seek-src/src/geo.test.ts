@@ -63,13 +63,20 @@ describe('radar', () => {
     expect(res.steps.map((x) => x.count)).toEqual([6, left.length])
   })
 
-  it('hele sonen til en mulig stasjon er gyldig, også delen utenfor sirkelen', () => {
+  it('før endgame vises området svarene peker ut, ikke stasjonssonene', () => {
     const res = solve([q(radar, 'in')], data, settings)
-    // Punkt 400 m nord for Vinderen: over 1 km fra Majorstuen, men inni Vinderens sone.
+    // Punkt 400 m nord for Vinderen: inni Vinderens sone, men over 1 km fra Majorstuen.
     const far = destination(pos('Vinderen'), 0.4, 0, { units: 'kilometers' }).geometry.coordinates as LngLat
     expect(dist(far, pos('Majorstuen'))).toBeGreaterThan(1000)
-    expect(booleanPointInPolygon(far, res.area!)).toBe(true)
-    expect(booleanPointInPolygon(pos('Kolsås'), res.area!)).toBe(false)
+    expect(res.stations.map((s) => s.name)).toContain('Vinderen') // stasjonen er fortsatt mulig
+    expect(booleanPointInPolygon(far, res.area!)).toBe(false)
+    expect(booleanPointInPolygon(pos('Majorstuen'), res.area!)).toBe(true)
+  })
+
+  it('utelukker svarene hverandre på kartet, vises sonene til stasjonene som står igjen', () => {
+    const res = solve([q(radar, 'in'), { ...q(radar, 'out'), id: 'q2' }], data, settings)
+    expect(res.area).not.toBeNull()
+    expect(booleanPointInPolygon(pos('Frøen'), res.area!)).toBe(true)
   })
 })
 
@@ -114,9 +121,14 @@ describe('spillområde', () => {
     expect(left.length).toBeLessThan(25)
   })
 
-  it('auto-området dekker alle stasjoner på linjene som er med, og bare dem', () => {
+  it('auto-området dekker alle stasjoner på linjene som er med, med et par km margin', () => {
     const all = autoPlayArea(stations, settings)!
     expect(solve([], data, { ...settings, playArea: all }).stations).toHaveLength(101)
+    const area = solve([], data, { ...settings, playArea: all }).area!
+    // Kolsås er den vestligste stasjonen: 1,5 km lenger vest er innenfor, 3 km er utenfor.
+    const west = (km: number) => destination(pos('Kolsås'), km, 270, { units: 'kilometers' }).geometry.coordinates as LngLat
+    expect(booleanPointInPolygon(west(1.5), area)).toBe(true)
+    expect(booleanPointInPolygon(west(3), area)).toBe(false)
 
     // Bare linje 1: Kolsås (linje 3, langt vest) faller utenfor rammen.
     const line1 = autoPlayArea(stations, { ...settings, lines: ['1'] })!
