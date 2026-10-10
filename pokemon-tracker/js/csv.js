@@ -161,7 +161,9 @@
 			const variant = (cells[idx["Variance"]] || "").trim();
 			const cond = (cells[idx["Card Condition"]] || "").trim();
 			const qty = Math.round(parseNumber(cells[idx["Quantity"]]) || 0);
-			const cost = parseNumber(cells[idx["Average Cost Paid"]]);
+			// "Average Cost Paid" is a required column in the Collectr export
+			// format, but Kortbok doesn't track cost at all — it's read past
+			// and discarded, never stored on a row.
 			const marketPrice = parseNumber(cells[priceIdx]) || 0;
 			const override = parseNumber(cells[idx["Price Override"]]) || 0;
 			const price = override > 0 ? override : marketPrice;
@@ -172,14 +174,7 @@
 			const id = buildId(pf, set_, name, no, variant, cond);
 			if (merged.has(id)) {
 				const existing = merged.get(id);
-				const totalQty = existing.qty + qty;
-				const existingCost = existing.cost == null ? 0 : existing.cost;
-				const newCost = cost == null ? 0 : cost;
-				existing.cost =
-					existing.cost == null && cost == null
-						? null
-						: (existingCost * existing.qty + newCost * qty) / totalQty;
-				existing.qty = totalQty;
+				existing.qty += qty;
 				existing.price = price;
 			} else {
 				merged.set(id, {
@@ -192,7 +187,6 @@
 					variant,
 					cond,
 					qty,
-					cost,
 					price,
 					added,
 				});
@@ -239,7 +233,7 @@
 					c.variant,
 					"Ungraded",
 					c.cond,
-					c.cost == null ? "" : c.cost,
+					"", // Average Cost Paid — Kortbok doesn't track cost
 					c.qty,
 					c.price,
 					0,

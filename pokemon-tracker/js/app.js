@@ -8,7 +8,9 @@
 	const STORAGE_KEY = "kortbok.v1";
 	const TOKEN_KEY = "kortbok-gh-token";
 	const GIST_ID_KEY = "kortbok-gist-id";
+	const AUTO_SYNC_KEY = "kortbok-gist-autosync";
 	const GIST_FILENAME = "kortbok-data.json";
+	const AUTO_GIST_DELAY_MS = 2500;
 	const PLATFORMS = ["Finn", "Facebook", "Vipps / lokalt", "Cardmarket", "Annet"];
 
 	let storageOk = true;
@@ -17,6 +19,7 @@
 	let collectionPageSize = 100;
 	let lastParsed = null; // { rows, meta } from the last CSV picked for import
 	let editingCardId = null; // card id being edited in the card dialog, or null when adding
+	let autoGistTimer = null; // debounce handle for scheduleAutoGistPush
 
 	// TCGdex "Legg til kort" search dialog state.
 	let findResults = []; // brief search results for the current query
@@ -28,7 +31,7 @@
 	let findLastQuery = null; // { name, no } of the last search, for retry
 
 	// "Nytt salg" dialog state.
-	let newSaleItems = []; // draft rows: { rowId, id, pf, set, name, no, rarity, variant, cond, added, qty, cost, price, soldPrice, fromCollection, removeFromCollection }
+	let newSaleItems = []; // draft rows: { rowId, id, pf, set, name, no, rarity, variant, cond, added, qty, price, soldPrice, fromCollection, removeFromCollection }
 	let editingSaleId = null; // sale id being edited via the new-sale dialog, or null when adding
 	let editingSaleShipping = null; // shipping carried through from an edited sale (no UI control for it anymore)
 	let editingManualSaleId = null; // sale id being edited via the no-card manual dialog, or null when adding
@@ -88,6 +91,7 @@
 		fn(state);
 		saveState();
 		renderAll();
+		scheduleAutoGistPush();
 	}
 
 	function replaceState(obj) {
@@ -169,23 +173,15 @@
 	function cardValue(c) {
 		return (c.price || 0) * c.qty;
 	}
-	function cardCost(c) {
-		return (c.cost || 0) * c.qty;
-	}
-	function cardProfit(c) {
-		return cardValue(c) - cardCost(c);
-	}
 
 	function collectionTotals() {
 		let value = 0,
-			cost = 0,
 			qty = 0;
 		state.cards.forEach((c) => {
 			value += cardValue(c);
-			cost += cardCost(c);
 			qty += c.qty;
 		});
-		return { value, cost, unrealized: value - cost, qty };
+		return { value, qty };
 	}
 
 	// A sale is a draft (packed/reserved but not yet confirmed) only when marked
@@ -228,7 +224,6 @@
 					variant: item.variant,
 					cond: item.cond,
 					qty: item.qty,
-					cost: item.cost,
 					price: item.price,
 					added: item.added,
 				});
@@ -251,11 +246,8 @@
 
 	function salesTotals() {
 		let revenue = 0,
-			profit = 0,
 			overMarket = 0,
-			spent = 0,
 			cardsSold = 0,
-			excluded = 0,
 			draftCount = 0;
 		state.sales.forEach((s) => {
 			if (!isSoldSale(s)) {
@@ -265,13 +257,9 @@
 			revenue += s.price || 0;
 			cardsSold += s.items.reduce((sum, i) => sum + i.qty, 0);
 			if (s.items.length) overMarket += saleOverMarket(s);
-			if (s.cost != null) {
-				profit += s.price - s.cost - (s.shipping || 0);
-				spent += s.cost;
-			} else excluded++;
 		});
 		const count = state.sales.length - draftCount;
-		return { revenue, profit, overMarket, spent, cardsSold, excluded, draftCount, count };
+		return { revenue, overMarket, cardsSold, draftCount, count };
 	}
 
 	function portfolioBreakdown() {
@@ -289,33 +277,20 @@
 	const CHART_PAD = { left: 56, right: 12, top: 14, bottom: 26 };
 	let profitChartPoints = []; // [{x, y, date, cumulative}] in SVG coordinate space, for hover lookup
 
-	// One point per sale date with a known-cost sold sale; a day with several
-	// such sales is folded into one step, same "by sale date" grouping as the
-	// backlog asked for.
-	// Market-value profit only reflects sales that actually have items (a
-	// manual no-card sale has no market price to compare against), so its
-	// line can diverge from the actual one by more than "what was sold for
-	// less/more than market" — it also simply excludes those manual sales.
-	// Two independent series sharing a date axis: "actual" needs a known cost
-	// (so it's a real profit figure), "overMarket" only needs items (so a
-	// sale can count toward one, the other, both, or neither).
+	// One point per sale date with at least one priced item; a day with
+	// several such sales is folded into one step. A manual no-card sale has
+	// no market price to compare against, so it's simply excluded.
 	function buildProfitSeries() {
 		const byDate = new Map();
 		state.sales.forEach((s) => {
-			if (!isSoldSale(s)) return;
-			const entry = byDate.get(s.date) || { actual: 0, overMarket: 0 };
-			if (s.cost != null) entry.actual += s.price - s.cost - (s.shipping || 0);
-			if (s.items.length) entry.overMarket += saleOverMarket(s);
-			byDate.set(s.date, entry);
+			if (!isSoldSale(s) || !s.items.length) return;
+			byDate.set(s.date, (byDate.get(s.date) || 0) + saleOverMarket(s));
 		});
 		const dates = [...byDate.keys()].sort((a, b) => new Date(a) - new Date(b));
-		let runActual = 0;
-		let runOverMarket = 0;
+		let running = 0;
 		return dates.map((date) => {
-			const e = byDate.get(date);
-			runActual += e.actual;
-			runOverMarket += e.overMarket;
-			return { date, actual: runActual, overMarket: runOverMarket };
+			running += byDate.get(date);
+			return { date, overMarket: running };
 		});
 	}
 
@@ -324,11 +299,11 @@
 		const series = buildProfitSeries();
 		profitChartPoints = [];
 		if (series.length < 2) {
-			wrap.innerHTML = `<p class="muted">Ikke nok salg med kjent kost til å vise en graf enda.</p>`;
+			wrap.innerHTML = `<p class="muted">Ikke nok salg til å vise en graf enda.</p>`;
 			return;
 		}
 
-		const allValues = series.flatMap((p) => [p.actual, p.overMarket]);
+		const allValues = series.map((p) => p.overMarket);
 		const minV = Math.min(0, ...allValues);
 		const maxV = Math.max(0, ...allValues);
 		const span = maxV - minV || 1;
@@ -342,39 +317,27 @@
 			CHART_PAD.top + innerH - ((v - domainMin) / (domainMax - domainMin)) * innerH;
 
 		const zeroY = yAt(0);
-		const actualColor = series[series.length - 1].actual >= 0 ? "var(--gain)" : "var(--loss)";
-		const marketColor = "var(--accent-2)";
-		const actualPoints = series.map((p, i) => `${xAt(i)},${yAt(p.actual)}`).join(" ");
-		const marketPoints = series.map((p, i) => `${xAt(i)},${yAt(p.overMarket)}`).join(" ");
-		const areaPoints =
-			`${xAt(0)},${zeroY} ` + actualPoints + ` ${xAt(series.length - 1)},${zeroY}`;
+		const color = series[series.length - 1].overMarket >= 0 ? "var(--gain)" : "var(--loss)";
+		const linePoints = series.map((p, i) => `${xAt(i)},${yAt(p.overMarket)}`).join(" ");
+		const areaPoints = `${xAt(0)},${zeroY} ` + linePoints + ` ${xAt(series.length - 1)},${zeroY}`;
 
 		profitChartPoints = series.map((p, i) => ({
 			x: xAt(i),
-			yActual: yAt(p.actual),
-			yMarket: yAt(p.overMarket),
+			y: yAt(p.overMarket),
 			date: p.date,
-			actual: p.actual,
 			overMarket: p.overMarket,
 		}));
 		const last = profitChartPoints[profitChartPoints.length - 1];
 
 		wrap.innerHTML = `
-			<div class="chart-legend">
-				<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:${actualColor}"></span>Faktisk fortjeneste</span>
-				<span class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch-dashed" style="border-color:${marketColor}"></span>Over markedspris</span>
-			</div>
 			<svg viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="none" id="profitSvg">
 				<line x1="${CHART_PAD.left}" y1="${zeroY}" x2="${CHART_W - CHART_PAD.right}" y2="${zeroY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" />
 				<text x="${CHART_PAD.left - 8}" y="${zeroY + 4}" text-anchor="end" font-size="10" fill="var(--muted)">0 kr</text>
-				<polygon points="${areaPoints}" fill="${actualColor}" opacity="0.12" />
-				<polyline points="${marketPoints}" fill="none" stroke="${marketColor}" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round" />
-				<polyline points="${actualPoints}" fill="none" stroke="${actualColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-				<circle cx="${last.x}" cy="${last.yActual}" r="4" fill="${actualColor}" />
-				<circle cx="${last.x}" cy="${last.yMarket}" r="4" fill="${marketColor}" />
+				<polygon points="${areaPoints}" fill="${color}" opacity="0.12" />
+				<polyline points="${linePoints}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+				<circle cx="${last.x}" cy="${last.y}" r="4" fill="${color}" />
 				<line id="profitCrosshair" x1="${last.x}" y1="${CHART_PAD.top}" x2="${last.x}" y2="${CHART_H - CHART_PAD.bottom}" stroke="var(--muted)" stroke-width="1" class="hidden" />
-				<circle id="profitHoverDotActual" cx="${last.x}" cy="${last.yActual}" r="4" fill="${actualColor}" class="hidden" />
-				<circle id="profitHoverDotMarket" cx="${last.x}" cy="${last.yMarket}" r="4" fill="${marketColor}" class="hidden" />
+				<circle id="profitHoverDot" cx="${last.x}" cy="${last.y}" r="4" fill="${color}" class="hidden" />
 				<text x="${CHART_PAD.left}" y="${CHART_H - 6}" font-size="10" fill="var(--muted)">${fmtDate(series[0].date)}</text>
 				<text x="${CHART_W - CHART_PAD.right}" y="${CHART_H - 6}" text-anchor="end" font-size="10" fill="var(--muted)">${fmtDate(series[series.length - 1].date)}</text>
 			</svg>
@@ -385,8 +348,7 @@
 		const container = document.getElementById("profitChartWrap");
 		function hide() {
 			document.getElementById("profitCrosshair")?.classList.add("hidden");
-			document.getElementById("profitHoverDotActual")?.classList.add("hidden");
-			document.getElementById("profitHoverDotMarket")?.classList.add("hidden");
+			document.getElementById("profitHoverDot")?.classList.add("hidden");
 			document.getElementById("profitTooltip")?.classList.add("hidden");
 		}
 		container.addEventListener("mousemove", (e) => {
@@ -404,23 +366,18 @@
 				}
 			});
 			const crosshair = document.getElementById("profitCrosshair");
-			const dotActual = document.getElementById("profitHoverDotActual");
-			const dotMarket = document.getElementById("profitHoverDotMarket");
+			const dot = document.getElementById("profitHoverDot");
 			crosshair.setAttribute("x1", nearest.x);
 			crosshair.setAttribute("x2", nearest.x);
 			crosshair.classList.remove("hidden");
-			dotActual.setAttribute("cx", nearest.x);
-			dotActual.setAttribute("cy", nearest.yActual);
-			dotActual.classList.remove("hidden");
-			dotMarket.setAttribute("cx", nearest.x);
-			dotMarket.setAttribute("cy", nearest.yMarket);
-			dotMarket.classList.remove("hidden");
+			dot.setAttribute("cx", nearest.x);
+			dot.setAttribute("cy", nearest.y);
+			dot.classList.remove("hidden");
 			const tooltip = document.getElementById("profitTooltip");
-			tooltip.textContent =
-				`${fmtDate(nearest.date)} — faktisk: ${fmtMoney0(nearest.actual)} · over markedspris: ${fmtMoney0(nearest.overMarket)}`;
+			tooltip.textContent = `${fmtDate(nearest.date)} — fortjeneste: ${fmtMoney0(nearest.overMarket)}`;
 			tooltip.classList.remove("hidden");
 			tooltip.style.left = `${(nearest.x / CHART_W) * rect.width}px`;
-			tooltip.style.top = `${(Math.min(nearest.yActual, nearest.yMarket) / CHART_H) * rect.height}px`;
+			tooltip.style.top = `${(nearest.y / CHART_H) * rect.height}px`;
 		});
 		container.addEventListener("mouseleave", hide);
 	}
@@ -560,13 +517,6 @@
 		const st = salesTotals();
 		const ct = collectionTotals();
 
-		const profitEl = document.getElementById("statProfit");
-		profitEl.textContent = fmtMoney0(st.profit);
-		profitEl.className = `stat-value ${gainClass(st.profit)}`;
-		document.getElementById("statProfitNote").textContent = st.excluded
-			? `${st.excluded} salg uten kjent kost er ikke med i fortjenesten.`
-			: "Alle salg har kjent kost.";
-
 		const overMarketEl = document.getElementById("statOverMarket");
 		overMarketEl.textContent = fmtMoney0(st.overMarket);
 		overMarketEl.className = `stat-value ${gainClass(st.overMarket)}`;
@@ -574,31 +524,12 @@
 		document.getElementById("statRevenue").textContent = fmtMoney0(st.revenue);
 		document.getElementById("statSalesCount").textContent = String(st.count);
 		document.getElementById("statCardsSold").textContent = String(st.cardsSold);
-		document.getElementById("statSpent").textContent = fmtMoney0(st.spent);
 		document.getElementById("statDraftNote").textContent = st.draftCount
 			? `+ ${st.draftCount} kladd${st.draftCount === 1 ? "" : "er"} (ikke med her)`
 			: "";
 		document.getElementById("statCardsLeft").textContent = String(ct.qty);
 
-		const maxUsedEarned = Math.max(1, st.spent, st.revenue);
-		document.getElementById("usedVsEarned").innerHTML = `
-			<div class="pf-bar-row">
-				<span class="pf-bar-label">Brukt (kostpris)</span>
-				<div class="pf-bar-track"><div class="pf-bar-fill" style="width:${(st.spent / maxUsedEarned) * 100}%; background: var(--loss)"></div></div>
-				<span class="pf-bar-value">${fmtMoney0(st.spent)}</span>
-			</div>
-			<div class="pf-bar-row">
-				<span class="pf-bar-label">Tjent (salgssum)</span>
-				<div class="pf-bar-track"><div class="pf-bar-fill" style="width:${(st.revenue / maxUsedEarned) * 100}%; background: var(--gain)"></div></div>
-				<span class="pf-bar-value">${fmtMoney0(st.revenue)}</span>
-			</div>
-		`;
-
 		document.getElementById("statValue").textContent = fmtMoney0(ct.value);
-		document.getElementById("statCost").textContent = fmtMoney0(ct.cost);
-		const unrealEl = document.getElementById("statUnrealized");
-		unrealEl.textContent = fmtMoney0(ct.unrealized);
-		unrealEl.className = `stat-value-sm ${gainClass(ct.unrealized)}`;
 		document.getElementById("statPriceDate").textContent = state.meta.priceDate
 			? fmtDate(state.meta.priceDate)
 			: "–";
@@ -693,8 +624,6 @@
 			nyeste: (a, b) => new Date(b.added) - new Date(a.added),
 			eldste: (a, b) => new Date(a.added) - new Date(b.added),
 			verdi: (a, b) => cardValue(b) - cardValue(a),
-			profitt: (a, b) => cardProfit(b) - cardProfit(a),
-			tap: (a, b) => cardProfit(a) - cardProfit(b),
 			navn: (a, b) => a.name.localeCompare(b.name, "nb"),
 		};
 		list.sort(sorters[sort] || sorters.nyeste);
@@ -718,7 +647,6 @@
 		const body = document.getElementById("collectionBody");
 		body.innerHTML = visible
 			.map((c) => {
-				const profit = cardProfit(c);
 				return `
 			<tr data-id="${escapeHTML(c.id)}">
 				<td><input type="checkbox" class="row-chk" data-id="${escapeHTML(c.id)}" ${selectedIds.has(c.id) ? "checked" : ""}></td>
@@ -730,9 +658,7 @@
 				<td class="mono">${escapeHTML(c.no)}</td>
 				<td>${variantChipHTML(c.variant)}</td>
 				<td class="mono num">${c.qty}</td>
-				<td class="mono num">${c.cost == null ? "–" : fmtMoney2(c.cost)}</td>
 				<td class="mono num">${fmtMoney2(cardValue(c))}</td>
-				<td class="mono num ${gainClass(profit)}">${fmtMoney2(profit)}</td>
 				<td class="mono">${fmtDate(c.added)}</td>
 				<td><button type="button" class="btn-sm edit-row-btn" data-id="${escapeHTML(c.id)}">Rediger</button></td>
 				<td><button type="button" class="btn-sm sell-row-btn" data-id="${escapeHTML(c.id)}">Selg</button></td>
@@ -784,13 +710,6 @@
 
 		document.getElementById("showMoreBtn").addEventListener("click", () => {
 			collectionPageSize += 100;
-			renderSamling();
-		});
-
-		document.getElementById("selectNoCostBtn").addEventListener("click", () => {
-			filteredSortedCards()
-				.filter((c) => c.cost == null)
-				.forEach((c) => selectedIds.add(c.id));
 			renderSamling();
 		});
 
@@ -858,35 +777,6 @@
 				s.cards = s.cards.filter((c) => !ids.includes(c.id));
 			});
 			selectedIds.clear();
-		});
-
-		document.getElementById("bulkCostBtn").addEventListener("click", () => {
-			document.getElementById("bulkCostCount").textContent =
-				`Setter kostpris på ${selectedIds.size} valgte kort.`;
-			document.getElementById("bulkCostValue").value = "";
-			document.getElementById("bulkCostError").textContent = "";
-			document.getElementById("bulkCostDialog").showModal();
-		});
-		document.getElementById("bulkCostCancelBtn").addEventListener("click", () => {
-			document.getElementById("bulkCostDialog").close();
-		});
-		document.getElementById("bulkCostForm").addEventListener("submit", (e) => {
-			e.preventDefault();
-			const raw = document.getElementById("bulkCostValue").value.trim();
-			const value = round2(parseFloat(raw.replace(",", ".")));
-			if (raw === "" || isNaN(value) || value < 0) {
-				document.getElementById("bulkCostError").textContent =
-					"Oppgi en gyldig kostpris.";
-				return;
-			}
-			const ids = [...selectedIds];
-			mutate((s) => {
-				ids.forEach((id) => {
-					const card = s.cards.find((c) => c.id === id);
-					if (card) card.cost = value;
-				});
-			});
-			document.getElementById("bulkCostDialog").close();
 		});
 
 		document.getElementById("bulkMoveBtn").addEventListener("click", () => {
@@ -969,24 +859,15 @@
 		document.getElementById("cardCond").value = card ? card.cond : "";
 		document.getElementById("cardPf").value = card ? card.pf : "Main";
 		document.getElementById("cardQty").value = card ? card.qty : 1;
-		document.getElementById("cardCost").value =
-			card && card.cost != null ? card.cost : "";
 		document.getElementById("cardPrice").value = card ? card.price : "";
 		document.getElementById("cardAdded").value = card ? card.added : todayLocalISO();
 		document.getElementById("cardError").textContent = "";
 		document.getElementById("cardDialog").showModal();
 	}
 
-	// Sums qty and takes a quantity-weighted average of cost, same rule as CSV import merges.
+	// Sums qty when merging a card into an id that already exists.
 	function mergeCardInto(target, extra) {
-		const totalQty = target.qty + extra.qty;
-		const targetCost = target.cost == null ? 0 : target.cost;
-		const extraCost = extra.cost == null ? 0 : extra.cost;
-		target.cost =
-			target.cost == null && extra.cost == null
-				? null
-				: (targetCost * target.qty + extraCost * extra.qty) / totalQty;
-		target.qty = totalQty;
+		target.qty += extra.qty;
 		target.price = extra.price;
 	}
 
@@ -1005,8 +886,6 @@
 			const cond = document.getElementById("cardCond").value.trim();
 			const pf = document.getElementById("cardPf").value.trim();
 			const qty = parseInt(document.getElementById("cardQty").value, 10);
-			const costRaw = document.getElementById("cardCost").value.trim();
-			const cost = costRaw === "" ? null : parseFloat(costRaw.replace(",", "."));
 			const priceRaw = document.getElementById("cardPrice").value.trim();
 			const price = parseFloat(priceRaw.replace(",", "."));
 			const added = document.getElementById("cardAdded").value || todayLocalISO();
@@ -1018,7 +897,7 @@
 			}
 
 			const id = window.KB.csv.buildId(pf, set_, name, no, variant, cond);
-			const newData = { id, pf, set: set_, name, no, rarity, variant, cond, qty, cost, price, added };
+			const newData = { id, pf, set: set_, name, no, rarity, variant, cond, qty, price, added };
 
 			mutate((s) => {
 				if (editingCardId) {
@@ -1294,7 +1173,6 @@
 
 				document.getElementById("findCond").value = "Near Mint";
 				document.getElementById("findQty").value = 1;
-				document.getElementById("findCost").value = "";
 				document.getElementById("findAdded").value = todayLocalISO();
 				document.getElementById("findDetailError").textContent = "";
 				const initialPrice = priceForVariantLabel(selectEl.value);
@@ -1325,7 +1203,6 @@
 			cond: document.getElementById("findCond").value.trim() || "Near Mint",
 			qty: parseInt(document.getElementById("findQty").value, 10),
 			price: parseFloat(document.getElementById("findPrice").value.replace(",", ".")),
-			costRaw: document.getElementById("findCost").value.trim(),
 			pf,
 			added: document.getElementById("findAdded").value || todayLocalISO(),
 		};
@@ -1343,7 +1220,6 @@
 	}
 
 	function buildFindCard(f) {
-		const cost = f.costRaw === "" ? null : parseFloat(f.costRaw.replace(",", "."));
 		const name = findSelectedDetail.name;
 		const no = findSelectedDetail._no;
 		const set_ = findSelectedDetail.set ? findSelectedDetail.set.name : "";
@@ -1359,7 +1235,6 @@
 			variant: f.variant,
 			cond: f.cond,
 			qty: f.qty,
-			cost: cost == null || isNaN(cost) ? null : cost,
 			price: f.price,
 			added: f.added,
 		};
@@ -1476,7 +1351,6 @@
 				</div>
 				<div class="sale-item-row-fields">
 					<label>Antall<input type="number" class="si-qty" min="1" step="1" value="${r.qty}" data-row-id="${r.rowId}"></label>
-					<label>Kost/stk (kr)<input type="number" class="si-cost" min="0" step="0.01" value="${r.cost ?? ""}" data-row-id="${r.rowId}"></label>
 					<label>Markedspris/stk (kr)<input type="number" class="si-market" min="0" step="0.01" value="${r.price ?? ""}" data-row-id="${r.rowId}"></label>
 					<label>Salgspris/stk (kr)<input type="number" class="si-sold" min="0" step="0.01" value="${r.soldPrice ?? ""}" data-row-id="${r.rowId}"></label>
 				</div>
@@ -1489,47 +1363,32 @@
 		const el = document.getElementById(`calc-${row.rowId}`);
 		if (!el) return;
 		const lineSold = (row.soldPrice || 0) * row.qty;
-		const lineCost = row.cost == null ? null : row.cost * row.qty;
-		const lineProfit = lineCost == null ? null : lineSold - lineCost;
+		const lineProfit = ((row.soldPrice || 0) - (row.price || 0)) * row.qty;
 		const mult = saleRowMultiplier(row);
-		const parts = [`Sum: ${fmtMoney2(lineSold)}`];
-		parts.push(lineProfit == null ? "kost ukjent" : `Profitt: ${fmtMoney2(lineProfit)}`);
+		const parts = [`Sum: ${fmtMoney2(lineSold)}`, `Fortjeneste: ${fmtMoney2(lineProfit)}`];
 		if (mult != null) parts.push(`${mult.toFixed(2)}x markedsverdi`);
 		el.textContent = parts.join(" · ");
 	}
 
 	function updateNewSaleSummary() {
 		let totalSold = 0;
-		let totalCost = 0;
 		let totalMarket = 0;
 		let totalQty = 0;
-		let anyCostUnknown = false;
 		newSaleItems.forEach((r) => {
 			totalSold += (r.soldPrice || 0) * r.qty;
 			totalMarket += (r.price || 0) * r.qty;
 			totalQty += r.qty;
-			if (r.cost == null) anyCostUnknown = true;
-			else totalCost += r.cost * r.qty;
 		});
 		document.getElementById("newSaleItemCount").textContent = totalQty
 			? `— ${totalQty} kort lagt til (${newSaleItems.length} ${newSaleItems.length === 1 ? "rad" : "rader"})`
 			: "";
-		const shipping = editingSaleShipping || 0;
 
 		document.getElementById("newSaleTotalPrice").textContent = fmtMoney2(totalSold);
-		document.getElementById("newSaleTotalCost").textContent = anyCostUnknown
-			? "delvis ukjent"
-			: fmtMoney2(totalCost);
 		document.getElementById("newSaleTotalMarket").textContent = fmtMoney2(totalMarket);
 		const profitEl = document.getElementById("newSaleTotalProfit");
-		if (anyCostUnknown) {
-			profitEl.textContent = "kost ukjent";
-			profitEl.className = "";
-		} else {
-			const profit = totalSold - totalCost - shipping;
-			profitEl.textContent = fmtMoney2(profit);
-			profitEl.className = gainClass(profit);
-		}
+		const profit = totalSold - totalMarket;
+		profitEl.textContent = fmtMoney2(profit);
+		profitEl.className = gainClass(profit);
 
 		const targetRaw = document.getElementById("distributeTotal").value.trim();
 		const diffEl = document.getElementById("newSaleDiff");
@@ -1585,7 +1444,7 @@
 					<span class="find-result-noimg" aria-hidden="true"></span>
 					<span class="find-result-info">
 						<span class="find-result-name">${escapeHTML(c.name)}</span>
-						<span class="find-result-sub">${escapeHTML(c.set)} · #${escapeHTML(c.no)} · ${c.qty} stk · kost ${c.cost == null ? "–" : fmtMoney2(c.cost)}</span>
+						<span class="find-result-sub">${escapeHTML(c.set)} · #${escapeHTML(c.no)} · ${c.qty} stk · pris ${fmtMoney2(c.price)}</span>
 					</span>
 					<button type="button" class="btn-sm sale-add-btn" data-kind="collection" data-id="${escapeHTML(c.id)}">Legg til</button>
 				</div>`,
@@ -1716,7 +1575,6 @@
 			cond: card.cond,
 			added: card.added,
 			qty: 1,
-			cost: card.cost,
 			price: card.price,
 			soldPrice: null,
 			fromCollection: true,
@@ -1764,7 +1622,6 @@
 					cond: "Near Mint",
 					added: todayLocalISO(),
 					qty: 1,
-					cost: null,
 					price: marketPrice,
 					soldPrice: null,
 					fromCollection: false,
@@ -1829,7 +1686,6 @@
 						cond: i.cond,
 						added: i.added,
 						qty: i.qty,
-						cost: i.cost,
 						price: i.price,
 						soldPrice,
 						fromCollection: i.fromCollection !== false,
@@ -1913,9 +1769,6 @@
 			if (!row) return;
 			if (e.target.classList.contains("si-qty")) {
 				row.qty = Math.max(1, parseInt(e.target.value, 10) || 1);
-			} else if (e.target.classList.contains("si-cost")) {
-				const v = e.target.value.trim();
-				row.cost = v === "" ? null : parseFloat(v.replace(",", "."));
 			} else if (e.target.classList.contains("si-market")) {
 				const v = e.target.value.trim();
 				row.price = v === "" ? null : parseFloat(v.replace(",", "."));
@@ -1933,14 +1786,6 @@
 			if (!row) return;
 			if (e.target.classList.contains("si-remove-chk")) {
 				row.removeFromCollection = e.target.checked;
-			} else if (e.target.classList.contains("si-cost")) {
-				// Round to 2 decimals once the user leaves the field.
-				if (row.cost != null) {
-					row.cost = Math.round(row.cost * 100) / 100;
-					e.target.value = row.cost.toFixed(2);
-					updateSaleRowCalc(row);
-					updateNewSaleSummary();
-				}
 			}
 		});
 		document.getElementById("newSaleItems").addEventListener("click", (e) => {
@@ -1989,15 +1834,12 @@
 				cond: r.cond,
 				added: r.added,
 				qty: r.qty,
-				cost: round2(r.cost),
 				price: round2(r.price),
 				soldPrice: round2(r.soldPrice),
 				fromCollection: r.fromCollection,
 				removeFromCollection: r.fromCollection ? !!r.removeFromCollection : false,
 			}));
-			const anyCostUnknown = items.some((i) => i.cost == null);
 			const totalPrice = items.reduce((sum, i) => sum + i.soldPrice * i.qty, 0);
-			const totalCost = anyCostUnknown ? null : items.reduce((sum, i) => sum + i.cost * i.qty, 0);
 
 			const sale = {
 				id: editingSaleId || uid(),
@@ -2006,7 +1848,6 @@
 				platform,
 				note,
 				price: totalPrice,
-				cost: totalCost,
 				shipping: editingSaleShipping,
 				status,
 				items,
@@ -2075,7 +1916,7 @@
 		list.innerHTML = sorted
 			.map((s) => {
 				const draft = !isSoldSale(s);
-				const profit = s.cost == null ? null : s.price - s.cost - (s.shipping || 0);
+				const profit = s.items.length ? saleOverMarket(s) : null;
 				const itemsLine = s.items.length
 					? s.items.map((i) => `${escapeHTML(i.name)} ×${i.qty}`).join(", ")
 					: "(salg uten kort)";
@@ -2092,7 +1933,7 @@
 					<div class="sale-items">${itemsLine}</div>
 					<div class="sale-foot">
 						<span class="${profit == null ? "muted" : gainClass(profit)}">
-							${draft ? "Ikke bekreftet solgt enda" : profit == null ? "kost ukjent" : "Fortjeneste: " + fmtMoney2(profit)}
+							${draft ? "Ikke bekreftet solgt enda" : profit == null ? "salg uten kort" : "Fortjeneste: " + fmtMoney2(profit)}
 						</span>
 						<div class="sale-actions">
 							<button type="button" class="btn-sm toggle-status-btn" data-id="${escapeHTML(s.id)}">${draft ? "Merk som solgt" : "Merk som kladd"}</button>
@@ -2133,7 +1974,6 @@
 				document.getElementById("manualSaleDialogTitle").textContent = "Rediger salg";
 				document.getElementById("manualSaleDesc").value = sale.title;
 				document.getElementById("manualSalePrice").value = sale.price;
-				document.getElementById("manualSaleCost").value = sale.cost == null ? "" : sale.cost;
 				document.getElementById("manualSaleDate").value = sale.date;
 				document.getElementById("manualSalePlatform").value = PLATFORMS.includes(sale.platform)
 					? sale.platform
@@ -2223,10 +2063,6 @@
 				const price = parseFloat(
 					document.getElementById("manualSalePrice").value.replace(",", "."),
 				);
-				const costRaw = document
-					.getElementById("manualSaleCost")
-					.value.trim();
-				const cost = costRaw === "" ? null : parseFloat(costRaw.replace(",", "."));
 				const date =
 					document.getElementById("manualSaleDate").value || todayLocalISO();
 				const platform = document.getElementById("manualSalePlatform").value;
@@ -2245,7 +2081,6 @@
 						platform,
 						note: "",
 						price,
-						cost: cost == null || isNaN(cost) ? null : cost,
 						items: [],
 					};
 					if (editingManualSaleId) {
@@ -2295,11 +2130,6 @@
 		const updatePrices = document.getElementById("updatePricesChk").checked;
 		const includeSold = document.getElementById("includeSoldChk").checked;
 		const addAsNewRow = document.getElementById("addAsNewRowChk").checked;
-		const costOverrideRaw = document.getElementById("importCostInput").value;
-		const costOverride =
-			costOverrideRaw.trim() === ""
-				? null
-				: window.KB.csv.parseNumber(costOverrideRaw);
 		const existingIds = new Set(state.cards.map((c) => c.id));
 		// A card already in the collection under a different set spelling (e.g.
 		// added by hand via TCGdex search) still counts as "already have it".
@@ -2307,9 +2137,6 @@
 		const soldIds = new Set(
 			state.sales.flatMap((s) => s.items.map((i) => i.id)),
 		);
-
-		const withCost = (r) =>
-			costOverride == null ? r : { ...r, cost: costOverride };
 
 		const toAdd = [];
 		const toAddAsNew = [];
@@ -2321,14 +2148,14 @@
 			if (existingIds.has(r.id) || existingSoftKeys.has(cardSoftKey(r))) {
 				existingCount++;
 				if (addAsNewRow) {
-					toAddAsNew.push(withCost(r));
+					toAddAsNew.push(r);
 				} else if (updatePrices) {
 					toUpdatePrice.push(r);
 				}
 			} else if (soldIds.has(r.id) && !includeSold) {
 				skippedSold++;
 			} else {
-				toAdd.push(withCost(r));
+				toAdd.push(r);
 			}
 		});
 
@@ -2434,7 +2261,6 @@
 		document.getElementById("updatePricesChk").addEventListener("change", renderImportPreview);
 		document.getElementById("includeSoldChk").addEventListener("change", renderImportPreview);
 		document.getElementById("addAsNewRowChk").addEventListener("change", renderImportPreview);
-		document.getElementById("importCostInput").addEventListener("input", renderImportPreview);
 
 		document.getElementById("importBtn").addEventListener("click", () => {
 			if (!lastParsed) return;
@@ -2586,11 +2412,76 @@
 		el.className = `import-status ${type || ""}`;
 	}
 
+	// Shared by the manual "Last opp til Gist" button and autosave. Creates a
+	// new Gist when gistId is empty (manual push only — autosave never does
+	// this, see scheduleAutoGistPush), otherwise PATCHes the existing one.
+	async function pushToGist(token, gistId, { silent } = {}) {
+		const body = {
+			description: "Kortbok data",
+			files: {
+				[GIST_FILENAME]: { content: JSON.stringify(state, null, 2) },
+			},
+		};
+		setSyncStatus(silent ? "Autolagrer…" : "Sender…", "");
+		try {
+			let res;
+			if (gistId) {
+				res = await fetch(`https://api.github.com/gists/${gistId}`, {
+					method: "PATCH",
+					headers: ghHeaders(token),
+					body: JSON.stringify(body),
+				});
+			} else {
+				body.public = false;
+				res = await fetch("https://api.github.com/gists", {
+					method: "POST",
+					headers: ghHeaders(token),
+					body: JSON.stringify(body),
+				});
+			}
+			if (!res.ok) throw new Error(`GitHub API-feil (${res.status})`);
+			const data = await res.json();
+			document.getElementById("gistIdInput").value = data.id;
+			localStorage.setItem(TOKEN_KEY, token);
+			localStorage.setItem(GIST_ID_KEY, data.id);
+			setSyncStatus(
+				silent ? `Autolagret til Gist ${data.id}.` : `Lastet opp til Gist ${data.id}.`,
+				"ok",
+			);
+			return data.id;
+		} catch (err) {
+			console.error(err);
+			setSyncStatus(
+				`${silent ? "Autolagring" : "Opplasting"} feilet: ${err.message}`,
+				"err",
+			);
+			throw err;
+		}
+	}
+
+	// Debounced so a burst of edits (typing, dragging a slider) doesn't fire
+	// one PATCH per keystroke — only once AUTO_GIST_DELAY_MS after the last
+	// mutate(). Silently does nothing until the user has both opted in via
+	// the checkbox AND already has a Gist (a token alone isn't enough —
+	// autosave never creates a new Gist on its own, only a manual push does).
+	function scheduleAutoGistPush() {
+		if (localStorage.getItem(AUTO_SYNC_KEY) !== "1") return;
+		const token = localStorage.getItem(TOKEN_KEY);
+		const gistId = localStorage.getItem(GIST_ID_KEY);
+		if (!token || !gistId) return;
+		clearTimeout(autoGistTimer);
+		autoGistTimer = setTimeout(() => {
+			pushToGist(token, gistId, { silent: true }).catch(() => {});
+		}, AUTO_GIST_DELAY_MS);
+	}
+
 	function initGistSync() {
 		const tokenInput = document.getElementById("tokenInput");
 		const gistIdInput = document.getElementById("gistIdInput");
+		const autoSyncChk = document.getElementById("autoSyncChk");
 		tokenInput.value = localStorage.getItem(TOKEN_KEY) || "";
 		gistIdInput.value = localStorage.getItem(GIST_ID_KEY) || "";
+		autoSyncChk.checked = localStorage.getItem(AUTO_SYNC_KEY) === "1";
 
 		document.getElementById("saveTokenBtn").addEventListener("click", () => {
 			localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
@@ -2601,9 +2492,21 @@
 		document.getElementById("forgetTokenBtn").addEventListener("click", () => {
 			localStorage.removeItem(TOKEN_KEY);
 			localStorage.removeItem(GIST_ID_KEY);
+			localStorage.removeItem(AUTO_SYNC_KEY);
 			tokenInput.value = "";
 			gistIdInput.value = "";
+			autoSyncChk.checked = false;
 			setSyncStatus("Token og Gist-ID glemt.", "");
+		});
+
+		autoSyncChk.addEventListener("change", () => {
+			localStorage.setItem(AUTO_SYNC_KEY, autoSyncChk.checked ? "1" : "0");
+			if (autoSyncChk.checked && !gistIdInput.value.trim()) {
+				setSyncStatus(
+					"Autolagring er på, men du må laste opp til Gist én gang manuelt først.",
+					"err",
+				);
+			}
 		});
 
 		document.getElementById("pushGistBtn").addEventListener("click", async () => {
@@ -2612,40 +2515,10 @@
 				setSyncStatus("Lim inn en GitHub-token først.", "err");
 				return;
 			}
-			let gistId = gistIdInput.value.trim();
-			const body = {
-				description: "Kortbok data",
-				files: {
-					[GIST_FILENAME]: { content: JSON.stringify(state, null, 2) },
-				},
-			};
-			setSyncStatus("Sender…", "");
 			try {
-				let res;
-				if (gistId) {
-					res = await fetch(`https://api.github.com/gists/${gistId}`, {
-						method: "PATCH",
-						headers: ghHeaders(token),
-						body: JSON.stringify(body),
-					});
-				} else {
-					body.public = false;
-					res = await fetch("https://api.github.com/gists", {
-						method: "POST",
-						headers: ghHeaders(token),
-						body: JSON.stringify(body),
-					});
-				}
-				if (!res.ok) throw new Error(`GitHub API-feil (${res.status})`);
-				const data = await res.json();
-				gistId = data.id;
-				gistIdInput.value = gistId;
-				localStorage.setItem(TOKEN_KEY, token);
-				localStorage.setItem(GIST_ID_KEY, gistId);
-				setSyncStatus(`Lastet opp til Gist ${gistId}.`, "ok");
-			} catch (err) {
-				console.error(err);
-				setSyncStatus(`Opplasting feilet: ${err.message}`, "err");
+				await pushToGist(token, gistIdInput.value.trim());
+			} catch {
+				// pushToGist already reported the error via setSyncStatus.
 			}
 		});
 

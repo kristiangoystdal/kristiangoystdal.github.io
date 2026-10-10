@@ -27,12 +27,24 @@ Stored as one JSON document in `localStorage["kortbok.v1"]`:
 
 ```
 {
-  cards: [{ id, pf, set, name, no, rarity, variant, cond, qty, cost, price, added }],
-  sales: [{ id, date, title, platform, note, price, cost, shipping, items: [...] }],
+  cards: [{ id, pf, set, name, no, rarity, variant, cond, qty, price, added }],
+  sales: [{ id, date, title, platform, note, price, shipping, items: [...] }],
   meta: { lastImport, lastBackup, priceDate },
   priceHistory: [{ date, prices: { [cardId]: price } }],
 }
 ```
+
+**No cost tracking.** Kortbok deliberately has no concept of purchase cost
+anywhere — not on a card, not on a sale, not on a sale item. Every "how am I
+doing" figure (Oversikt's "Fortjeneste", the profit chart, a sale's line in
+the Salg log, a row in "Nytt salg") is market-price-based: *sold price minus
+market price*, never *sold price minus what I paid*. This was a deliberate
+removal of an earlier cost-tracking feature (manual cost field, bulk
+"Sett kostpris", a CSV cost-override on import, `mergeCardInto` averaging
+cost on merge) — don't re-add a `cost` field without being asked; it was cut
+on purpose, not an oversight. `sale.shipping` survived the cut as a purely
+informational field (shown as "frakt X kr" in the Salg list) since it was
+never part of the market-based profit formula to begin with.
 
 `priceHistory` is a top-level array, one entry per CSV import, each a full
 snapshot of every row's price in that file (keyed by `id`, not just cards
@@ -52,15 +64,15 @@ correctly (see Import semantics / Nytt salg sections).
 
 - `id` = `[pf, set, name, no, variant, cond]` lower-cased, joined by `|`.
   Rarity and grade are intentionally excluded from the id.
-- `cost`/`price` are per-card unit values; `cost` can be `null` (unknown).
+- `price` is a per-card unit value — the market-price snapshot, same field
+  CSV import, TCGdex add, and manual add/edit all write.
 - A sale's `items[]` is a full snapshot of each sold card at sale time (not a
   reference), so the sales log survives later re-imports or deletions of the
   current collection.
-- Duplicate ids within one imported CSV are merged by summing `qty` and
-  taking a quantity-weighted average of `cost`. The same merge rule
-  (`mergeCardInto` in `app.js`) applies when editing a card into an id that
-  already exists, or adding a card (manually or via TCGdex) whose id matches
-  one already in `cards[]`.
+- Duplicate ids within one imported CSV are merged by summing `qty`. The
+  same merge rule (`mergeCardInto` in `app.js`) applies when editing a card
+  into an id that already exists, or adding a card (manually or via TCGdex)
+  whose id matches one already in `cards[]`.
 - `cardSoftKey(c)` = `name|no|variant` lower-cased — "the same physical card"
   regardless of set spelling or portfolio. Used for TCGdex duplicate
   detection (so a card added by hand isn't re-added under a different set
@@ -69,19 +81,22 @@ correctly (see Import semantics / Nytt salg sections).
 
 ## Definitions
 
-- Card profit = `(price - cost) * qty`, treating a `null` cost as 0.
-- "Tjent så langt" (profit so far) = sum of `(price - cost - (shipping||0))`
-  over sales where `cost != null`. Sales with unknown cost count toward
-  revenue but not profit; the UI reports how many were excluded.
-- "Ikke realisert" (unrealized) = collection value − collection cost.
-- "Brukt vs. tjent" (Oversikt) = sum of `cost` over sales with known cost,
-  vs. sum of `price` (revenue) over *all* sales — a coarser, always-available
-  comparison than the shipping-aware profit above.
-- Per sale item (Nytt salg): line sum = `soldPrice * qty`; line profit =
-  `(soldPrice - cost) * qty` (null if `cost` is null); multiplier = `soldPrice
-  / price` (null if `price` is 0 or null) — "price" here means the one-time
-  market-price snapshot, same field CSV import and TCGdex add already use,
-  not a separate field.
+- `saleMarketRevenue(s)` = sum of `(item.price || 0) * item.qty` over a
+  sale's items — what the items would have fetched at their market-price
+  snapshot. 0 for a manual no-card sale (nothing to compute from).
+- `saleOverMarket(s)` = `s.price - saleMarketRevenue(s)` when the sale has
+  items, else 0 — "Fortjeneste" everywhere means this, and only this. There
+  is no cost-based alternative definition anywhere in the app.
+- Oversikt's "Fortjeneste" stat = sum of `saleOverMarket(s)` over sold
+  (non-draft) sales.
+- "Fortjeneste over tid" chart = running total of `saleOverMarket(s)`,
+  grouped by sale date, sold sales with at least one item only (a manual
+  no-card sale has no market price to compare against, so it's excluded,
+  not counted as zero).
+- Per sale item (Nytt salg): line sum = `soldPrice * qty`; line fortjeneste
+  = `(soldPrice - price) * qty` — "price" is the one-time market-price
+  snapshot (same field CSV import, TCGdex add, and manual add/edit all
+  write); multiplier = `soldPrice / price` (null if `price` is 0 or null).
 
 ## Import semantics
 
@@ -93,19 +108,18 @@ Checkboxes change that:
   cards); this checkbox includes them as new again.
 - "Legg ... som egen rad" — cards that already exist are pushed as a brand
   new, separate `cards[]` entry instead of being skipped/price-updated (lets
-  you track a second purchase batch of the same card with its own cost,
-  rather than it being averaged into the existing row via `mergeCardInto`).
-  Takes priority over "Oppdater pris" for the rows it matches. Since `id` is
+  you track a second purchase batch of the same card as its own row, rather
+  than it being merged into the existing one via `mergeCardInto`). Takes
+  priority over "Oppdater pris" for the rows it matches. Since `id` is
   relied on as a unique key everywhere (edit/sell/select all do
   `cards.find(c => c.id === x)`), the new row's id is disambiguated with a
   `#2`, `#3`, ... suffix at import time (`computeImportPreview`/the
   `importBtn` handler in `app.js`) when it would otherwise collide.
 
-A text input ("Kostpris for alle") optionally overrides `cost` on every row
-about to be newly added (both plain new cards and "egen rad" rows) to one
-typed value, ignoring whatever "Average Cost Paid" the CSV had. Only affects
-rows being pushed as new entries — never touches `toUpdatePrice`, which only
-ever changes `price` on an existing row.
+The Collectr CSV's "Average Cost Paid" column is still a required header
+(`REQUIRED_HEADERS` in `csv.js`, since that's the real Collectr export
+format, not Kortbok's choice) but its value is read and discarded —
+`parseCollectrCSV` never puts a `cost` field on a row.
 
 **Price history.** Every successful import pushes a `priceHistory` snapshot
 (see Data model) of the *file's* prices, independent of the checkboxes
@@ -169,13 +183,13 @@ picks which "Legg til" to click, nothing is auto-deduped between the two
 groups.
 
 Each added card becomes a draft row (`newSaleItems`, dialog-local, not
-persisted until submit) with independently editable `qty`, `cost`,
-`price` (the market-price snapshot — fetched once from TCGdex for
-API-sourced rows, copied from the card for collection-sourced rows) and
-`soldPrice` (always blank until typed or distributed). A collection-sourced
-row also carries `fromCollection: true` and a `removeFromCollection`
-checkbox (default off); an API-sourced row is `fromCollection: false` and is
-never written into `cards[]`, regardless of that checkbox.
+persisted until submit) with independently editable `qty`, `price` (the
+market-price snapshot — fetched once from TCGdex for API-sourced rows,
+copied from the card for collection-sourced rows) and `soldPrice` (always
+blank until typed or distributed). A collection-sourced row also carries
+`fromCollection: true` and a `removeFromCollection` checkbox (default off);
+an API-sourced row is `fromCollection: false` and is never written into
+`cards[]`, regardless of that checkbox.
 
 "Fordel total" (`distributeSaleTotal`) splits one entered target number
 across every row's `soldPrice` proportionally to `price * qty` (falling back
@@ -185,9 +199,8 @@ cent. The diff line (`updateNewSaleSummary`) compares the live sum of
 `soldPrice * qty` against that same target number on every edit, so manual
 tweaks after distributing stay visible until they match again.
 
-On submit, `sale.price`/`sale.cost` are *computed* from the rows (sum of
-`soldPrice*qty`, and sum of `cost*qty` unless any row's cost is unknown) —
-unlike the older "Selg" dialog, where the total is what the user types.
+On submit, `sale.price` is *computed* from the rows (sum of `soldPrice*qty`)
+— unlike the older "Selg" dialog, where the total is what the user types.
 Collection quantities are only touched for rows where
 `fromCollection && removeFromCollection`, in one `mutate()` alongside pushing
 the sale.
@@ -241,6 +254,22 @@ state as one JSON file in the Gist; pull overwrites local state after a
 confirm dialog. This is optional — the page works fully offline via
 `localStorage` alone.
 
+**Autosave.** The manual push button and autosave both funnel through one
+`pushToGist(token, gistId, {silent})` (`app.js`) — `silent` only changes the
+status-line wording ("Autolagret" vs. "Lastet opp"), not the request. An
+"Autolagre til Gist ved endringer" checkbox (`#autoSyncChk`, persisted as
+`kortbok-gist-autosync` = `"1"`/`"0"`) gates `scheduleAutoGistPush()`, called
+at the end of every `mutate()`. It debounces (`AUTO_GIST_DELAY_MS`, 2.5s) so
+a burst of edits is one PATCH, not one per keystroke, and does nothing
+unless both the checkbox is on *and* a Gist id already exists —
+**autosave never creates a new Gist**, only a manual "Last opp til Gist"
+click does (so turning the checkbox on with no prior push just shows an
+inline reminder to push once first, rather than silently minting a Gist).
+`replaceState()` (restoring a JSON backup, pulling from Gist) does **not**
+trigger autosave — only `mutate()` does, since those are bulk replacements,
+not incremental edits, and a Gist pull immediately autosaving back to the
+same Gist would be a pointless round-trip.
+
 ## Backlog (one at a time, confirm before touching the `kortbok.v1` shape)
 
 1. ~~Manually edit a card's cost/value; add a single card without a CSV.~~ Done
@@ -250,9 +279,10 @@ confirm dialog. This is optional — the page works fully offline via
 3. ~~Overview chart of accumulated profit by sale date.~~ Done
    ("Fortjeneste over tid", inline SVG, `buildProfitSeries`/`renderProfitChart`
    in `app.js`).
-4. ~~Sell straight from a Samling selection using the full Nytt salg flow,
-   and bulk-set cost on several selected cards at once.~~ Done
-   (`openNewSaleDialogWithCards`, "Sett kostpris").
+4. ~~Sell straight from a Samling selection using the full Nytt salg flow.~~
+   Done (`openNewSaleDialogWithCards`). The bulk "Sett kostpris" action this
+   item originally shipped with was later removed in its entirety — see
+   item 10.
 5. ~~Store price history on each import and show what changed since the last
    one.~~ Done — see the "Price history" paragraph under Import semantics
    and the `priceHistory` field under Data model.
@@ -260,9 +290,8 @@ confirm dialog. This is optional — the page works fully offline via
    once.~~ Done ("Flytt portefølje", `bulkMoveDialog`/`bulkMoveForm` in
    `app.js`). Since `pf` is part of `id` (`buildId`), moving recomputes each
    card's `id`; if that collides with another card already in the target
-   portfolio, the two are merged via `mergeCardInto` (same qty-sum +
-   cost-average rule as CSV import/manual edit) instead of ending up as two
-   rows with the same id.
+   portfolio, the two are merged via `mergeCardInto` (sums `qty`) instead of
+   ending up as two rows with the same id.
 7. ~~Delete a card from the collection outright, not just via a sale.~~ Done
    — a per-row "Slett" button and a selection-bar "Slett valgte" button, both
    behind `confirmDialog` since there's no undo. This only removes the
@@ -281,6 +310,27 @@ confirm dialog. This is optional — the page works fully offline via
    sums every sold sale's `price` regardless of whether `cost` is known —
    there's no cost-based filtering to apply to a plain revenue figure, so
    manual no-card sales count here too.
+10. ~~Remove cost tracking entirely — only market-price-based fortjeneste
+    matters.~~ Done, as a deliberate hard removal (explicitly requested, not
+    just hidden behind a flag): the `cost` field is gone from `cards[]` and
+    `sales[].items[]`; the manual card dialog, the TCGdex add dialog, and
+    "Nytt salg" all lost their cost input; the bulk "Sett kostpris" action
+    (button + dialog) and "Velg uten kostpris" are gone; the CSV import
+    "Kostpris for alle" override is gone (the Collectr file's "Average Cost
+    Paid" column is still parsed since the format requires it, but the
+    value is discarded); `mergeCardInto` now only sums `qty`, no more
+    weighted cost averaging. Every profit figure (Oversikt's "Fortjeneste"
+    stat, "Fortjeneste over tid", a sale's line in the Salg list, a row in
+    "Nytt salg") was repointed at `saleOverMarket`/the per-row
+    `(soldPrice - price) * qty` equivalent — see Definitions. The old
+    cost-based "Tjent så langt"/"Kort igjen: Kost, Ikke realisert"/"Brukt
+    vs. tjent" Oversikt stats are gone outright, not merged into anything.
+    See the "No cost tracking" note under Data model before ever
+    considering adding a cost field back.
+11. ~~Autosave to Gist on every change, not just on manual "Last opp".~~
+    Done — see the "Autosave" paragraph under GitHub Gist sync. Opt-in via
+    a checkbox; off by default, and only ever updates a Gist that already
+    exists (never creates one on its own).
 
 **Note:** the original single-total "Selg" dialog (`#sellDialog`,
 `openSellDialog`/`initSellDialog`) has been removed — Samling's "Selg" and
