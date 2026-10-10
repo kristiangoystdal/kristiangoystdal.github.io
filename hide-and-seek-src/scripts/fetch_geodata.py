@@ -28,18 +28,25 @@ POSTNUMMER_WFS = ("https://wfs.geonorge.no/skwms1/wfs.postnummeromrader?" + urll
     "srsName": "urn:ogc:def:crs:EPSG::4258", "bbox": BBOX + ",urn:ogc:def:crs:EPSG::4258"}))
 KOMMUNER = {"0301": "Oslo", "3201": "Bærum"}
 
-# Filnavnene må stemme med POI_TYPES i src/geo.ts.
+# Sjeldne steder letes etter i et større område, siden nærmeste kan ligge langt unna.
+WIDE = "59.0,9.8,60.4,11.8"
+
+# Filnavnene må stemme med POI_TYPES i src/geo.ts. Verdien er (område, velgere).
 POI_TYPES = {
-    "kino": ('nwr["amenity"="cinema"]',),
-    "sykehus": ('nwr["amenity"="hospital"]',),
-    "museum": ('nwr["tourism"="museum"]',),
-    "park": ('nwr["leisure"="park"]["name"]',),
-    "bibliotek": ('nwr["amenity"="library"]',),
-    "universitet": ('nwr["amenity"="university"]',),
-    "svommehall": ('nwr["leisure"="sports_centre"]["sport"="swimming"]', 'nwr["leisure"="water_park"]'),
+    "flyplass": (WIDE, ('nwr["aeroway"="aerodrome"]["iata"]',)),
+    "jernbanestasjon": (BBOX, ('nwr["railway"="station"]["station"!="subway"]["station"!="light_rail"]["subway"!="yes"]',)),
+    "fjell": (BBOX, ('node["natural"="peak"]["name"]',)),
+    "park": (BBOX, ('nwr["leisure"="park"]["name"]',)),
+    "fornoyelsespark": (WIDE, ('nwr["tourism"="theme_park"]',)),
+    "dyrepark": (WIDE, ('nwr["tourism"="zoo"]',)),
+    "akvarium": (WIDE, ('nwr["tourism"="aquarium"]',)),
+    "golfbane": (WIDE, ('nwr["leisure"="golf_course"]',)),
+    "museum": (BBOX, ('nwr["tourism"="museum"]',)),
+    "kino": (BBOX, ('nwr["amenity"="cinema"]',)),
+    "sykehus": (BBOX, ('nwr["amenity"="hospital"]',)),
+    "bibliotek": (BBOX, ('nwr["amenity"="library"]',)),
+    "konsulat": (BBOX, ('nwr["office"="diplomatic"]', 'nwr["amenity"="embassy"]')),
 }
-TALLEST_COUNT = 15
-TALL_RE = "^([5-9][0-9]|1[0-9][0-9])"  # høyde 50–199 m
 
 CACHE = None
 
@@ -239,23 +246,11 @@ def poi_features(elements, extra=lambda tags: {}):
     return out
 
 
-def parse_height(tags):
-    try:
-        return float(tags.get("height", "").replace("m", "").replace(",", ".").strip())
-    except ValueError:
-        return 0.0
-
-
 def build_poi(out_dir):
     os.makedirs(f"{out_dir}/poi", exist_ok=True)
-    for key, selectors in POI_TYPES.items():
-        q = "(" + "".join(f"{s}({BBOX});" for s in selectors) + ");out center tags;"
+    for key, (bbox, selectors) in POI_TYPES.items():
+        q = "(" + "".join(f"{s}({bbox});" for s in selectors) + ");out center tags;"
         write(f"{out_dir}/poi/{key}.geojson", poi_features(overpass(q, f"op-poi-{key}.json")["elements"]))
-
-    q = f'(way["building"]["name"]["height"~"{TALL_RE}"]({BBOX});relation["building"]["name"]["height"~"{TALL_RE}"]({BBOX}););out center tags;'
-    feats = poi_features(overpass(q, "op-poi-hoye.json")["elements"], lambda tags: {"height": parse_height(tags)})
-    feats.sort(key=lambda f: -f["properties"]["height"])
-    write(f"{out_dir}/poi/hoyeste_bygninger.geojson", feats[:TALLEST_COUNT])
 
 
 if __name__ == "__main__":
