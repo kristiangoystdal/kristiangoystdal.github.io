@@ -8,6 +8,7 @@
 	const STORAGE_KEY = "kortbok.v1";
 	const TOKEN_KEY = "kortbok-gh-token";
 	const GIST_ID_KEY = "kortbok-gist-id";
+	const GIST_UPDATED_KEY = "kortbok-gist-updated-at";
 	const AUTO_SYNC_KEY = "kortbok-gist-autosync";
 	const GIST_FILENAME = "kortbok-data.json";
 	const AUTO_GIST_DELAY_MS = 2500;
@@ -806,26 +807,8 @@
 			const ids = [...selectedIds];
 			mutate((s) => {
 				ids.forEach((id) => {
-					const idx = s.cards.findIndex((c) => c.id === id);
-					if (idx === -1) return;
-					const card = s.cards[idx];
-					if (card.pf === newPf) return;
-					const newId = window.KB.csv.buildId(
-						newPf,
-						card.set,
-						card.name,
-						card.no,
-						card.variant,
-						card.cond,
-					);
-					const other = s.cards.find((c, i) => i !== idx && c.id === newId);
-					if (other) {
-						mergeCardInto(other, card);
-						s.cards.splice(idx, 1);
-					} else {
-						card.pf = newPf;
-						card.id = newId;
-					}
+					const card = s.cards.find((c) => c.id === id);
+					if (card) movePortfolio(s, card, newPf);
 				});
 			});
 			document.getElementById("bulkMoveDialog").close();
@@ -869,6 +852,31 @@
 	function mergeCardInto(target, extra) {
 		target.qty += extra.qty;
 		target.price = extra.price;
+	}
+
+	// Changes a card's portfolio and keeps `id` (which embeds `pf`) in sync.
+	// If another card already occupies the resulting id (same
+	// set/name/no/variant/cond under the new pf), merges into it instead of
+	// creating a duplicate-id row. Used by both the bulk "Flytt portefølje"
+	// action and CSV import syncing a card's pf to what Collectr reports.
+	function movePortfolio(s, card, newPf) {
+		if (card.pf === newPf) return;
+		const newId = window.KB.csv.buildId(
+			newPf,
+			card.set,
+			card.name,
+			card.no,
+			card.variant,
+			card.cond,
+		);
+		const other = s.cards.find((c) => c !== card && c.id === newId);
+		if (other) {
+			mergeCardInto(other, card);
+			s.cards = s.cards.filter((c) => c !== card);
+		} else {
+			card.pf = newPf;
+			card.id = newId;
+		}
 	}
 
 	function initCardDialog() {
@@ -2126,6 +2134,34 @@
 		return { up, down, unchanged, changes, sinceDate: prevSnapshot.date };
 	}
 
+	// Latest sale date per card id, across every sale (draft or sold) that
+	// has that id in its items — used to tell "this CSV row is a stale
+	// re-export of a card I already sold" apart from "I sold this card and
+	// then bought another copy of the exact same card afterwards".
+	function latestSaleDateById() {
+		const map = new Map();
+		state.sales.forEach((s) => {
+			s.items.forEach((i) => {
+				const prev = map.get(i.id);
+				if (!prev || new Date(s.date) > new Date(prev)) map.set(i.id, s.date);
+			});
+		});
+		return map;
+	}
+
+	// True when a CSV row's "Date Added" is strictly after the most recent
+	// sale of that same card id — i.e. this copy was added to Collectr after
+	// the old one was sold, so it's a genuine repurchase, not the same
+	// inventory resurfacing in a stale export.
+	function isRebuyAfterSale(r, saleDatesById) {
+		const saleDate = saleDatesById.get(r.id);
+		if (!saleDate || !r.added) return false;
+		const added = new Date(r.added);
+		const sold = new Date(saleDate);
+		if (isNaN(added.getTime()) || isNaN(sold.getTime())) return false;
+		return added.getTime() > sold.getTime();
+	}
+
 	function computeImportPreview(parsed) {
 		const updatePrices = document.getElementById("updatePricesChk").checked;
 		const includeSold = document.getElementById("includeSoldChk").checked;
@@ -2134,26 +2170,41 @@
 		// A card already in the collection under a different set spelling (e.g.
 		// added by hand via TCGdex search) still counts as "already have it".
 		const existingSoftKeys = new Set(state.cards.map(cardSoftKey));
+		const cardsById = new Map(state.cards.map((c) => [c.id, c]));
+		const cardsBySoftKey = new Map(state.cards.map((c) => [cardSoftKey(c), c]));
 		const soldIds = new Set(
 			state.sales.flatMap((s) => s.items.map((i) => i.id)),
 		);
+		const saleDatesById = latestSaleDateById();
 
 		const toAdd = [];
 		const toAddAsNew = [];
-		const toUpdatePrice = [];
+		// Existing cards: qty and pf are always resynced to match the CSV
+		// (Collectr is the source of truth for how many you own and which
+		// portfolio it's in), price only when "Oppdater pris" is checked.
+		const toSyncExisting = [];
 		let existingCount = 0;
 		let skippedSold = 0;
+		let rebought = 0;
+		let pfMismatches = 0;
 
 		parsed.rows.forEach((r) => {
 			if (existingIds.has(r.id) || existingSoftKeys.has(cardSoftKey(r))) {
 				existingCount++;
 				if (addAsNewRow) {
 					toAddAsNew.push(r);
-				} else if (updatePrices) {
-					toUpdatePrice.push(r);
+				} else {
+					toSyncExisting.push(r);
+					const existingCard = cardsById.get(r.id) || cardsBySoftKey.get(cardSoftKey(r));
+					if (existingCard && existingCard.pf !== r.pf) pfMismatches++;
 				}
 			} else if (soldIds.has(r.id) && !includeSold) {
-				skippedSold++;
+				if (isRebuyAfterSale(r, saleDatesById)) {
+					rebought++;
+					toAdd.push(r);
+				} else {
+					skippedSold++;
+				}
 			} else {
 				toAdd.push(r);
 			}
@@ -2163,9 +2214,12 @@
 			fileCount: parsed.rows.length,
 			toAdd,
 			toAddAsNew,
-			toUpdatePrice,
+			toSyncExisting,
+			updatePrices,
 			existingCount,
 			skippedSold,
+			rebought,
+			pfMismatches,
 		};
 	}
 
@@ -2197,8 +2251,8 @@
 			: "";
 		document.getElementById("csvPreviewText").innerHTML = `
 			<p>${preview.fileCount} kort i filen.</p>
-			<p>${preview.toAdd.length} nye kort legges til.</p>
-			<p>${preview.existingCount} kort finnes allerede${preview.toAddAsNew.length ? ` (${preview.toAddAsNew.length} legges til som egen rad)` : preview.toUpdatePrice.length ? ` (${preview.toUpdatePrice.length} får ny pris)` : ""}.</p>
+			<p>${preview.toAdd.length} nye kort legges til${preview.rebought ? ` (${preview.rebought} av disse er kjøpt tilbake etter at de ble solgt)` : ""}.</p>
+			<p>${preview.existingCount} kort finnes allerede${preview.toAddAsNew.length ? ` (${preview.toAddAsNew.length} legges til som egen rad)` : preview.toSyncExisting.length ? ` (${preview.toSyncExisting.length} får oppdatert antall${preview.updatePrices ? " og pris" : ""}${preview.pfMismatches ? `, ${preview.pfMismatches} flyttes til riktig portefølje` : ""})` : ""}.</p>
 			<p>${preview.skippedSold} kort hoppet over (solgt tidligere).</p>
 			${changesHtml}
 		`;
@@ -2206,7 +2260,7 @@
 			"hidden",
 			preview.toAdd.length === 0 &&
 				preview.toAddAsNew.length === 0 &&
-				preview.toUpdatePrice.length === 0,
+				preview.toSyncExisting.length === 0,
 		);
 	}
 
@@ -2285,11 +2339,17 @@
 					usedIds.add(id);
 					s.cards.push({ ...r, id });
 				});
-				preview.toUpdatePrice.forEach((r) => {
+				preview.toSyncExisting.forEach((r) => {
 					const card =
 						s.cards.find((c) => c.id === r.id) ||
 						s.cards.find((c) => cardSoftKey(c) === cardSoftKey(r));
-					if (card) card.price = r.price;
+					if (!card) return;
+					card.qty = r.qty;
+					if (preview.updatePrices) card.price = r.price;
+					// Collectr is the source of truth for which portfolio a card is
+					// in, same as it is for qty above — sync it even without
+					// "Oppdater pris" checked.
+					movePortfolio(s, card, r.pf);
 				});
 				s.meta.lastImport = new Date().toISOString();
 				if (lastParsed.meta.priceDate) s.meta.priceDate = lastParsed.meta.priceDate;
@@ -2305,7 +2365,7 @@
 			});
 			const resultBox = document.getElementById("importResult");
 			const added = preview.toAdd.length + preview.toAddAsNew.length;
-			resultBox.textContent = `Importert: ${added} nye, ${preview.toUpdatePrice.length} priser oppdatert.`;
+			resultBox.textContent = `Importert: ${added} nye, ${preview.toSyncExisting.length} oppdatert.`;
 			resultBox.className = "import-status ok";
 			lastParsed = null;
 			renderImportPreview();
@@ -2398,6 +2458,24 @@
 
 	// ---------- GitHub Gist sync ----------
 
+	// Last known remote `updated_at` for the Gist we last synced with, so a
+	// push can tell "nothing's changed remotely" apart from "someone else
+	// (another device/tab) pushed since our last sync" — scoped to gistId
+	// since switching to a different Gist should never compare against a
+	// stale timestamp from the previous one.
+	function getStoredGistUpdatedAt(gistId) {
+		try {
+			const raw = JSON.parse(localStorage.getItem(GIST_UPDATED_KEY) || "null");
+			return raw && raw.gistId === gistId ? raw.updatedAt : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredGistUpdatedAt(gistId, updatedAt) {
+		localStorage.setItem(GIST_UPDATED_KEY, JSON.stringify({ gistId, updatedAt }));
+	}
+
 	function ghHeaders(token) {
 		return {
 			Authorization: `token ${token}`,
@@ -2415,6 +2493,12 @@
 	// Shared by the manual "Last opp til Gist" button and autosave. Creates a
 	// new Gist when gistId is empty (manual push only — autosave never does
 	// this, see scheduleAutoGistPush), otherwise PATCHes the existing one.
+	//
+	// Before PATCHing, compares the Gist's current `updated_at` against the
+	// value stored from our own last successful push/pull. A mismatch means
+	// another device/tab pushed since we last synced, so blindly PATCHing
+	// would silently discard that write (last-write-wins). Autosave just
+	// skips the push and reports it; a manual push asks for confirmation.
 	async function pushToGist(token, gistId, { silent } = {}) {
 		const body = {
 			description: "Kortbok data",
@@ -2426,6 +2510,31 @@
 		try {
 			let res;
 			if (gistId) {
+				const known = getStoredGistUpdatedAt(gistId);
+				if (known) {
+					const checkRes = await fetch(`https://api.github.com/gists/${gistId}`, {
+						headers: ghHeaders(token),
+					});
+					if (checkRes.ok) {
+						const remote = await checkRes.json();
+						if (remote.updated_at && remote.updated_at !== known) {
+							if (silent) {
+								setSyncStatus(
+									"Autolagring hoppet over: Gisten er endret et annet sted siden sist. Synkroniser manuelt.",
+									"err",
+								);
+								return null;
+							}
+							const overwrite = await confirmDialog(
+								"Gisten har blitt endret et annet sted (annen enhet/fane) siden du sist synkroniserte herfra. Overskrive den med dataene i denne nettleseren?",
+							);
+							if (!overwrite) {
+								setSyncStatus("Avbrutt.", "");
+								return null;
+							}
+						}
+					}
+				}
 				res = await fetch(`https://api.github.com/gists/${gistId}`, {
 					method: "PATCH",
 					headers: ghHeaders(token),
@@ -2444,6 +2553,7 @@
 			document.getElementById("gistIdInput").value = data.id;
 			localStorage.setItem(TOKEN_KEY, token);
 			localStorage.setItem(GIST_ID_KEY, data.id);
+			setStoredGistUpdatedAt(data.id, data.updated_at);
 			setSyncStatus(
 				silent ? `Autolagret til Gist ${data.id}.` : `Lastet opp til Gist ${data.id}.`,
 				"ok",
@@ -2493,6 +2603,7 @@
 			localStorage.removeItem(TOKEN_KEY);
 			localStorage.removeItem(GIST_ID_KEY);
 			localStorage.removeItem(AUTO_SYNC_KEY);
+			localStorage.removeItem(GIST_UPDATED_KEY);
 			tokenInput.value = "";
 			gistIdInput.value = "";
 			autoSyncChk.checked = false;
@@ -2549,6 +2660,7 @@
 				}
 				localStorage.setItem(TOKEN_KEY, token);
 				localStorage.setItem(GIST_ID_KEY, gistId);
+				setStoredGistUpdatedAt(gistId, data.updated_at);
 				replaceState(parsed);
 				setSyncStatus("Hentet fra Gist.", "ok");
 			} catch (err) {

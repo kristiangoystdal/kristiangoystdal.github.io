@@ -101,20 +101,47 @@ correctly (see Import semantics / Nytt salg sections).
 ## Import semantics
 
 Default import only adds cards whose `id` isn't already in `cards[]`.
-Checkboxes change that:
-- "Oppdater pris" — also updates `price` on cards that already exist.
+
+**Existing cards (`toSyncExisting` in `computeImportPreview`): `qty` and
+`pf` are always resynced to the CSV, unconditionally** — Collectr is the
+source of truth for how many of a card you actually own and which
+portfolio it's filed under, so re-importing after buying more (or fewer,
+e.g. a correction) of a card, or moving it to a different portfolio in
+Collectr, updates the stored `qty`/`pf` to match, with no checkbox gating
+it. `price` is separate and still opt-in via "Oppdater pris". A card can
+match as "existing" by `id` (pf included) or by `cardSoftKey` alone (pf
+excluded) — the latter is exactly the case where the CSV's `pf` can differ
+from what's stored, which is what the sync is for. Changing `pf` changes
+`id` (`buildId` includes it), so this goes through `movePortfolio(s, card,
+newPf)` — the same helper "Flytt portefølje" uses — which merges into
+another card already occupying the resulting id (via `mergeCardInto`)
+rather than creating a duplicate-id row. Checkboxes:
+- "Oppdater pris" — also updates `price` on cards that already exist (qty
+  syncs either way, see above).
 - "Ta også med solgte" — cards whose `id` appears in any `sales[].items` are
   normally skipped (so re-importing a stale export doesn't resurrect sold
   cards); this checkbox includes them as new again.
 - "Legg ... som egen rad" — cards that already exist are pushed as a brand
-  new, separate `cards[]` entry instead of being skipped/price-updated (lets
-  you track a second purchase batch of the same card as its own row, rather
-  than it being merged into the existing one via `mergeCardInto`). Takes
-  priority over "Oppdater pris" for the rows it matches. Since `id` is
+  new, separate `cards[]` entry instead of having their qty/pf/price synced
+  (lets you track a second purchase batch of the same card as its own row,
+  rather than it being merged into the existing one via `mergeCardInto`).
+  Takes priority over qty/pf/price sync for the rows it matches. Since `id` is
   relied on as a unique key everywhere (edit/sell/select all do
   `cards.find(c => c.id === x)`), the new row's id is disambiguated with a
   `#2`, `#3`, ... suffix at import time (`computeImportPreview`/the
   `importBtn` handler in `app.js`) when it would otherwise collide.
+
+**Rebuying a card you'd fully sold before.** A card id that only appears in
+`sales[].items` (fully sold, no longer in `cards[]`) is normally skipped
+entirely on reimport, "Ta også med solgte" notwithstanding — that checkbox
+is for genuinely wanting stale/sold inventory back, not the common case.
+Instead, `isRebuyAfterSale`/`latestSaleDateById` compare the CSV row's
+"Date Added" against the *latest* sale date recorded for that id: if the
+row was added to Collectr strictly after that sale, it's treated as a
+legitimate new copy and goes through the normal `toAdd` path (counted in
+"nye kort legges til", with a note on how many were rebuys) regardless of
+the checkbox. A row with no comparable date, or dated at/before the sale,
+still falls back to the old skip-unless-checked behavior.
 
 The Collectr CSV's "Average Cost Paid" column is still a required header
 (`REQUIRED_HEADERS` in `csv.js`, since that's the real Collectr export
@@ -270,6 +297,19 @@ trigger autosave — only `mutate()` does, since those are bulk replacements,
 not incremental edits, and a Gist pull immediately autosaving back to the
 same Gist would be a pointless round-trip.
 
+**Conflict check (last-write-wins guard).** `kortbok-gist-updated-at`
+(`localStorage`) stores `{gistId, updatedAt}` from the Gist's `updated_at`
+field as of our last successful push or pull — `getStoredGistUpdatedAt`/
+`setStoredGistUpdatedAt` in `app.js`. Before a PATCH, `pushToGist` fetches
+the Gist and compares its current `updated_at` against that stored value
+(only when one exists for this `gistId` — a push to a Gist we've never
+synced with from this browser skips the check and just establishes the
+baseline). A mismatch means another device/tab pushed since we last synced
+here: autosave skips the PATCH and reports it via `setSyncStatus` rather
+than overwriting; a manual push asks for confirmation via `confirmDialog`
+first. This only protects pushes — it doesn't merge, so the loser of a real
+race still has to pull and redo their change.
+
 ## Backlog (one at a time, confirm before touching the `kortbok.v1` shape)
 
 1. ~~Manually edit a card's cost/value; add a single card without a CSV.~~ Done
@@ -331,6 +371,14 @@ same Gist would be a pointless round-trip.
     Done — see the "Autosave" paragraph under GitHub Gist sync. Opt-in via
     a checkbox; off by default, and only ever updates a Gist that already
     exists (never creates one on its own).
+12. ~~CSV import: always resync `qty` (and `pf`) for cards already in the
+    collection (it previously only ever touched `price`, and never caught a
+    portfolio move made in Collectr); and let a rebought copy of a
+    fully-sold card back in automatically by comparing dates, instead of
+    requiring "Ta også med solgte".~~ Done — see the two new paragraphs
+    under Import semantics ("Existing cards" / "Rebuying a card you'd fully
+    sold before"), and the shared `movePortfolio` helper under Data model's
+    neighboring code (used by both this and "Flytt portefølje").
 
 **Note:** the original single-total "Selg" dialog (`#sellDialog`,
 `openSellDialog`/`initSellDialog`) has been removed — Samling's "Selg" and
