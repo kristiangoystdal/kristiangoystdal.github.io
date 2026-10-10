@@ -61,7 +61,12 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   const setDraw = useUi((s) => s.setDraw)
   const setSettings = useGame((s) => s.setSettings)
 
-  const possible = useMemo(() => new Set(result.stations.map((s) => s.id)), [result])
+  // Hider ser bare sin egen sone, aldri hvilke stasjoner seekerne har igjen.
+  const hiderView = mode === 'hider'
+  const possible = useMemo(
+    () => new Set(hiderView ? (hider.stationId ? [hider.stationId] : []) : result.stations.map((s) => s.id)),
+    [result, hiderView, hider.stationId],
+  )
   const mask = useMemo(() => excluded(result.area), [result])
   const lineColor = useMemo(
     () => Object.fromEntries(data.lines.features.map((f) => [f.properties.line, f.properties.color])),
@@ -144,7 +149,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     for (const s of data.stations) {
       if (!s.lines.some((l) => settings.lines.includes(l))) continue
       const on = possible.has(s.id)
-      if (layers.zones) {
+      if (layers.zones && (on || !hiderView)) {
         L.circle([s.lat, s.lon], {
           radius: settings.zoneRadius,
           interactive: false,
@@ -164,10 +169,10 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
         fillOpacity: 1,
       })
         .bindTooltip(s.name, { permanent: on, direction: 'right', offset: [6, 0], className: 'station-label' })
-        .bindPopup(`<b>${s.name}</b><br>Linje ${dots}<br>${on ? 'Mulig' : 'Utelukket'} · ${rate.toFixed(1)} avganger/t`)
+        .bindPopup(`<b>${s.name}</b><br>Linje ${dots}<br>${hiderView ? '' : `${on ? 'Mulig' : 'Utelukket'} · `}${rate.toFixed(1)} avganger/t`)
         .addTo(st)
     }
-  }, [ready, data, possible, layers.zones, settings, lineColor])
+  }, [ready, data, possible, hiderView, layers.zones, settings, lineColor])
 
   // Når et svar krymper området, zoomes kartet inn på stasjonene som står igjen.
   useEffect(() => {
@@ -235,8 +240,20 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
       <div ref={el} data-basemap={settings.basemap} className="h-full w-full [&.hide-labels_.station-label]:hidden" />
       <div className="pointer-events-none absolute top-[calc(0.75rem+env(safe-area-inset-top))] left-3 z-[1000] flex max-w-[85%] flex-col items-start gap-2 md:max-w-[70%]">
         <div className="card pointer-events-auto px-3! py-1.5! text-sm shadow-lg">
-          <b className="text-accent tabular-nums">{result.stations.length}</b> stasjoner igjen
-          {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
+          {hiderView ? (
+            hider.stationId ? (
+              <>
+                Sonen din: <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
+              </>
+            ) : (
+              'Sett posisjonen din under Hider'
+            )
+          ) : (
+            <>
+              <b className="text-accent tabular-nums">{result.stations.length}</b> stasjoner igjen
+              {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
+            </>
+          )}
         </div>
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">

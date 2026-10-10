@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { CATEGORIES, KINDS, RADAR_RADII, answerLabel, answerOptions, describe, drawFor, fmtDist, formToQuestion, levelName, newForm, questionToForm, type Form } from './form'
-import { ADMIN_LEVELS, FIXED_REFS, POI_TYPES, autoAnswer, hasData, nearestStation, solve, type AutoAnswer, type Result } from './geo'
+import { ADMIN_LEVELS, FIXED_REFS, POI_TYPES, autoAnswer, hasData, nearestStation, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, Question } from './types'
 import { PointInput, Section } from './ui'
@@ -40,23 +40,15 @@ export function DrawNote({ q, log }: { q: Question; log: Question[] }) {
 function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
   const setDraft = useUi((s) => s.setDraft)
   const questions = useGame((s) => s.questions)
-  const settings = useGame((s) => s.settings)
   const saveQuestion = useGame((s) => s.saveQuestion)
   const auto = useAutoAnswer(data)
+  const isHider = useGame((s) => s.mode === 'hider')
   const set = (patch: Partial<Form>) => setDraft({ ...form, answer: null, ...patch })
 
   const category = KINDS.find((k) => k.kind === form.kind)!.category
   const q = formToQuestion(form)
   const options = q ? answerOptions(q, data) : []
   const missing = !hasData(form, data)
-
-  // Forhåndsvisning: hvor mange stasjoner står igjen for hvert mulige svar.
-  const counts = useMemo(() => {
-    if (!q || missing || options.length > 12) return {}
-    const others = questions.filter((x) => x.id !== q.id)
-    return Object.fromEntries(options.map((a) => [a, solve([...others, { ...q, answer: a }], data, settings).stations.length]))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify({ ...form, answer: null }), questions, settings, data])
 
   const poiSelect = (
     <label className="mb-3 block">
@@ -221,8 +213,9 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
         <div className="mb-3">
           <p className="mb-1 text-sm italic">«{describe(q, data)}»</p>
           <DrawNote q={q} log={questions} />
-          <span className="label">Svar fra hider</span>
-          {q.kind === 'photo' ? (
+          {/* Bare hider svarer. Seeker stiller spørsmålet og venter på svaret. */}
+          {isHider && <span className="label">Ditt svar</span>}
+          {!isHider ? null : q.kind === 'photo' ? (
             <input className="field" value={form.answer ?? ''} onChange={(e) => setDraft({ ...form, answer: e.target.value || null })} placeholder="Notat om bildet" />
           ) : (
             <div className="flex flex-wrap gap-1.5">
@@ -230,11 +223,10 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
                 <button
                   key={a}
                   type="button"
-                  className={`btn h-auto flex-col gap-0! py-1 ${form.answer === a ? 'btn-primary' : ''}`}
+                  className={`btn ${form.answer === a ? 'btn-primary' : ''}`}
                   onClick={() => setDraft({ ...form, answer: form.answer === a ? null : a })}
                 >
                   {answerLabel(q, a)}
-                  {counts[a] !== undefined && <span className="text-[11px] font-normal opacity-80">{counts[a]} igjen</span>}
                 </button>
               ))}
             </div>
@@ -253,7 +245,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
             setDraft(null)
           }}
         >
-          {form.answer === null ? 'Lagre uten svar' : form.id ? 'Lagre endring' : 'Lagre spørsmål'}
+          {form.id ? 'Lagre endring' : isHider && form.answer !== null ? 'Lagre med svar' : 'Still spørsmål'}
         </button>
         <button className="btn" onClick={() => setDraft(null)}>
           Avbryt
@@ -329,6 +321,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const undo = useGame((s) => s.undo)
   const removeQuestion = useGame((s) => s.removeQuestion)
   const level = useGame((s) => s.settings.adminLevel)
+  const isHider = useGame((s) => s.mode === 'hider')
 
   if (draft) {
     return (
@@ -354,7 +347,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
         </button>
       </div>
       <Section title={`Spørsmålslogg (${questions.length})`}>
-        {questions.length === 0 && <p className="text-sm text-muted">Ingen spørsmål ennå. Hvert svar krymper området hider kan være i.</p>}
+        {questions.length === 0 && <p className="text-sm text-muted">Ingen spørsmål ennå. Seeker stiller spørsmål, hider svarer, og hvert svar krymper området hider kan være i.</p>}
         <ol className="flex flex-col gap-2">
           {questions.map((q, i) => {
             const before = i === 0 ? total : result.steps[i - 1].count
@@ -365,7 +358,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                   <span>
                     {i + 1}. {KINDS.find((k) => k.kind === q.kind)!.category} · {time(q.time)}
                   </span>
-                  <span className="tabular-nums">{q.answer === null || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
+                  <span className="tabular-nums">{isHider || q.answer === null || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
                 </div>
                 <p className="mt-1 text-sm">{describe(q, data)}</p>
                 <div className="mt-1 -mb-2">
@@ -377,7 +370,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                   </span>
                   <span className="flex gap-1.5">
                     <button className="btn min-h-9!" onClick={() => setDraft(questionToForm(q, level))}>
-                      {q.answer === null ? 'Svar' : 'Rediger'}
+                      {isHider && q.answer === null ? 'Svar' : 'Rediger'}
                     </button>
                     <button className="btn min-h-9! text-bad" onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
                       Slett

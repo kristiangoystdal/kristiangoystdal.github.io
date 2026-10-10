@@ -5,16 +5,20 @@ import QuestionsView from './QuestionsView'
 import { loadData } from './data'
 import { solve } from './geo'
 import { gameFromHash, useGame, useUi, type Tab } from './store'
+import { Toast } from './notify'
 import { joinRoom, resumeRoom, roomFromHash, useSync } from './sync'
 import type { GeoData } from './types'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'map', label: 'Kart', icon: '🗺️' },
   { key: 'questions', label: 'Spørsmål', icon: '❓' },
+  // Den midterste fanen viser rollen telefonen har. Se ROLE_TAB.
   { key: 'hider', label: 'Hider', icon: '🙈' },
   { key: 'round', label: 'Runde', icon: '⏱️' },
   { key: 'settings', label: 'Oppsett', icon: '⚙️' },
 ]
+
+const ROLE_TAB = { hider: { label: 'Hider', icon: '🙈' }, seeker: { label: 'Seeker', icon: '🔍' } }
 
 function useTheme() {
   const theme = useGame((s) => s.settings.theme)
@@ -63,6 +67,7 @@ export default function App() {
   const setCollapsed = useUi((s) => s.setCollapsed)
   const questions = useGame((s) => s.questions)
   const settings = useGame((s) => s.settings)
+  const mode = useGame((s) => s.mode)
   const pending = questions.filter((q) => q.answer === null).length
   const room = useSync((s) => s.room)
   const online = useSync((s) => s.status === 'online')
@@ -74,10 +79,11 @@ export default function App() {
   }, [])
 
   const result = useMemo(
-    () => data && solve(questions, data, settings),
+    // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
+    () => data && solve(mode === 'hider' ? [] : questions, data, settings),
     // Bare sonestørrelse, linjevalg og spillområde påvirker geometrien.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, questions, settings.zoneRadius, settings.lines, settings.playArea],
+    [data, questions, mode, settings.zoneRadius, settings.lines, settings.playArea],
   )
 
   if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
@@ -87,6 +93,7 @@ export default function App() {
     <div className="flex h-dvh flex-col md:flex-row-reverse">
       <main className="relative min-h-0 flex-1">
         <MapView data={data} result={result} />
+        <Toast />
       </main>
       <aside className={`flex ${tab === 'map' ? 'max-h-[38dvh]' : 'max-h-[62dvh]'} flex-col border-t border-border bg-bg md:h-full md:max-h-none md:w-96 md:border-t-0 md:border-r`}>
         <button
@@ -114,7 +121,7 @@ export default function App() {
           {tab === 'settings' && <SettingsPanel data={data} result={result} />}
         </div>
         <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Skjermer">
-          {TABS.map((t) => (
+          {TABS.map((tab0) => ({ ...tab0, ...(tab0.key === 'hider' ? ROLE_TAB[mode] : {}) })).map((t) => (
             <button
               key={t.key}
               className={`relative flex min-h-14 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${tab === t.key ? 'text-accent' : 'text-muted'}`}
@@ -128,7 +135,7 @@ export default function App() {
               {t.key === 'round' && room && (
                 <span className={`absolute top-2 right-[26%] size-2.5 rounded-full ${online ? 'bg-ok' : 'bg-muted'}`} title={online ? 'Tilkoblet rom' : 'Frakoblet'} />
               )}
-              {t.key === 'questions' && pending > 0 && (
+              {(mode === 'hider' ? t.key === 'hider' : t.key === 'questions') && pending > 0 && (
                 <span className="absolute top-1.5 right-[22%] grid size-4 place-items-center rounded-full bg-accent text-[10px] text-accent-text">{pending}</span>
               )}
             </button>

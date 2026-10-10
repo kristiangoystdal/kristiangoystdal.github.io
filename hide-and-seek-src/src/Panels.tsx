@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { BASEMAPS, depRate } from './MapView'
 import { AutoHint, DrawNote, useAutoAnswer } from './QuestionsView'
-import { CATEGORIES, DRAWS, MAX_HAND, answerLabel, describe, place } from './form'
-import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, levelAreas, stationPos, type Result } from './geo'
+import { CATEGORIES, DRAWS, MAX_HAND, answerLabel, describe } from './form'
+import { ADMIN_LEVELS, POI_TYPES, autoAnswer, autoPlayArea, dist, levelAreas, nearestStation, stationPos, type Result } from './geo'
+import { NotifyToggle } from './notify'
 import { useGame, useUi, type Layer } from './store'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
-import type { DayKey, GeoData, Settings } from './types'
-import { PointInput, Section, useNow } from './ui'
+import type { DayKey, GeoData, LngLat, Question, Settings } from './types'
+import { PointInput, Section, locate, useNow } from './ui'
 
 const LAYERS: { key: Layer; label: string }[] = [
   { key: 'area', label: 'Mulig område' },
@@ -21,6 +22,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   const toggleLayer = useGame((s) => s.toggleLayer)
   const settings = useGame((s) => s.settings)
   const setSettings = useGame((s) => s.setSettings)
+  const hiderView = useGame((s) => s.mode === 'hider')
   const lineColor = Object.fromEntries(data.lines.features.map((f) => [f.properties.line, f.properties.color]))
 
   return (
@@ -43,6 +45,9 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
           ))}
         </div>
       </Section>
+      {hiderView ? (
+        <p className="text-sm text-muted">Som hider ser du bare din egen sone på kartet. Hvilke stasjoner seekerne har igjen, vises ikke.</p>
+      ) : (
       <Section title={`Mulige stasjoner (${result.stations.length})`}>
         {result.stations.length === 0 && <p className="text-sm text-bad">Ingen stasjoner passer med svarene. Sjekk loggen for et feil svar.</p>}
         <ul className="divide-y divide-border text-sm">
@@ -63,6 +68,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
           ))}
         </ul>
       </Section>
+      )}
     </div>
   )
 }
@@ -77,6 +83,33 @@ export function HiderPanel({ data }: { data: GeoData }) {
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
   const locked = useGame((s) => s.round.seekFrom !== null)
   const auto = useAutoAnswer(data)
+  const [busy, setBusy] = useState('')
+  const [error, setError] = useState('')
+
+  // Hiders stasjon er alltid den nærmeste, så den følger posisjonen.
+  const place = (pos: LngLat) => setHider({ stationId: nearestStation(data.stations, pos).id, pos })
+  const station = hider.pos && nearestStation(data.stations, hider.pos)
+  const away = station && hider.pos ? dist(stationPos(station), hider.pos) : 0
+  const answer = (q: Question, value: string) => {
+    const { id, time: _t, answer: _a, ...body } = q
+    saveQuestion(body as never, value, id)
+  }
+
+  /** Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå. */
+  const answerFromGps = async (q: Question) => {
+    setBusy(q.id)
+    setError('')
+    try {
+      const pos = await locate()
+      place(pos)
+      const a = autoAnswer(q, { pos, station: nearestStation(data.stations, pos) }, data)
+      if (a) answer(q, a.answer)
+      else setError('Dette spørsmålet kan ikke regnes ut. Svar selv under Spørsmål.')
+    } catch (e) {
+      setError((e as Error).message)
+    }
+    setBusy('')
+  }
 
   return (
     <div>
@@ -95,67 +128,55 @@ export function HiderPanel({ data }: { data: GeoData }) {
               ? 'Gjemmestedet ditt blir på denne telefonen. Seekerne ser det aldri. Rollen låses når runden starter.'
               : 'Velg hider før runden starter hvis det er du som gjemmer deg. Rollen låses når runden starter.'}
         </p>
+        {mode === 'seeker' && (
+          <p className="mt-2 text-sm">Som seeker stiller du spørsmål under Spørsmål. Hider svarer fra sin telefon, og svaret dukker opp i loggen din.</p>
+        )}
       </Section>
 
       {mode === 'hider' && (
         <>
-          <Section title="Hvor gjemmer du deg">
-            <label className="mb-3 block">
-              <span className="label">Stasjon</span>
-              <select
-                className="field"
-                value={hider.stationId ?? ''}
-                onChange={(e) => {
-                  const s = data.stations.find((x) => x.id === e.target.value)
-                  setHider(s ? { stationId: s.id, pos: stationPos(s) } : { stationId: null, pos: null })
-                }}
-              >
-                <option value="">Velg stasjon…</option>
-                {data.stations.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {hider.stationId && (
-              <PointInput label="Nøyaktig gjemmested" value={hider.pos} onChange={(pos) => setHider({ ...hider, pos })} stations={data.stations} />
-            )}
-            {hider.pos && hider.stationId && !place(hider.pos, data.stations).includes(data.stations.find((s) => s.id === hider.stationId)!.name) && (
-              <p className="text-xs text-bad">Gjemmestedet ligger nærmere en annen stasjon enn den du har valgt.</p>
+          <Section title="Hvor er du">
+            <PointInput label="Posisjonen din" value={hider.pos} onChange={place} stations={data.stations} />
+            {station && (
+              <p className={`text-xs ${away > zoneRadius ? 'text-bad' : 'text-muted'}`}>
+                Stasjonen din er {station.name}.{away > zoneRadius && ` Du er ${Math.round(away)} m unna, utenfor sonen på ${zoneRadius} m.`}
+              </p>
             )}
           </Section>
 
-          <Section title="Svarene dine">
-            {!hider.pos && <p className="text-sm text-muted">Velg stasjon for å få svarene regnet ut.</p>}
-            {hider.pos && questions.length === 0 && (
-              <p className="text-sm text-muted">Legg inn spørsmålene seekerne stiller under Spørsmål, eller importer loggen deres.</p>
-            )}
+          <Section title="Spørsmål til deg">
+            {questions.length === 0 && <p className="text-sm text-muted">Ingen spørsmål ennå. De dukker opp her når seekerne stiller dem.</p>}
+            {error && <p className="mb-2 text-xs text-bad">{error}</p>}
             <ul className="flex flex-col gap-2">
-              {hider.pos &&
-                questions.map((q) => {
-                  const a = auto(q)
-                  const wrong = a && q.answer !== null && q.answer !== a.answer
-                  return (
-                    <li key={q.id} className="card">
-                      <p className="mb-1 text-sm">{describe(q, data)}</p>
-                      <DrawNote q={q} log={questions} />
-                      {a ? <AutoHint q={q} auto={a} /> : <p className="mt-2 text-xs text-muted">Kan ikke regnes ut. Svar selv.</p>}
-                      {wrong && <p className="mt-1 text-xs text-bad">I loggen står det «{answerLabel(q, q.answer!)}».</p>}
-                      {a && q.answer !== a.answer && (
-                        <button
-                          className="btn mt-2 min-h-9!"
-                          onClick={() => {
-                            const { id, time: _t, answer: _a, ...body } = q
-                            saveQuestion(body as never, a.answer, id)
-                          }}
-                        >
-                          Før inn svaret
+              {questions.map((q) => {
+                const a = auto(q)
+                return (
+                  <li key={q.id} className="card">
+                    <p className="mb-1 text-sm">{describe(q, data)}</p>
+                    <DrawNote q={q} log={questions} />
+                    {q.answer !== null && (
+                      <p className="text-sm">
+                        Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
+                      </p>
+                    )}
+                    {a && q.answer !== a.answer && <AutoHint q={q} auto={a} />}
+                    {q.kind === 'photo' ? (
+                      q.answer === null && <p className="text-xs text-muted">Send bildet til seekerne, og skriv et notat under Spørsmål hvis du vil.</p>
+                    ) : (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {a && q.answer !== a.answer && (
+                          <button className="btn btn-primary" onClick={() => answer(q, a.answer)}>
+                            Svar: {answerLabel(q, a.answer)}
+                          </button>
+                        )}
+                        <button className="btn" disabled={busy === q.id} onClick={() => answerFromGps(q)}>
+                          {busy === q.id ? 'Henter posisjon…' : q.answer === null ? 'Svar med posisjonen min nå' : 'Svar på nytt med posisjonen min'}
                         </button>
-                      )}
-                    </li>
-                  )
-                })}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </Section>
 
@@ -207,6 +228,7 @@ function RoomPanel() {
             <p className="my-2 text-xs text-muted">
               Del koden med de andre. Logg, spillområde, klokke og poengtavle er felles. Hiders gjemmested deles aldri.
             </p>
+            <NotifyToggle />
             <div className="flex flex-wrap gap-1.5">
               <button
                 className="btn"

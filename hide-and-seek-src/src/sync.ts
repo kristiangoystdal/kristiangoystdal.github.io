@@ -1,17 +1,12 @@
 import { create } from 'zustand'
+import { announce } from './notify'
 import { useGame, type Round, type State } from './store'
 import type { Question, RoundResult, Settings } from './types'
 
-// Firebase-konfigurasjonen er ikke hemmelig: den identifiserer bare prosjektet.
-// Tilgangen styres av reglene i database.rules.json.
+// Realtime Database trenger bare adressen. Appen bruker ingen API-nøkkel, og
+// tilgangen styres av reglene i database.rules.json.
 const CONFIG = {
-  apiKey: 'AIzaSyBhuQadBV8iiFkGM7luvhVPBIoTHw7cSmE',
-  authDomain: 'jetlag-hide-and-seek-norway.firebaseapp.com',
   databaseURL: 'https://jetlag-hide-and-seek-norway-default-rtdb.europe-west1.firebasedatabase.app',
-  projectId: 'jetlag-hide-and-seek-norway',
-  storageBucket: 'jetlag-hide-and-seek-norway.firebasestorage.app',
-  messagingSenderId: '422445752650',
-  appId: '1:422445752650:web:a0ee40860182380ea1a1b3',
 }
 const EMULATOR = import.meta.env.VITE_FIREBASE_EMULATOR as string | undefined
 
@@ -139,6 +134,7 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
     const offRemote = db.onValue(room, (snap) => {
       const value = snap.val() as Partial<Shared> | null
       if (!value) return
+      const first = !synced
       synced = normalize(value)
       const local = useGame.getState()
       const next = fromShared(value, local)
@@ -148,6 +144,8 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       applying = true
       useGame.setState(othersChanged ? { ...next, past: [] } : next)
       applying = false
+      // Ikke varsle om alt som lå i rommet fra før da vi koblet til.
+      if (!first && othersChanged) announce(local.questions, next.questions, local.mode)
       // Sender det som eventuelt ble endret lokalt mens rommets tilstand ble lagt inn.
       push()
     })

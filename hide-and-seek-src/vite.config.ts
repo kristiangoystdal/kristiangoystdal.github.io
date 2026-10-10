@@ -26,6 +26,8 @@ export default defineConfig({
         icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
       },
       workbox: {
+        // Åpner appen når man trykker på et varsel.
+        importScripts: ['sw-notify.js'],
         globPatterns: ['**/*.{js,css,html,svg,json,geojson}'],
         runtimeCaching: [
           {
