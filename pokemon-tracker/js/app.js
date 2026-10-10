@@ -424,6 +424,112 @@
 		container.addEventListener("mouseleave", hide);
 	}
 
+	// ---------- "Omsetning over tid" chart ----------
+	// Pure sales value (sum of sale.price) — unlike the profit chart, this
+	// needs no known cost, so every sold sale counts (manual, no-card sales
+	// included).
+
+	let revenueChartPoints = []; // [{x, y, date, cumulative}] in SVG coordinate space, for hover lookup
+
+	function buildRevenueSeries() {
+		const byDate = new Map();
+		state.sales.forEach((s) => {
+			if (!isSoldSale(s)) return;
+			byDate.set(s.date, (byDate.get(s.date) || 0) + (s.price || 0));
+		});
+		const dates = [...byDate.keys()].sort((a, b) => new Date(a) - new Date(b));
+		let running = 0;
+		return dates.map((date) => {
+			running += byDate.get(date);
+			return { date, revenue: running };
+		});
+	}
+
+	function renderRevenueChart() {
+		const wrap = document.getElementById("revenueChart");
+		const series = buildRevenueSeries();
+		revenueChartPoints = [];
+		if (series.length < 2) {
+			wrap.innerHTML = `<p class="muted">Ikke nok salg til å vise en graf enda.</p>`;
+			return;
+		}
+
+		const maxV = Math.max(0, ...series.map((p) => p.revenue));
+		const domainMin = 0;
+		const domainMax = maxV * 1.1 || 1;
+
+		const innerW = CHART_W - CHART_PAD.left - CHART_PAD.right;
+		const innerH = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
+		const xAt = (i) => CHART_PAD.left + (i / (series.length - 1)) * innerW;
+		const yAt = (v) =>
+			CHART_PAD.top + innerH - ((v - domainMin) / (domainMax - domainMin)) * innerH;
+
+		const zeroY = yAt(0);
+		const color = "var(--accent-2)";
+		const linePoints = series.map((p, i) => `${xAt(i)},${yAt(p.revenue)}`).join(" ");
+		const areaPoints = `${xAt(0)},${zeroY} ` + linePoints + ` ${xAt(series.length - 1)},${zeroY}`;
+
+		revenueChartPoints = series.map((p, i) => ({
+			x: xAt(i),
+			y: yAt(p.revenue),
+			date: p.date,
+			revenue: p.revenue,
+		}));
+		const last = revenueChartPoints[revenueChartPoints.length - 1];
+
+		wrap.innerHTML = `
+			<svg viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="none" id="revenueSvg">
+				<line x1="${CHART_PAD.left}" y1="${zeroY}" x2="${CHART_W - CHART_PAD.right}" y2="${zeroY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" />
+				<text x="${CHART_PAD.left - 8}" y="${zeroY + 4}" text-anchor="end" font-size="10" fill="var(--muted)">0 kr</text>
+				<polygon points="${areaPoints}" fill="${color}" opacity="0.12" />
+				<polyline points="${linePoints}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+				<circle cx="${last.x}" cy="${last.y}" r="4" fill="${color}" />
+				<line id="revenueCrosshair" x1="${last.x}" y1="${CHART_PAD.top}" x2="${last.x}" y2="${CHART_H - CHART_PAD.bottom}" stroke="var(--muted)" stroke-width="1" class="hidden" />
+				<circle id="revenueHoverDot" cx="${last.x}" cy="${last.y}" r="4" fill="${color}" class="hidden" />
+				<text x="${CHART_PAD.left}" y="${CHART_H - 6}" font-size="10" fill="var(--muted)">${fmtDate(series[0].date)}</text>
+				<text x="${CHART_W - CHART_PAD.right}" y="${CHART_H - 6}" text-anchor="end" font-size="10" fill="var(--muted)">${fmtDate(series[series.length - 1].date)}</text>
+			</svg>
+		`;
+	}
+
+	function initRevenueChartHover() {
+		const container = document.getElementById("revenueChartWrap");
+		function hide() {
+			document.getElementById("revenueCrosshair")?.classList.add("hidden");
+			document.getElementById("revenueHoverDot")?.classList.add("hidden");
+			document.getElementById("revenueTooltip")?.classList.add("hidden");
+		}
+		container.addEventListener("mousemove", (e) => {
+			const svg = document.getElementById("revenueSvg");
+			if (!svg || revenueChartPoints.length < 2) return;
+			const rect = svg.getBoundingClientRect();
+			const mouseX = ((e.clientX - rect.left) / rect.width) * CHART_W;
+			let nearest = revenueChartPoints[0];
+			let bestDist = Infinity;
+			revenueChartPoints.forEach((p) => {
+				const d = Math.abs(p.x - mouseX);
+				if (d < bestDist) {
+					bestDist = d;
+					nearest = p;
+				}
+			});
+			const crosshair = document.getElementById("revenueCrosshair");
+			const dot = document.getElementById("revenueHoverDot");
+			crosshair.setAttribute("x1", nearest.x);
+			crosshair.setAttribute("x2", nearest.x);
+			crosshair.classList.remove("hidden");
+			dot.setAttribute("cx", nearest.x);
+			dot.setAttribute("cy", nearest.y);
+			dot.classList.remove("hidden");
+			const tooltip = document.getElementById("revenueTooltip");
+			tooltip.textContent = `${fmtDate(nearest.date)} — omsetning: ${fmtMoney0(nearest.revenue)}`;
+			tooltip.classList.remove("hidden");
+			tooltip.style.left = `${(nearest.x / CHART_W) * rect.width}px`;
+			tooltip.style.top = `${(nearest.y / CHART_H) * rect.height}px`;
+		});
+		container.addEventListener("mouseleave", hide);
+	}
+
 	// ---------- tabs ----------
 
 	function initTabs() {
@@ -497,6 +603,7 @@
 			: "–";
 
 		renderProfitChart();
+		renderRevenueChart();
 
 		const breakdown = portfolioBreakdown();
 		const maxVal = Math.max(1, ...breakdown.map((b) => b[1]));
@@ -618,6 +725,7 @@
 					<div class="cell-name">${escapeHTML(c.name)}</div>
 					<div class="cell-sub">${escapeHTML(c.set)}</div>
 				</td>
+				<td>${escapeHTML(c.pf)}</td>
 				<td class="mono">${escapeHTML(c.no)}</td>
 				<td>${variantChipHTML(c.variant)}</td>
 				<td class="mono num">${c.qty}</td>
@@ -2103,11 +2211,27 @@
 		return [...sales].reverse().sort((a, b) => new Date(b.date) - new Date(a.date));
 	}
 
+	// Matches on sold card names first (the common case: "did I sell my X?"),
+	// falling back to the sale title/note so manual (cardless) sales stay
+	// searchable too.
+	function filteredSales() {
+		const q = document.getElementById("saleSearchInput").value.trim().toLowerCase();
+		if (!q) return state.sales;
+		return state.sales.filter(
+			(s) =>
+				s.items.some((i) => i.name.toLowerCase().includes(q)) ||
+				s.title.toLowerCase().includes(q) ||
+				(s.note || "").toLowerCase().includes(q),
+		);
+	}
+
 	function renderSalg() {
-		const sorted = sortSalesNewestFirst(state.sales);
+		const sorted = sortSalesNewestFirst(filteredSales());
 		const list = document.getElementById("salesList");
 		if (!sorted.length) {
-			list.innerHTML = `<p class="muted">Ingen salg registrert.</p>`;
+			list.innerHTML = state.sales.length
+				? `<p class="muted">Ingen salg matcher søket.</p>`
+				: `<p class="muted">Ingen salg registrert.</p>`;
 			return;
 		}
 		list.innerHTML = sorted
@@ -2197,6 +2321,8 @@
 	}
 
 	function initSalgEvents() {
+		document.getElementById("saleSearchInput").addEventListener("input", renderSalg);
+
 		document.getElementById("salesList").addEventListener("click", async (e) => {
 			const undoBtn = e.target.closest(".undo-sale-btn");
 			const delBtn = e.target.closest(".delete-sale-btn");
@@ -2702,6 +2828,7 @@
 
 	initTabs();
 	initProfitChartHover();
+	initRevenueChartHover();
 	initSamlingEvents();
 	initCardDialog();
 	initFindCardDialog();

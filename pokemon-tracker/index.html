@@ -944,6 +944,12 @@
 						<div class="chart-tooltip hidden" id="profitTooltip"></div>
 					</div>
 
+					<div class="section-title">Omsetning over tid</div>
+					<div class="panel chart-wrap" id="revenueChartWrap">
+						<div id="revenueChart"></div>
+						<div class="chart-tooltip hidden" id="revenueTooltip"></div>
+					</div>
+
 					<div class="section-title">Verdi per portefølje</div>
 					<div class="panel" id="portfolioBars"></div>
 
@@ -987,6 +993,7 @@
 							<tr>
 								<th><input type="checkbox" id="selectAllChk" /></th>
 								<th>Kort / sett</th>
+								<th>Portefølje</th>
 								<th>Nr</th>
 								<th>Variant</th>
 								<th>Antall</th>
@@ -1032,6 +1039,13 @@
 					<button type="button" class="btn secondary" id="addManualSaleBtn">
 						Legg til salg uten kort
 					</button>
+				</div>
+				<div class="collection-controls">
+					<input
+						type="text"
+						id="saleSearchInput"
+						placeholder="Søk etter kort i salgene…"
+					/>
 				</div>
 				<div id="salesList"></div>
 			</section>

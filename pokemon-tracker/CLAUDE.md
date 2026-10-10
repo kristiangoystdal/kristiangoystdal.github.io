@@ -246,6 +246,19 @@ confirm dialog. This is optional — the page works fully offline via
    behind `confirmDialog` since there's no undo. This only removes the
    `cards[]` entry; it never touches `sales[]` (a sale's `items[]` is already
    an independent snapshot, so past sales are unaffected either way).
+8. ~~Show each card's portfolio in the Samling table; search the Salg log by
+   card name.~~ Done — Samling's table gained a plain "Portefølje" column
+   (`c.pf`, between name/set and card number). Salg gained a search input
+   (`#saleSearchInput`/`filteredSales` in `app.js`) that matches a sale's
+   `items[].name`, falling back to `title`/`note` so cardless manual sales
+   stay searchable too.
+9. ~~A second Oversikt chart for pure sales value (turnover), separate from
+   the profit chart.~~ Done ("Omsetning over tid",
+   `buildRevenueSeries`/`renderRevenueChart` in `app.js`, same cumulative-
+   by-sale-date shape as the profit chart). Unlike the profit chart, this
+   sums every sold sale's `price` regardless of whether `cost` is known —
+   there's no cost-based filtering to apply to a plain revenue figure, so
+   manual no-card sales count here too.
 
 **Note:** `#sellDialog`/`openSellDialog`/`initSellDialog` (the original
 single-total "Selg" dialog) are no longer wired to any button — Samling's
