@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { BASEMAPS, depRate } from './MapView'
-import { AutoHint, useAutoAnswer } from './QuestionsView'
-import { answerLabel, describe, place } from './form'
+import { AutoHint, DrawNote, useAutoAnswer } from './QuestionsView'
+import { CATEGORIES, DRAWS, MAX_HAND, answerLabel, describe, place } from './form'
 import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, levelAreas, stationPos, type Result } from './geo'
-import { MAX_CARDS, useGame, useUi, type Layer } from './store'
-import type { Card, DayKey, GeoData, Settings } from './types'
+import { useGame, useUi, type Layer } from './store'
+import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
+import type { DayKey, GeoData, Settings } from './types'
 import { PointInput, Section, useNow } from './ui'
 
 const LAYERS: { key: Layer; label: string }[] = [
@@ -74,6 +75,7 @@ export function HiderPanel({ data }: { data: GeoData }) {
   const questions = useGame((s) => s.questions)
   const saveQuestion = useGame((s) => s.saveQuestion)
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
+  const locked = useGame((s) => s.round.seekFrom !== null)
   const auto = useAutoAnswer(data)
 
   return (
@@ -81,15 +83,17 @@ export function HiderPanel({ data }: { data: GeoData }) {
       <Section title="Rolle">
         <div className="flex gap-1.5">
           {(['seeker', 'hider'] as const).map((m) => (
-            <button key={m} className={`btn flex-1 ${mode === m ? 'btn-primary' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+            <button key={m} className={`btn flex-1 ${mode === m ? 'btn-primary' : ''}`} aria-pressed={mode === m} disabled={locked && mode !== m} onClick={() => setMode(m)}>
               {m === 'seeker' ? 'Seeker' : 'Hider'}
             </button>
           ))}
         </div>
         <p className="mt-2 text-xs text-muted">
-          {mode === 'hider'
-            ? 'Posisjonen din lagres bare på denne telefonen og blir ikke med når du deler spillet.'
-            : 'Bytt til hider når det er du som gjemmer deg. Da regner appen ut svarene dine.'}
+          {locked
+            ? 'Rollen er låst til runden er ferdig.'
+            : mode === 'hider'
+              ? 'Gjemmestedet ditt blir på denne telefonen. Seekerne ser det aldri. Rollen låses når runden starter.'
+              : 'Velg hider før runden starter hvis det er du som gjemmer deg. Rollen låses når runden starter.'}
         </p>
       </Section>
 
@@ -134,7 +138,8 @@ export function HiderPanel({ data }: { data: GeoData }) {
                   const wrong = a && q.answer !== null && q.answer !== a.answer
                   return (
                     <li key={q.id} className="card">
-                      <p className="text-sm">{describe(q, data)}</p>
+                      <p className="mb-1 text-sm">{describe(q, data)}</p>
+                      <DrawNote q={q} log={questions} />
                       {a ? <AutoHint q={q} auto={a} /> : <p className="mt-2 text-xs text-muted">Kan ikke regnes ut. Svar selv.</p>}
                       {wrong && <p className="mt-1 text-xs text-bad">I loggen står det «{answerLabel(q, q.answer!)}».</p>}
                       {a && q.answer !== a.answer && (
@@ -173,23 +178,100 @@ const clock = (sec: number) => {
   const h = Math.floor(s / 3600)
   return `${h ? `${h}:` : ''}${String(Math.floor((s % 3600) / 60)).padStart(h ? 2 : 1, '0')}:${String(s % 60).padStart(2, '0')}`
 }
-const CARD_TYPES: Record<Card['type'], string> = { curse: 'Curse', bonus: 'Tidsbonus', powerup: 'Powerup' }
+const STATUS = { off: '', connecting: 'Kobler til…', online: 'Tilkoblet', offline: 'Frakoblet. Endringer sendes når nettet er tilbake.' }
+
+/** Sanntidsrom: alle med samme kode ser samme logg, klokke og poengtavle. */
+function RoomPanel() {
+  const { room, status, error } = useSync()
+  const [code, setCode] = useState('')
+  const [copied, setCopied] = useState(false)
+  const hasGame = useGame((s) => s.questions.length > 0)
+
+  const join = () => {
+    if (hasGame && !confirm('Spørsmålene på denne telefonen erstattes av rommets. Fortsette?')) return
+    void joinRoom(code)
+  }
+
+  return (
+    <Section title="Rom">
+      <div className="card">
+        {room ? (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-3xl font-bold tracking-[0.2em]">{room}</span>
+              <span className={`text-xs ${status === 'online' ? 'text-ok' : 'text-muted'}`} role="status">
+                {status === 'online' && '● '}
+                {STATUS[status]}
+              </span>
+            </div>
+            <p className="my-2 text-xs text-muted">
+              Del koden med de andre. Logg, spillområde, klokke og poengtavle er felles. Hiders gjemmested deles aldri.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                className="btn"
+                onClick={async () => {
+                  await navigator.clipboard?.writeText(roomLink(room)).catch(() => {})
+                  setCopied(true)
+                }}
+              >
+                {copied ? 'Lenke kopiert' : 'Kopier lenke'}
+              </button>
+              <button className="btn" onClick={leaveRoom}>
+                Forlat rommet
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-2 text-sm">Spill sammen i sanntid på flere telefoner.</p>
+            <button className="btn btn-primary mb-2 w-full" onClick={() => void createRoom()}>
+              Lag rom med dette spillet
+            </button>
+            <form
+              className="flex gap-1.5"
+              onSubmit={(e) => {
+                e.preventDefault()
+                join()
+              }}
+            >
+              <input
+                className="field font-mono tracking-widest uppercase"
+                value={code}
+                onChange={(e) => setCode(cleanCode(e.target.value))}
+                placeholder="Romkode"
+                aria-label="Romkode"
+                autoCapitalize="characters"
+                autoComplete="off"
+              />
+              <button className="btn" disabled={code.length !== CODE_LENGTH}>
+                Bli med
+              </button>
+            </form>
+          </>
+        )}
+        {error && <p className="mt-2 text-xs text-bad">{error}</p>}
+      </div>
+    </Section>
+  )
+}
+
 
 export function RoundPanel() {
   const now = useNow()
   const g = useGame()
   const [player, setPlayer] = useState('')
-  const [card, setCard] = useState<Omit<Card, 'id'>>({ type: 'bonus', name: '', minutes: 5 })
 
   const { seekFrom } = g.round
   const hiding = seekFrom !== null && now < seekFrom
-  const bonus = g.cards.filter((c) => c.type === 'bonus').reduce((sum, c) => sum + c.minutes, 0)
+  const isHider = g.mode === 'hider'
   const totals = new Map<string, number>()
   for (const r of g.results) totals.set(r.hider, (totals.get(r.hider) ?? 0) + r.seconds + r.bonusMinutes * 60)
   for (const p of g.players) if (!totals.has(p)) totals.set(p, 0)
 
   return (
     <div>
+      <RoomPanel />
       <Section title="Runde">
         <div className="card text-center">
           {seekFrom === null ? (
@@ -218,6 +300,9 @@ export function RoundPanel() {
               <button className="btn btn-primary w-full" onClick={() => g.setRound({ seekFrom: Date.now() + g.round.hidingMinutes * 60000 })}>
                 Start gjemmetid
               </button>
+              <p className="mt-2 text-xs text-muted">
+                Du er <b>{isHider ? 'hider' : 'seeker'}</b> på denne telefonen. Rollen kan ikke byttes etter start.
+              </p>
             </>
           ) : (
             <>
@@ -225,7 +310,6 @@ export function RoundPanel() {
               <div className={`my-1 text-5xl font-bold tabular-nums ${hiding ? '' : 'text-accent'}`}>{clock(Math.abs(now - seekFrom) / 1000)}</div>
               <div className="mb-3 text-xs text-muted">
                 {g.round.hider || 'Hider'}
-                {bonus > 0 && ` · +${bonus} min i tidsbonus på hånden`}
               </div>
               <div className="flex gap-2">
                 {hiding ? (
@@ -251,48 +335,23 @@ export function RoundPanel() {
         </div>
       </Section>
 
-      <Section title={`Kort på hånden (${g.cards.length}/${MAX_CARDS})`}>
-        <ul className="mb-2 flex flex-col gap-1.5">
-          {g.cards.map((c) => (
-            <li key={c.id} className="card flex items-center justify-between gap-2 py-2!">
-              <span className="text-sm">
-                <span className="text-xs text-muted">{CARD_TYPES[c.type]}</span>
-                <br />
-                {c.type === 'bonus' ? `+${c.minutes} min` : c.name || CARD_TYPES[c.type]}
+      <Section title="Kort">
+        <p className="mb-2 text-xs text-muted">
+          Kortene er fysiske. For hvert spørsmål hider svarer på, trekker hider så mange kort og beholder noen av dem:
+        </p>
+        <ul className="divide-y divide-border text-sm">
+          {CATEGORIES.map((c) => (
+            <li key={c} className="flex justify-between py-1.5">
+              <span>{c}</span>
+              <span className="text-muted">
+                trekk {DRAWS[c].draw}, behold {DRAWS[c].keep}
               </span>
-              <button className="btn min-h-9!" onClick={() => g.removeCard(c.id)}>
-                {c.type === 'bonus' ? 'Kast' : 'Spill / kast'}
-              </button>
             </li>
           ))}
         </ul>
-        {g.cards.length >= MAX_CARDS ? (
-          <p className="text-xs text-bad">Hånden er full. Spill eller kast et kort før du trekker nytt.</p>
-        ) : (
-          <div className="flex gap-1.5">
-            <select className="field w-auto!" value={card.type} aria-label="Korttype" onChange={(e) => setCard({ ...card, type: e.target.value as Card['type'] })}>
-              {Object.entries(CARD_TYPES).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-            {card.type === 'bonus' ? (
-              <input className="field" type="number" min={1} value={card.minutes} aria-label="Minutter" onChange={(e) => setCard({ ...card, minutes: Math.max(1, +e.target.value) })} />
-            ) : (
-              <input className="field" value={card.name} aria-label="Kortnavn" placeholder="Navn på kortet" onChange={(e) => setCard({ ...card, name: e.target.value })} />
-            )}
-            <button
-              className="btn"
-              onClick={() => {
-                g.addCard(card)
-                setCard({ ...card, name: '' })
-              }}
-            >
-              Legg til
-            </button>
-          </div>
-        )}
+        <p className="mt-2 text-xs text-muted">
+          Maks {MAX_HAND} kort på hånden. Stilles akkurat samme spørsmål på nytt, trekker hider to ganger. Loggen viser hva som gjelder for hvert spørsmål.
+        </p>
       </Section>
 
       <Section title="Poengtavle">
@@ -325,6 +384,7 @@ export function RoundPanel() {
         {g.results.length > 0 && (
           <>
             <h3 className="label">Runder</h3>
+            <p className="mb-1 text-xs text-muted">Legg inn tidsbonusen fra hiders kort når runden er over.</p>
             <ul className="divide-y divide-border text-sm">
               {g.results.map((r, i) => (
                 <li key={r.id} className="flex items-center justify-between py-1.5">
@@ -332,8 +392,17 @@ export function RoundPanel() {
                     {i + 1}. {r.hider}
                   </span>
                   <span className="flex items-center gap-2 text-muted tabular-nums">
-                    {clock(r.seconds)}
-                    {r.bonusMinutes > 0 && ` + ${r.bonusMinutes} min`}
+                    {clock(r.seconds)} +
+                    <input
+                      className="field min-h-9! w-14! px-1.5! text-center"
+                      type="number"
+                      min={0}
+                      value={r.bonusMinutes || ''}
+                      placeholder="0"
+                      aria-label={`Tidsbonus i minutter for runde ${i + 1}`}
+                      onChange={(e) => g.setBonus(r.id, Math.max(0, +e.target.value || 0))}
+                    />
+                    min
                     <button className="text-xs underline" onClick={() => g.removeResult(r.id)}>
                       slett
                     </button>

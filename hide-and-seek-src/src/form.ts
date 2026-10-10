@@ -27,6 +27,51 @@ export const KINDS: { kind: Kind; category: string; label: string }[] = [
   { kind: 'tentacles', category: 'Tentacles', label: 'Tentacles' },
   { kind: 'photo', category: 'Photos', label: 'Foto' },
 ]
+/**
+ * Kortene er fysiske. Appen viser bare hvor mange hider trekker og beholder
+ * for hver spørsmålskategori (standardverdiene fra Jetlag Hide and Seek).
+ */
+export const DRAWS: Record<string, { draw: number; keep: number }> = {
+  Matching: { draw: 3, keep: 1 },
+  Measuring: { draw: 3, keep: 1 },
+  Thermometer: { draw: 2, keep: 1 },
+  Radar: { draw: 2, keep: 1 },
+  Tentacles: { draw: 4, keep: 2 },
+  Photos: { draw: 1, keep: 1 },
+}
+export const MAX_HAND = 6
+
+/** To spørsmål med samme nøkkel er «akkurat samme spørsmål», uansett hvor seeker står. */
+export function questionKey(q: QuestionBody): string {
+  switch (q.kind) {
+    case 'radar':
+      return `radar:${q.radiusM}`
+    case 'thermometer':
+      return 'thermometer'
+    case 'line':
+      return `line:${q.line}`
+    case 'admin':
+      return `admin:${q.level}`
+    case 'nearest':
+      return `nearest:${q.poiType}`
+    case 'measure':
+      return `measure:${q.ref}`
+    case 'tentacles':
+      return `tentacles:${q.poiType}:${q.radiusM}`
+    case 'photo':
+      return `photo:${q.text.trim().toLowerCase()}`
+  }
+}
+
+/** Hva hider trekker for et spørsmål. Er det stilt før i loggen, trekker hider to ganger. */
+export function drawFor(q: Question, log: Question[]) {
+  const { draw, keep } = DRAWS[KINDS.find((k) => k.kind === q.kind)!.category]
+  const at = log.findIndex((x) => x.id === q.id)
+  const earlier = at === -1 ? log : log.slice(0, at)
+  const repeat = earlier.some((x) => questionKey(x) === questionKey(q))
+  return { draw, keep, repeat, text: `Hider trekker ${draw}, beholder ${keep}${repeat ? ', to ganger (stilt før)' : ''}` }
+}
+
 export const CATEGORIES = [...new Set(KINDS.map((k) => k.category))]
 export const RADAR_RADII = [500, 1000, 2000, 5000, 10000]
 

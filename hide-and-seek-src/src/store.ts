@@ -1,9 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Form } from './form'
-import type { Card, LngLat, Question, QuestionBody, RoundResult, Settings } from './types'
+import type { LngLat, Question, QuestionBody, RoundResult, Settings } from './types'
 
-export const MAX_CARDS = 6
 const UNDO_LIMIT = 30
 const uid = () => Math.random().toString(36).slice(2, 10)
 
@@ -21,14 +20,14 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export type Layer = 'lines' | 'zones' | 'area' | 'admin' | 'poi'
 
-interface Round {
+export interface Round {
   hidingMinutes: number
   hider: string
   /** Tidspunktet gjemmetiden er over og letingen starter. null = ingen runde i gang. */
   seekFrom: number | null
 }
 
-interface State {
+export interface State {
   settings: Settings
   questions: Question[]
   past: Question[][]
@@ -36,7 +35,6 @@ interface State {
   hider: { stationId: string | null; pos: LngLat | null }
   layers: Record<Layer, boolean>
   round: Round
-  cards: Card[]
   players: string[]
   results: RoundResult[]
 
@@ -48,11 +46,10 @@ interface State {
   setHider: (hider: State['hider']) => void
   toggleLayer: (layer: Layer) => void
   setRound: (patch: Partial<Round>) => void
-  addCard: (card: Omit<Card, 'id'>) => void
-  removeCard: (id: string) => void
   addPlayer: (name: string) => void
   removePlayer: (name: string) => void
   finishRound: (seconds: number) => void
+  setBonus: (id: string, minutes: number) => void
   removeResult: (id: string) => void
   newGame: () => void
   importGame: (game: SharedGame) => void
@@ -80,7 +77,6 @@ export const useGame = create<State>()(
         hider: { stationId: null, pos: null },
         layers: { lines: true, zones: true, area: true, admin: false, poi: false },
         round: { hidingMinutes: 30, hider: '', seekFrom: null },
-        cards: [],
         players: [],
         results: [],
 
@@ -93,12 +89,11 @@ export const useGame = create<State>()(
           ),
         removeQuestion: (id) => editQuestions((qs) => qs.filter((q) => q.id !== id)),
         undo: () => set((s) => (s.past.length ? { questions: s.past[s.past.length - 1], past: s.past.slice(0, -1) } : s)),
-        setMode: (mode) => set({ mode }),
+        // Rollen er låst mens en runde pågår, så ingen kan kikke på den andre siden.
+        setMode: (mode) => set((s) => (s.round.seekFrom !== null ? s : { mode })),
         setHider: (hider) => set({ hider }),
         toggleLayer: (layer) => set((s) => ({ layers: { ...s.layers, [layer]: !s.layers[layer] } })),
         setRound: (patch) => set((s) => ({ round: { ...s.round, ...patch } })),
-        addCard: (card) => set((s) => (s.cards.length >= MAX_CARDS ? s : { cards: [...s.cards, { ...card, id: uid() }] })),
-        removeCard: (id) => set((s) => ({ cards: s.cards.filter((c) => c.id !== id) })),
         addPlayer: (name) => set((s) => (s.players.includes(name) ? s : { players: [...s.players, name] })),
         removePlayer: (name) => set((s) => ({ players: s.players.filter((p) => p !== name) })),
         finishRound: (seconds) =>
@@ -109,18 +104,18 @@ export const useGame = create<State>()(
                 id: uid(),
                 hider: s.round.hider || 'Ukjent',
                 seconds,
-                bonusMinutes: s.cards.filter((c) => c.type === 'bonus').reduce((sum, c) => sum + c.minutes, 0),
+                bonusMinutes: 0,
               },
             ],
             round: { ...s.round, seekFrom: null },
           })),
+        setBonus: (id, minutes) => set((s) => ({ results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         removeResult: (id) => set((s) => ({ results: s.results.filter((r) => r.id !== id) })),
         newGame: () =>
           set((s) => ({
             questions: [],
             past: [...s.past, s.questions].slice(-UNDO_LIMIT),
             hider: { stationId: null, pos: null },
-            cards: [],
             round: { ...s.round, seekFrom: null },
           })),
         importGame: (game) =>

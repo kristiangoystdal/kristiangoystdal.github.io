@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CATEGORIES, KINDS, RADAR_RADII, answerLabel, answerOptions, describe, fmtDist, formToQuestion, levelName, newForm, questionToForm, type Form } from './form'
+import { CATEGORIES, KINDS, RADAR_RADII, answerLabel, answerOptions, describe, drawFor, fmtDist, formToQuestion, levelName, newForm, questionToForm, type Form } from './form'
 import { ADMIN_LEVELS, FIXED_REFS, POI_TYPES, autoAnswer, hasData, nearestStation, solve, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, Question } from './types'
@@ -29,6 +29,12 @@ export function AutoHint({ q, auto }: { q: Question; auto: AutoAnswer }) {
       )}
     </p>
   )
+}
+
+/** Hvor mange kort hider trekker for spørsmålet. Uthevet når det er en gjentakelse. */
+export function DrawNote({ q, log }: { q: Question; log: Question[] }) {
+  const d = drawFor(q, log)
+  return <p className={`mb-2 text-xs ${d.repeat ? 'font-semibold text-accent' : 'text-muted'}`}>🂠 {d.text}</p>
 }
 
 function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
@@ -213,7 +219,8 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
 
       {q && !missing && (
         <div className="mb-3">
-          <p className="mb-2 text-sm italic">«{describe(q, data)}»</p>
+          <p className="mb-1 text-sm italic">«{describe(q, data)}»</p>
+          <DrawNote q={q} log={questions} />
           <span className="label">Svar fra hider</span>
           {q.kind === 'photo' ? (
             <input className="field" value={form.answer ?? ''} onChange={(e) => setDraft({ ...form, answer: e.target.value || null })} placeholder="Notat om bildet" />
@@ -361,6 +368,9 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                   <span className="tabular-nums">{q.answer === null || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
                 </div>
                 <p className="mt-1 text-sm">{describe(q, data)}</p>
+                <div className="mt-1 -mb-2">
+                  <DrawNote q={q} log={questions} />
+                </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <span className={`text-sm font-semibold ${q.answer === null ? 'text-muted' : 'text-accent'}`}>
                     {q.answer === null ? 'Venter på svar' : answerLabel(q, q.answer)}

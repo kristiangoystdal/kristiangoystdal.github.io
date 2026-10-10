@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { booleanPointInPolygon, destination } from '@turf/turf'
 import { describe, expect, it } from 'vitest'
+import { drawFor } from './form'
 import { areaAt, autoAnswer, autoPlayArea, dist, isPositive, nearestStation, regionOf, solve, stationPos, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
@@ -112,6 +113,23 @@ describe('thermometer', () => {
     const ring = voronoiCell(b, [a])!.geometry.coordinates[0] as LngLat[]
     const onBisector = ring.filter((p) => Math.abs(dist(p, a) - dist(p, b)) < 50)
     expect(onBisector.length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('korttrekk', () => {
+  const radar = (id: string, station: string, radiusM: number): Question => ({ ...q({ kind: 'radar', center: pos(station), radiusM }), id })
+
+  it('samme spørsmål på nytt gir to trekk, uansett hvor seeker står', () => {
+    const log = [radar('a', 'Majorstuen', 1000), radar('b', 'Tøyen', 2000), radar('c', 'Helsfyr', 1000)]
+    expect(drawFor(log[0], log)).toMatchObject({ draw: 2, keep: 1, repeat: false })
+    expect(drawFor(log[1], log).repeat).toBe(false) // annen radius er et annet spørsmål
+    expect(drawFor(log[2], log).repeat).toBe(true)
+  })
+
+  it('et nytt spørsmål i skjemaet sammenlignes med hele loggen', () => {
+    const log = [{ ...q({ kind: 'line', line: '3' }), id: 'a' }]
+    expect(drawFor({ ...q({ kind: 'line', line: '3' }), id: 'draft' }, log)).toMatchObject({ draw: 3, keep: 1, repeat: true })
+    expect(drawFor({ ...q({ kind: 'line', line: '4' }), id: 'draft' }, log).repeat).toBe(false)
   })
 })
 

@@ -5,6 +5,7 @@ import QuestionsView from './QuestionsView'
 import { loadData } from './data'
 import { solve } from './geo'
 import { gameFromHash, useGame, useUi, type Tab } from './store'
+import { joinRoom, resumeRoom, roomFromHash, useSync } from './sync'
 import type { GeoData } from './types'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
@@ -31,9 +32,17 @@ function useTheme() {
   }, [theme])
 }
 
-/** Åpnes siden med et delt spill i lenken, tilbys det importert én gang. */
+/** Åpnes siden med en romkode eller et delt spill i lenken, tilbys det én gang. Ellers gjenopptas forrige rom. */
 function useSharedLink() {
   useEffect(() => {
+    const room = roomFromHash(location.hash)
+    if (room) {
+      history.replaceState(null, '', location.pathname)
+      const mine = useGame.getState().questions.length
+      if (!mine || confirm(`Bli med i rom ${room}? Dine ${mine} spørsmål erstattes av rommets.`)) void joinRoom(room)
+      return
+    }
+    resumeRoom()
     const game = gameFromHash(location.hash)
     if (!game) return
     history.replaceState(null, '', location.pathname)
@@ -55,6 +64,8 @@ export default function App() {
   const questions = useGame((s) => s.questions)
   const settings = useGame((s) => s.settings)
   const pending = questions.filter((q) => q.answer === null).length
+  const room = useSync((s) => s.room)
+  const online = useSync((s) => s.status === 'online')
 
   useTheme()
   useSharedLink()
@@ -114,6 +125,9 @@ export default function App() {
                 {t.icon}
               </span>
               {t.label}
+              {t.key === 'round' && room && (
+                <span className={`absolute top-2 right-[26%] size-2.5 rounded-full ${online ? 'bg-ok' : 'bg-muted'}`} title={online ? 'Tilkoblet rom' : 'Frakoblet'} />
+              )}
               {t.key === 'questions' && pending > 0 && (
                 <span className="absolute top-1.5 right-[22%] grid size-4 place-items-center rounded-full bg-accent text-[10px] text-accent-text">{pending}</span>
               )}

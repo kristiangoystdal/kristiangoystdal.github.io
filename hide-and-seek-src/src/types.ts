@@ -62,16 +62,10 @@ export interface Settings {
   playArea: LngLat[] | null
 }
 
-export interface Card {
-  id: string
-  type: 'curse' | 'bonus' | 'powerup'
-  name: string
-  minutes: number
-}
-
 export interface RoundResult {
   id: string
   hider: string
   seconds: number
+  /** Tidsbonus fra hiders fysiske kort, lagt inn for hånd etter runden. */
   bonusMinutes: number
 }
