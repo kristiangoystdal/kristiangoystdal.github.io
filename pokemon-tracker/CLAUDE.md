@@ -29,9 +29,19 @@ Stored as one JSON document in `localStorage["kortbok.v1"]`:
 {
   cards: [{ id, pf, set, name, no, rarity, variant, cond, qty, cost, price, added }],
   sales: [{ id, date, title, platform, note, price, cost, shipping, items: [...] }],
-  meta: { lastImport, lastBackup, priceDate }
+  meta: { lastImport, lastBackup, priceDate },
+  priceHistory: [{ date, prices: { [cardId]: price } }],
 }
 ```
+
+`priceHistory` is a top-level array, one entry per CSV import, each a full
+snapshot of every row's price in that file (keyed by `id`, not just cards
+kept in `cards[]`). Capped to the last `PRICE_HISTORY_LIMIT` (12) entries,
+oldest dropped first. Re-importing the same "Market Price (As of ...)" date
+twice overwrites that entry instead of appending a duplicate. Missing on
+restored backups older than this feature — `state.priceHistory || []` is
+used everywhere it's read, so that's not a crash, just "no comparison
+available yet".
 
 `sale.shipping` (NOK, optional — no UI control for it anymore; carried through
 unmodified when editing a sale that already has one) and each sale item's
@@ -96,6 +106,17 @@ about to be newly added (both plain new cards and "egen rad" rows) to one
 typed value, ignoring whatever "Average Cost Paid" the CSV had. Only affects
 rows being pushed as new entries — never touches `toUpdatePrice`, which only
 ever changes `price` on an existing row.
+
+**Price history.** Every successful import pushes a `priceHistory` snapshot
+(see Data model) of the *file's* prices, independent of the checkboxes
+above — even a row skipped as "already have it" or "solgt tidligere" is
+still recorded, since this is about market-price trend, not collection
+membership. Before that push, the live preview (`renderImportPreview`) diffs
+`lastParsed.rows` against the previous snapshot (`computePriceChanges`) and
+shows how many prices went up/down/unchanged since that date, plus the 5
+biggest movers — so the comparison is always "new file vs. last import",
+never against the current `cards[].price` (which "Oppdater pris" may or may
+not have touched).
 
 ## TCGdex search-and-add ("Legg til kort")
 
@@ -232,8 +253,9 @@ confirm dialog. This is optional — the page works fully offline via
 4. ~~Sell straight from a Samling selection using the full Nytt salg flow,
    and bulk-set cost on several selected cards at once.~~ Done
    (`openNewSaleDialogWithCards`, "Sett kostpris").
-5. Store price history on each import and show what changed since the last
-   one.
+5. ~~Store price history on each import and show what changed since the last
+   one.~~ Done — see the "Price history" paragraph under Import semantics
+   and the `priceHistory` field under Data model.
 6. ~~Bulk-move several selected Samling cards to a different portfolio at
    once.~~ Done ("Flytt portefølje", `bulkMoveDialog`/`bulkMoveForm` in
    `app.js`). Since `pf` is part of `id` (`buildId`), moving recomputes each
@@ -260,11 +282,10 @@ confirm dialog. This is optional — the page works fully offline via
    there's no cost-based filtering to apply to a plain revenue figure, so
    manual no-card sales count here too.
 
-**Note:** `#sellDialog`/`openSellDialog`/`initSellDialog` (the original
-single-total "Selg" dialog) are no longer wired to any button — Samling's
-"Selg" and "Selg valgte" both open "Nytt salg" now. The old dialog's markup
-and JS are still in the files, just dead code; ask before deleting them in
-case something still depends on it being there.
+**Note:** the original single-total "Selg" dialog (`#sellDialog`,
+`openSellDialog`/`initSellDialog`) has been removed — Samling's "Selg" and
+"Selg valgte" have opened "Nytt salg" instead since that feature shipped,
+and nothing referenced the old dialog any more.
 
 Ask before changing the `kortbok.v1` data model — write a migration if it's
 needed.

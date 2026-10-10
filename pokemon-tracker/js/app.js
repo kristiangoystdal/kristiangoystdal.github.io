@@ -16,7 +16,6 @@
 	let selectedIds = new Set();
 	let collectionPageSize = 100;
 	let lastParsed = null; // { rows, meta } from the last CSV picked for import
-	let sellContext = null; // array of card ids currently in the sell dialog
 	let editingCardId = null; // card id being edited in the card dialog, or null when adding
 
 	// TCGdex "Legg til kort" search dialog state.
@@ -41,6 +40,7 @@
 			cards: [],
 			sales: [],
 			meta: { lastImport: null, lastBackup: null, priceDate: null },
+			priceHistory: [],
 		};
 	}
 
@@ -63,6 +63,7 @@
 			parsed.meta.lastImport = parsed.meta.lastImport || null;
 			parsed.meta.lastBackup = parsed.meta.lastBackup || null;
 			parsed.meta.priceDate = parsed.meta.priceDate || null;
+			parsed.priceHistory = Array.isArray(parsed.priceHistory) ? parsed.priceHistory : [];
 			return parsed;
 		} catch (err) {
 			console.error("Kortbok: could not load state", err);
@@ -941,175 +942,12 @@
 		});
 	}
 
-	// ---------- Selg-dialog ----------
-
-	function openSellDialog(ids) {
-		const cards = state.cards.filter((c) => ids.includes(c.id));
-		if (!cards.length) return;
-		sellContext = cards.map((c) => c.id);
-
-		const list = document.getElementById("sellItemsList");
-		list.innerHTML = cards
-			.map(
-				(c) => `
-			<div class="sell-item" data-id="${escapeHTML(c.id)}">
-				<div class="sell-item-name">${escapeHTML(c.name)} <span class="muted">${escapeHTML(c.set)} · #${escapeHTML(c.no)}</span></div>
-				<label class="sell-item-qty">
-					Antall
-					<input type="number" class="sell-qty-input" min="1" max="${c.qty}" value="${c.qty}" data-id="${escapeHTML(c.id)}">
-					<span class="muted">av ${c.qty}</span>
-				</label>
-			</div>`,
-			)
-			.join("");
-
-		document.getElementById("sellDate").value = todayLocalISO();
-		document.getElementById("sellPlatform").value = PLATFORMS[0];
-		document.getElementById("sellNote").value = "";
-		document.getElementById("sellError").textContent = "";
-		recalcSellTotal(cards);
-
-		list.querySelectorAll(".sell-qty-input").forEach((inp) => {
-			inp.addEventListener("input", () => recalcSellDialog());
-		});
-		document.getElementById("sellTotalPrice").addEventListener(
-			"input",
-			updateSellComputed,
-			{ once: false },
-		);
-
-		document.getElementById("sellDialog").showModal();
-	}
-
-	function currentSellQtys() {
-		const qtys = {};
-		document.querySelectorAll(".sell-qty-input").forEach((inp) => {
-			qtys[inp.dataset.id] = Math.max(
-				1,
-				Math.min(parseInt(inp.value, 10) || 1, parseInt(inp.max, 10)),
-			);
-		});
-		return qtys;
-	}
-
-	function recalcSellTotal(cards) {
-		const total = cards.reduce((s, c) => s + c.price * c.qty, 0);
-		document.getElementById("sellTotalPrice").value = total.toFixed(2);
-		updateSellComputed();
-	}
-
-	function recalcSellDialog() {
-		updateSellComputed();
-	}
-
-	function updateSellComputed() {
-		if (!sellContext) return;
-		const cards = state.cards.filter((c) => sellContext.includes(c.id));
-		const qtys = currentSellQtys();
-		let cost = 0;
-		let value = 0;
-		let anyUnknownCost = false;
-		cards.forEach((c) => {
-			const qty = qtys[c.id] || 0;
-			value += c.price * qty;
-			if (c.cost == null) anyUnknownCost = true;
-			else cost += c.cost * qty;
-		});
-		const totalInput = parseFloat(
-			document.getElementById("sellTotalPrice").value.replace(",", "."),
-		);
-		const total = isNaN(totalInput) ? 0 : totalInput;
-		document.getElementById("sellComputedCost").textContent = anyUnknownCost
-			? "ukjent"
-			: fmtMoney2(cost);
-		document.getElementById("sellComputedValue").textContent = fmtMoney2(value);
-		const profitEl = document.getElementById("sellComputedProfit");
-		if (anyUnknownCost) {
-			profitEl.textContent = "kost ukjent";
-			profitEl.className = "";
-		} else {
-			const profit = total - cost;
-			profitEl.textContent = fmtMoney2(profit);
-			profitEl.className = gainClass(profit);
-		}
-	}
-
 	function saleTitle(items) {
 		if (items.length === 1) return items[0].name;
 		const totalQty = items.reduce((s, i) => s + i.qty, 0);
 		const names = items.map((i) => i.name);
 		const shown = names.slice(0, 3).join(", ");
 		return `${totalQty} kort: ${shown}${names.length > 3 ? " …" : ""}`;
-	}
-
-	function initSellDialog() {
-		document.getElementById("sellCancelBtn").addEventListener("click", () => {
-			document.getElementById("sellDialog").close();
-		});
-
-		document
-			.getElementById("sellDialogForm")
-			.addEventListener("submit", (e) => {
-				e.preventDefault();
-				const cards = state.cards.filter((c) => sellContext.includes(c.id));
-				const qtys = currentSellQtys();
-				const totalInput = parseFloat(
-					document.getElementById("sellTotalPrice").value.replace(",", "."),
-				);
-				if (isNaN(totalInput) || totalInput < 0) {
-					document.getElementById("sellError").textContent =
-						"Oppgi en gyldig totalpris.";
-					return;
-				}
-				const date = document.getElementById("sellDate").value || todayLocalISO();
-				const platform = document.getElementById("sellPlatform").value;
-				const note = document.getElementById("sellNote").value.trim();
-
-				const items = cards.map((c) => ({
-					id: c.id,
-					pf: c.pf,
-					set: c.set,
-					name: c.name,
-					no: c.no,
-					rarity: c.rarity,
-					variant: c.variant,
-					cond: c.cond,
-					added: c.added,
-					qty: qtys[c.id],
-					cost: c.cost,
-					price: c.price,
-				}));
-				const anyUnknown = items.some((i) => i.cost == null);
-				const cost = anyUnknown
-					? null
-					: items.reduce((s, i) => s + i.cost * i.qty, 0);
-
-				const sale = {
-					id: uid(),
-					date,
-					title: saleTitle(items),
-					platform,
-					note,
-					price: totalInput,
-					cost,
-					items,
-				};
-
-				mutate((s) => {
-					items.forEach((item) => {
-						const card = s.cards.find((c) => c.id === item.id);
-						if (!card) return;
-						card.qty -= item.qty;
-						if (card.qty <= 0) {
-							s.cards = s.cards.filter((c) => c.id !== item.id);
-						}
-					});
-					s.sales.push(sale);
-				});
-
-				selectedIds.clear();
-				document.getElementById("sellDialog").close();
-			});
 	}
 
 	// ---------- Legg til / rediger kort ----------
@@ -2422,6 +2260,37 @@
 
 	// ---------- render: Import og data ----------
 
+	const PRICE_HISTORY_LIMIT = 12; // keep the last N import snapshots, oldest dropped first
+
+	// Diffs this import's rows against the most recent stored snapshot (one
+	// entry per past import, each a map of card id -> price at that time).
+	// Only cards present in both snapshots can be compared; a card new to
+	// this import has nothing to diff against and is silently skipped.
+	function computePriceChanges(rows) {
+		const history = state.priceHistory || [];
+		if (!history.length) return null;
+		const prevSnapshot = history[history.length - 1];
+		const prev = prevSnapshot.prices;
+		let up = 0,
+			down = 0,
+			unchanged = 0;
+		const changes = [];
+		rows.forEach((r) => {
+			const prevPrice = prev[r.id];
+			if (prevPrice == null) return;
+			const diff = r.price - prevPrice;
+			if (diff > 0.005) up++;
+			else if (diff < -0.005) down++;
+			else unchanged++;
+			if (Math.abs(diff) > 0.005) {
+				changes.push({ name: r.name, no: r.no, prevPrice, price: r.price, diff });
+			}
+		});
+		if (!up && !down && !unchanged) return null;
+		changes.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+		return { up, down, unchanged, changes, sinceDate: prevSnapshot.date };
+	}
+
 	function computeImportPreview(parsed) {
 		const updatePrices = document.getElementById("updatePricesChk").checked;
 		const includeSold = document.getElementById("includeSoldChk").checked;
@@ -2482,11 +2351,29 @@
 		}
 		box.classList.remove("hidden");
 		const preview = computeImportPreview(lastParsed);
+		const changes = computePriceChanges(lastParsed.rows);
+		const changesHtml = changes
+			? `
+			<p>Pris siden forrige import (${fmtDate(changes.sinceDate)}): ${changes.up} opp, ${changes.down} ned, ${changes.unchanged} uendret.</p>
+			${
+				changes.changes.length
+					? `<ul class="price-change-list">${changes.changes
+							.slice(0, 5)
+							.map(
+								(c) =>
+									`<li>${escapeHTML(c.name)}${c.no ? ` #${escapeHTML(c.no)}` : ""}: ${c.diff > 0 ? "+" : ""}${fmtMoney2(c.diff)} kr (${fmtMoney2(c.prevPrice)} → ${fmtMoney2(c.price)})</li>`,
+							)
+							.join("")}</ul>`
+					: ""
+			}
+		`
+			: "";
 		document.getElementById("csvPreviewText").innerHTML = `
 			<p>${preview.fileCount} kort i filen.</p>
 			<p>${preview.toAdd.length} nye kort legges til.</p>
 			<p>${preview.existingCount} kort finnes allerede${preview.toAddAsNew.length ? ` (${preview.toAddAsNew.length} legges til som egen rad)` : preview.toUpdatePrice.length ? ` (${preview.toUpdatePrice.length} får ny pris)` : ""}.</p>
 			<p>${preview.skippedSold} kort hoppet over (solgt tidligere).</p>
+			${changesHtml}
 		`;
 		document.getElementById("importBtn").classList.toggle(
 			"hidden",
@@ -2552,6 +2439,11 @@
 		document.getElementById("importBtn").addEventListener("click", () => {
 			if (!lastParsed) return;
 			const preview = computeImportPreview(lastParsed);
+			const snapshotDate = lastParsed.meta.priceDate || todayLocalISO();
+			const snapshotPrices = {};
+			lastParsed.rows.forEach((r) => {
+				snapshotPrices[r.id] = r.price;
+			});
 			mutate((s) => {
 				preview.toAdd.forEach((r) => s.cards.push({ ...r }));
 				// Existing cards re-imported as a new row get a disambiguated id so
@@ -2575,6 +2467,15 @@
 				});
 				s.meta.lastImport = new Date().toISOString();
 				if (lastParsed.meta.priceDate) s.meta.priceDate = lastParsed.meta.priceDate;
+
+				s.priceHistory = s.priceHistory || [];
+				const lastSnapshot = s.priceHistory[s.priceHistory.length - 1];
+				if (lastSnapshot && lastSnapshot.date === snapshotDate) {
+					lastSnapshot.prices = snapshotPrices;
+				} else {
+					s.priceHistory.push({ date: snapshotDate, prices: snapshotPrices });
+					if (s.priceHistory.length > PRICE_HISTORY_LIMIT) s.priceHistory.shift();
+				}
 			});
 			const resultBox = document.getElementById("importResult");
 			const added = preview.toAdd.length + preview.toAddAsNew.length;
@@ -2832,7 +2733,6 @@
 	initSamlingEvents();
 	initCardDialog();
 	initFindCardDialog();
-	initSellDialog();
 	initNewSaleDialog();
 	initSalgEvents();
 	initImportEvents();
