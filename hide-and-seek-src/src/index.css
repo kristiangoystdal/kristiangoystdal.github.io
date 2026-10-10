@@ -52,11 +52,23 @@ body {
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Ingen forsinkelse eller dobbelttrykk-zoom på knapper. */
+button,
+select,
+summary,
+a {
+  touch-action: manipulation;
+}
+button {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 @layer components {
   .btn {
-    @apply inline-flex min-h-10 shrink-0 cursor-pointer whitespace-nowrap items-center justify-center gap-1.5 rounded-lg border border-border bg-panel-2 px-3 text-sm font-medium text-text disabled:cursor-not-allowed disabled:opacity-45;
+    @apply inline-flex min-h-11 shrink-0 md:min-h-10 cursor-pointer whitespace-nowrap items-center justify-center gap-1.5 rounded-lg border border-border bg-panel-2 px-3 text-sm font-medium text-text disabled:cursor-not-allowed disabled:opacity-45;
   }
   .btn-primary {
     @apply border-accent bg-accent text-accent-text;
@@ -64,8 +76,9 @@ body {
   .btn-on {
     @apply border-accent text-accent;
   }
+  /* 16 px tekst på mobil: mindre får iOS til å zoome inn når feltet får fokus. */
   .field {
-    @apply min-h-10 w-full rounded-lg border border-border bg-panel px-2.5 text-sm text-text;
+    @apply min-h-11 w-full rounded-lg border border-border bg-panel px-2.5 text-base text-text md:min-h-10 md:text-sm;
   }
   .label {
     @apply mb-1 block text-xs font-semibold tracking-wide text-muted uppercase;
@@ -75,9 +88,21 @@ body {
   }
 }
 
-/* Mørke kartfliser: OSM har bare lyse, så de inverteres. */
-[data-theme='dark'] .leaflet-tile-pane {
+/* Mørkt tema: kartflisene inverteres. Satellittbilder lar vi være. */
+[data-theme='dark'] [data-basemap='clean'] .leaflet-tile-pane {
+  filter: invert(1) brightness(0.85) contrast(0.9);
+}
+[data-theme='dark'] [data-basemap='standard'] .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+/* På telefon zoomer man med fingrene, så knappene bare tar plass. */
+@media (max-width: 767px) {
+  .leaflet-control-zoom {
+    display: none;
+  }
 }
 .leaflet-container {
   background: var(--bg);
@@ -96,6 +121,22 @@ body {
 .leaflet-tooltip.station-label::before {
   display: none;
 }
-.picking .leaflet-container {
+.picking /* Mørkt tema: kartflisene inverteres. Satellittbilder lar vi være. */
+[data-theme='dark'] [data-basemap='clean'] .leaflet-tile-pane {
+  filter: invert(1) brightness(0.85) contrast(0.9);
+}
+[data-theme='dark'] [data-basemap='standard'] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+/* På telefon zoomer man med fingrene, så knappene bare tar plass. */
+@media (max-width: 767px) {
+  .leaflet-control-zoom {
+    display: none;
+  }
+}
+.leaflet-container {
   cursor: crosshair;
 }

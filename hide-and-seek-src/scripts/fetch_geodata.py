@@ -4,15 +4,16 @@
 Kilder:
   - Fylke og kommune: Kartverket (ws.geonorge.no/kommuneinfo)
   - Bydeler: OpenStreetMap via Overpass (admin_level=9, 15 bydeler + Sentrum og Marka)
-  - Delbydeler: oslokommune/bydelsfakta (MIT), generaliserte grenser
+  - Postnummerområder: Posten/Kartverket (wfs.geonorge.no), kun Oslo og Bærum
   - POI: OpenStreetMap via Overpass
 
 Bruk:
-    python3 scripts/fetch_geodata.py public/data [cache-mappe]
+    python3 scripts/fetch_geodata.py public/data [cache-mappe] [admin|poi]
 """
 import json
 import math
 import os
+import re
 import sys
 import time
 import urllib.parse
@@ -22,9 +23,10 @@ UA = "hide-and-seek-oslo-databuild/1.0 (github.com/kristiangoystdal)"
 OVERPASS = "https://overpass-api.de/api/interpreter"
 BBOX = "59.78,10.38,60.06,11.00"  # dekker alle T-banestasjoner med margin
 KARTVERKET = "https://ws.geonorge.no/kommuneinfo/v1"
-BYDELSFAKTA = "https://raw.githubusercontent.com/oslokommune/bydelsfakta/master/src/config/geoData"
-BYDEL_FILES = ["alna", "bjerke", "frogner", "gamle_oslo", "grorud", "grunerlokka", "nordre_aker", "nordstrand",
-               "ostensjo", "sagene", "sondre_nordstrand", "st_hanshaugen", "stovner", "ullern", "vestre_aker"]
+POSTNUMMER_WFS = ("https://wfs.geonorge.no/skwms1/wfs.postnummeromrader?" + urllib.parse.urlencode({
+    "service": "WFS", "version": "2.0.0", "request": "GetFeature", "typeNames": "app:Postnummerområde",
+    "srsName": "urn:ogc:def:crs:EPSG::4258", "bbox": BBOX + ",urn:ogc:def:crs:EPSG::4258"}))
+KOMMUNER = {"0301": "Oslo", "3201": "Bærum"}
 
 # Filnavnene må stemme med POI_TYPES i src/geo.ts.
 POI_TYPES = {
@@ -162,6 +164,27 @@ def kartverket(kind, number):
     return d["omrade"]
 
 
+def build_postnummer():
+    """Postnummerområder fra Kartverkets WFS (GML, koordinater som «lat lon»)."""
+    gml = fetch(POSTNUMMER_WFS, key="kv-postnummer.gml")
+    ring = lambda text: [[float(lon), float(lat)] for lat, lon in zip(*[iter(text.split())] * 2)]
+    feats = []
+    for member in re.findall(r"<wfs:member>(.*?)</wfs:member>", gml, re.S):
+        kommune = re.search(r"<app:kommune>(\d+)", member).group(1)
+        if kommune not in KOMMUNER:
+            continue
+        polys = []
+        for poly in re.findall(r"<gml:Polygon.*?</gml:Polygon>", member, re.S):
+            outer = re.search(r"<gml:exterior>.*?<gml:posList[^>]*>([^<]*)", poly, re.S).group(1)
+            inners = re.findall(r"<gml:interior>.*?<gml:posList[^>]*>([^<]*)", poly, re.S)
+            polys.append([ring(outer)] + [ring(i) for i in inners])
+        nr = re.search(r"<app:postnummer>(\d+)", member).group(1)
+        sted = re.search(r"<app:poststed>([^<]*)", member).group(1).title()
+        feats.append(feature(nr, {"type": "MultiPolygon", "coordinates": polys}, 5, poststed=sted))
+    feats.sort(key=lambda f: f["properties"]["name"])
+    return feats
+
+
 def write(path, features):
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": features}, f, ensure_ascii=False, separators=(",", ":"))
@@ -179,21 +202,11 @@ def build_admin(out_dir):
     # Bærum har ingen bydeler: kommunen står inn som én «bydel» så spørsmålet alltid har svar.
     bydel.append(feature("Bærum", baerum, 10))
 
-    delbydel = []
-    for name in BYDEL_FILES:
-        text = fetch(f"{BYDELSFAKTA}/{name}.js", key=f"bf-{name}.js")
-        fc = json.loads(text[text.index("{"):].rstrip().rstrip(";"))
-        parent = fc["name"].replace("Bydel ", "")
-        for f in fc["features"]:
-            delbydel.append(feature(f["properties"]["name"], f["geometry"], 0, bydel=parent))
-    # Sentrum og Marka har ingen delbydeler i kommunens inndeling.
-    for f in bydel:
-        if f["properties"]["name"] in ("Sentrum", "Marka", "Bærum"):
-            delbydel.append({**f, "properties": {"name": f["properties"]["name"], "bydel": f["properties"]["name"]}})
+    postnummer = build_postnummer()
 
     write(f"{out_dir}/admin.geojson", [
         {**f, "properties": {**f["properties"], "level": level}}
-        for level, feats in (("fylke", fylke), ("kommune", kommune), ("bydel", bydel), ("delbydel", delbydel))
+        for level, feats in (("fylke", fylke), ("kommune", kommune), ("bydel", bydel), ("postnummer", postnummer))
         for f in feats
     ])
 
@@ -250,5 +263,8 @@ if __name__ == "__main__":
     CACHE = sys.argv[2] if len(sys.argv) > 2 else None
     if CACHE:
         os.makedirs(CACHE, exist_ok=True)
-    build_admin(out)
-    build_poi(out)
+    only = sys.argv[3] if len(sys.argv) > 3 else None
+    if only in (None, "admin"):
+        build_admin(out)
+    if only in (None, "poi"):
+        build_poi(out)

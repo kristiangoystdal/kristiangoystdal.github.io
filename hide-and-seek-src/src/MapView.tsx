@@ -1,14 +1,38 @@
 import L from 'leaflet'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { formToQuestion } from './form'
-import { FIXED_REFS, excluded, regionOf, type Result } from './geo'
+import { FIXED_REFS, excluded, levelAreas, regionOf, type Result } from './geo'
 import { useGame, useUi } from './store'
-import type { GeoData, LngLat, Station } from './types'
+import type { GeoData, LngLat, Settings, Station } from './types'
 import { locate } from './ui'
 
 const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'me'] as const
 type Group = (typeof GROUPS)[number]
 const LABEL_ZOOM = 13
+
+type Basemap = Settings['basemap']
+/** Bakgrunnskartene. Ingen av dem krever nøkkel. */
+export const BASEMAPS: Record<Basemap, { label: string; url: string; maxZoom: number; attribution: string }> = {
+  clean: {
+    label: 'Enkelt',
+    url: 'https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png',
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
+  },
+  standard: {
+    label: 'Vanlig',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  },
+  satellite: {
+    label: 'Satellitt',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    maxZoom: 19,
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+  },
+}
+const BASEMAP_ORDER: Basemap[] = ['clean', 'standard', 'satellite']
 const ll = (p: LngLat): L.LatLngTuple => [p[1], p[0]]
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
@@ -33,6 +57,9 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   const draft = useUi((s) => s.draft)
   const pick = useUi((s) => s.pick)
   const setPick = useUi((s) => s.setPick)
+  const draw = useUi((s) => s.draw)
+  const setDraw = useUi((s) => s.setDraw)
+  const setSettings = useGame((s) => s.setSettings)
 
   const possible = useMemo(() => new Set(result.stations.map((s) => s.id)), [result])
   const mask = useMemo(() => excluded(result.area), [result])
@@ -44,17 +71,15 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   useEffect(() => {
     const m = L.map(el.current!, { zoomControl: false, preferCanvas: true })
     m.fitBounds(L.latLngBounds(data.stations.map((s) => [s.lat, s.lon])), { padding: [20, 20] })
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere',
-    }).addTo(m)
     L.control.zoom({ position: 'topright' }).addTo(m)
     for (const g of GROUPS) groups.current[g] = L.layerGroup().addTo(m)
 
     m.on('click', (e) => {
-      const { pick, setPick } = useUi.getState()
+      const { pick, setPick, draw, setDraw } = useUi.getState()
+      const p: LngLat = [e.latlng.lng, e.latlng.lat]
+      if (draw) return setDraw([...draw, p])
       if (!pick) return
-      pick.done([e.latlng.lng, e.latlng.lat])
+      pick.done(p)
       setPick(null)
     })
     const showLabels = () => el.current?.classList.toggle('hide-labels', m.getZoom() < LABEL_ZOOM)
@@ -73,18 +98,28 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   }, [data])
 
   useEffect(() => {
+    if (!ready || !map.current) return
+    const { url, maxZoom, attribution } = BASEMAPS[settings.basemap] ?? BASEMAPS.clean
+    const tiles = L.tileLayer(url, { maxZoom, attribution }).addTo(map.current)
+    map.current.setMaxZoom(maxZoom)
+    return () => void tiles.remove()
+  }, [ready, settings.basemap])
+
+  useEffect(() => {
     if (!ready) return
     const g = groups.current.mask.clearLayers()
     if (mask && layers.area) {
-      L.geoJSON(mask, { interactive: false, style: { color: css('--accent'), weight: 2, fillColor: '#000', fillOpacity: 0.45 } }).addTo(g)
+      // Skyggen har ingen kant (den ville også tegnet ytterrammen). Kanten tegnes rundt selve området.
+      L.geoJSON(mask, { interactive: false, style: { stroke: false, fillColor: css('--bg'), fillOpacity: 0.6 } }).addTo(g)
+      if (result.area) L.geoJSON(result.area, { interactive: false, style: { color: css('--accent'), weight: 2, fill: false } }).addTo(g)
     }
-  }, [ready, mask, layers.area, settings.theme])
+  }, [ready, mask, result.area, layers.area, settings.theme])
 
   useEffect(() => {
     if (!ready) return
     const g = groups.current.admin.clearLayers()
     if (!layers.admin) return
-    const feats = data.admin.filter((f) => f.properties.level === settings.adminLevel)
+    const feats = levelAreas(data, settings.adminLevel)
     L.geoJSON(feats as never, { style: { color: css('--muted'), weight: 1.5, fill: false, dashArray: '4 4' } })
       .bindTooltip((l) => (l as L.GeoJSON & { feature: (typeof feats)[number] }).feature.properties.name, { sticky: true })
       .addTo(g)
@@ -137,9 +172,11 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   // Når et svar krymper området, zoomes kartet inn på stasjonene som står igjen.
   useEffect(() => {
     const left = data.stations.filter((s) => possible.has(s.id))
-    if (!ready || left.length === 0 || left.length === data.stations.length) return
+    if (!ready || draw || left.length === 0 || left.length === data.stations.length) return
     const pad = settings.zoneRadius / 111000
     const bounds = L.latLngBounds(left.map((s) => [s.lat, s.lon])).pad(0.15)
+    // Panelet kan nettopp ha endret høyde. Uten dette regner Leaflet utsnittet for gammel kartstørrelse.
+    map.current?.invalidateSize()
     map.current?.fitBounds([[bounds.getSouth() - pad, bounds.getWest() - 2 * pad], [bounds.getNorth() + pad, bounds.getEast() + 2 * pad]], { maxZoom: 15 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, possible])
@@ -159,6 +196,11 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     if (mode === 'hider' && hider.pos) {
       L.circleMarker(ll(hider.pos), { radius: 8, color: '#fff', weight: 2, fillColor: css('--ok'), fillOpacity: 1 }).bindTooltip('Hider (deg)').addTo(g)
     }
+    if (draw) {
+      const style = { color: '#3b6ceb', weight: 2.5, dashArray: '6 5', fillOpacity: 0.1, interactive: false }
+      if (draw.length >= 2) (draw.length >= 3 ? L.polygon(draw.map(ll), style) : L.polyline(draw.map(ll), style)).addTo(g)
+      for (const p of draw) L.circleMarker(ll(p), { radius: 5, color: '#fff', weight: 2, fillColor: '#3b6ceb', fillOpacity: 1, interactive: false }).addTo(g)
+    }
     if (!draft) return
     const q = formToQuestion(draft)
     const region = q && regionOf(q, data)
@@ -169,7 +211,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
       p && L.circleMarker(ll(p), { radius: 7, color: '#fff', weight: 2, fillColor: '#3b6ceb', fillOpacity: 1 }).bindTooltip(text, { permanent: true, direction: 'top' }).addTo(g)
     pin(draft.pos, draft.kind === 'thermometer' ? 'Start' : 'Seeker')
     if (draft.kind === 'thermometer') pin(draft.pos2, 'Slutt')
-  }, [ready, data, draft, layers.poi, mode, hider.pos, settings.theme])
+  }, [ready, data, draft, draw, layers.poi, mode, hider.pos, settings.theme])
 
   useEffect(() => {
     if (!ready) return
@@ -189,9 +231,9 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   }
 
   return (
-    <div className={`relative h-full w-full ${pick ? 'picking' : ''}`}>
-      <div ref={el} className="h-full w-full [&.hide-labels_.station-label]:hidden" />
-      <div className="pointer-events-none absolute top-3 left-3 z-[1000] flex max-w-[70%] flex-col items-start gap-2">
+    <div className={`relative h-full w-full ${pick || draw ? 'picking' : ''}`}>
+      <div ref={el} data-basemap={settings.basemap} className="h-full w-full [&.hide-labels_.station-label]:hidden" />
+      <div className="pointer-events-none absolute top-[calc(0.75rem+env(safe-area-inset-top))] left-3 z-[1000] flex max-w-[85%] flex-col items-start gap-2 md:max-w-[70%]">
         <div className="card pointer-events-auto px-3! py-1.5! text-sm shadow-lg">
           <b className="text-accent tabular-nums">{result.stations.length}</b> stasjoner igjen
           {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
@@ -199,16 +241,48 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">
             <span>Trykk på kartet: {pick.label.toLowerCase()}</span>
-            <button className="btn min-h-8!" onClick={() => setPick(null)}>
+            <button className="btn min-h-9!" onClick={() => setPick(null)}>
               Avbryt
             </button>
           </div>
         )}
+        {draw && (
+          <div className="card pointer-events-auto px-3! py-2! text-sm shadow-lg">
+            <p className="mb-2">Trykk rundt spillområdet, hjørne for hjørne. {draw.length} satt.</p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                className="btn btn-primary min-h-9!"
+                disabled={draw.length < 3}
+                onClick={() => {
+                  setSettings({ playArea: draw })
+                  setDraw(null)
+                }}
+              >
+                Ferdig
+              </button>
+              <button className="btn min-h-9!" disabled={draw.length === 0} onClick={() => setDraw(draw.slice(0, -1))}>
+                Angre punkt
+              </button>
+              <button className="btn min-h-9!" onClick={() => setDraw(null)}>
+                Avbryt
+              </button>
+            </div>
+          </div>
+        )}
         {locError && <div className="card pointer-events-auto px-3! py-1.5! text-xs text-bad shadow-lg">{locError}</div>}
       </div>
-      <button className="btn absolute right-3 bottom-6 z-[1000] shadow-lg" onClick={findMe} aria-label="Vis min posisjon">
-        ◎ Meg
-      </button>
+      <div className="absolute right-3 bottom-7 z-[1000] flex flex-col items-end gap-2">
+        <button
+          className="btn shadow-lg"
+          aria-label={`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}. Trykk for å bytte.`}
+          onClick={() => setSettings({ basemap: BASEMAP_ORDER[(BASEMAP_ORDER.indexOf(settings.basemap) + 1) % BASEMAP_ORDER.length] })}
+        >
+          ◫ {BASEMAPS[settings.basemap].label}
+        </button>
+        <button className="btn shadow-lg" onClick={findMe} aria-label="Vis min posisjon">
+          ◎ Meg
+        </button>
+      </div>
     </div>
   )
 }

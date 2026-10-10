@@ -15,6 +15,8 @@ export const DEFAULT_SETTINGS: Settings = {
   hourTo: 18,
   adminLevel: 'bydel',
   theme: 'auto',
+  basemap: 'clean',
+  playArea: null,
 }
 
 export type Layer = 'lines' | 'zones' | 'area' | 'admin' | 'poi'
@@ -60,7 +62,7 @@ interface State {
 export interface SharedGame {
   v: 1
   questions: Question[]
-  settings: Pick<Settings, 'zoneRadius' | 'lines'>
+  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea'>
 }
 
 export const useGame = create<State>()(
@@ -129,14 +131,24 @@ export const useGame = create<State>()(
           })),
       }
     },
-    { name: 'hideandseek.v1' },
+    {
+      name: 'hideandseek.v1',
+      version: 4,
+      // v1 hadde nivået «delbydel», som er erstattet av postsone. v3 og v4 la til spillområde og kartvalg.
+      migrate: (old) => {
+        const s = old as State
+        const fix = (level: string) => (level === 'delbydel' ? 'postsone' : level)
+        const questions = s.questions.map((q) => (q.kind === 'admin' ? { ...q, level: fix(q.level) } : q))
+        return { ...s, settings: { ...DEFAULT_SETTINGS, ...s.settings, adminLevel: fix(s.settings.adminLevel) }, questions, past: [] } as State
+      },
+    },
   ),
 )
 
 export const exportGame = (s: Pick<State, 'questions' | 'settings'>): SharedGame => ({
   v: 1,
   questions: s.questions,
-  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines },
+  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null },
 })
 
 export function parseGame(text: string): SharedGame {
@@ -168,16 +180,27 @@ interface UiState {
   draft: Form | null
   /** Satt mens brukeren skal trykke på kartet for å velge et punkt. */
   pick: { label: string; done: (p: LngLat) => void } | null
+  /** Hjørnene som er satt så langt mens spillområdet tegnes. null = tegner ikke. */
+  draw: LngLat[] | null
+  /** På mobil: panelet er slått sammen så kartet fyller skjermen. */
+  collapsed: boolean
   setTab: (tab: Tab) => void
+  setCollapsed: (collapsed: boolean) => void
   setDraft: (draft: UiState['draft']) => void
   setPick: (pick: UiState['pick']) => void
+  setDraw: (draw: UiState['draw']) => void
 }
 
 export const useUi = create<UiState>((set) => ({
   tab: 'map',
+  collapsed: false,
   draft: null,
   pick: null,
-  setTab: (tab) => set({ tab }),
-  setDraft: (draft) => set({ draft }),
+  draw: null,
+  // Trykk på fanen som alt er åpen slår panelet sammen eller ut igjen.
+  setTab: (tab) => set((s) => ({ tab, collapsed: s.tab === tab ? !s.collapsed : false })),
+  setCollapsed: (collapsed) => set({ collapsed }),
+  setDraft: (draft) => set({ draft, collapsed: false }),
   setPick: (pick) => set({ pick }),
+  setDraw: (draw) => set({ draw }),
 }))

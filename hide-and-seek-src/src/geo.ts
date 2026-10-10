@@ -3,6 +3,7 @@ import {
   booleanIntersects,
   booleanPointInPolygon,
   circle,
+  convex,
   difference,
   distance,
   featureCollection,
@@ -11,7 +12,7 @@ import {
   polygon,
   union,
 } from '@turf/turf'
-import type { AdminLevel, Area, GeoData, LngLat, Poi, Question, Settings, Station } from './types'
+import type { AdminArea, AdminLevel, Area, GeoData, LngLat, Poi, Question, Settings, Station } from './types'
 
 /** Ytre ramme for alt som regnes ut. Dekker hele T-banenettet med god margin. */
 export const BOUNDS: [number, number, number, number] = [10.2, 59.7, 11.25, 60.2]
@@ -37,7 +38,8 @@ export const ADMIN_LEVELS: { key: AdminLevel; label: string }[] = [
   { key: 'fylke', label: 'Fylke' },
   { key: 'kommune', label: 'Kommune' },
   { key: 'bydel', label: 'Bydel' },
-  { key: 'delbydel', label: 'Delbydel' },
+  { key: 'postsone', label: 'Postsone (3 første siffer)' },
+  { key: 'postnummer', label: 'Postnummer' },
 ]
 
 export const POSITIVE: Record<string, string> = { radar: 'in', thermometer: 'warmer', measure: 'closer' }
@@ -112,11 +114,39 @@ export function nearestStation(stations: Station[], pos: LngLat): Station {
 }
 
 /** Det administrative området et punkt ligger i, på gitt nivå. */
+const zoneCache = new WeakMap<AdminArea[], Map<AdminLevel, AdminArea[]>>()
+
+/**
+ * Alle områdene på et nivå. Postsoner finnes ikke i dataene: de lages ved å slå
+ * sammen postnumrene som deler de tre første sifrene (0368 og 0369 blir «036x»).
+ */
+export function levelAreas(data: GeoData, level: AdminLevel): AdminArea[] {
+  let cache = zoneCache.get(data.admin)
+  if (!cache) zoneCache.set(data.admin, (cache = new Map()))
+  let areas = cache.get(level)
+  if (areas) return areas
+  if (level === 'postsone') {
+    const groups = new Map<string, AdminArea[]>()
+    for (const f of levelAreas(data, 'postnummer')) {
+      const zone = f.properties.name.slice(0, 3)
+      groups.set(zone, [...(groups.get(zone) ?? []), f])
+    }
+    areas = [...groups].map(([zone, feats]) => {
+      const merged = feats.length === 1 ? feats[0] : union(featureCollection(feats))!
+      return { ...merged, properties: { name: `${zone}x`, level } }
+    })
+  } else {
+    areas = data.admin.filter((f) => f.properties.level === level)
+  }
+  cache.set(level, areas)
+  return areas
+}
+
 export function areaAt(data: GeoData, level: AdminLevel, pos: LngLat) {
-  const areas = data.admin.filter((f) => f.properties.level === level)
+  const areas = levelAreas(data, level)
   const hit = areas.find((f) => booleanPointInPolygon(pos, f))
   if (hit || areas.length === 0) return hit ?? null
-  // Delbydelsgrensene er generaliserte og har små glipper. Da gjelder nærmeste område.
+  // Grensene er forenklet og kan ha små glipper. Da gjelder nærmeste område.
   const near = areas
     .map((f) => ({ f, d: pointToPolygonDistance(pos, f, { units: 'meters' }) }))
     .reduce((a, b) => (a.d <= b.d ? a : b))
@@ -174,6 +204,23 @@ export function regionOf(q: Question, data: GeoData): Area | null {
   }
 }
 
+/** Området hider kan være i før noen spørsmål er stilt. */
+export function startArea(settings: Pick<Settings, 'playArea'>): Area {
+  const ring = settings.playArea
+  return ring && ring.length >= 3 ? polygon([[...ring, ring[0]]]) : WORLD
+}
+
+/**
+ * Spillområde laget fra stasjonene: den minste konvekse rammen rundt sonene til
+ * alle stasjoner på linjene som er med.
+ */
+export function autoPlayArea(stations: Station[], settings: Pick<Settings, 'lines' | 'zoneRadius'>): LngLat[] | null {
+  const zones = stations.filter((s) => s.lines.some((l) => settings.lines.includes(l))).map((s) => disc(stationPos(s), settings.zoneRadius, 24))
+  const hull = zones.length ? convex(featureCollection(zones)) : null
+  // Siste punkt i ringen gjentar det første. playArea lagres uten.
+  return hull ? (hull.geometry.coordinates[0].slice(0, -1) as LngLat[]) : null
+}
+
 export function applyQuestion(area: Area | null, q: Question, data: GeoData): Area | null {
   if (!area || q.answer === null) return area
   const region = regionOf(q, data)
@@ -206,7 +253,7 @@ export interface Result {
 }
 
 export function solve(questions: Question[], data: GeoData, settings: Settings): Result {
-  let area: Area | null = WORLD
+  let area: Area | null = startArea(settings)
   const steps: Step[] = []
   questions.forEach((q, i) => {
     area = applyQuestion(area, q, data)
@@ -215,10 +262,13 @@ export function solve(questions: Question[], data: GeoData, settings: Settings):
   return { area, stations: possibleStations(area, questions, data, settings), steps }
 }
 
+// Skyggen går langt utenfor BOUNDS, så kanten aldri synes når man zoomer ut.
+const SHADE: Area = bboxPolygon([4, 57, 18, 63])
+
 /** Alt utenfor det mulige området, til skyggelegging på kartet. */
 export function excluded(area: Area | null): Area | null {
-  if (!area) return WORLD
-  return area === WORLD ? null : difference(featureCollection([WORLD, area]))
+  if (!area) return SHADE
+  return area === WORLD ? null : difference(featureCollection([SHADE, area]))
 }
 
 export interface AutoAnswer {
@@ -287,7 +337,7 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
 
 /** Kan spørsmålet stilles med dataene som er lastet? */
 export function hasData(q: Pick<Question, 'kind'> & Partial<{ level: AdminLevel; poiType: string; ref: string }>, data: GeoData) {
-  if (q.kind === 'admin') return data.admin.some((f) => f.properties.level === q.level)
+  if (q.kind === 'admin') return !!q.level && levelAreas(data, q.level).length > 0
   if (q.kind === 'nearest' || q.kind === 'tentacles') return (data.poi[q.poiType ?? ''] ?? []).length > 0
   if (q.kind === 'measure') return refPois(data, q.ref ?? '').length > 0
   return true

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { booleanPointInPolygon, destination } from '@turf/turf'
 import { describe, expect, it } from 'vitest'
-import { areaAt, autoAnswer, dist, isPositive, nearestStation, regionOf, solve, stationPos, voronoiCell } from './geo'
+import { areaAt, autoAnswer, autoPlayArea, dist, isPositive, nearestStation, regionOf, solve, stationPos, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
 const raw = JSON.parse(readFileSync('public/data/stations.json', 'utf8'))
@@ -21,7 +21,7 @@ const data: GeoData = {
     ],
   },
 }
-const settings: Settings = { zoneRadius: 500, lines: ['1', '2', '3', '4', '5'], day: 'wk', hourFrom: 10, hourTo: 18, adminLevel: 'bydel', theme: 'auto' }
+const settings: Settings = { zoneRadius: 500, lines: ['1', '2', '3', '4', '5'], day: 'wk', hourFrom: 10, hourTo: 18, adminLevel: 'bydel', theme: 'auto', basemap: 'clean', playArea: null }
 const q = (body: QuestionBody, answer: string | null = null): Question => ({ id: 'q', time: 0, answer, ...body })
 const names = (qs: Question[]) => solve(qs, data, settings).stations.map((s) => s.name)
 
@@ -57,6 +57,41 @@ describe('radar', () => {
     const res = solve([q(radar, 'in'), { ...q(radar, 'out'), id: 'q2' }], data, settings)
     expect(res.area).toBeNull()
     expect(res.stations).toHaveLength(0)
+  })
+})
+
+describe('spillområde', () => {
+  it('stasjoner utenfor området er utelukket før første spørsmål', () => {
+    // Firkant rundt sentrum, fra Majorstuen i vest til Tøyen i øst.
+    const playArea: LngLat[] = [[10.70, 59.905], [10.78, 59.905], [10.78, 59.935], [10.70, 59.935]]
+    const res = solve([], data, { ...settings, playArea })
+    const left = res.stations.map((s) => s.name)
+    expect(left).toContain('Majorstuen')
+    expect(left).toContain('Tøyen')
+    expect(left).not.toContain('Kolsås')
+    expect(left).not.toContain('Vestli')
+    expect(left.length).toBeLessThan(25)
+  })
+
+  it('auto-området dekker alle stasjoner på linjene som er med, og bare dem', () => {
+    const all = autoPlayArea(stations, settings)!
+    expect(solve([], data, { ...settings, playArea: all }).stations).toHaveLength(101)
+
+    // Bare linje 1: Kolsås (linje 3, langt vest) faller utenfor rammen.
+    const line1 = autoPlayArea(stations, { ...settings, lines: ['1'] })!
+    const left = solve([], data, { ...settings, playArea: line1 }).stations.map((s) => s.name)
+    expect(left).toContain('Frognerseteren')
+    expect(left).toContain('Bergkrystallen')
+    expect(left).not.toContain('Kolsås')
+  })
+
+  it('spørsmål krymper videre innenfor området', () => {
+    const playArea: LngLat[] = [[10.70, 59.905], [10.78, 59.905], [10.78, 59.935], [10.70, 59.935]]
+    const radar = q({ kind: 'radar', center: pos('Majorstuen'), radiusM: 1000 }, 'out')
+    const left = solve([radar], data, { ...settings, playArea }).stations.map((s) => s.name)
+    expect(left).not.toContain('Majorstuen')
+    expect(left).toContain('Tøyen')
+    expect(left).not.toContain('Kolsås')
   })
 })
 
@@ -140,9 +175,23 @@ describe.skipIf(!existsSync(ADMIN_FILE))('administrative grenser', () => {
   })
 
   it('alle stasjoner har et svar på alle nivåer', () => {
-    for (const level of ['fylke', 'kommune', 'bydel', 'delbydel'] as const) {
+    for (const level of ['fylke', 'kommune', 'bydel', 'postsone', 'postnummer'] as const) {
       expect(stations.filter((s) => !areaAt(real, level, stationPos(s))).map((s) => s.name)).toEqual([])
     }
+  })
+
+  it('postsonen er de tre første sifrene i postnummeret', () => {
+    for (const s of ['Majorstuen', 'Kolsås', 'Tøyen', 'Vestli']) {
+      expect(name('postnummer', s)).toMatch(/^\d{4}$/)
+      expect(name('postsone', s)).toBe(`${name('postnummer', s)!.slice(0, 3)}x`)
+    }
+  })
+
+  it('samme postsone gir minst like mange stasjoner som samme postnummer', () => {
+    const left = (level: AdminLevel) => solve([q({ kind: 'admin', level, pos: pos('Majorstuen') }, 'yes')], real, settings).stations.length
+    expect(left('postnummer')).toBeGreaterThanOrEqual(1)
+    expect(left('postsone')).toBeGreaterThanOrEqual(left('postnummer'))
+    expect(left('postsone')).toBeLessThan(15)
   })
 
   it('samme bydel som Majorstuen: ja beholder Frogner, nei fjerner Majorstuen-området', () => {

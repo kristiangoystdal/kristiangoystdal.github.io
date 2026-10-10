@@ -1,4 +1,4 @@
-import { ADMIN_LEVELS, FIXED_REFS, NEGATIVE, POI_TYPES, POSITIVE, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
+import { FIXED_REFS, NEGATIVE, POI_TYPES, POSITIVE, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
 import type { AdminLevel, GeoData, Kind, LngLat, Question, QuestionBody, Station } from './types'
 
 /** Skjemaet for et spørsmål: flatt og med valgfrie punkter, så det kan være halvferdig. */
@@ -83,7 +83,9 @@ export const formToQuestion = (f: Form): Question | null => {
 export const fmtDist = (d: number) => (d >= 1000 ? `${+(d / 1000).toFixed(d % 1000 ? 1 : 0)} km` : `${Math.round(d)} m`)
 export const poiLabel = (key: string) => POI_TYPES.find((t) => t.key === key)?.label ?? key
 export const refLabel = (key: string) => FIXED_REFS[key]?.name ?? `nærmeste ${poiLabel(key).toLowerCase()}`
-export const levelLabel = (key: AdminLevel) => ADMIN_LEVELS.find((l) => l.key === key)!.label
+const LEVEL_NAMES: Record<AdminLevel, string> = { fylke: 'fylke', kommune: 'kommune', bydel: 'bydel', postsone: 'postsone', postnummer: 'postnummer' }
+/** Nivået i løpende tekst: «samme postsone». */
+export const levelName = (key: AdminLevel) => LEVEL_NAMES[key] ?? key
 
 /** Beskriver et punkt ut fra nærmeste stasjon. */
 export function place(pos: LngLat, stations: Station[]) {
@@ -102,7 +104,7 @@ export function describe(q: Question, data: GeoData): string {
       return `Er stasjonen din på linje ${q.line}?`
     case 'admin': {
       const a = areaAt(data, q.level, q.pos)
-      return `Er du i samme ${levelLabel(q.level).toLowerCase()} som meg?${a ? ` (${a.properties.name})` : ''}`
+      return `Er du i samme ${levelName(q.level)} som meg?${a ? ` (${a.properties.name})` : ''}`
     }
     case 'nearest': {
       const p = nearestPoi(data.poi[q.poiType] ?? [], q.pos)

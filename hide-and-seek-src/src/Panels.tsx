@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { depRate } from './MapView'
+import { BASEMAPS, depRate } from './MapView'
 import { AutoHint, useAutoAnswer } from './QuestionsView'
-import { answerLabel, describe, levelLabel, place } from './form'
-import { ADMIN_LEVELS, POI_TYPES, stationPos, type Result } from './geo'
-import { MAX_CARDS, useGame, type Layer } from './store'
+import { answerLabel, describe, place } from './form'
+import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, levelAreas, stationPos, type Result } from './geo'
+import { MAX_CARDS, useGame, useUi, type Layer } from './store'
 import type { Card, DayKey, GeoData, Settings } from './types'
 import { PointInput, Section, useNow } from './ui'
 
@@ -19,6 +19,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   const layers = useGame((s) => s.layers)
   const toggleLayer = useGame((s) => s.toggleLayer)
   const settings = useGame((s) => s.settings)
+  const setSettings = useGame((s) => s.setSettings)
   const lineColor = Object.fromEntries(data.lines.features.map((f) => [f.properties.line, f.properties.color]))
 
   return (
@@ -28,6 +29,15 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
           {LAYERS.map((l) => (
             <button key={l.key} className={`btn ${layers[l.key] ? 'btn-on' : ''}`} aria-pressed={layers[l.key]} onClick={() => toggleLayer(l.key)}>
               {l.label}
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section title="Bakgrunnskart">
+        <div className="flex gap-1.5">
+          {(Object.keys(BASEMAPS) as (keyof typeof BASEMAPS)[]).map((k) => (
+            <button key={k} className={`btn flex-1 ${settings.basemap === k ? 'btn-on' : ''}`} aria-pressed={settings.basemap === k} onClick={() => setSettings({ basemap: k })}>
+              {BASEMAPS[k].label}
             </button>
           ))}
         </div>
@@ -129,7 +139,7 @@ export function HiderPanel({ data }: { data: GeoData }) {
                       {wrong && <p className="mt-1 text-xs text-bad">I loggen står det «{answerLabel(q, q.answer!)}».</p>}
                       {a && q.answer !== a.answer && (
                         <button
-                          className="btn mt-2 min-h-8!"
+                          className="btn mt-2 min-h-9!"
                           onClick={() => {
                             const { id, time: _t, answer: _a, ...body } = q
                             saveQuestion(body as never, a.answer, id)
@@ -250,7 +260,7 @@ export function RoundPanel() {
                 <br />
                 {c.type === 'bonus' ? `+${c.minutes} min` : c.name || CARD_TYPES[c.type]}
               </span>
-              <button className="btn min-h-8!" onClick={() => g.removeCard(c.id)}>
+              <button className="btn min-h-9!" onClick={() => g.removeCard(c.id)}>
                 {c.type === 'bonus' ? 'Kast' : 'Spill / kast'}
               </button>
             </li>
@@ -341,13 +351,37 @@ export function RoundPanel() {
 const DAYS: Record<DayKey, string> = { wk: 'Hverdag', sa: 'Lørdag', su: 'Søndag' }
 const THEMES: Record<Settings['theme'], string> = { auto: 'Følg systemet', light: 'Lys', dark: 'Mørk' }
 
-export function SettingsPanel({ data }: { data: GeoData }) {
+export function SettingsPanel({ data, result }: { data: GeoData; result: Result }) {
   const s = useGame((x) => x.settings)
   const set = useGame((x) => x.setSettings)
+  const asked = useGame((x) => x.questions.length)
+  const setDraw = useUi((x) => x.setDraw)
   const hours = [...Array(25).keys()]
 
   return (
     <div>
+      <Section title="Spillområde">
+        <p className="mb-2 text-sm">
+          {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : 'Hele T-banenettet.'}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          <button className="btn btn-primary" onClick={() => set({ playArea: autoPlayArea(data.stations, s) })}>
+            Auto fra stasjonene
+          </button>
+          <button className="btn" onClick={() => setDraw([])}>
+            {s.playArea ? 'Tegn på nytt' : 'Tegn område på kartet'}
+          </button>
+          {s.playArea && (
+            <button className="btn" onClick={() => set({ playArea: null })}>
+              Bruk hele nettet
+            </button>
+          )}
+        </div>
+        <p className="mt-1 text-xs text-muted">
+          «Auto» legger en ramme rundt sonene til alle stasjoner på linjene som er med. Trykk på nytt hvis du endrer linjer eller sonestørrelse. Stasjoner der hele sonen ligger utenfor området er utelukket fra start, og området følger med når du deler spillet.
+        </p>
+      </Section>
+
       <Section title={`Sonestørrelse: ${s.zoneRadius} m`}>
         <input className="w-full accent-accent" type="range" min={250} max={1000} step={50} value={s.zoneRadius} aria-label="Sonestørrelse i meter" onChange={(e) => set({ zoneRadius: +e.target.value })} />
         <p className="text-xs text-muted">Hvor langt fra stasjonen hider kan gjemme seg.</p>
@@ -424,14 +458,13 @@ export function SettingsPanel({ data }: { data: GeoData }) {
         <ul className="text-xs text-muted">
           <li>{data.stations.length} stasjoner og {data.lines.features.length} linjer fra Ruter GTFS</li>
           {ADMIN_LEVELS.map((l) => {
-            const n = data.admin.filter((f) => f.properties.level === l.key).length
-            return <li key={l.key}>{levelLabel(l.key)}: {n || 'mangler'}</li>
+            return <li key={l.key}>{l.label}: {levelAreas(data, l.key).length || 'mangler'}</li>
           })}
           {POI_TYPES.map((t) => (
             <li key={t.key}>{t.label}: {data.poi[t.key]?.length || 'mangler'}</li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-muted">Kart © OpenStreetMap-bidragsytere. Inspirert av taibeled/JetLagHideAndSeek.</p>
+        <p className="mt-2 text-xs text-muted">Grenser © Kartverket og Posten. Bydeler og steder © OpenStreetMap-bidragsytere. Inspirert av taibeled/JetLagHideAndSeek.</p>
       </Section>
     </div>
   )

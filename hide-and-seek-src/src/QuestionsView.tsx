@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CATEGORIES, KINDS, RADAR_RADII, answerLabel, answerOptions, describe, fmtDist, formToQuestion, levelLabel, newForm, questionToForm, type Form } from './form'
+import { CATEGORIES, KINDS, RADAR_RADII, answerLabel, answerOptions, describe, fmtDist, formToQuestion, levelName, newForm, questionToForm, type Form } from './form'
 import { ADMIN_LEVELS, FIXED_REFS, POI_TYPES, autoAnswer, hasData, nearestStation, solve, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, Question } from './types'
@@ -160,6 +160,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
               ))}
             </select>
           </label>
+          {form.level === 'postsone' && <p className="-mt-2 mb-3 text-xs text-muted">Postsonen er de tre første sifrene i postnummeret, f.eks. 036x for 0368.</p>}
           {seeker}
         </>
       )}
@@ -206,7 +207,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
 
       {missing && (
         <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">
-          {form.kind === 'admin' ? `Grensedata for ${levelLabel(form.level).toLowerCase()} er ikke lastet inn ennå.` : 'Stedsdata for dette valget er ikke lastet inn ennå.'}
+          {form.kind === 'admin' ? `Grensedata for ${levelName(form.level)} er ikke lastet inn ennå.` : 'Stedsdata for dette valget er ikke lastet inn ennå.'}
         </p>
       )}
 
@@ -365,10 +366,10 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     {q.answer === null ? 'Venter på svar' : answerLabel(q, q.answer)}
                   </span>
                   <span className="flex gap-1.5">
-                    <button className="btn min-h-8!" onClick={() => setDraft(questionToForm(q, level))}>
+                    <button className="btn min-h-9!" onClick={() => setDraft(questionToForm(q, level))}>
                       {q.answer === null ? 'Svar' : 'Rediger'}
                     </button>
-                    <button className="btn min-h-8! text-bad" onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
+                    <button className="btn min-h-9! text-bad" onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
                       Slett
                     </button>
                   </span>

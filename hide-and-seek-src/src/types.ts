@@ -3,7 +3,7 @@ import type { Feature, FeatureCollection, LineString, MultiPolygon, Polygon } fr
 /** [lengdegrad, breddegrad], samme rekkefølge som GeoJSON. */
 export type LngLat = [number, number]
 export type DayKey = 'wk' | 'sa' | 'su'
-export type AdminLevel = 'fylke' | 'kommune' | 'bydel' | 'delbydel'
+export type AdminLevel = 'fylke' | 'kommune' | 'bydel' | 'postsone' | 'postnummer'
 export type Area = Feature<Polygon | MultiPolygon>
 
 export interface Station {
@@ -15,6 +15,8 @@ export interface Station {
   dep: Record<DayKey, number[]>
 }
 
+export type AdminArea = Feature<Polygon | MultiPolygon, { name: string; level: AdminLevel }>
+
 export interface Poi {
   name: string
   pos: LngLat
@@ -23,7 +25,7 @@ export interface Poi {
 export interface GeoData {
   stations: Station[]
   lines: FeatureCollection<LineString, { line: string; name: string; color: string }>
-  admin: Feature<Polygon | MultiPolygon, { name: string; level: AdminLevel }>[]
+  admin: AdminArea[]
   poi: Record<string, Poi[]>
 }
 
@@ -55,6 +57,9 @@ export interface Settings {
   hourTo: number
   adminLevel: AdminLevel
   theme: 'auto' | 'light' | 'dark'
+  basemap: 'clean' | 'standard' | 'satellite'
+  /** Hjørnene i spillområdet. null = hele T-banenettet. */
+  playArea: LngLat[] | null
 }
 
 export interface Card {

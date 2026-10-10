@@ -21,6 +21,9 @@ function useTheme() {
     const mq = matchMedia('(prefers-color-scheme: dark)')
     const apply = () => {
       document.documentElement.dataset.theme = theme === 'auto' ? (mq.matches ? 'dark' : 'light') : theme
+      // Statuslinjen på telefonen følger temaet.
+      const panel = getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', panel)
     }
     apply()
     mq.addEventListener('change', apply)
@@ -46,6 +49,9 @@ export default function App() {
   const tab = useUi((s) => s.tab)
   const setTab = useUi((s) => s.setTab)
   const pick = useUi((s) => s.pick)
+  const draw = useUi((s) => s.draw)
+  const collapsed = useUi((s) => s.collapsed)
+  const setCollapsed = useUi((s) => s.setCollapsed)
   const questions = useGame((s) => s.questions)
   const settings = useGame((s) => s.settings)
   const pending = questions.filter((q) => q.answer === null).length
@@ -58,9 +64,9 @@ export default function App() {
 
   const result = useMemo(
     () => data && solve(questions, data, settings),
-    // Bare sonestørrelse og linjevalg påvirker geometrien.
+    // Bare sonestørrelse, linjevalg og spillområde påvirker geometrien.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, questions, settings.zoneRadius, settings.lines],
+    [data, questions, settings.zoneRadius, settings.lines, settings.playArea],
   )
 
   if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
@@ -72,8 +78,16 @@ export default function App() {
         <MapView data={data} result={result} />
       </main>
       <aside className={`flex ${tab === 'map' ? 'max-h-[38dvh]' : 'max-h-[62dvh]'} flex-col border-t border-border bg-bg md:h-full md:max-h-none md:w-96 md:border-t-0 md:border-r`}>
-        {/* Mens man velger punkt på kartet, skjules panelet på mobil så kartet får plassen. */}
-        <div className={`min-h-0 flex-1 overflow-y-auto p-4 ${pick ? 'hidden md:block' : ''}`}>
+        <button
+          className={`grid h-6 w-full shrink-0 cursor-pointer place-items-center md:hidden ${pick || draw ? 'hidden' : ''}`}
+          aria-label={collapsed ? 'Vis panelet' : 'Skjul panelet og vis hele kartet'}
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          <span className="h-1 w-10 rounded-full bg-border" />
+        </button>
+        {/* Mens man velger punkt eller tegner på kartet, skjules panelet på mobil så kartet får plassen. */}
+        <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 md:pt-4 ${pick || draw || collapsed ? 'hidden md:block' : ''}`}>
           <div className="mb-3 hidden items-baseline justify-between md:flex">
             <h1 className="text-lg font-bold">
               Hide and Seek <span className="text-accent">Oslo</span>
@@ -86,7 +100,7 @@ export default function App() {
           {tab === 'questions' && <QuestionsView data={data} result={result} />}
           {tab === 'hider' && <HiderPanel data={data} />}
           {tab === 'round' && <RoundPanel />}
-          {tab === 'settings' && <SettingsPanel data={data} />}
+          {tab === 'settings' && <SettingsPanel data={data} result={result} />}
         </div>
         <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Skjermer">
           {TABS.map((t) => (

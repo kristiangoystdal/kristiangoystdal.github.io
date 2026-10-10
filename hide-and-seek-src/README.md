@@ -20,7 +20,7 @@ Alt ligger ferdig bygget i `public/data/`. Appen kaller ingen API-er ved kjørin
 | Fil | Kilde | Script |
 |---|---|---|
 | `stations.json`, `lines.geojson` | Ruter GTFS (`rb_rut-aggregated-gtfs.zip`, route_type 401) | `scripts/gtfs_to_json.py` |
-| `admin.geojson` | Kartverket (fylke, kommune), OSM (bydel), oslokommune/bydelsfakta (delbydel) | `scripts/fetch_geodata.py` |
+| `admin.geojson` | Kartverket (fylke, kommune, postnummer), OSM (bydel) | `scripts/fetch_geodata.py` |
 | `poi/*.geojson` | OpenStreetMap via Overpass | `scripts/fetch_geodata.py` |
 
 `admin.geojson` og `poi/` er valgfrie: mangler de, vises spørsmålstypene som
@@ -33,4 +33,4 @@ trenger dem som «data mangler», og resten virker som før.
   ut hiders svar direkte fra avstander.
 - `src/form.ts`: spørsmålsskjemaet og tekstene i loggen.
 - `src/store.ts`: Zustand. `useGame` lagres i localStorage, `useUi` gjør ikke det.
-- `src/MapView.tsx`: Leaflet-kartet. `QuestionsView.tsx` og `Panels.tsx` er skjermene.
+- `src/MapView.tsx`: Leaflet-kartet og bakgrunnskartene (`BASEMAPS`, ingen krever nøkkel). `QuestionsView.tsx` og `Panels.tsx` er skjermene.

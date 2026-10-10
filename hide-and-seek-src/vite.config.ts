@@ -29,10 +29,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,json,geojson}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/tile\.openstreetmap\.org\//,
+            urlPattern: /^https:\/\/(cache\.kartverket\.no|tile\.openstreetmap\.org|server\.arcgisonline\.com)\//,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'osm-tiles',
+              cacheName: 'map-tiles',
               expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
