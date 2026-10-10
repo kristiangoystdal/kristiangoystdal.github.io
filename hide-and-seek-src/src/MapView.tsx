@@ -1,7 +1,7 @@
 import L from 'leaflet'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { formToQuestion } from './form'
-import { FIXED_REFS, excluded, levelAreas, regionOf, type Result } from './geo'
+import { excluded, levelAreas, regionOf, type Result } from './geo'
 import { useGame, useUi } from './store'
 import type { GeoData, LngLat, Settings, Station } from './types'
 import { locate } from './ui'
@@ -54,6 +54,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   const layers = useGame((s) => s.layers)
   const mode = useGame((s) => s.mode)
   const hider = useGame((s) => s.hider)
+  const endgame = useGame((s) => !!s.round.endgame)
   const draft = useUi((s) => s.draft)
   const pick = useUi((s) => s.pick)
   const setPick = useUi((s) => s.setPick)
@@ -194,7 +195,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     const draftPoi = draft && ['nearest', 'tentacles'].includes(draft.kind) ? draft.poiType : draft?.kind === 'measure' ? draft.ref : null
     const shown = layers.poi ? Object.keys(data.poi) : draftPoi ? [draftPoi] : []
     for (const key of shown) {
-      for (const p of FIXED_REFS[key] ? [FIXED_REFS[key]] : (data.poi[key] ?? [])) {
+      for (const p of data.poi[key] ?? []) {
         L.circleMarker(ll(p.pos), { radius: 4, color: '#fff', weight: 1, fillColor: '#3b6ceb', fillOpacity: 1 }).bindTooltip(p.name).addTo(poi)
       }
     }
@@ -250,7 +251,8 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
             )
           ) : (
             <>
-              <b className="text-accent tabular-nums">{result.stations.length}</b> stasjoner igjen
+              {endgame && <span className="block text-xs font-semibold text-accent uppercase">Endgame</span>}
+              <b className="text-accent tabular-nums">{result.stations.length}</b> {result.stations.length === 1 ? `stasjon igjen: ${result.stations[0].name}` : 'stasjoner igjen'}
               {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
             </>
           )}

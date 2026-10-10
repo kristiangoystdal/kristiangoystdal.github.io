@@ -1,9 +1,26 @@
 import { useState } from 'react'
-import { CATEGORIES, KINDS, RADAR_RADII, answerLabel, answerOptions, describe, drawFor, fmtDist, formToQuestion, levelName, newForm, questionToForm, type Form } from './form'
-import { ADMIN_LEVELS, FIXED_REFS, POI_TYPES, autoAnswer, hasData, nearestStation, type AutoAnswer, type Result } from './geo'
+import {
+  CATEGORIES,
+  answerLabel,
+  answerOptions,
+  categoryOf,
+  describe,
+  drawFor,
+  fmtDist,
+  formToQuestion,
+  itemOf,
+  itemsFor,
+  newForm,
+  questionToForm,
+  responseMinutes,
+  switchItem,
+  usedKeys,
+  type Form,
+} from './form'
+import { autoAnswer, dist, hasData, nearestStation, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, Question } from './types'
-import { PointInput, Section } from './ui'
+import { PointInput, Section, useNow } from './ui'
 
 const UNSURE_M = 30
 const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
@@ -37,95 +54,95 @@ export function DrawNote({ q, log }: { q: Question; log: Question[] }) {
   return <p className={`mb-2 text-xs ${d.repeat ? 'font-semibold text-accent' : 'text-muted'}`}>🂠 {d.text}</p>
 }
 
+/** Nedtelling for svartiden på et ubesvart spørsmål. */
+export function Countdown({ q }: { q: Question }) {
+  const now = useNow()
+  const size = useGame((s) => s.settings.size)
+  if (q.answer !== null) return null
+  const left = Math.round((q.time + responseMinutes(q, size) * 60000 - now) / 1000)
+  if (left <= 0) return <span className="text-xs font-semibold text-bad">Svartiden er ute</span>
+  return (
+    <span className={`text-xs tabular-nums ${left < 60 ? 'font-semibold text-bad' : 'text-muted'}`}>
+      ⏱ {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')} igjen
+    </span>
+  )
+}
+
 function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
   const setDraft = useUi((s) => s.setDraft)
   const questions = useGame((s) => s.questions)
+  const size = useGame((s) => s.settings.size)
   const saveQuestion = useGame((s) => s.saveQuestion)
   const auto = useAutoAnswer(data)
   const isHider = useGame((s) => s.mode === 'hider')
   const set = (patch: Partial<Form>) => setDraft({ ...form, answer: null, ...patch })
 
-  const category = KINDS.find((k) => k.kind === form.kind)!.category
+  const item = itemOf(form.item)!
+  const items = itemsFor(item.category, size)
+  const groups = [...new Set(items.map((i) => i.group))]
+  // Merker hvilke spørsmål som alt er stilt, så man ser hva som er igjen.
+  const used = usedKeys(questions.filter((x) => x.id !== form.id))
+  const isUsed = (id: string) => [...used].some((k) => k === id || k.startsWith(`${id}:`))
   const q = formToQuestion(form)
   const options = q ? answerOptions(q, data) : []
   const missing = !hasData(form, data)
+  const walked = form.pos && form.pos2 ? dist(form.pos, form.pos2) : 0
 
-  const poiSelect = (
-    <label className="mb-3 block">
-      <span className="label">Type sted</span>
-      <select className="field" value={form.poiType} onChange={(e) => set({ poiType: e.target.value })}>
-        {POI_TYPES.map((t) => (
-          <option key={t.key} value={t.key} disabled={!data.poi[t.key]?.length}>
-            {t.label}
-            {data.poi[t.key]?.length ? ` (${data.poi[t.key].length})` : ' (data mangler)'}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-  const radius = (
-    <div className="mb-3">
-      <span className="label">Radius</span>
-      <div className="flex flex-wrap gap-1.5">
-        {RADAR_RADII.map((r) => (
-          <button key={r} type="button" className={`btn ${form.radiusM === r ? 'btn-on' : ''}`} onClick={() => set({ radiusM: r })}>
-            {fmtDist(r)}
-          </button>
-        ))}
-        <label className="flex items-center gap-1 text-sm">
-          <input
-            className="field w-20!"
-            type="number"
-            min={50}
-            step={50}
-            value={form.radiusM}
-            aria-label="Egen radius i meter"
-            onChange={(e) => set({ radiusM: +e.target.value })}
-          />
-          m
-        </label>
-      </div>
-    </div>
-  )
   const seeker = <PointInput label="Seekers posisjon" value={form.pos} onChange={(pos) => set({ pos })} stations={data.stations} />
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className={`btn ${c === category ? 'btn-on' : ''}`}
-            onClick={() => set({ kind: KINDS.find((k) => k.category === c)!.kind })}
-          >
-            {c}
-          </button>
-        ))}
+        {CATEGORIES.map((c) => {
+          const first = itemsFor(c, size)[0]
+          return (
+            <button key={c} type="button" className={`btn ${c === item.category ? 'btn-on' : ''}`} disabled={!first} onClick={() => first && setDraft(switchItem(form, first))}>
+              {c}
+            </button>
+          )
+        })}
       </div>
-      {category === 'Matching' && (
-        <label className="mb-3 block">
-          <span className="label">Hva sammenlignes</span>
-          <select className="field" value={form.kind} onChange={(e) => set({ kind: e.target.value as Form['kind'] })}>
-            {KINDS.filter((k) => k.category === 'Matching').map((k) => (
-              <option key={k.kind} value={k.kind}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+      {itemsFor('Tentacles', size).length === 0 && <p className="-mt-1 mb-3 text-xs text-muted">Tentacles er ikke med i små spill.</p>}
+
+      <label className="mb-3 block">
+        <span className="label">Spørsmål</span>
+        <select className="field" value={item.id} onChange={(e) => setDraft(switchItem(form, itemOf(e.target.value)!))}>
+          {groups.map((g) => (
+            <optgroup key={g} label={g}>
+              {items
+                .filter((i) => i.group === g)
+                .map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {isUsed(i.id) ? '✓ ' : ''}
+                    {i.label}
+                  </option>
+                ))}
+            </optgroup>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs text-muted">✓ = stilt før. Stilles det på nytt, trekker hider to ganger.</span>
+      </label>
 
       {form.kind === 'radar' && (
         <>
           {seeker}
-          {radius}
+          {item.id === 'r-choose' && (
+            <label className="mb-3 block">
+              <span className="label">Avstand i meter</span>
+              <input className="field" type="number" min={50} step={50} value={form.radiusM} onChange={(e) => set({ radiusM: +e.target.value })} />
+            </label>
+          )}
         </>
       )}
       {form.kind === 'thermometer' && (
         <>
           <PointInput label="Startpunkt" value={form.pos} onChange={(pos) => set({ pos })} stations={data.stations} />
           <PointInput label="Sluttpunkt" value={form.pos2} onChange={(pos2) => set({ pos2 })} stations={data.stations} />
+          {walked > 0 && walked < form.radiusM && (
+            <p className="mb-3 text-xs text-bad">
+              Du har bare flyttet deg {fmtDist(walked)}. Dette spørsmålet krever minst {fmtDist(form.radiusM)}.
+            </p>
+          )}
         </>
       )}
       {form.kind === 'line' && (
@@ -146,77 +163,32 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
           </div>
         </div>
       )}
-      {form.kind === 'admin' && (
-        <>
-          <label className="mb-3 block">
-            <span className="label">Nivå</span>
-            <select className="field" value={form.level} onChange={(e) => set({ level: e.target.value as Form['level'] })}>
-              {ADMIN_LEVELS.map((l) => (
-                <option key={l.key} value={l.key}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {form.level === 'postsone' && <p className="-mt-2 mb-3 text-xs text-muted">Postsonen er de tre første sifrene i postnummeret, f.eks. 036x for 0368.</p>}
-          {seeker}
-        </>
+      {['admin', 'nearest', 'measure', 'namelen', 'border', 'tentacles'].includes(form.kind) && seeker}
+      {form.kind === 'admin' && form.level === 'postsone' && (
+        <p className="-mt-2 mb-3 text-xs text-muted">Postsonen er de tre første sifrene i postnummeret, f.eks. 036x for 0368.</p>
       )}
-      {form.kind === 'nearest' && (
-        <>
-          {poiSelect}
-          {seeker}
-        </>
-      )}
-      {form.kind === 'measure' && (
-        <>
-          <label className="mb-3 block">
-            <span className="label">Avstand til</span>
-            <select className="field" value={form.ref} onChange={(e) => set({ ref: e.target.value })}>
-              {Object.entries(FIXED_REFS).map(([key, p]) => (
-                <option key={key} value={key}>
-                  {p.name}
-                </option>
-              ))}
-              {POI_TYPES.map((t) => (
-                <option key={t.key} value={t.key} disabled={!data.poi[t.key]?.length}>
-                  Nærmeste {t.label.toLowerCase()}
-                  {data.poi[t.key]?.length ? '' : ' (data mangler)'}
-                </option>
-              ))}
-            </select>
-          </label>
-          {seeker}
-        </>
-      )}
-      {form.kind === 'tentacles' && (
-        <>
-          {poiSelect}
-          {seeker}
-          {radius}
-        </>
-      )}
-      {form.kind === 'photo' && (
-        <label className="mb-3 block">
-          <span className="label">Hva skal hider ta bilde av</span>
-          <input className="field" value={form.text} onChange={(e) => set({ text: e.target.value })} placeholder="F.eks. høyeste bygning du ser" />
-        </label>
-      )}
-
-      {missing && (
-        <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">
-          {form.kind === 'admin' ? `Grensedata for ${levelName(form.level)} er ikke lastet inn ennå.` : 'Stedsdata for dette valget er ikke lastet inn ennå.'}
+      {form.kind === 'manual' && (
+        <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">
+          Appen har ikke data til å regne ut dette. Hider svarer selv, og svaret loggføres uten at kartet krymper.
         </p>
       )}
+      {item.rules && (
+        <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm">
+          <b>Krav til bildet:</b> {item.rules}
+        </p>
+      )}
+
+      {missing && <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">Dataene for dette spørsmålet er ikke lastet inn.</p>}
 
       {q && !missing && (
         <div className="mb-3">
           <p className="mb-1 text-sm italic">«{describe(q, data)}»</p>
           <DrawNote q={q} log={questions} />
+          <p className="mb-2 text-xs text-muted">Svartid: {responseMinutes(q, size)} min</p>
           {/* Bare hider svarer. Seeker stiller spørsmålet og venter på svaret. */}
           {isHider && <span className="label">Ditt svar</span>}
           {!isHider ? null : q.kind === 'photo' ? (
-            <input className="field" value={form.answer ?? ''} onChange={(e) => setDraft({ ...form, answer: e.target.value || null })} placeholder="Notat om bildet" />
+            <input className="field" value={form.answer ?? ''} onChange={(e) => setDraft({ ...form, answer: e.target.value || null })} placeholder="Notat om bildet, f.eks. «sendt»" />
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {options.map((a) => (
@@ -320,7 +292,8 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const canUndo = useGame((s) => s.past.length > 0)
   const undo = useGame((s) => s.undo)
   const removeQuestion = useGame((s) => s.removeQuestion)
-  const level = useGame((s) => s.settings.adminLevel)
+  const size = useGame((s) => s.settings.size)
+  const setNote = useGame((s) => s.setNote)
   const isHider = useGame((s) => s.mode === 'hider')
 
   if (draft) {
@@ -339,7 +312,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   return (
     <div>
       <div className="mb-4 flex gap-2">
-        <button className="btn btn-primary flex-1" onClick={() => setDraft(newForm('radar', level, lastPos))}>
+        <button className="btn btn-primary flex-1" onClick={() => setDraft(newForm(itemsFor('Radar', size)[0], lastPos))}>
           + Nytt spørsmål
         </button>
         <button className="btn" onClick={undo} disabled={!canUndo}>
@@ -356,20 +329,26 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
               <li key={q.id} className="card">
                 <div className="flex items-baseline justify-between gap-2 text-xs text-muted">
                   <span>
-                    {i + 1}. {KINDS.find((k) => k.kind === q.kind)!.category} · {time(q.time)}
+                    {i + 1}. {categoryOf(q)} · {time(q.time)}
                   </span>
                   <span className="tabular-nums">{isHider || q.answer === null || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
                 </div>
                 <p className="mt-1 text-sm">{describe(q, data)}</p>
+                {itemOf(q.item)?.rules && <p className="mt-1 text-xs text-muted">Krav: {itemOf(q.item)!.rules}</p>}
                 <div className="mt-1 -mb-2">
                   <DrawNote q={q} log={questions} />
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <span className={`text-sm font-semibold ${q.answer === null ? 'text-muted' : 'text-accent'}`}>
                     {q.answer === null ? 'Venter på svar' : answerLabel(q, q.answer)}
+                    {q.answer === null && (
+                      <span className="ml-2">
+                        <Countdown q={q} />
+                      </span>
+                    )}
                   </span>
                   <span className="flex gap-1.5">
-                    <button className="btn min-h-9!" onClick={() => setDraft(questionToForm(q, level))}>
+                    <button className="btn min-h-9!" onClick={() => setDraft(questionToForm(q))}>
                       {isHider && q.answer === null ? 'Svar' : 'Rediger'}
                     </button>
                     <button className="btn min-h-9! text-bad" onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
@@ -377,6 +356,15 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     </button>
                   </span>
                 </div>
+                {!isHider && (
+                  <input
+                    className="field mt-2 min-h-9! text-sm!"
+                    value={q.note ?? ''}
+                    onChange={(e) => setNote(q.id, e.target.value)}
+                    placeholder="Notat"
+                    aria-label={`Notat til spørsmål ${i + 1}`}
+                  />
+                )}
               </li>
             )
           })}

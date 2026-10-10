@@ -68,6 +68,7 @@ export default function App() {
   const questions = useGame((s) => s.questions)
   const settings = useGame((s) => s.settings)
   const mode = useGame((s) => s.mode)
+  const endgame = useGame((s) => s.round.endgame ?? null)
   const pending = questions.filter((q) => q.answer === null).length
   const room = useSync((s) => s.room)
   const online = useSync((s) => s.status === 'online')
@@ -80,10 +81,10 @@ export default function App() {
 
   const result = useMemo(
     // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
-    () => data && solve(mode === 'hider' ? [] : questions, data, settings),
+    () => data && (mode === 'hider' ? solve([], data, settings) : solve(questions, data, settings, endgame)),
     // Bare sonestørrelse, linjevalg og spillområde påvirker geometrien.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, questions, mode, settings.zoneRadius, settings.lines, settings.playArea],
+    [data, questions, mode, endgame, settings.zoneRadius, settings.lines, settings.playArea],
   )
 
   if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>

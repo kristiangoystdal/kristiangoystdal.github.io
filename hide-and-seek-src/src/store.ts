@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Form } from './form'
+import type { Endgame } from './geo'
 import type { LngLat, Question, QuestionBody, RoundResult, Settings } from './types'
 
 const UNDO_LIMIT = 30
@@ -15,6 +16,7 @@ export const DEFAULT_SETTINGS: Settings = {
   adminLevel: 'bydel',
   theme: 'auto',
   basemap: 'clean',
+  size: 'M',
   playArea: null,
 }
 
@@ -25,6 +27,8 @@ export interface Round {
   hider: string
   /** Tidspunktet gjemmetiden er over og letingen starter. null = ingen runde i gang. */
   seekFrom: number | null
+  /** Satt når seekerne har startet endgame ved en stasjon. */
+  endgame?: Endgame | null
 }
 
 export interface State {
@@ -41,6 +45,7 @@ export interface State {
   setSettings: (patch: Partial<Settings>) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
   removeQuestion: (id: string) => void
+  setNote: (id: string, note: string) => void
   undo: () => void
   setMode: (mode: State['mode']) => void
   setHider: (hider: State['hider']) => void
@@ -59,7 +64,7 @@ export interface State {
 export interface SharedGame {
   v: 1
   questions: Question[]
-  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea'>
+  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size'>
 }
 
 export const useGame = create<State>()(
@@ -84,10 +89,12 @@ export const useGame = create<State>()(
         saveQuestion: (body, answer, id) =>
           editQuestions((qs) =>
             id
-              ? qs.map((q) => (q.id === id ? { ...body, id, time: q.time, answer } : q))
+              ? qs.map((q) => (q.id === id ? { ...body, id, time: q.time, answer, note: q.note } : q))
               : [...qs, { ...body, id: uid(), time: Date.now(), answer }],
           ),
         removeQuestion: (id) => editQuestions((qs) => qs.filter((q) => q.id !== id)),
+        // Notater går utenom angre-loggen, ellers ville hvert tastetrykk blitt et angresteg.
+        setNote: (id, note) => set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, note: note || undefined } : q)) })),
         undo: () => set((s) => (s.past.length ? { questions: s.past[s.past.length - 1], past: s.past.slice(0, -1) } : s)),
         // Rollen er låst mens en runde pågår, så ingen kan kikke på den andre siden.
         setMode: (mode) => set((s) => (s.round.seekFrom !== null ? s : { mode })),
@@ -107,7 +114,7 @@ export const useGame = create<State>()(
                 bonusMinutes: 0,
               },
             ],
-            round: { ...s.round, seekFrom: null },
+            round: { ...s.round, seekFrom: null, endgame: null },
           })),
         setBonus: (id, minutes) => set((s) => ({ results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         removeResult: (id) => set((s) => ({ results: s.results.filter((r) => r.id !== id) })),
@@ -116,7 +123,7 @@ export const useGame = create<State>()(
             questions: [],
             past: [...s.past, s.questions].slice(-UNDO_LIMIT),
             hider: { stationId: null, pos: null },
-            round: { ...s.round, seekFrom: null },
+            round: { ...s.round, seekFrom: null, endgame: null },
           })),
         importGame: (game) =>
           set((s) => ({
@@ -128,7 +135,7 @@ export const useGame = create<State>()(
     },
     {
       name: 'hideandseek.v1',
-      version: 4,
+      version: 5,
       // v1 hadde nivået «delbydel», som er erstattet av postsone. v3 og v4 la til spillområde og kartvalg.
       migrate: (old) => {
         const s = old as State
@@ -143,7 +150,7 @@ export const useGame = create<State>()(
 export const exportGame = (s: Pick<State, 'questions' | 'settings'>): SharedGame => ({
   v: 1,
   questions: s.questions,
-  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null },
+  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size },
 })
 
 export function parseGame(text: string): SharedGame {

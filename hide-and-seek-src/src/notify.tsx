@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { create } from 'zustand'
-import { KINDS, answerLabel } from './form'
+import { answerLabel, categoryOf, itemOf } from './form'
 import { useUi, type Tab } from './store'
 import type { Question } from './types'
 
@@ -31,7 +31,7 @@ function notify(note: Note) {
  */
 export function announce(before: Question[], after: Question[], mode: 'seeker' | 'hider') {
   const old = new Map(before.map((q) => [q.id, q]))
-  const category = (q: Question) => KINDS.find((k) => k.kind === q.kind)?.category ?? 'Spørsmål'
+  const category = (q: Question) => `${categoryOf(q)}${itemOf(q.item) ? `: ${itemOf(q.item)!.label}` : ''}`
   for (const q of after) {
     const prev = old.get(q.id)
     if (!prev && q.answer === null) {
@@ -41,7 +41,7 @@ export function announce(before: Question[], after: Question[], mode: 'seeker' |
         tab: mode === 'hider' ? 'hider' : 'questions',
       })
     } else if (q.answer !== null && prev?.answer !== q.answer && mode === 'seeker') {
-      notify({ title: 'Hider har svart', body: `${category(q)}: ${answerLabel(q, q.answer)}`, tab: 'questions' })
+      notify({ title: 'Hider har svart', body: `${category(q)} → ${answerLabel(q, q.answer)}`, tab: 'questions' })
     }
   }
 }

@@ -33,7 +33,7 @@ export interface Shared {
   players: string
 }
 type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'players'>
-type Setup = Pick<Settings, 'zoneRadius' | 'lines' | 'playArea'>
+type Setup = Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size'>
 
 const byId = <T extends { id: string }>(items: T[]) => Object.fromEntries(items.map((x) => [x.id, JSON.stringify(x)]))
 const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(map ?? {}).map((v) => JSON.parse(v) as T)
@@ -43,7 +43,7 @@ const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(ma
  * Rolle, kartvalg og tema hører også til telefonen.
  */
 export function toShared(s: Synced): Shared {
-  const setup: Setup = { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null }
+  const setup: Setup = { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size }
   return {
     questions: byId(s.questions),
     results: byId(s.results),

@@ -8,6 +8,7 @@ import {
   distance,
   featureCollection,
   intersect,
+  pointToLineDistance,
   pointToPolygonDistance,
   polygon,
   union,
@@ -18,21 +19,23 @@ import type { AdminArea, AdminLevel, Area, GeoData, LngLat, Poi, Question, Setti
 export const BOUNDS: [number, number, number, number] = [10.2, 59.7, 11.25, 60.2]
 export const WORLD: Area = bboxPolygon(BOUNDS)
 
-export const FIXED_REFS: Record<string, Poi> = {
-  slottet: { name: 'Slottet', pos: [10.7275, 59.917] },
-  holmenkollen: { name: 'Holmenkollbakken', pos: [10.6678, 59.9638] },
-}
-
-export const POI_TYPES: { key: string; label: string }[] = [
-  { key: 'kino', label: 'Kino' },
-  { key: 'sykehus', label: 'Sykehus' },
-  { key: 'museum', label: 'Museum' },
-  { key: 'park', label: 'Park' },
-  { key: 'bibliotek', label: 'Bibliotek' },
-  { key: 'universitet', label: 'Universitet' },
-  { key: 'svommehall', label: 'Svømmehall' },
-  { key: 'hoyeste_bygninger', label: 'Høy bygning' },
+export const POI_TYPES: { key: string; label: string; plural: string }[] = [
+  { key: 'flyplass', label: 'flyplass', plural: 'flyplasser' },
+  { key: 'jernbanestasjon', label: 'jernbanestasjon', plural: 'jernbanestasjoner' },
+  { key: 'fjell', label: 'fjell', plural: 'fjell' },
+  { key: 'park', label: 'park', plural: 'parker' },
+  { key: 'fornoyelsespark', label: 'fornøyelsespark', plural: 'fornøyelsesparker' },
+  { key: 'dyrepark', label: 'dyrepark', plural: 'dyreparker' },
+  { key: 'akvarium', label: 'akvarium', plural: 'akvarier' },
+  { key: 'golfbane', label: 'golfbane', plural: 'golfbaner' },
+  { key: 'museum', label: 'museum', plural: 'museer' },
+  { key: 'kino', label: 'kino', plural: 'kinoer' },
+  { key: 'sykehus', label: 'sykehus', plural: 'sykehus' },
+  { key: 'bibliotek', label: 'bibliotek', plural: 'biblioteker' },
+  { key: 'konsulat', label: 'utenlandsk konsulat eller ambassade', plural: 'konsulater og ambassader' },
 ]
+/** Tentacles kan også spørre om T-banelinjer, som ikke er punkter. */
+export const METRO_LINES = 'metrolinje'
 
 export const ADMIN_LEVELS: { key: AdminLevel; label: string }[] = [
   { key: 'fylke', label: 'Fylke' },
@@ -42,8 +45,7 @@ export const ADMIN_LEVELS: { key: AdminLevel; label: string }[] = [
   { key: 'postnummer', label: 'Postnummer' },
 ]
 
-export const POSITIVE: Record<string, string> = { radar: 'in', thermometer: 'warmer', measure: 'closer' }
-export const NEGATIVE: Record<string, string> = { radar: 'out', thermometer: 'colder', measure: 'further' }
+const POSITIVE_ANSWERS = ['yes', 'in', 'warmer', 'closer']
 
 const GAP_M = 300
 
@@ -153,8 +155,31 @@ export function areaAt(data: GeoData, level: AdminLevel, pos: LngLat) {
   return near.d <= GAP_M ? near.f : null
 }
 
-function refPois(data: GeoData, ref: string): Poi[] {
-  return FIXED_REFS[ref] ? [FIXED_REFS[ref]] : (data.poi[ref] ?? [])
+const borderCache = new Map<string, number>()
+
+/** Avstand i meter til nærmeste grense på et nivå, uansett hvilken side man står på. */
+export function borderDist(data: GeoData, level: 'fylke' | 'kommune', pos: LngLat): number {
+  const key = `${level}:${pos[0]},${pos[1]}`
+  let d = borderCache.get(key)
+  if (d === undefined) {
+    d = Math.min(...levelAreas(data, level).map((f) => Math.abs(pointToPolygonDistance(pos, f, { units: 'meters' }))))
+    borderCache.set(key, d)
+  }
+  return d
+}
+
+/** T-banelinjen som går nærmest et punkt. */
+export function nearestLine(data: GeoData, pos: LngLat): string | null {
+  let best: string | null = null
+  let bestD = Infinity
+  for (const f of data.lines.features) {
+    const d = pointToLineDistance(pos, f, { units: 'meters' })
+    if (d < bestD) {
+      bestD = d
+      best = f.properties.line
+    }
+  }
+  return best
 }
 
 /** POI-ene en tentacles-seeker kan få som svar: de innenfor radius fra seeker. */
@@ -162,8 +187,7 @@ function tentacleCandidates(data: GeoData, q: Extract<Question, { kind: 'tentacl
   return (data.poi[q.poiType] ?? []).filter((p) => dist(p.pos, q.pos) <= q.radiusM)
 }
 
-export const isPositive = (q: Question) =>
-  q.kind === 'tentacles' ? q.answer !== 'outside' : q.answer === 'yes' || q.answer === POSITIVE[q.kind]
+export const isPositive = (q: Question) => (q.kind === 'tentacles' ? q.answer !== 'outside' : POSITIVE_ANSWERS.includes(q.answer ?? ''))
 
 /**
  * Området et spørsmål peker ut: hider er innenfor ved positivt svar og
@@ -183,7 +207,7 @@ export function regionOf(q: Question, data: GeoData): Area | null {
       return mine && voronoiCell(mine.pos, pois.map((p) => p.pos))
     }
     case 'measure': {
-      const pois = refPois(data, q.ref)
+      const pois = data.poi[q.ref] ?? []
       const mine = nearestPoi(pois, q.pos)
       if (!mine) return null
       // «Nærmere enn meg» = innenfor min avstand fra et hvilket som helst sted av typen.
@@ -193,7 +217,8 @@ export function regionOf(q: Question, data: GeoData): Area | null {
     }
     case 'tentacles': {
       const reach = disc(q.pos, q.radiusM)
-      if (!q.answer || q.answer === 'outside') return reach
+      // Linjer er ikke punkter: da avgrenser bare rekkevidden området, resten skjer per stasjon.
+      if (!q.answer || q.answer === 'outside' || q.poiType === METRO_LINES) return reach
       const cands = tentacleCandidates(data, q)
       const hit = cands.find((p) => p.name === q.answer)
       const cell = hit && voronoiCell(hit.pos, cands.map((p) => p.pos))
@@ -229,16 +254,27 @@ export function applyQuestion(area: Area | null, q: Question, data: GeoData): Ar
   return isPositive(q) ? intersect(pair) : difference(pair)
 }
 
-export function possibleStations(area: Area | null, questions: Question[], data: GeoData, settings: Settings): Station[] {
-  if (!area) return []
-  return data.stations.filter((s) => {
-    if (!s.lines.some((l) => settings.lines.includes(l))) return false
-    for (const q of questions) {
-      if (q.kind !== 'line' || q.answer === null) continue
-      if (s.lines.includes(q.line) !== (q.answer === 'yes')) return false
+/**
+ * Spørsmål som ikke lar seg tegne som et område, avgjøres stasjon for stasjon.
+ * For avstander til grenser tas det høyde for at hider kan stå hvor som helst i sonen.
+ */
+function stationFits(s: Station, q: Question, data: GeoData, zoneRadius: number): boolean {
+  switch (q.kind) {
+    case 'line':
+      return s.lines.includes(q.line) === (q.answer === 'yes')
+    case 'namelen':
+      return (s.name.length === nearestStation(data.stations, q.pos).name.length) === (q.answer === 'yes')
+    case 'border': {
+      if (!hasData(q, data)) return true
+      const mine = borderDist(data, q.level, stationPos(s))
+      const theirs = borderDist(data, q.level, q.pos)
+      return q.answer === 'closer' ? mine - zoneRadius <= theirs : mine + zoneRadius > theirs
     }
-    return area === WORLD || booleanIntersects(disc(stationPos(s), settings.zoneRadius, 32), area)
-  })
+    case 'tentacles':
+      return q.poiType !== METRO_LINES || q.answer === 'outside' || s.lines.includes(q.answer ?? '')
+    default:
+      return true
+  }
 }
 
 export interface Step {
@@ -247,19 +283,67 @@ export interface Step {
 }
 
 export interface Result {
+  /** Det gyldige området: hele sonen til hver stasjon som står igjen, eller i endgame det som er igjen av den ene sonen. */
   area: Area | null
   stations: Station[]
   steps: Step[]
 }
 
-export function solve(questions: Question[], data: GeoData, settings: Settings): Result {
-  let area: Area | null = startArea(settings)
-  const steps: Step[] = []
-  questions.forEach((q, i) => {
-    area = applyQuestion(area, q, data)
-    steps.push({ count: possibleStations(area, questions.slice(0, i + 1), data, settings).length })
-  })
-  return { area, stations: possibleStations(area, questions, data, settings), steps }
+/** Endgame: seekerne er i hiders sone, og hider står stille. */
+export interface Endgame {
+  stationId: string
+  time: number
+}
+
+/**
+ * Kan hider ha stått et sted i denne stasjonens sone da spørsmålet ble besvart?
+ * Hider kan flytte seg i sonen mellom spørsmålene, så hvert spørsmål vurderes
+ * for seg: en stasjon ryker bare når ikke noe sted i sonen passer med svaret.
+ */
+function zoneFits(s: Station, q: Question, region: Area | null, zoneRadius: number): boolean {
+  if (!region) return true
+  const zone = disc(stationPos(s), zoneRadius, 32)
+  return isPositive(q) ? booleanIntersects(zone, region) : difference(featureCollection([zone, region])) !== null
+}
+
+export function solve(questions: Question[], data: GeoData, settings: Settings, endgame: Endgame | null = null): Result {
+  const base = startArea(settings)
+  const target = endgame && data.stations.find((s) => s.id === endgame.stationId)
+  const roaming = questions.filter((q) => q.answer !== null && (!target || q.time < endgame!.time))
+
+  let left = data.stations.filter(
+    (s) =>
+      s.lines.some((l) => settings.lines.includes(l)) &&
+      (base === WORLD || booleanIntersects(disc(stationPos(s), settings.zoneRadius, 32), base)),
+  )
+  const counts = new Map<string, number>()
+  for (const q of roaming) {
+    const region = regionOf(q, data)
+    left = left.filter((s) => stationFits(s, q, data, settings.zoneRadius) && zoneFits(s, q, region, settings.zoneRadius))
+    counts.set(q.id, left.length)
+  }
+
+  if (target) {
+    // I endgame står hider stille, så svarene skjærer sonen nøyaktig.
+    let area: Area | null = disc(stationPos(target), settings.zoneRadius)
+    for (const q of questions) {
+      if (q.time < endgame!.time) continue
+      area = applyQuestion(area, q, data)
+      counts.set(q.id, area ? 1 : 0)
+    }
+    return { area, stations: area ? [target] : [], steps: steps(questions, counts, left.length) }
+  }
+
+  // Så lenge en stasjon er mulig, er hele sonen dens gyldig.
+  const zones = left.map((s) => disc(stationPos(s), settings.zoneRadius, 48))
+  const area = roaming.length === 0 ? base : zones.length === 0 ? null : zones.length === 1 ? zones[0] : union(featureCollection(zones))
+  return { area, stations: left, steps: steps(questions, counts, data.stations.length) }
+}
+
+/** Antall stasjoner etter hvert spørsmål. Ubesvarte spørsmål endrer ingenting. */
+function steps(questions: Question[], counts: Map<string, number>, start: number): Step[] {
+  let count = start
+  return questions.map((q) => ({ count: (count = counts.get(q.id) ?? count) }))
 }
 
 // Skyggen går langt utenfor BOUNDS, så kanten aldri synes når man zoomer ut.
@@ -312,7 +396,7 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
       return { answer: mine.name === theirs.name ? 'yes' : 'no', detail: `du: ${mine.name}, seeker: ${theirs.name}` }
     }
     case 'measure': {
-      const pois = refPois(data, q.ref)
+      const pois = data.poi[q.ref] ?? []
       const mine = nearestPoi(pois, hider.pos)
       const theirs = nearestPoi(pois, q.pos)
       if (!mine || !theirs) return null
@@ -327,8 +411,23 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
     case 'tentacles': {
       const d = dist(hider.pos, q.pos)
       if (d > q.radiusM) return { answer: 'outside', marginM: d - q.radiusM, detail: `${m(d)} fra seeker` }
+      if (q.poiType === METRO_LINES) {
+        const line = nearestLine(data, hider.pos)
+        return line === null ? null : { answer: line, marginM: q.radiusM - d, detail: `nærmeste linje er ${line}` }
+      }
       const mine = nearestPoi(tentacleCandidates(data, q), hider.pos)
       return mine && { answer: mine.name, marginM: q.radiusM - d, detail: `${m(dist(mine.pos, hider.pos))} unna` }
+    }
+    case 'namelen': {
+      const theirs = nearestStation(data.stations, q.pos)
+      const same = hider.station.name.length === theirs.name.length
+      return { answer: same ? 'yes' : 'no', detail: `${hider.station.name}: ${hider.station.name.length} tegn, ${theirs.name}: ${theirs.name.length} tegn` }
+    }
+    case 'border': {
+      if (!hasData(q, data)) return null
+      const a = borderDist(data, q.level, hider.pos)
+      const b = borderDist(data, q.level, q.pos)
+      return { answer: a <= b ? 'closer' : 'further', marginM: Math.abs(a - b), detail: `du: ${m(a)}, seeker: ${m(b)}` }
     }
     default:
       return null
@@ -337,8 +436,9 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
 
 /** Kan spørsmålet stilles med dataene som er lastet? */
 export function hasData(q: Pick<Question, 'kind'> & Partial<{ level: AdminLevel; poiType: string; ref: string }>, data: GeoData) {
-  if (q.kind === 'admin') return !!q.level && levelAreas(data, q.level).length > 0
+  if (q.kind === 'admin' || q.kind === 'border') return !!q.level && levelAreas(data, q.level).length > 0
+  if (q.kind === 'tentacles' && q.poiType === METRO_LINES) return true
   if (q.kind === 'nearest' || q.kind === 'tentacles') return (data.poi[q.poiType ?? ''] ?? []).length > 0
-  if (q.kind === 'measure') return refPois(data, q.ref ?? '').length > 0
+  if (q.kind === 'measure') return (data.poi[q.ref ?? ''] ?? []).length > 0
   return true
 }

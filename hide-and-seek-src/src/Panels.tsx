@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BASEMAPS, depRate } from './MapView'
-import { AutoHint, DrawNote, useAutoAnswer } from './QuestionsView'
-import { CATEGORIES, DRAWS, MAX_HAND, answerLabel, describe } from './form'
+import { AutoHint, Countdown, DrawNote, useAutoAnswer } from './QuestionsView'
+import { CATEGORIES, DRAWS, ITEMS, MAX_HAND, answerLabel, answerOptions, describe, itemOf } from './form'
 import { ADMIN_LEVELS, POI_TYPES, autoAnswer, autoPlayArea, dist, levelAreas, nearestStation, stationPos, type Result } from './geo'
 import { NotifyToggle } from './notify'
 import { useGame, useUi, type Layer } from './store'
@@ -17,6 +17,45 @@ const LAYERS: { key: Layer; label: string }[] = [
   { key: 'poi', label: 'Steder' },
 ]
 
+/** Seekerne starter endgame når de er fremme i sonen de tror hider er i. */
+function EndgameControl({ result }: { result: Result }) {
+  const endgame = useGame((s) => s.round.endgame)
+  const setRound = useGame((s) => s.setRound)
+  const [picked, setPicked] = useState('')
+  const stationId = result.stations.some((s) => s.id === picked) ? picked : (result.stations[0]?.id ?? '')
+
+  if (endgame) {
+    return (
+      <Section title="Endgame">
+        <p className="mb-2 text-sm">
+          Bare sonen ved <b>{result.stations[0]?.name ?? 'stasjonen'}</b> er gyldig. Hider står stille, så svar på nye spørsmål skjærer sonen nøyaktig.
+        </p>
+        {!result.area && <p className="mb-2 text-sm text-bad">Svarene utelukker hele sonen. Hider er trolig ved en annen stasjon.</p>}
+        <button className="btn" onClick={() => setRound({ endgame: null })}>
+          Avslutt endgame
+        </button>
+      </Section>
+    )
+  }
+  return (
+    <Section title="Endgame">
+      <div className="flex gap-1.5">
+        <select className="field" value={stationId} aria-label="Stasjon for endgame" onChange={(e) => setPicked(e.target.value)}>
+          {result.stations.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+        <button className="btn btn-primary" disabled={!stationId} onClick={() => setRound({ endgame: { stationId, time: Date.now() } })}>
+          Start endgame
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-muted">Start når dere er fremme i sonen. Da er bare den sonen gyldig, og hider må stå stille.</p>
+    </Section>
+  )
+}
+
 export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   const layers = useGame((s) => s.layers)
   const toggleLayer = useGame((s) => s.toggleLayer)
@@ -27,6 +66,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
 
   return (
     <div>
+      {!hiderView && <EndgameControl result={result} />}
       <Section title="Kartlag">
         <div className="flex flex-wrap gap-1.5">
           {LAYERS.map((l) => (
@@ -82,6 +122,7 @@ export function HiderPanel({ data }: { data: GeoData }) {
   const saveQuestion = useGame((s) => s.saveQuestion)
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
   const locked = useGame((s) => s.round.seekFrom !== null)
+  const endgame = useGame((s) => !!s.round.endgame)
   const auto = useAutoAnswer(data)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
@@ -144,6 +185,11 @@ export function HiderPanel({ data }: { data: GeoData }) {
             )}
           </Section>
 
+          {endgame && (
+            <p className="mb-5 rounded-lg border border-accent p-3 text-sm">
+              <b>Endgame er startet.</b> Seekerne er i en sone. Er det din, må du stå stille der du er.
+            </p>
+          )}
           <Section title="Spørsmål til deg">
             {questions.length === 0 && <p className="text-sm text-muted">Ingen spørsmål ennå. De dukker opp her når seekerne stiller dem.</p>}
             {error && <p className="mb-2 text-xs text-bad">{error}</p>}
@@ -153,7 +199,9 @@ export function HiderPanel({ data }: { data: GeoData }) {
                 return (
                   <li key={q.id} className="card">
                     <p className="mb-1 text-sm">{describe(q, data)}</p>
+                    {itemOf(q.item)?.rules && <p className="mb-1 text-xs">Krav til bildet: {itemOf(q.item)!.rules}</p>}
                     <DrawNote q={q} log={questions} />
+                    <Countdown q={q} />
                     {q.answer !== null && (
                       <p className="text-sm">
                         Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
@@ -161,7 +209,25 @@ export function HiderPanel({ data }: { data: GeoData }) {
                     )}
                     {a && q.answer !== a.answer && <AutoHint q={q} auto={a} />}
                     {q.kind === 'photo' ? (
-                      q.answer === null && <p className="text-xs text-muted">Send bildet til seekerne, og skriv et notat under Spørsmål hvis du vil.</p>
+                      q.answer === null && (
+                        <div className="mt-2">
+                          <p className="mb-2 text-xs text-muted">Send bildet til seekerne på melding, og kvitter her.</p>
+                          <button className="btn btn-primary" onClick={() => answer(q, 'Bilde sendt')}>
+                            Bilde sendt
+                          </button>
+                        </div>
+                      )
+                    ) : q.kind === 'manual' ? (
+                      <div className="mt-2">
+                        <p className="mb-2 text-xs text-muted">Appen kan ikke regne ut dette. Svar selv:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {answerOptions(q, data).map((o) => (
+                            <button key={o} className={`btn ${q.answer === o ? 'btn-primary' : ''}`} onClick={() => answer(q, o)}>
+                              {answerLabel(q, o)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ) : (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {a && q.answer !== a.answer && (
@@ -372,7 +438,7 @@ export function RoundPanel() {
           ))}
         </ul>
         <p className="mt-2 text-xs text-muted">
-          Maks {MAX_HAND} kort på hånden. Stilles akkurat samme spørsmål på nytt, trekker hider to ganger. Loggen viser hva som gjelder for hvert spørsmål.
+          Maks {MAX_HAND} kort på hånden. Stilles akkurat samme spørsmål på nytt, trekker hider to ganger. Loggen viser hva som gjelder for hvert spørsmål. Hider har 5 min på å svare, og lengre på bilder.
         </p>
       </Section>
 
@@ -473,6 +539,19 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
         </p>
       </Section>
 
+      <Section title="Spillstørrelse">
+        <div className="flex gap-1.5">
+          {(['S', 'M', 'L'] as const).map((k) => (
+            <button key={k} className={`btn flex-1 ${s.size === k ? 'btn-on' : ''}`} aria-pressed={s.size === k} onClick={() => set({ size: k })}>
+              {{ S: 'Small', M: 'Medium', L: 'Large' }[k]}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-muted">
+          Styrer hvilke spørsmål som er med: {ITEMS.filter((i) => i.sizes.includes(s.size)).length} av {ITEMS.length} i dette spillet. Bilder har {s.size === 'L' ? 20 : 10} min svartid, resten 5 min.
+        </p>
+      </Section>
+
       <Section title={`Sonestørrelse: ${s.zoneRadius} m`}>
         <input className="w-full accent-accent" type="range" min={250} max={1000} step={50} value={s.zoneRadius} aria-label="Sonestørrelse i meter" onChange={(e) => set({ zoneRadius: +e.target.value })} />
         <p className="text-xs text-muted">Hvor langt fra stasjonen hider kan gjemme seg.</p>
@@ -525,7 +604,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
         <p className="mt-1 text-xs text-muted">Styrer avganger per time i stasjonslisten og på kartet.</p>
       </Section>
 
-      <Section title="Nivå for «samme område»">
+      <Section title="Områdegrenser på kartet">
         <select className="field" value={s.adminLevel} onChange={(e) => set({ adminLevel: e.target.value as Settings['adminLevel'] })}>
           {ADMIN_LEVELS.map((l) => (
             <option key={l.key} value={l.key}>

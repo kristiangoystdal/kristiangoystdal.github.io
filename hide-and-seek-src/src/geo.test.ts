@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { booleanPointInPolygon, destination } from '@turf/turf'
 import { describe, expect, it } from 'vitest'
-import { drawFor } from './form'
+import { ITEMS, drawFor, formToQuestion, itemsFor, newForm, responseMinutes } from './form'
 import { areaAt, autoAnswer, autoPlayArea, dist, isPositive, nearestStation, regionOf, solve, stationPos, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
@@ -22,7 +22,7 @@ const data: GeoData = {
     ],
   },
 }
-const settings: Settings = { zoneRadius: 500, lines: ['1', '2', '3', '4', '5'], day: 'wk', hourFrom: 10, hourTo: 18, adminLevel: 'bydel', theme: 'auto', basemap: 'clean', playArea: null }
+const settings: Settings = { zoneRadius: 500, lines: ['1', '2', '3', '4', '5'], day: 'wk', hourFrom: 10, hourTo: 18, adminLevel: 'bydel', theme: 'auto', basemap: 'clean', size: 'M', playArea: null }
 const q = (body: QuestionBody, answer: string | null = null): Question => ({ id: 'q', time: 0, answer, ...body })
 const names = (qs: Question[]) => solve(qs, data, settings).stations.map((s) => s.name)
 
@@ -54,11 +54,51 @@ describe('radar', () => {
     expect(left).toContain('Frøen')
   })
 
-  it('innenfor + utenfor samme sirkel er en selvmotsigelse', () => {
+  it('hider kan flytte seg i sonen: innenfor og så utenfor samme sirkel beholder stasjonene på kanten', () => {
     const res = solve([q(radar, 'in'), { ...q(radar, 'out'), id: 'q2' }], data, settings)
+    const left = res.stations.map((s) => s.name)
+    expect(left).toContain('Frøen') // ~650 m unna, sonen krysser sirkelen
+    expect(left).not.toContain('Majorstuen') // hele sonen ligger inni
+    expect(left).not.toContain('Jernbanetorget') // hele sonen ligger utenfor
+    expect(res.steps.map((x) => x.count)).toEqual([6, left.length])
+  })
+
+  it('hele sonen til en mulig stasjon er gyldig, også delen utenfor sirkelen', () => {
+    const res = solve([q(radar, 'in')], data, settings)
+    // Punkt 400 m nord for Vinderen: over 1 km fra Majorstuen, men inni Vinderens sone.
+    const far = destination(pos('Vinderen'), 0.4, 0, { units: 'kilometers' }).geometry.coordinates as LngLat
+    expect(dist(far, pos('Majorstuen'))).toBeGreaterThan(1000)
+    expect(booleanPointInPolygon(far, res.area!)).toBe(true)
+    expect(booleanPointInPolygon(pos('Kolsås'), res.area!)).toBe(false)
+  })
+})
+
+describe('endgame', () => {
+  const at = (id: string, time: number, body: QuestionBody, answer: string): Question => ({ ...q(body, answer), id, time })
+  const endgame = { stationId: byName('Frøen').id, time: 100 }
+
+  it('bare sonen til den valgte stasjonen er gyldig', () => {
+    const res = solve([at('a', 1, { kind: 'radar', center: pos('Majorstuen'), radiusM: 1000 }, 'in')], data, settings, endgame)
+    expect(res.stations.map((s) => s.name)).toEqual(['Frøen'])
+    expect(booleanPointInPolygon(pos('Frøen'), res.area!)).toBe(true)
+    expect(booleanPointInPolygon(pos('Majorstuen'), res.area!)).toBe(false)
+  })
+
+  it('spørsmål etter start skjærer sonen nøyaktig, spørsmål før gjør det ikke', () => {
+    const cut: QuestionBody = { kind: 'radar', center: pos('Majorstuen'), radiusM: 700 }
+    const north = destination(pos('Frøen'), 0.4, 0, { units: 'kilometers' }).geometry.coordinates as LngLat
+    const before = solve([at('a', 1, cut, 'in')], data, settings, endgame)
+    const after = solve([at('a', 200, cut, 'in')], data, settings, endgame)
+    expect(booleanPointInPolygon(north, before.area!)).toBe(true)
+    expect(booleanPointInPolygon(north, after.area!)).toBe(false)
+    expect(booleanPointInPolygon(pos('Frøen'), after.area!)).toBe(true)
+  })
+
+  it('svar som utelukker hele sonen gir null stasjoner', () => {
+    const res = solve([at('a', 200, { kind: 'radar', center: pos('Kolsås'), radiusM: 500 }, 'in')], data, settings, endgame)
     expect(res.area).toBeNull()
     expect(res.stations).toHaveLength(0)
-  })
+})
 })
 
 describe('spillområde', () => {
@@ -133,6 +173,50 @@ describe('korttrekk', () => {
   })
 })
 
+describe('regelboken', () => {
+  it('spillstørrelsen styrer hvilke spørsmål som er med', () => {
+    expect(itemsFor('Tentacles', 'S')).toHaveLength(0)
+    expect(itemsFor('Tentacles', 'M')).toHaveLength(4)
+    expect(itemsFor('Tentacles', 'L')).toHaveLength(8)
+    expect(itemsFor('Thermometer', 'S').map((i) => i.label)).toEqual(['1 km', '5 km'])
+    expect(itemsFor('Thermometer', 'L')).toHaveLength(4)
+    expect(itemsFor('Radar', 'S')).toHaveLength(10)
+    expect(itemsFor('Photos', 'S')).toHaveLength(6)
+    expect(itemsFor('Photos', 'M')).toHaveLength(14)
+    expect(itemsFor('Photos', 'L')).toHaveLength(18)
+    expect(new Set(ITEMS.map((i) => i.id)).size).toBe(ITEMS.length)
+  })
+
+  it('bilder har lengre svartid', () => {
+    const photo = formToQuestion(newForm(itemsFor('Photos', 'S')[0], null))!
+    const radar = formToQuestion(newForm(itemsFor('Radar', 'S')[0], pos('Majorstuen')))!
+    expect([responseMinutes(photo, 'S'), responseMinutes(photo, 'L'), responseMinutes(radar, 'L')]).toEqual([10, 20, 5])
+  })
+
+  it('alle spørsmål som trenger et punkt blir gyldige når seeker har en posisjon', () => {
+    for (const item of ITEMS) {
+      const form = { ...newForm(item, pos('Majorstuen')), pos2: pos('Tøyen') }
+      expect(formToQuestion(form), item.id).not.toBeNull()
+    }
+  })
+
+  it('lengde på stasjonsnavn deler stasjonene etter antall tegn', () => {
+    const body: QuestionBody = { kind: 'namelen', pos: pos('Tøyen') } // 5 tegn
+    const yes = names([q(body, 'yes')])
+    expect(yes).toContain('Frøen')
+    expect(yes).not.toContain('Majorstuen')
+    expect(yes.length + names([q(body, 'no')]).length).toBe(101)
+    expect(autoAnswer(q(body), { pos: pos('Frøen'), station: byName('Frøen') }, data)!.answer).toBe('yes')
+  })
+
+  it('tentacles med T-banelinjer beholder stasjonene på linjen hider er nærmest', () => {
+    const body: QuestionBody = { kind: 'tentacles', poiType: 'metrolinje', pos: pos('Stortinget'), radiusM: 25000 }
+    const left = names([q(body, '1')])
+    expect(left).toContain('Frognerseteren')
+    expect(left).not.toContain('Kolsås')
+  })
+})
+
 describe('samme linje', () => {
   it('ja/nei deler stasjonene etter linje', () => {
     const yes = names([q({ kind: 'line', line: '1' }, 'yes')])
@@ -149,7 +233,6 @@ describe('hiders autosvar stemmer med geometrien', () => {
     { kind: 'radar', center: seeker, radiusM: 2000 },
     { kind: 'thermometer', from: seeker, to: pos('Stortinget') },
     { kind: 'nearest', poiType: 'kino', pos: seeker },
-    { kind: 'measure', ref: 'slottet', pos: seeker },
     { kind: 'measure', ref: 'kino', pos: seeker },
     { kind: 'tentacles', poiType: 'kino', pos: seeker, radiusM: 2500 },
   ]
@@ -210,6 +293,19 @@ describe.skipIf(!existsSync(ADMIN_FILE))('administrative grenser', () => {
     expect(left('postnummer')).toBeGreaterThanOrEqual(1)
     expect(left('postsone')).toBeGreaterThanOrEqual(left('postnummer'))
     expect(left('postsone')).toBeLessThan(15)
+  })
+
+  it('avstand til kommunegrensen: hider ved grensen er nærmere enn seeker i sentrum', () => {
+    const body: QuestionBody = { kind: 'border', level: 'kommune', pos: pos('Stortinget') }
+    // Lijordet ligger rett ved grensen mellom Oslo og Bærum.
+    const auto = autoAnswer(q(body), { pos: pos('Lijordet'), station: byName('Lijordet') }, real)!
+    expect(auto.answer).toBe('closer')
+    const closer = solve([q(body, 'closer')], real, settings).stations.map((s) => s.name)
+    const further = solve([q(body, 'further')], real, settings).stations.map((s) => s.name)
+    expect(closer).toContain('Lijordet')
+    expect(further).not.toContain('Lijordet')
+    expect(further).toContain('Stortinget') // seekers egen stasjon: sonen rekker både nærmere og lenger unna
+    expect(closer).toContain('Stortinget')
   })
 
   it('samme bydel som Majorstuen: ja beholder Frogner, nei fjerner Majorstuen-området', () => {

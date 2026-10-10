@@ -31,6 +31,8 @@ trenger dem som «data mangler», og resten virker som før.
 - `src/geo.ts`: all geometri. `regionOf` gir området et spørsmål peker ut,
   `solve` krymper det mulige området spørsmål for spørsmål, `autoAnswer` regner
   ut hiders svar direkte fra avstander.
-- `src/form.ts`: spørsmålsskjemaet og tekstene i loggen.
+- `src/form.ts`: regelbokens spørsmål (`ITEMS`), kort per kategori (`DRAWS`), svartid og tekstene i loggen.
+- `src/sync.ts`: sanntidsrom i Firebase Realtime Database. Reglene ligger i `database.rules.json`.
+- `src/notify.tsx`: varsler om nye spørsmål og svar.
 - `src/store.ts`: Zustand. `useGame` lagres i localStorage, `useUi` gjør ikke det.
 - `src/MapView.tsx`: Leaflet-kartet og bakgrunnskartene (`BASEMAPS`, ingen krever nøkkel). `QuestionsView.tsx` og `Panels.tsx` er skjermene.

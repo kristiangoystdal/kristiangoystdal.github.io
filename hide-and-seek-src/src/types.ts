@@ -29,22 +29,34 @@ export interface GeoData {
   poi: Record<string, Poi[]>
 }
 
+export type GameSize = 'S' | 'M' | 'L'
+
 interface Base {
   id: string
   time: number
   /** null = stilt, men ikke besvart ennå */
   answer: string | null
+  /** Hvilket spørsmål i regelboken dette er (id i ITEMS i form.ts). */
+  item?: string
+  /** Seekernes eget notat. */
+  note?: string
 }
 
 export type QuestionBody =
   | { kind: 'radar'; center: LngLat; radiusM: number }
-  | { kind: 'thermometer'; from: LngLat; to: LngLat }
+  | { kind: 'thermometer'; from: LngLat; to: LngLat; minM?: number }
   | { kind: 'line'; line: string }
   | { kind: 'admin'; level: AdminLevel; pos: LngLat }
   | { kind: 'nearest'; poiType: string; pos: LngLat }
   | { kind: 'measure'; ref: string; pos: LngLat }
   | { kind: 'tentacles'; poiType: string; pos: LngLat; radiusM: number }
   | { kind: 'photo'; text: string }
+  /** Matching: har hiders stasjon like langt navn som seekers nærmeste. */
+  | { kind: 'namelen'; pos: LngLat }
+  /** Measuring: avstand til nærmeste fylkes- eller kommunegrense. */
+  | { kind: 'border'; level: 'fylke' | 'kommune'; pos: LngLat }
+  /** Spørsmål appen ikke har data til å regne ut. Hider svarer selv, og svaret loggføres uten å krympe kartet. */
+  | { kind: 'manual'; family: 'matching' | 'measuring'; subject: string }
 
 export type Question = Base & QuestionBody
 export type Kind = Question['kind']
@@ -58,6 +70,8 @@ export interface Settings {
   adminLevel: AdminLevel
   theme: 'auto' | 'light' | 'dark'
   basemap: 'clean' | 'standard' | 'satellite'
+  /** Spillstørrelsen styrer hvilke spørsmål som er tilgjengelige. */
+  size: GameSize
   /** Hjørnene i spillområdet. null = hele T-banenettet. */
   playArea: LngLat[] | null
 }
