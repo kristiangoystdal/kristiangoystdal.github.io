@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --panel-2: #eceef2;
+  --border: #d5d9e0;
+  --text: #15181d;
+  --muted: #5f6875;
+  --accent: #d9530b;
+  --accent-text: #ffffff;
+  --ok: #1f8a4c;
+  --bad: #c0392b;
+}
+[data-theme='dark'] {
+  --bg: #101317;
+  --panel: #171b21;
+  --panel-2: #1d2229;
+  --border: #2a303a;
+  --text: #e9edf2;
+  --muted: #8b95a3;
+  --accent: #f0732a;
+  --accent-text: #14100c;
+  --ok: #4cc27f;
+  --bad: #f0705f;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-ok: var(--ok);
+  --color-bad: var(--bad);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  overscroll-behavior: none;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-10 shrink-0 cursor-pointer whitespace-nowrap items-center justify-center gap-1.5 rounded-lg border border-border bg-panel-2 px-3 text-sm font-medium text-text disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-accent-text;
+  }
+  .btn-on {
+    @apply border-accent text-accent;
+  }
+  .field {
+    @apply min-h-10 w-full rounded-lg border border-border bg-panel px-2.5 text-sm text-text;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold tracking-wide text-muted uppercase;
+  }
+  .card {
+    @apply rounded-xl border border-border bg-panel p-3;
+  }
+}
+
+/* Mørke kartfliser: OSM har bare lyse, så de inverteres. */
+[data-theme='dark'] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+.leaflet-container {
+  background: var(--bg);
+  font: inherit;
+}
+.leaflet-tooltip.station-label {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 0 0 2px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 3px var(--panel);
+}
+.leaflet-tooltip.station-label::before {
+  display: none;
+}
+.picking .leaflet-container {
+  cursor: crosshair;
+}
