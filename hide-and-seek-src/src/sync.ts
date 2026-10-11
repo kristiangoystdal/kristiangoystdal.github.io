@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { announce } from './notify'
 import { GAME_SETTINGS, useGame, type Round, type State } from './store'
-import type { Question, RoundResult, Settings } from './types'
+import type { LngLat, Question, RoundResult, Settings } from './types'
 
 // Realtime Database trenger bare adressen. Appen bruker ingen API-nøkkel, og
 // tilgangen styres av reglene i database.rules.json.
@@ -11,6 +11,7 @@ const CONFIG = {
 const EMULATOR = import.meta.env.VITE_FIREBASE_EMULATOR as string | undefined
 
 const ROOM_KEY = 'hideandseek.room'
+const DEVICE_KEY = 'hideandseek.device'
 export const CODE_LENGTH = 6
 // Uten 0/O og 1/I/L, som er lette å forveksle når koden leses opp.
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -32,6 +33,20 @@ export interface Shared {
   setup: string
   players: string
 }
+/** En seekers siste kjente posisjon. `v` er farten i m/s, null når den er ukjent. */
+export interface SeekerPos {
+  pos: LngLat
+  t: number
+  v: number | null
+}
+
+/** Telefonens egen nøkkel under `seekers` i rommet. */
+function deviceId() {
+  let id = localStorage.getItem(DEVICE_KEY)
+  if (!id) localStorage.setItem(DEVICE_KEY, (id = Math.random().toString(36).slice(2, 10)))
+  return id
+}
+
 type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'players'>
 type Setup = Pick<Settings, (typeof GAME_SETTINGS)[number]>
 
@@ -43,7 +58,7 @@ const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(ma
  * Rolle, kartvalg og tema hører også til telefonen.
  */
 export function toShared(s: Synced): Shared {
-  const setup: Setup = { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size }
+  const setup: Setup = { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null }
   return {
     questions: byId(s.questions),
     results: byId(s.results),
@@ -57,7 +72,7 @@ export function fromShared(remote: Partial<Shared>, local: Synced): Synced {
   return {
     // Rekkefølgen i databasen er vilkårlig, så loggen sorteres på tidspunkt.
     questions: fromIds<Question>(remote.questions).sort((a, b) => a.time - b.time || a.id.localeCompare(b.id)),
-    results: fromIds<RoundResult>(remote.results),
+    results: fromIds<RoundResult>(remote.results).sort((a, b) => (a.at ?? 0) - (b.at ?? 0)),
     round: remote.round ? (JSON.parse(remote.round) as Round) : local.round,
     settings: { ...local.settings, ...(remote.setup ? (JSON.parse(remote.setup) as Setup) : {}) },
     players: remote.players ? (JSON.parse(remote.players) as string[]) : local.players,
@@ -87,10 +102,19 @@ interface SyncState {
   room: string | null
   status: 'off' | 'connecting' | 'online' | 'offline'
   error: string
+  /** Seekerne som deler posisjon i rommet, per telefon. */
+  seekers: Record<string, SeekerPos>
 }
-export const useSync = create<SyncState>(() => ({ room: null, status: 'off', error: '' }))
+export const useSync = create<SyncState>(() => ({ room: null, status: 'off', error: '', seekers: {} }))
 
 let stop: (() => void) | null = null
+let sendPos: ((p: SeekerPos | null) => void) | null = null
+
+/** Deler seekers posisjon i rommet, eller fjerner den med null. Hiders posisjon sendes aldri. */
+export function shareSeekerPos(p: SeekerPos | null) {
+  if (p && useGame.getState().mode !== 'seeker') return
+  sendPos?.(p)
+}
 let emulated = false
 
 const withTimeout = <T>(p: Promise<T>) =>
@@ -121,6 +145,10 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
     // Sist kjente tilstand i rommet. Lokale endringer sendes som forskjellen fra denne.
     let synced: Shared | null = null
     let applying = false
+    let seenSeekers = ''
+    // Posisjonen skrives for seg, så en avvist skriving aldri stopper resten av synken.
+    const mine = db.child(room, `seekers/${deviceId()}`)
+    sendPos = (p) => void (p ? db.set(mine, JSON.stringify(p)) : db.remove(mine)).catch(() => {})
 
     const push = () => {
       // Før første svar fra rommet vet vi ikke hva som er nytt, så ingenting sendes.
@@ -132,10 +160,19 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       db.update(room, patch).catch(() => useSync.setState({ error: 'Kunne ikke lagre til rommet.' }))
     }
     const offRemote = db.onValue(room, (snap) => {
-      const value = snap.val() as Partial<Shared> | null
+      const value = snap.val() as (Partial<Shared> & { seekers?: Record<string, string> }) | null
       if (!value) return
+      const seekers = JSON.stringify(value.seekers ?? {})
+      if (seekers !== seenSeekers) {
+        seenSeekers = seekers
+        useSync.setState({ seekers: Object.fromEntries(Object.entries(value.seekers ?? {}).map(([id, v]) => [id, JSON.parse(v) as SeekerPos])) })
+      }
       const first = !synced
-      synced = normalize(value)
+      const incoming = normalize(value)
+      // Posisjonene oppdateres ofte. Er spillet ellers uendret, røres ikke tilstanden.
+      const same = synced !== null && Object.keys(diff(synced, incoming)).length === 0
+      synced = incoming
+      if (same) return
       const local = useGame.getState()
       const next = fromShared(value, local)
       // Angre går tilbake til denne telefonens forrige logg. Har noen andre endret
@@ -173,8 +210,9 @@ export const joinRoom = (code: string) => connect(cleanCode(code), 'join')
 export function leaveRoom() {
   stop?.()
   stop = null
+  sendPos = null
   localStorage.removeItem(ROOM_KEY)
-  useSync.setState({ room: null, status: 'off', error: '' })
+  useSync.setState({ room: null, status: 'off', error: '', seekers: {} })
 }
 
 /** Kobler til rommet telefonen var i sist siden var åpen. */

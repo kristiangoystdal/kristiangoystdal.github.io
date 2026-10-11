@@ -6,9 +6,10 @@ Kilder:
   - Bydeler: OpenStreetMap via Overpass (admin_level=9, 15 bydeler + Sentrum og Marka)
   - Postnummerområder: Posten/Kartverket (wfs.geonorge.no), kun Oslo og Bærum
   - POI: OpenStreetMap via Overpass
+  - Kystlinje, øyer, vann og riksgrense: OpenStreetMap via Overpass
 
 Bruk:
-    python3 scripts/fetch_geodata.py public/data [cache-mappe] [admin|poi]
+    python3 scripts/fetch_geodata.py public/data [cache-mappe] [admin|poi|shapes|<stedstype>]
 """
 import json
 import math
@@ -47,6 +48,13 @@ POI_TYPES = {
     "bibliotek": (BBOX, ('nwr["amenity"="library"]',)),
     "konsulat": (BBOX, ('nwr["office"="diplomatic"]', 'nwr["amenity"="embassy"]')),
 }
+
+# Kystlinjen hentes litt utenfor kartet, så nærmeste kyst alltid er med.
+COAST_BBOX = "59.6,10.1,60.1,11.0"
+# Riksgrensen mot Sverige, langt nok nord og sør til at nærmeste punkt fra Oslo er med.
+BORDER_BBOX = "58.9,10.9,61.3,12.9"
+NOT_WATER = {"pool", "reflecting_pool", "fountain", "wastewater"}
+MIN_ISLAND_M = 60
 
 CACHE = None
 
@@ -144,6 +152,103 @@ def stitch(ways):
     return rings
 
 
+def simplify_line(points, tol_m):
+    """Douglas-Peucker på en åpen linje av [lon, lat] med toleranse i meter."""
+    if len(points) < 3:
+        return points
+    lat0 = math.radians(points[0][1])
+    xy = [(p[0] * 111320 * math.cos(lat0), p[1] * 110540) for p in points]
+    keep = [False] * len(points)
+    keep[0] = keep[-1] = True
+    stack = [(0, len(points) - 1)]
+    while stack:
+        a, b = stack.pop()
+        ax, ay = xy[a]
+        bx, by = xy[b]
+        dx, dy = bx - ax, by - ay
+        norm = math.hypot(dx, dy)
+        best, best_i = 0.0, -1
+        for i in range(a + 1, b):
+            px, py = xy[i]
+            d = math.hypot(px - ax, py - ay) if norm == 0 else abs(dy * px - dx * py + bx * ay - by * ax) / norm
+            if d > best:
+                best, best_i = d, i
+        if best > tol_m:
+            keep[best_i] = True
+            stack.append((a, best_i))
+            stack.append((best_i, b))
+    return [p for p, k in zip(points, keep) if k]
+
+
+def chains(ways):
+    """Setter sammen veisegmenter til lengst mulige linjer. Returnerer (lukkede ringer, åpne linjer)."""
+    segs = [[[round(p["lon"], 5), round(p["lat"], 5)] for p in w] for w in ways if w]
+    closed, opened = [], []
+    while segs:
+        line = segs.pop()
+        grew = True
+        while grew and line[0] != line[-1]:
+            grew = False
+            for i, s in enumerate(segs):
+                if s[0] == line[-1]:
+                    line += s[1:]
+                elif s[-1] == line[-1]:
+                    line += s[-2::-1]
+                elif s[-1] == line[0]:
+                    line = s[:-1] + line
+                elif s[0] == line[0]:
+                    line = s[:0:-1] + line
+                else:
+                    continue
+                segs.pop(i)
+                grew = True
+                break
+        (closed if line[0] == line[-1] and len(line) >= 4 else opened).append(line)
+    return closed, opened
+
+
+def diag_m(points):
+    lons, lats = [p[0] for p in points], [p[1] for p in points]
+    return dist_m((min(lons), min(lats)), (max(lons), max(lats)))
+
+
+def geo(kind, coords, **props):
+    return {"type": "Feature", "properties": props, "geometry": {"type": kind, "coordinates": coords}}
+
+
+def build_shapes(out_dir):
+    """Linjer avstand måles til. Lukkede kystringer er øyer, og brukes også til landmasse-spørsmålet."""
+    ways = overpass(f'way["natural"="coastline"]({COAST_BBOX});out geom;', "op-coast.json")["elements"]
+    closed, opened = chains([w.get("geometry") for w in ways])
+    coast = [geo("Polygon", [simplify_ring(r, 8)]) for r in closed if diag_m(r) >= MIN_ISLAND_M]
+    coast += [geo("LineString", simplify_line(l, 8)) for l in opened if len(l) >= 2]
+    write(f"{out_dir}/coast.geojson", coast)
+
+    q = (f'(way["natural"="water"]["name"]({BBOX});relation["natural"="water"]["name"]({BBOX});'
+         f'way["waterway"="river"]["name"]({BBOX}););out geom;')
+    water = []
+    for el in overpass(q, "op-water.json")["elements"]:
+        tags = el.get("tags", {})
+        if tags.get("water") in NOT_WATER:
+            continue
+        if el["type"] == "relation":
+            rings = stitch([m.get("geometry") for m in el["members"] if m["type"] == "way" and m["role"] != "inner"])
+            rings = [[[round(p[0], 5), round(p[1], 5)] for p in r] for r in rings]
+        else:
+            rings = [[[round(p["lon"], 5), round(p["lat"], 5)] for p in el["geometry"]]]
+        for r in rings:
+            if r[0] == r[-1] and len(r) >= 4:
+                water.append(geo("Polygon", [simplify_ring(r, 8)], name=tags["name"]))
+            elif len(r) >= 2:
+                water.append(geo("LineString", simplify_line(r, 8), name=tags["name"]))
+    water.sort(key=lambda f: f["properties"]["name"])
+    write(f"{out_dir}/water.geojson", water)
+
+    ways = overpass(f'way["boundary"="administrative"]["admin_level"="2"]["maritime"!="yes"]({BORDER_BBOX});out geom;', "op-riks.json")["elements"]
+    closed, opened = chains([w.get("geometry") for w in ways if "border_type" not in w.get("tags", {})])
+    write(f"{out_dir}/riks.geojson", [geo("LineString", simplify_line(l, 20)) for l in closed + opened if len(l) >= 2])
+
+
 def ring_contains(ring, pt):
     x, y = pt
     inside = False
@@ -230,12 +335,18 @@ def dist_m(a, b):
     return math.hypot((a[0] - b[0]) * 111320 * math.cos(lat0), (a[1] - b[1]) * 110540)
 
 
-def poi_features(elements, extra=lambda tags: {}):
+def honorary(tags):
+    """Honorære konsulater teller ikke som konsulat i reglene."""
+    text = " ".join(tags.get(k, "") for k in ("diplomatic", "consulate", "name", "name:en", "name:no", "official_name")).lower()
+    return "honor" in text
+
+
+def poi_features(elements, extra=lambda tags: {}, skip=lambda tags: False):
     out = []
     for el in elements:
         tags = el.get("tags", {})
         name, pt = tags.get("name"), point_of(el)
-        if not name or not pt:
+        if not name or not pt or skip(tags):
             continue
         # Samme sted er ofte tegnet både som punkt og flate.
         if any(f["properties"]["name"] == name and dist_m(f["geometry"]["coordinates"], pt) < 300 for f in out):
@@ -246,11 +357,14 @@ def poi_features(elements, extra=lambda tags: {}):
     return out
 
 
-def build_poi(out_dir):
+def build_poi(out_dir, only=None):
     os.makedirs(f"{out_dir}/poi", exist_ok=True)
     for key, (bbox, selectors) in POI_TYPES.items():
+        if only and key != only:
+            continue
         q = "(" + "".join(f"{s}({bbox});" for s in selectors) + ");out center tags;"
-        write(f"{out_dir}/poi/{key}.geojson", poi_features(overpass(q, f"op-poi-{key}.json")["elements"]))
+        skip = honorary if key == "konsulat" else lambda tags: False
+        write(f"{out_dir}/poi/{key}.geojson", poi_features(overpass(q, f"op-poi-{key}.json")["elements"], skip=skip))
 
 
 if __name__ == "__main__":
@@ -263,3 +377,7 @@ if __name__ == "__main__":
         build_admin(out)
     if only in (None, "poi"):
         build_poi(out)
+    if only in POI_TYPES:
+        build_poi(out, only)
+    if only in (None, "shapes"):
+        build_shapes(out)

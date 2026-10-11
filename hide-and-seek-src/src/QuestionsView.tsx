@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import { deadline } from './clock'
 import {
   CATEGORIES,
+  ITEMS,
   answerLabel,
   answerOptions,
+  available,
   categoryOf,
   describe,
-  drawFor,
   fmtDist,
   formToQuestion,
+  isUsed,
   itemOf,
   itemsFor,
   newForm,
@@ -17,10 +20,10 @@ import {
   usedKeys,
   type Form,
 } from './form'
-import { autoAnswer, dist, hasData, nearestStation, type AutoAnswer, type Result } from './geo'
+import { ANSWER_CANT, ANSWER_NULL, METRO_LINES, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, Question } from './types'
-import { PointInput, Section, locate, useNow } from './ui'
+import { PAUSE_TEXT, PointInput, Section, locate, useGameNow } from './ui'
 
 const UNSURE_M = 30
 const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
@@ -48,19 +51,23 @@ export function AutoHint({ q, auto }: { q: Question; auto: AutoAnswer }) {
   )
 }
 
-/** Hvor mange kort hider trekker for spørsmålet. Uthevet når det er en gjentakelse. */
-export function DrawNote({ q, log }: { q: Question; log: Question[] }) {
-  const d = drawFor(q, log)
-  return <p className={`mb-2 text-xs ${d.repeat ? 'font-semibold text-accent' : 'text-muted'}`}>🂠 {d.text}</p>
+/** Viser at hider har endret svaret, og hva det var før. */
+function AnswerHistory({ q }: { q: Question }) {
+  if (!q.history?.length) return null
+  return (
+    <p className="mt-1 text-xs text-bad">
+      Svaret er endret. Tidligere: {q.history.map((h) => `${answerLabel(q, h.answer)} (til kl. ${time(h.at)})`).join(', ')}
+    </p>
+  )
 }
 
 /** Nedtelling for svartiden på et ubesvart spørsmål. */
 export function Countdown({ q }: { q: Question }) {
-  const now = useNow()
+  const now = useGameNow()
   const size = useGame((s) => s.settings.size)
   if (q.answer !== null) return null
-  const left = Math.round((q.time + responseMinutes(q, size) * 60000 - now) / 1000)
-  if (left <= 0) return <span className="text-xs font-semibold text-bad">Svartiden er ute</span>
+  const left = Math.round((deadline(q, size) - now) / 1000)
+  if (left <= 0) return <span className="text-xs font-semibold text-bad">Svartiden er ute. Hiders klokke står stille.</span>
   return (
     <span className={`text-xs tabular-nums ${left < 60 ? 'font-semibold text-bad' : 'text-muted'}`}>
       ⏱ {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')} igjen
@@ -68,22 +75,39 @@ export function Countdown({ q }: { q: Question }) {
   )
 }
 
+/** Hvorfor et nytt spørsmål ikke kan stilles akkurat nå, eller null når det er lov. */
+function useBlocked(exceptId?: string) {
+  const pause = useGame((s) => s.round.pause)
+  const open = useGame((s) => s.questions.some((q) => q.answer === null && q.id !== exceptId))
+  if (pause) return `${PAUSE_TEXT[pause.kind].title}. Ingen spørsmål før spillet fortsetter.`
+  if (open) return 'Bare ett spørsmål om gangen. Vent til det forrige er besvart.'
+  return null
+}
+
 function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
+  const rules = useGame((s) => s.settings)
   const setDraft = useUi((s) => s.setDraft)
   const questions = useGame((s) => s.questions)
   const size = useGame((s) => s.settings.size)
   const saveQuestion = useGame((s) => s.saveQuestion)
   const auto = useAutoAnswer(data)
   const isHider = useGame((s) => s.mode === 'hider')
+  const endgame = useGame((s) => !!s.round.endgame)
+  const lines = useGame((s) => s.settings.lines)
+  const waiting = useBlocked(form.id)
   const set = (patch: Partial<Form>) => setDraft({ ...form, answer: null, ...patch })
 
   const item = itemOf(form.item)!
-  const items = itemsFor(item.category, size)
+  const items = itemsFor(item.category, rules)
   const groups = [...new Set(items.map((i) => i.group))]
   // Merker hvilke spørsmål som alt er stilt, så man ser hva som er igjen.
   const used = usedKeys(questions.filter((x) => x.id !== form.id))
-  const isUsed = (id: string) => [...used].some((k) => k === id || k.startsWith(`${id}:`))
   const q = formToQuestion(form)
+  // Hider som legger inn spørsmål og svar samlet, er ikke bundet av køen.
+  const blocked = !form.id && !(isHider && form.answer !== null) ? waiting : null
+  const route = data.lines.features.find((f) => f.properties.line === form.line)?.properties.stations ?? []
+  const stationName = (id?: string) => data.stations.find((x) => x.id === id)?.name ?? ''
+  const special = [ANSWER_NULL, ...(form.kind === 'photo' && endgame ? [ANSWER_CANT] : [])]
   const options = q ? answerOptions(q, data) : []
   const missing = !hasData(form, data)
   const walked = form.pos && form.pos2 ? dist(form.pos, form.pos2) : 0
@@ -94,7 +118,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
     <div>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {CATEGORIES.map((c) => {
-          const first = itemsFor(c, size)[0]
+          const first = itemsFor(c, rules)[0]
           return (
             <button key={c} type="button" className={`btn ${c === item.category ? 'btn-on' : ''}`} disabled={!first} onClick={() => first && setDraft(switchItem(form, first))}>
               {c}
@@ -102,7 +126,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
           )
         })}
       </div>
-      {itemsFor('Tentacles', size).length === 0 && <p className="-mt-1 mb-3 text-xs text-muted">Tentacles er ikke med i små spill.</p>}
+      {itemsFor('Tentacles', rules).length === 0 && <p className="-mt-1 mb-3 text-xs text-muted">Tentacles er ikke med i dette spillet. Det kan slås på under Oppsett.</p>}
 
       <label className="mb-3 block">
         <span className="label">Spørsmål</span>
@@ -113,14 +137,14 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
                 .filter((i) => i.group === g)
                 .map((i) => (
                   <option key={i.id} value={i.id}>
-                    {isUsed(i.id) ? '✓ ' : ''}
+                    {isUsed(used, i.id) ? '✓ ' : ''}
                     {i.label}
                   </option>
                 ))}
             </optgroup>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-muted">✓ = stilt før. Stilles det på nytt, trekker hider to ganger.</span>
+        <span className="mt-1 block text-xs text-muted">✓ = stilt før.</span>
       </label>
 
       {form.kind === 'radar' && (
@@ -145,25 +169,55 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
           )}
         </>
       )}
-      {form.kind === 'line' && (
-        <div className="mb-3">
-          <span className="label">Linje</span>
-          <div className="flex gap-1.5">
-            {data.lines.features.map((f) => (
-              <button
-                key={f.properties.line}
-                type="button"
-                className={`btn w-11 ${form.line === f.properties.line ? 'btn-on' : ''}`}
-                style={{ borderBottom: `3px solid ${f.properties.color}` }}
-                onClick={() => set({ line: f.properties.line })}
-              >
-                {f.properties.line}
-              </button>
-            ))}
+      {form.kind === 'transit' && (
+        <>
+          <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">Kan bare stilles mens dere er om bord og i bevegelse. Svaret er ja hvis T-banen dere sitter på stopper ved hiders stasjon på resten av turen.</p>
+          <div className="mb-3">
+            <span className="label">Linje</span>
+            <div className="flex gap-1.5">
+              {data.lines.features
+                .filter((f) => lines.includes(f.properties.line))
+                .map((f) => (
+                  <button
+                    key={f.properties.line}
+                    type="button"
+                    className={`btn w-11 ${form.line === f.properties.line ? 'btn-on' : ''}`}
+                    style={{ borderBottom: `3px solid ${f.properties.color}` }}
+                    onClick={() => set({ line: f.properties.line, next: 0 })}
+                  >
+                    {f.properties.line}
+                  </button>
+                ))}
+            </div>
           </div>
-        </div>
+          <div className="mb-3">
+            <span className="label">Retning</span>
+            <div className="flex gap-1.5">
+              {([1, -1] as const).map((d) => (
+                <button key={d} type="button" className={`btn flex-1 ${form.dir === d ? 'btn-on' : ''}`} onClick={() => set({ dir: d })}>
+                  mot {stationName(d === 1 ? route.at(-1) : route[0])}
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="mb-3 block">
+            <span className="label">Neste stopp</span>
+            <select className="field" value={form.next} onChange={(e) => set({ next: +e.target.value })}>
+              {route.map((id, i) => (
+                <option key={i} value={i}>
+                  {stationName(id)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </>
       )}
-      {['admin', 'nearest', 'measure', 'namelen', 'border', 'tentacles'].includes(form.kind) && seeker}
+      {['admin', 'nearest', 'measure', 'namelen', 'border', 'tentacles', 'geodist', 'landmass'].includes(form.kind) && seeker}
+      {(form.kind === 'nearest' || form.kind === 'measure' || (form.kind === 'tentacles' && form.poiType !== METRO_LINES)) && (
+        <p className="-mt-2 mb-3 text-xs text-muted">
+          Stedene er hentet fra OpenStreetMap og kan avvike fra kartappen dere bruker. Er dere uenige om hva som teller, sender seekerne et skjermbilde til hider.
+        </p>
+      )}
       {form.kind === 'admin' && form.level === 'postsone' && (
         <p className="-mt-2 mb-3 text-xs text-muted">Postsonen er de tre første sifrene i postnummeret, f.eks. 036x for 0368.</p>
       )}
@@ -183,7 +237,6 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       {q && !missing && (
         <div className="mb-3">
           <p className="mb-1 text-sm italic">«{describe(q, data)}»</p>
-          <DrawNote q={q} log={questions} />
           <p className="mb-2 text-xs text-muted">Svartid: {responseMinutes(q, size)} min</p>
           {/* Bare hider svarer. Seeker stiller spørsmålet og venter på svaret. */}
           {isHider && <span className="label">Ditt svar</span>}
@@ -203,14 +256,24 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
               ))}
             </div>
           )}
+          {isHider && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {special.map((a) => (
+                <button key={a} type="button" className={`btn ${form.answer === a ? 'btn-primary' : ''}`} onClick={() => setDraft({ ...form, answer: form.answer === a ? null : a })}>
+                  {answerLabel(q, a)}
+                </button>
+              ))}
+            </div>
+          )}
           {auto(q) && <AutoHint q={q} auto={auto(q)!} />}
         </div>
       )}
+      {blocked && <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">{blocked}</p>}
 
       <div className="flex gap-2">
         <button
           className="btn btn-primary flex-1"
-          disabled={!q || missing}
+          disabled={!q || missing || !!blocked}
           onClick={() => {
             const { id, time: _t, answer, ...body } = q!
             saveQuestion(body as never, answer, form.id)
@@ -230,7 +293,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
 /** Hiders visning av spørsmålene: svar med posisjonen, eller for hånd der appen ikke kan regne. */
 function HiderQuestions({ data }: { data: GeoData }) {
   const questions = useGame((s) => s.questions)
-  const saveQuestion = useGame((s) => s.saveQuestion)
+  const answerQuestion = useGame((s) => s.answerQuestion)
   const setHider = useGame((s) => s.setHider)
   const hasPos = useGame((s) => s.hider.pos !== null)
   const endgame = useGame((s) => !!s.round.endgame)
@@ -238,10 +301,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
 
-  const answer = (q: Question, value: string) => {
-    const { id, time: _t, answer: _a, ...body } = q
-    saveQuestion(body as never, value, id)
-  }
+  const answer = (q: Question, value: string) => answerQuestion(q.id, value)
 
   /** Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå. */
   const answerFromGps = async (q: Question) => {
@@ -249,7 +309,9 @@ function HiderQuestions({ data }: { data: GeoData }) {
     setError('')
     try {
       const pos = await locate()
-      const station = nearestStation(data.stations, pos)
+      // Stasjonen hider har valgt gjelder så lenge hider står i sonen dens.
+      const { hider, settings } = useGame.getState()
+      const station = hiderStation(data.stations, pos, settings.zoneRadius, hider.stationId)
       setHider({ stationId: station.id, pos })
       const a = autoAnswer(q, { pos, station }, data)
       if (a) answer(q, a.answer)
@@ -266,6 +328,9 @@ function HiderQuestions({ data }: { data: GeoData }) {
       {endgame && (
         <p className="mb-5 rounded-lg border border-accent p-3 text-sm">
           <b>Endgame er startet.</b> Seekerne er i en sone. Er det din, må du stå stille der du er.
+          <span className="mt-1 block text-xs text-muted">
+            Gjemmestedet må være innen ca. 3 m fra en vei eller sti, og offentlig tilgjengelig hele spilletiden. Står du et sted som ikke er lov, går du straks til nærmeste lovlige sted.
+          </span>
         </p>
       )}
       <Section title="Spørsmål til deg">
@@ -278,13 +343,13 @@ function HiderQuestions({ data }: { data: GeoData }) {
               <li key={q.id} className="card">
                 <p className="mb-1 text-sm">{describe(q, data)}</p>
                 {itemOf(q.item)?.rules && <p className="mb-1 text-xs">Krav til bildet: {itemOf(q.item)!.rules}</p>}
-                <DrawNote q={q} log={questions} />
                 <Countdown q={q} />
                 {q.answer !== null && (
                   <p className="text-sm">
                     Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
                   </p>
                 )}
+                <AnswerHistory q={q} />
                 {a && q.answer !== a.answer && <AutoHint q={q} auto={a} />}
                 {q.kind === 'photo' ? (
                   q.answer === null && (
@@ -317,6 +382,18 @@ function HiderQuestions({ data }: { data: GeoData }) {
                       {busy === q.id ? 'Henter posisjon…' : q.answer === null ? 'Svar med posisjonen min nå' : 'Svar på nytt med posisjonen min'}
                     </button>
                   </div>
+                )}
+                {q.answer === null && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <button className="btn" onClick={() => answer(q, ANSWER_NULL)} title="Det spørsmålet handler om finnes ikke innenfor kartet">
+                        Nullsvar
+                      </button>
+                      {q.kind === 'photo' && endgame && (
+                        <button className="btn" onClick={() => answer(q, ANSWER_CANT)}>
+                          Kan ikke svare
+                        </button>
+                      )}
+                    </div>
                 )}
               </li>
             )
@@ -392,9 +469,10 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const canUndo = useGame((s) => s.past.length > 0)
   const undo = useGame((s) => s.undo)
   const removeQuestion = useGame((s) => s.removeQuestion)
-  const size = useGame((s) => s.settings.size)
   const setNote = useGame((s) => s.setNote)
   const isHider = useGame((s) => s.mode === 'hider')
+  const blocked = useBlocked()
+  const rules = useGame((s) => s.settings)
 
   if (draft) {
     return (
@@ -408,17 +486,20 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const last = questions.findLast((q) => 'pos' in q || 'center' in q || 'to' in q)
   const lastPos = !last ? null : 'pos' in last ? last.pos : 'center' in last ? last.center : 'to' in last ? last.to : null
   const total = data.stations.length
+  // Radar er vanligst å åpne med. Er det tatt ut av spillet, brukes det første som er med.
+  const first = itemsFor('Radar', rules)[0] ?? ITEMS.find((i) => available(i, rules))
 
   return (
     <div>
       <div className="mb-4 flex gap-2">
-        <button className={`btn flex-1 ${isHider ? '' : 'btn-primary'}`} onClick={() => setDraft(newForm(itemsFor('Radar', size)[0], lastPos))}>
+        <button className={`btn flex-1 ${isHider ? '' : 'btn-primary'}`} disabled={!first || (!isHider && !!blocked)} onClick={() => first && setDraft(newForm(first, lastPos))}>
           {isHider ? '+ Legg inn spørsmål selv' : '+ Nytt spørsmål'}
         </button>
         <button className="btn" onClick={undo} disabled={!canUndo}>
           Angre
         </button>
       </div>
+      {!isHider && blocked && <p className="-mt-2 mb-4 text-xs text-muted">{blocked}</p>}
       {isHider ? (
         <HiderQuestions data={data} />
       ) : (
@@ -434,13 +515,10 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     <span>
                       {i + 1}. {categoryOf(q)} · {time(q.time)}
                     </span>
-                    <span className="tabular-nums">{isHider || q.answer === null || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
+                    <span className="tabular-nums">{isHider || !shrinks(q) || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
                   </div>
                   <p className="mt-1 text-sm">{describe(q, data)}</p>
                   {itemOf(q.item)?.rules && <p className="mt-1 text-xs text-muted">Krav: {itemOf(q.item)!.rules}</p>}
-                  <div className="mt-1 -mb-2">
-                    <DrawNote q={q} log={questions} />
-                  </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className={`text-sm font-semibold ${q.answer === null ? 'text-muted' : 'text-accent'}`}>
                       {q.answer === null ? 'Venter på svar' : answerLabel(q, q.answer)}
@@ -451,14 +529,16 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                       )}
                     </span>
                     <span className="flex gap-1.5">
-                      <button className="btn min-h-9!" onClick={() => setDraft(questionToForm(q))}>
-                        {isHider && q.answer === null ? 'Svar' : 'Rediger'}
+                      {/* Besvarte spørsmål er låst, så loggen viser det som faktisk ble spurt og svart. */}
+                      <button className="btn min-h-9!" disabled={q.answer !== null} onClick={() => setDraft(questionToForm(q))}>
+                        Rediger
                       </button>
-                      <button className="btn min-h-9! text-bad" onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
+                      <button className="btn min-h-9! text-bad" disabled={q.answer !== null} onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
                         Slett
                       </button>
                     </span>
                   </div>
+                  <AnswerHistory q={q} />
                   {!isHider && (
                     <input
                       className="field mt-2 min-h-9! text-sm!"

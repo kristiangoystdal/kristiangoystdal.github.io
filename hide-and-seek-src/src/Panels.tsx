@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { BASEMAPS, depRate } from './MapView'
-import { CATEGORIES, DRAWS, ITEMS, MAX_HAND } from './form'
-import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, dist, levelAreas, nearestStation, stationPos, type Result } from './geo'
+import { PLANNING_MINUTES, hiderSeconds } from './clock'
+import { CATEGORIES, ITEMS, SIZE_RULES, enabledIds } from './form'
+import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, dist, hiderStation, levelAreas, stationPos, stationsInReach, type Result } from './geo'
 import { NotifyToggle } from './notify'
 import { useGame, useUi, type Layer } from './store'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
-import type { DayKey, GeoData, LngLat, Settings } from './types'
-import { PointInput, Section, useNow } from './ui'
+import type { DayKey, GeoData, LngLat, RoundResult, Settings } from './types'
+import { PAUSE_TEXT, PointInput, Section, useGameNow, useNow } from './ui'
 
 const LAYERS: { key: Layer; label: string }[] = [
   { key: 'area', label: 'Mulig område' },
@@ -121,9 +122,10 @@ export function HiderPanel({ data }: { data: GeoData }) {
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
   const locked = useGame((s) => s.round.seekFrom !== null)
 
-  // Hiders stasjon er alltid den nærmeste, så den følger posisjonen.
-  const place = (pos: LngLat) => setHider({ stationId: nearestStation(data.stations, pos).id, pos })
-  const station = hider.pos && nearestStation(data.stations, hider.pos)
+  // Hider velger selv blant stasjonene som har hider i sonen sin. Uten et valg gjelder den nærmeste.
+  const place = (pos: LngLat) => setHider({ stationId: hiderStation(data.stations, pos, zoneRadius, hider.stationId).id, pos })
+  const station = hider.pos && hiderStation(data.stations, hider.pos, zoneRadius, hider.stationId)
+  const reach = hider.pos ? stationsInReach(data.stations, hider.pos, zoneRadius) : []
   const away = station && hider.pos ? dist(stationPos(station), hider.pos) : 0
   return (
     <div>
@@ -146,6 +148,7 @@ export function HiderPanel({ data }: { data: GeoData }) {
           <p className="mt-2 text-sm">Som seeker stiller du spørsmål under Spørsmål. Hider svarer fra sin telefon, og svaret dukker opp i loggen din.</p>
         )}
       </Section>
+      {mode === 'seeker' && <SharePanel />}
 
       {mode === 'hider' && (
         <>
@@ -156,6 +159,19 @@ export function HiderPanel({ data }: { data: GeoData }) {
                 Stasjonen din er {station.name}.{away > zoneRadius && ` Du er ${Math.round(away)} m unna, utenfor sonen på ${zoneRadius} m.`}
               </p>
             )}
+            {hider.pos && reach.length > 1 && (
+              <label className="mt-3 block">
+                <span className="label">Velg stasjonen som er din</span>
+                <select className="field" value={station?.id ?? ''} onChange={(e) => setHider({ stationId: e.target.value, pos: hider.pos })}>
+                  {reach.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({Math.round(dist(stationPos(s), hider.pos!))} m)
+                    </option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs text-muted">Du står i sonen til flere stasjoner. Spørsmål om stasjonen din svares ut fra den du velger.</span>
+              </label>
+            )}
           </Section>
 
           <p className="mb-5 text-sm">Spørsmålene fra seekerne ligger under <b>Spørsmål</b>. Der svarer du med posisjonen din.</p>
@@ -165,6 +181,9 @@ export function HiderPanel({ data }: { data: GeoData }) {
               <li>Avstander regnes i luftlinje fra der du faktisk står, ikke fra stasjonen.</li>
               <li>Står du nær en grense, varsler appen. Da bør du måle selv før du svarer.</li>
               <li>Fotospørsmål har ingen fasit i appen. Svaret loggføres som notat.</li>
+              <li>Svarer du ikke innen svartiden, står klokken din til svaret kommer.</li>
+              <li>I endgame må gjemmestedet være innen ca. 3 m fra en vei eller sti, og offentlig tilgjengelig hele spilletiden.</li>
+              <li>Seekerne som deler posisjon, vises som oransje punkter på kartet ditt.</li>
             </ul>
           </Section>
         </>
@@ -258,17 +277,94 @@ function RoomPanel() {
 }
 
 
+const total = (r: RoundResult) => r.seconds + r.bonusMinutes * 60
+
+/** Seeker slår på posisjonsdeling ved rundestart. Hider ser bare hvor mange som deler. */
+function SharePanel() {
+  const room = useSync((s) => s.room)
+  const sharing = useSync((s) => Object.keys(s.seekers).length)
+  const isHider = useGame((s) => s.mode === 'hider')
+  const on = useGame((s) => s.sharePos)
+  const setSharePos = useGame((s) => s.setSharePos)
+  return (
+    <Section title="Posisjonsdeling">
+      {isHider ? (
+        <p className="text-sm">
+          {!room ? 'Dere må være i et rom for at seekerne skal kunne dele posisjon.' : sharing ? `${sharing} ${sharing === 1 ? 'seeker deler' : 'seekere deler'} posisjon. De vises som oransje punkter på kartet.` : 'Ingen seekere deler posisjon ennå.'}
+          <span className="mt-1 block text-xs text-muted">Din posisjon deles aldri.</span>
+        </p>
+      ) : (
+        <>
+          <button type="button" role="switch" aria-checked={on} className="card flex w-full cursor-pointer items-center justify-between gap-3 text-left" onClick={() => setSharePos(!on)}>
+            <span className="text-sm">
+              <b className="block">Del posisjonen min med hider</b>
+              <span className={`text-xs ${on && room ? 'text-ok' : 'text-muted'}`}>{!on ? 'Av. Hider ser ikke hvor du er.' : room ? 'På. Hider ser deg på kartet.' : 'På, men du er ikke i et rom ennå.'}</span>
+            </span>
+            <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-accent' : 'bg-border'}`} aria-hidden>
+              <span className={`absolute top-0.5 left-0.5 size-6 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-5' : ''}`} />
+            </span>
+          </button>
+          <p className="mt-1 text-xs text-muted">Reglene sier at hider skal kunne følge seekerne hele runden. Posisjonen sendes bare i et rom, og bare mens appen er åpen på skjermen.</p>
+        </>
+      )}
+    </Section>
+  )
+}
+
+const ASK_BONUS_MS = 30 * 60000
+
+/** Når hider er funnet, spør hiders telefon om tidsbonusen som skal legges til tiden. */
+export function BonusPrompt() {
+  const round = useGame((s) => {
+    const last = s.results.at(-1)
+    const mine = s.mode === 'hider' && s.round.seekFrom === null && last && last.id !== s.bonusAsked
+    return mine && Date.now() - (last.at ?? 0) < ASK_BONUS_MS ? last : null
+  })
+  const answerBonus = useGame((s) => s.answerBonus)
+  const [minutes, setMinutes] = useState('')
+  if (!round) return null
+  return (
+    <div className="fixed inset-0 z-[2000] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal aria-labelledby="bonus-title">
+      <form
+        className="card w-full max-w-sm shadow-xl"
+        onSubmit={(e) => {
+          e.preventDefault()
+          answerBonus(round.id, Math.max(0, +minutes || 0))
+          setMinutes('')
+        }}
+      >
+        <h2 id="bonus-title" className="mb-1 text-lg font-bold">
+          Du ble funnet
+        </h2>
+        <p className="mb-3 text-sm text-muted">Tiden din ble {clock(round.seconds)}. Hvor mye tidsbonus skal legges til?</p>
+        <label className="mb-3 block">
+          <span className="label">Tidsbonus (min)</span>
+          <input className="field" type="number" min={0} inputMode="numeric" autoFocus value={minutes} placeholder="0" onChange={(e) => setMinutes(e.target.value)} />
+        </label>
+        <button className="btn btn-primary w-full">Lagre</button>
+        <p className="mt-2 text-xs text-muted">Kan rettes etterpå under Runde.</p>
+      </form>
+    </div>
+  )
+}
+
 export function RoundPanel() {
-  const now = useNow()
+  const wall = useNow()
+  const now = useGameNow()
   const g = useGame()
   const [player, setPlayer] = useState('')
 
-  const { seekFrom } = g.round
+  const { seekFrom, pause } = g.round
   const hiding = seekFrom !== null && now < seekFrom
   const isHider = g.mode === 'hider'
-  const totals = new Map<string, number>()
-  for (const r of g.results) totals.set(r.hider, (totals.get(r.hider) ?? 0) + r.seconds + r.bonusMinutes * 60)
-  for (const p of g.players) if (!totals.has(p)) totals.set(p, 0)
+  const size = g.settings.size
+  const planLeft = ((g.round.planUntil ?? 0) - wall) / 1000
+
+  // Bare den beste runden til hver spiller teller.
+  const best = new Map<string, RoundResult>()
+  for (const r of g.results) if (!best.has(r.hider) || total(r) > total(best.get(r.hider)!)) best.set(r.hider, r)
+  const names = [...new Set([...g.players, ...best.keys()])].sort((a, b) => (best.has(b) ? total(best.get(b)!) : -1) - (best.has(a) ? total(best.get(a)!) : -1))
+  const rounds = (name: string) => g.results.filter((r) => r.hider === name).length
 
   return (
     <div>
@@ -277,6 +373,13 @@ export function RoundPanel() {
         <div className="card text-center">
           {seekFrom === null ? (
             <>
+              {planLeft > 0 && (
+                <div className="mb-3 rounded-lg bg-panel-2 p-2">
+                  <div className="text-xs font-semibold tracking-wide text-muted uppercase">Planleggingstid for neste hider</div>
+                  <div className="text-3xl font-bold tabular-nums">{clock(planLeft)}</div>
+                  <p className="text-xs text-muted">Opptil {PLANNING_MINUTES} minutter. Neste runde starter fra forrige hiders gjemmested.</p>
+                </div>
+              )}
               <div className="mb-3 grid grid-cols-2 gap-2 text-left">
                 <label>
                   <span className="label">Hider</span>
@@ -298,7 +401,7 @@ export function RoundPanel() {
                   />
                 </label>
               </div>
-              <button className="btn btn-primary w-full" onClick={() => g.setRound({ seekFrom: Date.now() + g.round.hidingMinutes * 60000 })}>
+              <button className="btn btn-primary w-full" onClick={g.startRound}>
                 Start gjemmetid
               </button>
               <p className="mt-2 text-xs text-muted">
@@ -308,60 +411,75 @@ export function RoundPanel() {
           ) : (
             <>
               <div className="text-xs font-semibold tracking-wide text-muted uppercase">{hiding ? 'Gjemmetid igjen' : 'Tid som hider'}</div>
-              <div className={`my-1 text-5xl font-bold tabular-nums ${hiding ? '' : 'text-accent'}`}>{clock(Math.abs(now - seekFrom) / 1000)}</div>
-              <div className="mb-3 text-xs text-muted">
-                {g.round.hider || 'Hider'}
+              <div className={`my-1 text-5xl font-bold tabular-nums ${hiding ? '' : 'text-accent'}`}>
+                {clock(hiding ? (seekFrom - now) / 1000 : hiderSeconds(g.round, g.questions, size, wall))}
               </div>
+              <div className="mb-3 text-xs text-muted">{g.round.hider || 'Hider'}</div>
+              {pause && (
+                <p className="mb-3 rounded-lg border border-accent p-2 text-left text-sm">
+                  <b className="block">{PAUSE_TEXT[pause.kind].title}</b>
+                  <span className="text-xs text-muted">{PAUSE_TEXT[pause.kind].body}</span>
+                </p>
+              )}
               <div className="flex gap-2">
                 {hiding ? (
-                  <button className="btn flex-1" onClick={() => g.setRound({ seekFrom: Date.now() })}>
+                  <button className="btn flex-1" disabled={!!pause} onClick={() => g.setRound({ seekFrom: Date.now() })}>
                     Start letingen nå
                   </button>
                 ) : (
-                  <button className="btn btn-primary flex-1" onClick={() => g.finishRound((Date.now() - seekFrom) / 1000)}>
+                  <button className="btn btn-primary flex-1" disabled={!!pause} onClick={() => g.finishRound(hiderSeconds(g.round, g.questions, size, Date.now()))}>
                     Funnet!
                   </button>
                 )}
                 <button
                   className="btn"
                   onClick={() => {
-                    if (confirm('Avbryte runden uten å lagre tiden?')) g.setRound({ seekFrom: null })
+                    if (confirm('Avbryte runden uten å lagre tiden?')) g.cancelRound()
                   }}
                 >
                   Avbryt
                 </button>
+              </div>
+              {!hiding && <p className="mt-2 text-xs text-muted">Hider er funnet når seekerne er innen ca. 1,5 m og har sett hider.</p>}
+              <div className="mt-3 flex gap-2 border-t border-border pt-3">
+                {pause ? (
+                  <button className="btn btn-primary flex-1" onClick={g.resumeGame}>
+                    Fortsett spillet
+                  </button>
+                ) : (
+                  <>
+                    <button className="btn flex-1" onClick={() => g.pauseGame('pause')}>
+                      ⏸ Pause
+                    </button>
+                    <button
+                      className="btn flex-1"
+                      onClick={() => {
+                        if (confirm('Starte en avtalt hvileperiode? Alle klokker står til spillet fortsetter. Reglene anbefaler minst 10 timer, og alle må tilbake til samme sted.')) g.pauseGame('rest')
+                      }}
+                    >
+                      🌙 Hvileperiode
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}
         </div>
       </Section>
 
-      <Section title="Kort">
-        <p className="mb-2 text-xs text-muted">
-          Kortene er fysiske. For hvert spørsmål hider svarer på, trekker hider så mange kort og beholder noen av dem:
-        </p>
-        <ul className="divide-y divide-border text-sm">
-          {CATEGORIES.map((c) => (
-            <li key={c} className="flex justify-between py-1.5">
-              <span>{c}</span>
-              <span className="text-muted">
-                trekk {DRAWS[c].draw}, behold {DRAWS[c].keep}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-xs text-muted">
-          Maks {MAX_HAND} kort på hånden. Stilles akkurat samme spørsmål på nytt, trekker hider to ganger. Loggen viser hva som gjelder for hvert spørsmål. Hider har 5 min på å svare, og lengre på bilder.
-        </p>
-      </Section>
+      <SharePanel />
 
       <Section title="Poengtavle">
+        <p className="mb-1 text-xs text-muted">Den som holdt seg skjult lengst vinner. Bare den beste runden til hver spiller teller.</p>
         <ul className="mb-2 divide-y divide-border text-sm">
-          {[...totals].sort((a, b) => b[1] - a[1]).map(([name, sec]) => (
+          {names.map((name) => (
             <li key={name} className="flex items-center justify-between py-1.5">
-              <span>{name}</span>
+              <span>
+                {name}
+                {rounds(name) > 1 && <span className="ml-1 text-xs text-muted">beste av {rounds(name)}</span>}
+              </span>
               <span className="flex items-center gap-2">
-                <b className="tabular-nums">{clock(sec)}</b>
+                <b className="tabular-nums">{best.has(name) ? clock(total(best.get(name)!)) : '–'}</b>
                 {g.players.includes(name) && (
                   <button className="text-xs text-muted underline" onClick={() => g.removePlayer(name)}>
                     fjern
@@ -382,15 +500,25 @@ export function RoundPanel() {
           <input className="field" value={player} onChange={(e) => setPlayer(e.target.value)} placeholder="Ny spiller" aria-label="Ny spiller" />
           <button className="btn">Legg til</button>
         </form>
+        {g.players.length > 1 && (
+          <div className="mb-3">
+            <h3 className="label">Rekkefølge</h3>
+            <p className="mb-2 text-sm">{g.players.join(' → ')}</p>
+            <button className="btn" disabled={seekFrom !== null} onClick={g.shufflePlayers}>
+              Trekk rekkefølge
+            </button>
+            <p className="mt-1 text-xs text-muted">Trekker tilfeldig hvem som gjemmer seg først, og rekkefølgen etter det.</p>
+          </div>
+        )}
         {g.results.length > 0 && (
           <>
             <h3 className="label">Runder</h3>
-            <p className="mb-1 text-xs text-muted">Legg inn tidsbonusen fra hiders kort når runden er over.</p>
+            <p className="mb-1 text-xs text-muted">Hider legger inn tidsbonusen når runden er over. ★ = spillerens beste runde.</p>
             <ul className="divide-y divide-border text-sm">
               {g.results.map((r, i) => (
                 <li key={r.id} className="flex items-center justify-between py-1.5">
-                  <span>
-                    {i + 1}. {r.hider}
+                  <span className={best.get(r.hider) === r ? 'font-semibold' : ''}>
+                    {i + 1}. {r.hider} {best.get(r.hider) === r && <span className="text-accent">★</span>}
                   </span>
                   <span className="flex items-center gap-2 text-muted tabular-nums">
                     {clock(r.seconds)} +
@@ -418,16 +546,22 @@ export function RoundPanel() {
   )
 }
 
+const SIZE_NAMES = { S: 'Small', M: 'Medium', L: 'Large' }
+/** Tentacles-spørsmålene reglene har fra Medium og opp. */
+const TENTACLES_2KM = ITEMS.filter((i) => i.category === 'Tentacles' && i.sizes.includes('M')).map((i) => i.id)
 const DAYS: Record<DayKey, string> = { wk: 'Hverdag', sa: 'Lørdag', su: 'Søndag' }
 const THEMES: Record<Settings['theme'], string> = { auto: 'Følg systemet', light: 'Lys', dark: 'Mørk' }
 
 export function SettingsPanel({ data, result }: { data: GeoData; result: Result }) {
   const s = useGame((x) => x.settings)
   const set = useGame((x) => x.setSettings)
+  const setRound = useGame((x) => x.setRound)
   const asked = useGame((x) => x.questions.length)
   const setDraw = useUi((x) => x.setDraw)
   const locked = useGame((x) => x.round.seekFrom !== null)
   const hours = [...Array(25).keys()]
+  const enabled = enabledIds(s)
+  const tentacles = TENTACLES_2KM.every((id) => enabled.includes(id))
 
   return (
     <div>
@@ -461,14 +595,99 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
       <Section title="Spillstørrelse">
         <div className="flex gap-1.5">
           {(['S', 'M', 'L'] as const).map((k) => (
-            <button key={k} className={`btn flex-1 ${s.size === k ? 'btn-on' : ''}`} aria-pressed={s.size === k} disabled={locked} onClick={() => set({ size: k })}>
-              {{ S: 'Small', M: 'Medium', L: 'Large' }[k]}
+            <button
+              key={k}
+              className={`btn flex-1 ${s.size === k ? 'btn-on' : ''}`}
+              aria-pressed={s.size === k}
+              disabled={locked}
+              onClick={() => {
+                // Størrelsen bestemmer sone og gjemmetid etter reglene. Begge kan justeres etterpå.
+                set({ size: k, zoneRadius: SIZE_RULES[k].zoneRadius, questions: null })
+                setRound({ hidingMinutes: SIZE_RULES[k].hidingMinutes })
+              }}
+            >
+              {SIZE_NAMES[k]}
             </button>
           ))}
         </div>
         <p className="mt-1 text-xs text-muted">
-          Styrer hvilke spørsmål som er med: {ITEMS.filter((i) => i.sizes.includes(s.size)).length} av {ITEMS.length} i dette spillet. Bilder har {s.size === 'L' ? 20 : 10} min svartid, resten 5 min.
+          Styrer hvilke spørsmål som er med: {enabled.length} av {ITEMS.length} i dette spillet. Bilder har {s.size === 'L' ? 20 : 10} min svartid, resten 5 min. Valget setter også gjemmetiden til {SIZE_RULES[s.size].hidingMinutes} min og sonen til {SIZE_RULES[s.size].zoneRadius} m. Begge kan justeres etterpå.
         </p>
+      </Section>
+
+      {s.size === 'S' && (
+        <Section title="Tentacles">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={tentacles}
+            disabled={locked}
+            className="card flex w-full cursor-pointer items-center justify-between gap-3 text-left disabled:opacity-60"
+            onClick={() => set({ questions: tentacles ? enabled.filter((id) => !TENTACLES_2KM.includes(id)) : [...enabled, ...TENTACLES_2KM] })}
+          >
+            <span className="text-sm">
+              <b className="block">Ta med Tentacles i små spill</b>
+              <span className="text-xs text-muted">Reglene har ikke Tentacles i Small. Slås det på, er spørsmålene på 2 km med: museer, biblioteker, kinoer og sykehus.</span>
+            </span>
+            <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${tentacles ? 'bg-accent' : 'bg-border'}`} aria-hidden>
+              <span className={`absolute top-0.5 left-0.5 size-6 rounded-full bg-white shadow transition-transform ${tentacles ? 'translate-x-5' : ''}`} />
+            </span>
+          </button>
+        </Section>
+      )}
+
+      <Section title="Tilpass spørsmål">
+        <details className="card">
+          <summary className="cursor-pointer text-sm font-medium">
+            {s.questions ? `Egendefinert utvalg: ${enabled.length} av ${ITEMS.length}` : `Standard for ${SIZE_NAMES[s.size]}: ${enabled.length} av ${ITEMS.length}`}
+          </summary>
+          <p className="my-2 text-xs text-muted">Kryss av for spørsmålene som skal være med. Utvalget gjelder for alle i rommet. Bytter du spillstørrelse, går utvalget tilbake til standard.</p>
+          {s.questions && (
+            <button className="btn mb-2" disabled={locked} onClick={() => set({ questions: null })}>
+              Tilbake til standard for {SIZE_NAMES[s.size]}
+            </button>
+          )}
+          {CATEGORIES.map((c) => {
+            const all = ITEMS.filter((i) => i.category === c)
+            const on = all.filter((i) => enabled.includes(i.id)).length
+            const ids = all.map((i) => i.id)
+            return (
+              <fieldset key={c} className="mt-3 border-t border-border pt-2" disabled={locked}>
+                <legend className="sr-only">{c}</legend>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <b className="text-sm">
+                    {c} <span className="font-normal text-muted">{on} av {all.length}</span>
+                  </b>
+                  <span className="flex gap-1.5">
+                    <button type="button" className="btn min-h-9!" onClick={() => set({ questions: [...new Set([...enabled, ...ids])] })}>
+                      Alle
+                    </button>
+                    <button type="button" className="btn min-h-9!" onClick={() => set({ questions: enabled.filter((id) => !ids.includes(id)) })}>
+                      Ingen
+                    </button>
+                  </span>
+                </div>
+                <ul>
+                  {all.map((i) => (
+                    <li key={i.id}>
+                      <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          className="size-4 accent-accent"
+                          checked={enabled.includes(i.id)}
+                          onChange={(e) => set({ questions: e.target.checked ? [...enabled, i.id] : enabled.filter((id) => id !== i.id) })}
+                        />
+                        <span>
+                          {i.label} <span className="text-xs text-muted">{i.group}</span>
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </fieldset>
+            )
+          })}
+        </details>
       </Section>
 
       <Section title={`Sonestørrelse: ${s.zoneRadius} m`}>
@@ -551,10 +770,13 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
             return <li key={l.key}>{l.label}: {levelAreas(data, l.key).length || 'mangler'}</li>
           })}
           {POI_TYPES.map((t) => (
-            <li key={t.key}>{t.label}: {data.poi[t.key]?.length || 'mangler'}</li>
+            <li key={t.key}>{t.icon} {t.label[0].toUpperCase() + t.label.slice(1)}: {data.poi[t.key]?.length ?? 'mangler'}</li>
           ))}
+          <li>Kystlinje: {data.shapes.coast ? `${data.islands.length} øyer og fastlandet` : 'mangler'}</li>
+          <li>Vann og elver: {data.shapes.water?.length ?? 'mangler'}</li>
+          <li>Riksgrense: {data.shapes.riks ? (data.shapes.riks.length ? 'innenfor kartet' : 'utenfor kartet') : 'mangler'}</li>
         </ul>
-        <p className="mt-2 text-xs text-muted">Grenser © Kartverket og Posten. Bydeler og steder © OpenStreetMap-bidragsytere. Inspirert av taibeled/JetLagHideAndSeek.</p>
+        <p className="mt-2 text-xs text-muted">Grenser © Kartverket og Posten. Bydeler, steder, kystlinje, vann og riksgrense © OpenStreetMap-bidragsytere. Inspirert av taibeled/JetLagHideAndSeek.</p>
       </Section>
     </div>
   )

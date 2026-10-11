@@ -1,5 +1,5 @@
-import { METRO_LINES, POI_TYPES, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
-import type { AdminLevel, GameSize, GeoData, Kind, LngLat, Question, QuestionBody, Station } from './types'
+import { ANSWER_CANT, ANSWER_NULL, METRO_LINES, POI_TYPES, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
+import type { AdminLevel, GameSize, GeoData, Kind, LngLat, Question, QuestionBody, Settings, ShapeKey, Station } from './types'
 
 /** Skjemaet for et spørsmål: flatt og med valgfrie punkter, så det kan være halvferdig. */
 export interface Form {
@@ -12,6 +12,9 @@ export interface Form {
   pos2: LngLat | null
   radiusM: number
   line: string
+  /** Bare kollektivlinje: kjøreretningen og neste stopp, som plass i linjens stasjonsliste. */
+  dir: 1 | -1
+  next: number
   level: AdminLevel
   poiType: string
   ref: string
@@ -24,16 +27,12 @@ export interface Form {
 export const CATEGORIES = ['Matching', 'Measuring', 'Thermometer', 'Radar', 'Tentacles', 'Photos'] as const
 export type Category = (typeof CATEGORIES)[number]
 
-/** Kortene er fysiske. Appen viser bare hvor mange hider trekker og beholder per kategori. */
-export const DRAWS: Record<Category, { draw: number; keep: number }> = {
-  Matching: { draw: 3, keep: 1 },
-  Measuring: { draw: 3, keep: 1 },
-  Thermometer: { draw: 2, keep: 1 },
-  Radar: { draw: 2, keep: 1 },
-  Tentacles: { draw: 4, keep: 2 },
-  Photos: { draw: 1, keep: 1 },
+/** Regelbokens gjemmetid og soneradius per spillstørrelse. Settes når størrelsen velges, og kan overstyres. */
+export const SIZE_RULES: Record<GameSize, { hidingMinutes: number; zoneRadius: number }> = {
+  S: { hidingMinutes: 30, zoneRadius: 400 },
+  M: { hidingMinutes: 60, zoneRadius: 400 },
+  L: { hidingMinutes: 180, zoneRadius: 800 },
 }
-export const MAX_HAND = 6
 
 /** Ett spørsmål fra regelboken. */
 export interface Item {
@@ -57,6 +56,7 @@ const measuring = (id: string, group: string, label: string, fields: Partial<For
 const mPoi = (key: string, group: string) => matching(key, group, cap(poi(key).label), { kind: 'nearest', poiType: key })
 const mePoi = (key: string, group: string) => measuring(key, group, cap(poi(key).label), { kind: 'measure', ref: key })
 const mManual = (id: string, group: string, label: string) => matching(id, group, label, { kind: 'manual', family: 'matching', text: label.toLowerCase() })
+const meShape = (id: string, group: string, label: string, ref: ShapeKey) => measuring(id, group, label, { kind: 'geodist', ref })
 const meManual = (id: string, group: string, label: string) => measuring(id, group, label, { kind: 'manual', family: 'measuring', text: label.toLowerCase() })
 const radar = (m: number): Item => ({ id: `r-${m}`, category: 'Radar', group: 'Avstand', label: fmtDist(m), sizes: ALL, fields: { kind: 'radar', radiusM: m } })
 const thermo = (m: number, sizes: string): Item => ({ id: `t-${m}`, category: 'Thermometer', group: 'Reist minst', label: fmtDist(m), sizes, fields: { kind: 'thermometer', radiusM: m } })
@@ -85,7 +85,7 @@ const POI_GROUPS: [string, string[]][] = [
 
 export const ITEMS: Item[] = [
   mPoi('flyplass', 'Transport'),
-  matching('line', 'Transport', 'T-banelinje', { kind: 'line' }),
+  matching('line', 'Transport', 'Kollektivlinje (T-banen dere sitter på)', { kind: 'transit' }),
   matching('namelen', 'Transport', 'Lengde på stasjonsnavn', { kind: 'namelen' }),
   mManual('street', 'Transport', 'Gate eller sti'),
   matching('admin1', 'Administrativt', '1. nivå: fylke', { kind: 'admin', level: 'fylke' }),
@@ -93,19 +93,19 @@ export const ITEMS: Item[] = [
   matching('admin3', 'Administrativt', '3. nivå: bydel', { kind: 'admin', level: 'bydel' }),
   matching('admin4', 'Administrativt', '4. nivå: postsone', { kind: 'admin', level: 'postsone' }),
   mPoi('fjell', 'Natur'),
-  mManual('landmass', 'Natur', 'Landmasse'),
+  matching('landmass', 'Natur', 'Landmasse', { kind: 'landmass' }),
   mPoi('park', 'Natur'),
   ...POI_GROUPS.flatMap(([group, keys]) => keys.map((k) => mPoi(k, group))),
 
   mePoi('flyplass', 'Transport'),
   meManual('highspeed', 'Transport', 'Høyhastighetsbane'),
   mePoi('jernbanestasjon', 'Transport'),
-  meManual('border-int', 'Grenser', 'Riksgrensen'),
+  meShape('border-int', 'Grenser', 'Riksgrensen', 'riks'),
   measuring('border1', 'Grenser', 'Fylkesgrense', { kind: 'border', level: 'fylke' }),
   measuring('border2', 'Grenser', 'Kommunegrense', { kind: 'border', level: 'kommune' }),
   meManual('sealevel', 'Natur', 'Havnivå (høyde over havet)'),
-  meManual('water', 'Natur', 'Vann eller innsjø'),
-  meManual('coast', 'Natur', 'Kystlinjen'),
+  meShape('water', 'Natur', 'Vann eller innsjø', 'water'),
+  meShape('coast', 'Natur', 'Kystlinjen', 'coast'),
   mePoi('fjell', 'Natur'),
   mePoi('park', 'Natur'),
   ...POI_GROUPS.flatMap(([group, keys]) => keys.map((k) => mePoi(k, group))),
@@ -143,13 +143,22 @@ export const ITEMS: Item[] = [
 
 const ITEM_BY_ID = new Map(ITEMS.map((i) => [i.id, i]))
 export const itemOf = (id: string | undefined) => (id ? ITEM_BY_ID.get(id) : undefined)
-export const itemsFor = (category: Category, size: GameSize) => ITEMS.filter((i) => i.category === category && i.sizes.includes(size))
+/** Det i oppsettet som avgjør hvilke spørsmål som er med. */
+export type Rules = Pick<Settings, 'size' | 'questions'>
+/** Er spørsmålet med i dette spillet? Et egendefinert utvalg går foran spillstørrelsen. */
+export const available = (i: Item, rules: Rules) => (rules.questions ? rules.questions.includes(i.id) : i.sizes.includes(rules.size))
+export const itemsFor = (category: Category, rules: Rules) => ITEMS.filter((i) => i.category === category && available(i, rules))
+/** Spørsmålene som er med, som en liste med id-er. Utgangspunktet når utvalget tilpasses. */
+export const enabledIds = (rules: Rules) => ITEMS.filter((i) => available(i, rules)).map((i) => i.id)
 
 // Spørsmål lagret før regelboklisten kom har ingen item. Da gjettes kategorien fra typen.
 const LEGACY_CATEGORY: Record<Kind, Category> = {
   radar: 'Radar',
   thermometer: 'Thermometer',
   line: 'Matching',
+  transit: 'Matching',
+  landmass: 'Matching',
+  geodist: 'Measuring',
   admin: 'Matching',
   nearest: 'Matching',
   namelen: 'Matching',
@@ -164,12 +173,12 @@ export const categoryOf = (q: Pick<Question, 'kind' | 'item'>): Category => item
 /** Svartiden hider har: 5 min, men 10 min (S/M) eller 20 min (L) for bilder. */
 export const responseMinutes = (q: Pick<Question, 'kind' | 'item'>, size: GameSize) => (categoryOf(q) === 'Photos' ? (size === 'L' ? 20 : 10) : 5)
 
-const BLANK: Omit<Form, 'item' | 'kind' | 'pos'> = { pos2: null, radiusM: 1000, line: '1', level: 'bydel', poiType: 'museum', ref: 'museum', text: '', family: 'matching', answer: null }
+const BLANK: Omit<Form, 'item' | 'kind' | 'pos'> = { pos2: null, radiusM: 1000, line: '1', dir: 1, next: 0, level: 'bydel', poiType: 'museum', ref: 'museum', text: '', family: 'matching', answer: null }
 
 export const newForm = (item: Item, pos: LngLat | null): Form => ({ ...BLANK, kind: 'radar', pos, ...item.fields, item: item.id })
 
 /** Bytter spørsmål i skjemaet, men beholder posisjonene som alt er valgt. */
-export const switchItem = (form: Form, item: Item): Form => ({ ...newForm(item, form.pos), pos2: form.pos2, line: form.line, id: form.id, note: form.note })
+export const switchItem = (form: Form, item: Item): Form => ({ ...newForm(item, form.pos), pos2: form.pos2, line: form.line, dir: form.dir, next: form.next, id: form.id, note: form.note })
 
 export function formToBody(f: Form): (QuestionBody & { item: string }) | null {
   const body = ((): QuestionBody | null => {
@@ -180,6 +189,12 @@ export function formToBody(f: Form): (QuestionBody & { item: string }) | null {
         return f.pos && f.pos2 ? { kind: 'thermometer', from: f.pos, to: f.pos2, minM: f.radiusM } : null
       case 'line':
         return { kind: 'line', line: f.line }
+      case 'transit':
+        return { kind: 'transit', line: f.line, dir: f.dir, next: f.next }
+      case 'geodist':
+        return f.pos && { kind: 'geodist', ref: f.ref as ShapeKey, pos: f.pos }
+      case 'landmass':
+        return f.pos && { kind: 'landmass', pos: f.pos }
       case 'admin':
         return f.pos && { kind: 'admin', level: f.level, pos: f.pos }
       case 'nearest':
@@ -223,7 +238,8 @@ export function fmtDist(d: number) {
   return d >= 1000 ? `${+(d / 1000).toFixed(d % 1000 ? 1 : 0)} km` : `${Math.round(d)} m`
 }
 const poiName = (key: string) => (key === METRO_LINES ? 'T-banelinje' : (POI_TYPES.find((t) => t.key === key)?.label ?? key))
-const poiPlural = (key: string) => (key === METRO_LINES ? 'T-banelinjene' : (POI_TYPES.find((t) => t.key === key)?.plural ?? key))
+const poiPlural = (key: string) => (key === METRO_LINES ? 'T-banelinjer' : (POI_TYPES.find((t) => t.key === key)?.plural ?? key))
+const SHAPE_NAMES: Record<ShapeKey, string> = { coast: 'kystlinjen', water: 'nærmeste vann eller innsjø', riks: 'riksgrensen' }
 const LEVEL_NAMES: Record<AdminLevel, string> = { fylke: 'fylke', kommune: 'kommune', bydel: 'bydel', postsone: 'postsone', postnummer: 'postnummer' }
 /** Nivået i løpende tekst: «samme postsone». */
 export const levelName = (key: AdminLevel) => LEVEL_NAMES[key] ?? key
@@ -243,6 +259,15 @@ export function describe(q: Question, data: GeoData): string {
       return `Jeg har reist ${q.minM ? `minst ${fmtDist(q.minM)}` : fmtDist(dist(q.from, q.to))}: ${place(q.from, data.stations)} → ${place(q.to, data.stations)}. Varmere eller kaldere?`
     case 'line':
       return `Er stasjonen din på linje ${q.line}?`
+    case 'transit': {
+      const order = data.lines.features.find((f) => f.properties.line === q.line)?.properties.stations ?? []
+      const name = (id?: string) => data.stations.find((s) => s.id === id)?.name ?? 'ukjent'
+      return `Stopper T-banen vi sitter på ved stasjonen din? (linje ${q.line} mot ${name(q.dir === 1 ? order.at(-1) : order[0])}, neste stopp ${name(order[q.next])})`
+    }
+    case 'geodist':
+      return `Er du nærmere ${SHAPE_NAMES[q.ref]} enn meg? (${place(q.pos, data.stations)})`
+    case 'landmass':
+      return `Er du på samme landmasse som meg? (${place(q.pos, data.stations)})`
     case 'admin': {
       const a = areaAt(data, q.level, q.pos)
       return `Er du i samme ${levelName(q.level)} som meg?${a ? ` (${a.properties.name})` : ''}`
@@ -262,7 +287,7 @@ export function describe(q: Question, data: GeoData): string {
     case 'manual':
       return q.family === 'matching' ? `Har vi samme nærmeste ${q.subject}?` : `Er du nærmere ${q.subject} enn meg?`
     case 'tentacles':
-      return `Hvilken av ${poiPlural(q.poiType)} innen ${fmtDist(q.radiusM)} fra meg er du nærmest? (${place(q.pos, data.stations)})`
+      return `Av alle ${poiPlural(q.poiType)} innen ${fmtDist(q.radiusM)} fra meg, hvilken er du nærmest? (${place(q.pos, data.stations)})`
     case 'photo':
       return `Send et bilde: ${q.text}`
   }
@@ -279,8 +304,12 @@ const ANSWER_LABELS: Record<string, string> = {
   further: 'Lenger unna',
   outside: 'Utenfor radius',
 }
+const SPECIAL_LABELS: Record<string, string> = {
+  [ANSWER_NULL]: 'Nullsvar (finnes ikke innenfor kartet)',
+  [ANSWER_CANT]: 'Kan ikke svare',
+}
 export const answerLabel = (q: Pick<Question, 'kind'> & { poiType?: string }, answer: string) =>
-  q.kind === 'photo' ? answer : q.poiType === METRO_LINES && !ANSWER_LABELS[answer] ? `Linje ${answer}` : (ANSWER_LABELS[answer] ?? answer)
+  SPECIAL_LABELS[answer] ?? (q.kind === 'photo' ? answer : q.poiType === METRO_LINES && !ANSWER_LABELS[answer] ? `Linje ${answer}` : (ANSWER_LABELS[answer] ?? answer))
 
 /** Svarene hider kan gi. Tom liste = fritekst. */
 export function answerOptions(q: Question, data: GeoData): string[] {
@@ -291,6 +320,7 @@ export function answerOptions(q: Question, data: GeoData): string[] {
       return ['warmer', 'colder']
     case 'measure':
     case 'border':
+    case 'geodist':
       return ['closer', 'further']
     case 'manual':
       return q.family === 'matching' ? ['yes', 'no'] : ['closer', 'further']
@@ -306,7 +336,7 @@ export function answerOptions(q: Question, data: GeoData): string[] {
 
 /** To spørsmål med samme nøkkel er «akkurat samme spørsmål», uansett hvor seeker står. */
 export function questionKey(q: Question): string {
-  const extra = q.kind === 'line' ? `:${q.line}` : q.item === 'r-choose' && q.kind === 'radar' ? `:${q.radiusM}` : ''
+  const extra = q.kind === 'line' || q.kind === 'transit' ? `:${q.line}` : q.item === 'r-choose' && q.kind === 'radar' ? `:${q.radiusM}` : ''
   if (q.item) return q.item + extra
   switch (q.kind) {
     case 'radar':
@@ -328,12 +358,5 @@ export function questionKey(q: Question): string {
 
 /** Nøklene til alle spørsmål som alt er stilt, for å merke hva som er brukt. */
 export const usedKeys = (log: Question[]) => new Set(log.map(questionKey))
-
-/** Hva hider trekker for et spørsmål. Er det stilt før i loggen, trekker hider to ganger. */
-export function drawFor(q: Question, log: Question[]) {
-  const { draw, keep } = DRAWS[categoryOf(q)]
-  const at = log.findIndex((x) => x.id === q.id)
-  const earlier = at === -1 ? log : log.slice(0, at)
-  const repeat = earlier.some((x) => questionKey(x) === questionKey(q))
-  return { draw, keep, repeat, text: `Hider trekker ${draw}, beholder ${keep}${repeat ? ', to ganger (stilt før)' : ''}` }
-}
+/** Er spørsmålet i katalogen stilt før, i en eller annen variant? */
+export const isUsed = (used: Set<string>, itemId: string) => [...used].some((k) => k === itemId || k.startsWith(`${itemId}:`))

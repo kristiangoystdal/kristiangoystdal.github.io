@@ -1,14 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { PLANNING_MINUTES, resume, type PauseKind, type Round } from './clock'
 import type { Form } from './form'
-import type { Endgame } from './geo'
 import type { LngLat, Question, QuestionBody, RoundResult, Settings } from './types'
 
 const UNDO_LIMIT = 30
 const uid = () => Math.random().toString(36).slice(2, 10)
 
 export const DEFAULT_SETTINGS: Settings = {
-  zoneRadius: 500,
+  zoneRadius: 400,
   lines: ['1', '2', '3', '4', '5'],
   day: 'wk',
   hourFrom: 10,
@@ -21,18 +21,11 @@ export const DEFAULT_SETTINGS: Settings = {
 }
 
 /** Innstillingene som er felles for alle i spillet og deles i rommet. */
-export const GAME_SETTINGS = ['size', 'zoneRadius', 'lines', 'playArea'] as const satisfies readonly (keyof Settings)[]
+export const GAME_SETTINGS = ['size', 'questions', 'zoneRadius', 'lines', 'playArea'] as const satisfies readonly (keyof Settings)[]
 
 export type Layer = 'lines' | 'zones' | 'area' | 'admin' | 'poi'
 
-export interface Round {
-  hidingMinutes: number
-  hider: string
-  /** Tidspunktet gjemmetiden er over og letingen starter. null = ingen runde i gang. */
-  seekFrom: number | null
-  /** Satt når seekerne har startet endgame ved en stasjon. */
-  endgame?: Endgame | null
-}
+export type { Round }
 
 export interface State {
   settings: Settings
@@ -44,9 +37,15 @@ export interface State {
   round: Round
   players: string[]
   results: RoundResult[]
+  /** Siste runde hider har fått spørsmål om tidsbonus for, så det ikke spørres to ganger. */
+  bonusAsked: string | null
+  /** Seeker deler posisjonen sin i rommet. */
+  sharePos: boolean
 
   setSettings: (patch: Partial<Settings>) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
+  /** Hider svarer. Går utenom angre-loggen, som er seekernes. */
+  answerQuestion: (id: string, answer: string) => void
   removeQuestion: (id: string) => void
   setNote: (id: string, note: string) => void
   undo: () => void
@@ -54,6 +53,14 @@ export interface State {
   setHider: (hider: State['hider']) => void
   toggleLayer: (layer: Layer) => void
   setRound: (patch: Partial<Round>) => void
+  startRound: () => void
+  cancelRound: () => void
+  pauseGame: (kind: PauseKind) => void
+  resumeGame: () => void
+  /** Hider oppgir tidsbonusen for runden som nettopp er ferdig. */
+  answerBonus: (id: string, minutes: number) => void
+  setSharePos: (on: boolean) => void
+  shufflePlayers: () => void
   addPlayer: (name: string) => void
   removePlayer: (name: string) => void
   finishRound: (seconds: number) => void
@@ -67,8 +74,16 @@ export interface State {
 export interface SharedGame {
   v: 1
   questions: Question[]
-  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size'>
+  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size' | 'questions'>
 }
+
+const HISTORY_LIMIT = 10
+/** Endres et svar som alt er gitt, tas det gamle vare på så alle ser at det er endret. */
+const historyOf = (q: Question, answer: string | null) =>
+  q.answer !== null && q.answer !== answer ? [...(q.history ?? []), { answer: q.answer, at: Date.now() }].slice(-HISTORY_LIMIT) : q.history
+
+/** Rundens tilstand når ingen runde er i gang. */
+const IDLE: Partial<Round> = { seekFrom: null, endgame: null, pause: null, stoppedMs: 0, planUntil: null }
 
 export const useGame = create<State>()(
   persist(
@@ -84,9 +99,11 @@ export const useGame = create<State>()(
         mode: 'seeker',
         hider: { stationId: null, pos: null },
         layers: { lines: true, zones: true, area: true, admin: false, poi: false },
-        round: { hidingMinutes: 30, hider: '', seekFrom: null },
+        round: { hidingMinutes: 60, hider: '', seekFrom: null },
         players: [],
         results: [],
+        bonusAsked: null,
+        sharePos: false,
 
         // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
         setSettings: (patch) =>
@@ -94,9 +111,12 @@ export const useGame = create<State>()(
         saveQuestion: (body, answer, id) =>
           editQuestions((qs) =>
             id
-              ? qs.map((q) => (q.id === id ? { ...body, id, time: q.time, answer, note: q.note } : q))
-              : [...qs, { ...body, id: uid(), time: Date.now(), answer }],
+              ? qs.map((q) => (q.id === id ? { ...body, id, time: q.time, answer, note: q.note, extraMs: q.extraMs, history: historyOf(q, answer), answeredAt: answer === null ? undefined : (q.answeredAt ?? Date.now()) } : q))
+              : [...qs, { ...body, id: uid(), time: Date.now(), answer, answeredAt: answer === null ? undefined : Date.now() }],
           ),
+        // Første svar avgjør om svartiden ble holdt. Svarer hider på nytt, står tidspunktet.
+        answerQuestion: (id, answer) =>
+          set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, answer, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() } : q)) })),
         removeQuestion: (id) => editQuestions((qs) => qs.filter((q) => q.id !== id)),
         // Notater går utenom angre-loggen, ellers ville hvert tastetrykk blitt et angresteg.
         setNote: (id, note) => set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, note: note || undefined } : q)) })),
@@ -106,21 +126,39 @@ export const useGame = create<State>()(
         setHider: (hider) => set({ hider }),
         toggleLayer: (layer) => set((s) => ({ layers: { ...s.layers, [layer]: !s.layers[layer] } })),
         setRound: (patch) => set((s) => ({ round: { ...s.round, ...patch } })),
+        // Ny runde, ny hider: forrige rundes spørsmål teller ikke som stilt, og gjemmestedet er et annet.
+        startRound: () =>
+          set((s) => ({
+            questions: [],
+            past: s.questions.length ? [...s.past, s.questions].slice(-UNDO_LIMIT) : s.past,
+            hider: { stationId: null, pos: null },
+            round: { ...s.round, ...IDLE, seekFrom: Date.now() + s.round.hidingMinutes * 60000 },
+          })),
+        cancelRound: () => set((s) => ({ round: { ...s.round, ...IDLE } })),
+        pauseGame: (kind) => set((s) => (s.round.seekFrom === null || s.round.pause ? s : { round: { ...s.round, pause: { at: Date.now(), kind } } })),
+        resumeGame: () => set((s) => resume(s.round, s.questions, Date.now())),
+        answerBonus: (id, minutes) => set((s) => ({ bonusAsked: id, results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
+        setSharePos: (sharePos) => set({ sharePos }),
+        shufflePlayers: () =>
+          set((s) => {
+            const players = [...s.players]
+            for (let i = players.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1))
+              ;[players[i], players[j]] = [players[j], players[i]]
+            }
+            return { players, round: s.round.seekFrom === null ? { ...s.round, hider: players[0] ?? s.round.hider } : s.round }
+          }),
         addPlayer: (name) => set((s) => (s.players.includes(name) ? s : { players: [...s.players, name] })),
         removePlayer: (name) => set((s) => ({ players: s.players.filter((p) => p !== name) })),
         finishRound: (seconds) =>
-          set((s) => ({
-            results: [
-              ...s.results,
-              {
-                id: uid(),
-                hider: s.round.hider || 'Ukjent',
-                seconds,
-                bonusMinutes: 0,
-              },
-            ],
-            round: { ...s.round, seekFrom: null, endgame: null },
-          })),
+          set((s) => {
+            // Neste i rekkefølgen gjemmer seg, og får planleggingstid.
+            const next = s.players[(s.players.indexOf(s.round.hider) + 1) % (s.players.length || 1)]
+            return {
+              results: [...s.results, { id: uid(), hider: s.round.hider || 'Ukjent', at: Date.now(), seconds, bonusMinutes: 0 }],
+              round: { ...s.round, ...IDLE, hider: s.players.includes(s.round.hider) ? next : s.round.hider, planUntil: Date.now() + PLANNING_MINUTES * 60000 },
+            }
+          }),
         setBonus: (id, minutes) => set((s) => ({ results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         removeResult: (id) => set((s) => ({ results: s.results.filter((r) => r.id !== id) })),
         newGame: () =>
@@ -128,7 +166,7 @@ export const useGame = create<State>()(
             questions: [],
             past: [...s.past, s.questions].slice(-UNDO_LIMIT),
             hider: { stationId: null, pos: null },
-            round: { ...s.round, seekFrom: null, endgame: null },
+            round: { ...s.round, ...IDLE },
           })),
         importGame: (game) =>
           set((s) => ({
@@ -155,7 +193,7 @@ export const useGame = create<State>()(
 export const exportGame = (s: Pick<State, 'questions' | 'settings'>): SharedGame => ({
   v: 1,
   questions: s.questions,
-  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size },
+  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null },
 })
 
 export function parseGame(text: string): SharedGame {

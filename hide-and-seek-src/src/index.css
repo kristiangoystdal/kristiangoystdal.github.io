@@ -121,6 +121,17 @@ button {
 .leaflet-tooltip.station-label::before {
   display: none;
 }
+/* Steder på kartet: ett ikon per type, på en lys skive så det synes på alle bakgrunnskart. */
+.poi-icon {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(0 0 0 / 0.25);
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  font-size: 13px;
+  line-height: 1;
+}
 .picking /* Mørkt tema: kartflisene inverteres. Satellittbilder lar vi være. */
 [data-theme='dark'] [data-basemap='clean'] .leaflet-tile-pane {
   filter: invert(1) brightness(0.85) contrast(0.9);

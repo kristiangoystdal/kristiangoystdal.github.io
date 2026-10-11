@@ -24,10 +24,18 @@ export interface Poi {
 
 export interface GeoData {
   stations: Station[]
-  lines: FeatureCollection<LineString, { line: string; name: string; color: string }>
+  /** `stations` er stasjons-id-ene i kjørerekkefølge fra den ene endestasjonen til den andre. */
+  lines: FeatureCollection<LineString, { line: string; name: string; color: string; stations?: string[] }>
   admin: AdminArea[]
+  /** Steder per type. Mangler nøkkelen, er dataene ikke lastet inn. Tom liste = ingen innenfor kartet. */
   poi: Record<string, Poi[]>
+  /** Linjer avstand måles til. Mangler nøkkelen, er dataene ikke lastet inn. Tom liste = ingen innenfor kartet. */
+  shapes: Partial<Record<ShapeKey, LngLat[][]>>
+  /** Øyer i sjøen. Alt annet land regnes som fastlandet. */
+  islands: Area[]
 }
+
+export type ShapeKey = 'coast' | 'water' | 'riks'
 
 export type GameSize = 'S' | 'M' | 'L'
 
@@ -36,6 +44,12 @@ interface Base {
   time: number
   /** null = stilt, men ikke besvart ennå */
   answer: string | null
+  /** Når svaret kom. Brukes til å se om svartiden ble overholdt. */
+  answeredAt?: number
+  /** Tid spillet sto på pause mens spørsmålet var ubesvart. Legges til svartiden. */
+  extraMs?: number
+  /** Tidligere svar, når hider har endret svaret sitt. */
+  history?: { answer: string; at: number }[]
   /** Hvilket spørsmål i regelboken dette er (id i ITEMS i form.ts). */
   item?: string
   /** Seekernes eget notat. */
@@ -45,7 +59,14 @@ interface Base {
 export type QuestionBody =
   | { kind: 'radar'; center: LngLat; radiusM: number }
   | { kind: 'thermometer'; from: LngLat; to: LngLat; minM?: number }
+  /** Eldre logger: fritt valgt linjenummer. Nye spørsmål bruker «transit». */
   | { kind: 'line'; line: string }
+  /** Matching: stopper T-banen seekerne sitter på ved hiders stasjon? `next` er plassen i linjens stasjonsliste. */
+  | { kind: 'transit'; line: string; dir: 1 | -1; next: number }
+  /** Measuring: avstand til kystlinjen, nærmeste vann eller riksgrensen. */
+  | { kind: 'geodist'; ref: ShapeKey; pos: LngLat }
+  /** Matching: er hider på samme landmasse som seeker. */
+  | { kind: 'landmass'; pos: LngLat }
   | { kind: 'admin'; level: AdminLevel; pos: LngLat }
   | { kind: 'nearest'; poiType: string; pos: LngLat }
   | { kind: 'measure'; ref: string; pos: LngLat }
@@ -72,6 +93,8 @@ export interface Settings {
   basemap: 'clean' | 'standard' | 'satellite'
   /** Spillstørrelsen styrer hvilke spørsmål som er tilgjengelige. */
   size: GameSize
+  /** Egendefinert spill: spørsmålene som er med (id i ITEMS). null = det spillstørrelsen gir. */
+  questions?: string[] | null
   /** Hjørnene i spillområdet. null = hele T-banenettet. */
   playArea: LngLat[] | null
 }
@@ -79,7 +102,9 @@ export interface Settings {
 export interface RoundResult {
   id: string
   hider: string
+  /** Når runden sluttet. Holder rundene i rekkefølge. */
+  at?: number
   seconds: number
-  /** Tidsbonus fra hiders fysiske kort, lagt inn for hånd etter runden. */
+  /** Tidsbonus i minutter. Hider legger den inn når runden er over. */
   bonusMinutes: number
 }

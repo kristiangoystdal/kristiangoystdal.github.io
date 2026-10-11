@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { booleanPointInPolygon, destination } from '@turf/turf'
 import { describe, expect, it } from 'vitest'
-import { ITEMS, drawFor, formToQuestion, itemsFor, newForm, responseMinutes } from './form'
-import { areaAt, autoAnswer, autoPlayArea, dist, isPositive, nearestStation, regionOf, solve, stationPos, voronoiCell } from './geo'
+import { ITEMS, SIZE_RULES, enabledIds, formToQuestion, itemsFor, newForm, questionKey, responseMinutes, usedKeys } from './form'
+import { ANSWER_NULL, HIGH_SPEED, areaAt, autoAnswer, autoPlayArea, clipData, dist, hiderStation, isPositive, landmassOf, nearestStation, polylineDist, regionOf, shapeDist, solve, stationPos, stationsInReach, transitStops, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
 const raw = JSON.parse(readFileSync('public/data/stations.json', 'utf8'))
@@ -14,6 +14,8 @@ const data: GeoData = {
   stations,
   lines: { type: 'FeatureCollection', features: [] },
   admin: [],
+  shapes: { coast: [], water: [], riks: [] },
+  islands: [],
   poi: {
     kino: [
       { name: 'Colosseum', pos: [10.7106, 59.9297] },
@@ -168,40 +170,57 @@ describe('thermometer', () => {
   })
 })
 
-describe('korttrekk', () => {
-  const radar = (id: string, station: string, radiusM: number): Question => ({ ...q({ kind: 'radar', center: pos(station), radiusM }), id })
+describe('svar som ikke krymper kartet', () => {
+  const radar = (id: string, answer: string | null = null): Question => ({ ...q({ kind: 'radar', center: pos('Majorstuen'), radiusM: 1000 }, answer), id, item: 'r-1000' })
 
-  it('samme spørsmål på nytt gir to trekk, uansett hvor seeker står', () => {
-    const log = [radar('a', 'Majorstuen', 1000), radar('b', 'Tøyen', 2000), radar('c', 'Helsfyr', 1000)]
-    expect(drawFor(log[0], log)).toMatchObject({ draw: 2, keep: 1, repeat: false })
-    expect(drawFor(log[1], log).repeat).toBe(false) // annen radius er et annet spørsmål
-    expect(drawFor(log[2], log).repeat).toBe(true)
+  it('samme spørsmål kjennes igjen uansett hvor seeker står', () => {
+    const elsewhere = { ...radar('b'), center: pos('Tøyen') } as Question
+    expect(usedKeys([radar('a')]).has(questionKey(elsewhere))).toBe(true)
+    expect(usedKeys([radar('a')]).has('r-2000')).toBe(false)
   })
 
-  it('et nytt spørsmål i skjemaet sammenlignes med hele loggen', () => {
-    const log = [{ ...q({ kind: 'line', line: '3' }), id: 'a' }]
-    expect(drawFor({ ...q({ kind: 'line', line: '3' }), id: 'draft' }, log)).toMatchObject({ draw: 3, keep: 1, repeat: true })
-    expect(drawFor({ ...q({ kind: 'line', line: '4' }), id: 'draft' }, log).repeat).toBe(false)
+  it('nullsvar teller som besvart uten å utelukke noe', () => {
+    const res = solve([radar('a', ANSWER_NULL)], data, settings)
+    expect(res.stations).toHaveLength(101)
+    expect(res.area).not.toBeNull()
+  })
+
+  it('høyhastighetsbane finnes ikke i kartet og gir nullsvar', () => {
+    const auto = autoAnswer(q({ kind: 'manual', family: 'measuring', subject: HIGH_SPEED }), { pos: pos('Tøyen'), station: byName('Tøyen') }, data)
+    expect(auto?.answer).toBe(ANSWER_NULL)
+    expect(ITEMS.find((i) => i.id === 'me-highspeed')!.fields.text).toBe(HIGH_SPEED)
   })
 })
 
 describe('regelboken', () => {
+  it('spillstørrelsen setter gjemmetid og sone', () => {
+    expect(SIZE_RULES).toEqual({ S: { hidingMinutes: 30, zoneRadius: 400 }, M: { hidingMinutes: 60, zoneRadius: 400 }, L: { hidingMinutes: 180, zoneRadius: 800 } })
+  })
+
   it('spillstørrelsen styrer hvilke spørsmål som er med', () => {
-    expect(itemsFor('Tentacles', 'S')).toHaveLength(0)
-    expect(itemsFor('Tentacles', 'M')).toHaveLength(4)
-    expect(itemsFor('Tentacles', 'L')).toHaveLength(8)
-    expect(itemsFor('Thermometer', 'S').map((i) => i.label)).toEqual(['1 km', '5 km'])
-    expect(itemsFor('Thermometer', 'L')).toHaveLength(4)
-    expect(itemsFor('Radar', 'S')).toHaveLength(10)
-    expect(itemsFor('Photos', 'S')).toHaveLength(6)
-    expect(itemsFor('Photos', 'M')).toHaveLength(14)
-    expect(itemsFor('Photos', 'L')).toHaveLength(18)
+    expect(itemsFor('Tentacles', { size: 'S' })).toHaveLength(0)
+    expect(itemsFor('Tentacles', { size: 'M' })).toHaveLength(4)
+    expect(itemsFor('Tentacles', { size: 'L' })).toHaveLength(8)
+    expect(itemsFor('Thermometer', { size: 'S' }).map((i) => i.label)).toEqual(['1 km', '5 km'])
+    expect(itemsFor('Thermometer', { size: 'L' })).toHaveLength(4)
+    expect(itemsFor('Radar', { size: 'S' })).toHaveLength(10)
+    expect(itemsFor('Photos', { size: 'S' })).toHaveLength(6)
+    expect(itemsFor('Photos', { size: 'M' })).toHaveLength(14)
+    expect(itemsFor('Photos', { size: 'L' })).toHaveLength(18)
     expect(new Set(ITEMS.map((i) => i.id)).size).toBe(ITEMS.length)
   })
 
+  it('et egendefinert utvalg går foran spillstørrelsen', () => {
+    const custom = { size: 'S' as const, questions: [...enabledIds({ size: 'S' }), 'te-museum'].filter((id) => id !== 'r-500') }
+    expect(itemsFor('Tentacles', custom).map((i) => i.id)).toEqual(['te-museum'])
+    expect(itemsFor('Radar', custom)).toHaveLength(9)
+    expect(itemsFor('Photos', { size: 'L', questions: [] })).toHaveLength(0)
+    expect(enabledIds({ size: 'M', questions: null })).toHaveLength(ITEMS.filter((i) => i.sizes.includes('M')).length)
+  })
+
   it('bilder har lengre svartid', () => {
-    const photo = formToQuestion(newForm(itemsFor('Photos', 'S')[0], null))!
-    const radar = formToQuestion(newForm(itemsFor('Radar', 'S')[0], pos('Majorstuen')))!
+    const photo = formToQuestion(newForm(itemsFor('Photos', { size: 'S' })[0], null))!
+    const radar = formToQuestion(newForm(itemsFor('Radar', { size: 'S' })[0], pos('Majorstuen')))!
     expect([responseMinutes(photo, 'S'), responseMinutes(photo, 'L'), responseMinutes(radar, 'L')]).toEqual([10, 20, 5])
   })
 
@@ -328,5 +347,151 @@ describe.skipIf(!existsSync(ADMIN_FILE))('administrative grenser', () => {
     expect(yes).not.toContain('Tøyen')
     expect(no).toContain('Tøyen')
     expect(yes.length).toBeLessThan(20)
+  })
+})
+
+const LINES_FILE = 'public/data/lines.geojson'
+const shapeFile = (k: string) => `public/data/${k}.geojson`
+const outline = (f: { geometry: { type: string; coordinates: unknown } }) => (f.geometry.type === 'Polygon' ? (f.geometry.coordinates as LngLat[][]) : [f.geometry.coordinates as LngLat[]])
+
+describe('kollektivlinje', () => {
+  const real: GeoData = { ...data, lines: JSON.parse(readFileSync(LINES_FILE, 'utf8')) }
+  const route = real.lines.features.find((f) => f.properties.line === '3')!.properties.stations!
+  const at = (name: string) => route.indexOf(byName(name).id)
+  // Linje 3 mot Mortensrud, neste stopp Tøyen.
+  const east: QuestionBody = { kind: 'transit', line: '3', dir: 1, next: at('Tøyen') }
+
+  it('svaret er ja bare for stasjonene T-banen har igjen å stoppe ved', () => {
+    const stops = transitStops(real, east)
+    expect(stops[0]).toBe(byName('Tøyen').id)
+    expect(stops.at(-1)).toBe(byName('Mortensrud').id)
+    const ask = (name: string) => autoAnswer(q(east), { pos: pos(name), station: byName(name) }, real)!.answer
+    expect(ask('Mortensrud')).toBe('yes')
+    expect(ask('Tøyen')).toBe('yes')
+    expect(ask('Kolsås')).toBe('no') // samme linje, men bak toget
+    expect(ask('Vestli')).toBe('no')
+  })
+
+  it('motsatt retning gir stasjonene den andre veien', () => {
+    const west = transitStops(real, { line: '3', dir: -1, next: at('Tøyen') })
+    expect(west[0]).toBe(byName('Kolsås').id)
+    expect(west).not.toContain(byName('Mortensrud').id)
+  })
+
+  it('kartet krymper til stoppene som gjenstår, og linjen teller i gjentakelser', () => {
+    const yes = solve([q(east, 'yes')], real, settings).stations.map((s) => s.name)
+    const no = solve([q(east, 'no')], real, settings).stations.map((s) => s.name)
+    expect(yes).toContain('Mortensrud')
+    expect(yes).not.toContain('Kolsås')
+    expect(no).toContain('Kolsås')
+    expect(yes.length + no.length).toBe(101)
+    expect(questionKey({ ...q(east), item: 'm-line' })).toBe('m-line:3')
+  })
+})
+
+describe.skipIf(!existsSync(shapeFile('coast')))('kyst, vann, riksgrense og landmasse', () => {
+  const load = (k: string) => (existsSync(shapeFile(k)) ? JSON.parse(readFileSync(shapeFile(k), 'utf8')).features : [])
+  const coast = load('coast')
+  const real: GeoData = {
+    ...data,
+    shapes: { coast: coast.flatMap(outline), water: load('water').flatMap(outline), riks: load('riks').flatMap(outline) },
+    islands: coast.filter((f: { geometry: { type: string } }) => f.geometry.type === 'Polygon'),
+  }
+  const hider = (name: string) => ({ pos: pos(name), station: byName(name) })
+
+  it('avstand til en linje måles til nærmeste punkt', () => {
+    const line: LngLat[] = [[10.7, 59.9], [10.8, 59.9]]
+    expect(polylineDist([10.75, 59.91], [line])).toBeCloseTo(dist([10.75, 59.91], [10.75, 59.9]), -1)
+    expect(polylineDist([10.6, 59.9], [line])).toBeCloseTo(dist([10.6, 59.9], [10.7, 59.9]), -1)
+    expect(polylineDist([10.7, 59.9], [])).toBe(Infinity)
+  })
+
+  it('Jernbanetorget ligger nærmere kysten enn Sognsvann', () => {
+    expect(shapeDist(real, 'coast', pos('Jernbanetorget'))).toBeLessThan(1000)
+    expect(shapeDist(real, 'coast', pos('Sognsvann'))).toBeGreaterThan(5000)
+    const body: QuestionBody = { kind: 'geodist', ref: 'coast', pos: pos('Majorstuen') }
+    expect(autoAnswer(q(body), hider('Jernbanetorget'), real)!.answer).toBe('closer')
+    expect(autoAnswer(q(body), hider('Sognsvann'), real)!.answer).toBe('further')
+    const closer = solve([q(body, 'closer')], real, settings).stations.map((s) => s.name)
+    expect(closer).toContain('Jernbanetorget')
+    expect(closer).not.toContain('Sognsvann')
+  })
+
+  it('Sognsvann stasjon ligger rett ved vannet', () => {
+    expect(shapeDist(real, 'water', pos('Sognsvann'))).toBeLessThan(500)
+    const body: QuestionBody = { kind: 'geodist', ref: 'water', pos: pos('Sognsvann') }
+    expect(autoAnswer(q(body), hider('Carl Berners plass'), real)!.answer).toBe('further')
+  })
+
+  it('riksgrensen ligger øst for Oslo, så østlige stasjoner er nærmere', () => {
+    const east = shapeDist(real, 'riks', pos('Ellingsrudåsen'))
+    const west = shapeDist(real, 'riks', pos('Kolsås'))
+    expect(east).toBeGreaterThan(50000)
+    expect(east).toBeLessThan(110000)
+    expect(west - east).toBeGreaterThan(15000)
+  })
+
+  it('alle stasjoner ligger på fastlandet, og en øy i fjorden er en annen landmasse', () => {
+    expect(stations.every((s) => landmassOf(real, stationPos(s)) === -1)).toBe(true)
+    const hovedoya: LngLat = [10.7285, 59.895]
+    expect(landmassOf(real, hovedoya)).toBeGreaterThanOrEqual(0)
+    const body: QuestionBody = { kind: 'landmass', pos: hovedoya }
+    expect(autoAnswer(q(body), hider('Tøyen'), real)!.answer).toBe('no')
+    expect(autoAnswer(q({ kind: 'landmass', pos: pos('Majorstuen') }), hider('Tøyen'), real)!.answer).toBe('yes')
+    expect(solve([q(body, 'yes')], real, settings).stations).toHaveLength(0)
+  })
+})
+
+describe('hiders stasjon', () => {
+  // Stortinget og Jernbanetorget ligger så tett at sonene overlapper.
+  const between: LngLat = [(pos('Stortinget')[0] + pos('Jernbanetorget')[0]) / 2, (pos('Stortinget')[1] + pos('Jernbanetorget')[1]) / 2]
+
+  it('hider kan velge blant stasjonene som har hider i sonen', () => {
+    const reach = stationsInReach(stations, between, 400).map((s) => s.name)
+    expect(reach).toContain('Stortinget')
+    expect(reach).toContain('Jernbanetorget')
+    expect(reach).not.toContain('Majorstuen')
+  })
+
+  it('valget står så lenge hider er i sonen, ellers gjelder den nærmeste', () => {
+    expect(hiderStation(stations, between, 400, byName('Stortinget').id).name).toBe('Stortinget')
+    expect(hiderStation(stations, between, 400, byName('Jernbanetorget').id).name).toBe('Jernbanetorget')
+    expect(hiderStation(stations, pos('Kolsås'), 400, byName('Stortinget').id).name).toBe('Kolsås')
+    expect(hiderStation(stations, pos('Tøyen'), 400, null).name).toBe('Tøyen')
+  })
+})
+
+describe('steder utenfor kartgrensen finnes ikke', () => {
+  const far = { name: 'Gardermoen', pos: [11.1, 60.19] as LngLat }
+  const full: GeoData = { ...data, poi: { ...data.poi, flyplass: [far] }, shapes: { riks: [[[12.5, 59.0], [12.5, 61.0]]], coast: [[[10.7, 59.905], [10.76, 59.905]]] } }
+  const clipped = clipData(full, autoPlayArea(stations, settings))
+  const hider = { pos: pos('Tøyen'), station: byName('Tøyen') }
+
+  it('uten spillområde er alt med', () => {
+    expect(clipData(full, null)).toBe(full)
+    expect(autoAnswer(q({ kind: 'nearest', poiType: 'flyplass', pos: pos('Majorstuen') }), hider, full)!.answer).toBe('yes')
+  })
+
+  it('flyplassen og riksgrensen utenfor området gir nullsvar, og kartet krymper ikke', () => {
+    expect(clipped.poi.flyplass).toEqual([])
+    expect(clipped.poi.kino).toHaveLength(3)
+    expect(clipped.shapes.riks).toEqual([])
+    expect(clipped.shapes.coast).toHaveLength(1)
+    const airport: QuestionBody = { kind: 'nearest', poiType: 'flyplass', pos: pos('Majorstuen') }
+    expect(autoAnswer(q(airport), hider, clipped)!.answer).toBe(ANSWER_NULL)
+    expect(autoAnswer(q({ kind: 'measure', ref: 'flyplass', pos: pos('Majorstuen') }), hider, clipped)!.answer).toBe(ANSWER_NULL)
+    expect(autoAnswer(q({ kind: 'geodist', ref: 'riks', pos: pos('Majorstuen') }), hider, clipped)!.answer).toBe(ANSWER_NULL)
+    expect(autoAnswer(q({ kind: 'geodist', ref: 'coast', pos: pos('Majorstuen') }), hider, clipped)!.answer).toBe('closer')
+    expect(solve([q(airport, ANSWER_NULL)], clipped, settings).stations).toHaveLength(101)
+  })
+
+  it('data som ikke er lastet inn gir ikke noe forslag', () => {
+    expect(autoAnswer(q({ kind: 'nearest', poiType: 'museum', pos: pos('Majorstuen') }), hider, clipped)).toBeNull()
+    expect(autoAnswer(q({ kind: 'geodist', ref: 'water', pos: pos('Majorstuen') }), hider, { ...clipped, shapes: {} })).toBeNull()
+  })
+
+  it('tentacles uten noen steder innen rekkevidde gir nullsvar', () => {
+    const none: QuestionBody = { kind: 'tentacles', poiType: 'kino', pos: pos('Kolsås'), radiusM: 2000 }
+    expect(autoAnswer(q(none), hider, data)!.answer).toBe(ANSWER_NULL)
   })
 })

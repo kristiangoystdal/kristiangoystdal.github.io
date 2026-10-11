@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import MapView from './MapView'
-import { HiderPanel, MapPanel, RoundPanel, SettingsPanel } from './Panels'
+import { BonusPrompt, HiderPanel, MapPanel, RoundPanel, SettingsPanel } from './Panels'
 import QuestionsView from './QuestionsView'
 import { loadData } from './data'
-import { solve } from './geo'
+import { clipData, dist, solve } from './geo'
 import { gameFromHash, useGame, useUi, type Tab } from './store'
 import { Toast } from './notify'
-import { joinRoom, resumeRoom, roomFromHash, useSync } from './sync'
-import type { GeoData } from './types'
+import { joinRoom, resumeRoom, roomFromHash, shareSeekerPos, useSync, type SeekerPos } from './sync'
+import type { GeoData, LngLat } from './types'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'map', label: 'Kart', icon: '🗺️' },
@@ -56,8 +56,46 @@ function useSharedLink() {
   }, [])
 }
 
+const SHARE_EVERY_MS = 10000
+
+/**
+ * Deler seekers posisjon i rommet så hider kan følge med. Nettleseren gir bare
+ * posisjon mens appen er åpen. Hiders posisjon deles aldri.
+ */
+function useShareLocation() {
+  const on = useGame((s) => s.sharePos && s.mode === 'seeker')
+  const room = useSync((s) => s.room)
+  useEffect(() => {
+    if (!on || !room || !navigator.geolocation) return
+    let here: LngLat | null = null
+    let speed: number | null = null
+    let sent: SeekerPos | null = null
+    const watch = navigator.geolocation.watchPosition(
+      (p) => {
+        here = [p.coords.longitude, p.coords.latitude]
+        speed = p.coords.speed
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000 },
+    )
+    const send = () => {
+      if (!here) return
+      const t = Date.now()
+      // Ikke alle telefoner oppgir fart. Da regnes den fra forrige punkt.
+      const v = speed ?? (sent ? dist(sent.pos, here) / ((t - sent.t) / 1000) : null)
+      shareSeekerPos((sent = { pos: here, t, v: v === null ? null : Math.round(v * 10) / 10 }))
+    }
+    const timer = setInterval(send, SHARE_EVERY_MS)
+    return () => {
+      navigator.geolocation.clearWatch(watch)
+      clearInterval(timer)
+      shareSeekerPos(null)
+    }
+  }, [on, room])
+}
+
 export default function App() {
-  const [data, setData] = useState<GeoData | null>(null)
+  const [loaded, setData] = useState<GeoData | null>(null)
   const [error, setError] = useState(false)
   const tab = useUi((s) => s.tab)
   const setTab = useUi((s) => s.setTab)
@@ -75,10 +113,13 @@ export default function App() {
 
   useTheme()
   useSharedLink()
+  useShareLocation()
   useEffect(() => {
     loadData().then(setData, () => setError(true))
   }, [])
 
+  // Steder utenfor spillområdet regnes som om de ikke finnes.
+  const data = useMemo(() => loaded && clipData(loaded, settings.playArea), [loaded, settings.playArea])
   const result = useMemo(
     // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
     () => data && (mode === 'hider' ? solve([], data, settings) : solve(questions, data, settings, endgame)),
@@ -95,6 +136,7 @@ export default function App() {
       <main className="relative min-h-0 flex-1">
         <MapView data={data} result={result} />
         <Toast />
+        <BonusPrompt />
       </main>
       <aside className={`flex ${tab === 'map' ? 'max-h-[38dvh]' : 'max-h-[62dvh]'} flex-col border-t border-border bg-bg md:h-full md:max-h-none md:w-96 md:border-t-0 md:border-r`}>
         <button

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { gameNow, waitingForAnswer, type PauseKind } from './clock'
 import { place } from './form'
 import { stationPos } from './geo'
-import { useUi } from './store'
+import { useGame, useUi } from './store'
 import type { LngLat, Station } from './types'
 
 export function useNow(intervalMs = 1000) {
@@ -11,6 +12,33 @@ export function useNow(intervalMs = 1000) {
     return () => clearInterval(t)
   }, [intervalMs])
   return now
+}
+
+/** Tiden spillets klokker viser. Står stille mens spillet er på pause. */
+export function useGameNow() {
+  const pause = useGame((s) => s.round.pause)
+  return gameNow({ pause }, useNow())
+}
+
+export const PAUSE_TEXT: Record<PauseKind, { title: string; body: string }> = {
+  pause: { title: '⏸ Spillet er på pause', body: 'Alle klokker står. Alle blir stående der de er til spillet fortsetter.' },
+  rest: { title: '🌙 Hvileperiode', body: 'Alle klokker står. Før spillet fortsetter må alle tilbake til nøyaktig samme sted.' },
+}
+
+/** Det alle må vite akkurat nå: pause, eller at hiders klokke står fordi svartiden er ute. */
+export function GameStatus() {
+  const now = useGameNow()
+  const pause = useGame((s) => s.round.pause)
+  const running = useGame((s) => s.round.seekFrom !== null)
+  const waiting = useGame((s) => running && waitingForAnswer(s.questions, s.settings.size, now))
+  if (!running || (!pause && !waiting)) return null
+  const text = pause ? PAUSE_TEXT[pause.kind] : { title: 'Hiders klokke står stille', body: 'Svartiden er ute. Klokken starter igjen når svaret kommer.' }
+  return (
+    <div className="card pointer-events-auto border-accent! px-3! py-2! text-sm shadow-lg" role="status">
+      <b className="block">{text.title}</b>
+      <span className="text-xs text-muted">{text.body}</span>
+    </div>
+  )
 }
 
 export function locate(): Promise<LngLat> {

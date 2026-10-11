@@ -1,14 +1,18 @@
 import L from 'leaflet'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { formToQuestion } from './form'
-import { excluded, levelAreas, regionOf, type Result } from './geo'
+import { POI_TYPES, excluded, levelAreas, regionOf, type Result } from './geo'
 import { useGame, useUi } from './store'
+import { useSync } from './sync'
 import type { GeoData, LngLat, Settings, Station } from './types'
-import { locate } from './ui'
+import { GameStatus, locate } from './ui'
 
-const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'me'] as const
+const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'seekers', 'me'] as const
 type Group = (typeof GROUPS)[number]
 const LABEL_ZOOM = 13
+const METRO_SUFFIX = ' (T-bane)'
+/** Eldre posisjoner enn dette tegnes svakere. */
+const STALE_MS = 120000
 
 type Basemap = Settings['basemap']
 /** Bakgrunnskartene. Ingen av dem krever nøkkel. */
@@ -61,6 +65,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   const draw = useUi((s) => s.draw)
   const setDraw = useUi((s) => s.setDraw)
   const setSettings = useGame((s) => s.setSettings)
+  const seekers = useSync((s) => s.seekers)
 
   // Hider ser bare sin egen sone, aldri hvilke stasjoner seekerne har igjen.
   const hiderView = mode === 'hider'
@@ -101,7 +106,9 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
       m.remove()
       map.current = null
     }
-  }, [data])
+    // Stasjonene er de samme selv om spillområdet endrer hvilke steder som er med.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.stations])
 
   useEffect(() => {
     if (!ready || !map.current) return
@@ -196,8 +203,12 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     const draftPoi = draft && ['nearest', 'tentacles'].includes(draft.kind) ? draft.poiType : draft?.kind === 'measure' ? draft.ref : null
     const shown = layers.poi ? Object.keys(data.poi) : draftPoi ? [draftPoi] : []
     for (const key of shown) {
+      const type = POI_TYPES.find((t) => t.key === key)
+      const icon = L.divIcon({ className: 'poi-icon', html: type?.icon ?? '•', iconSize: [22, 22] })
       for (const p of data.poi[key] ?? []) {
-        L.circleMarker(ll(p.pos), { radius: 4, color: '#fff', weight: 1, fillColor: '#3b6ceb', fillOpacity: 1 }).bindTooltip(p.name).addTo(poi)
+        // T-banestasjonene tegnes alt som stasjoner.
+        if (p.name.endsWith(METRO_SUFFIX)) continue
+        L.marker(ll(p.pos), { icon, keyboard: false }).bindTooltip(`${p.name} · ${type?.label ?? key}`).addTo(poi)
       }
     }
     if (mode === 'hider' && hider.pos) {
@@ -225,6 +236,20 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     const g = groups.current.me.clearLayers()
     if (me) L.circleMarker(ll(me), { radius: 7, color: '#fff', weight: 2.5, fillColor: '#1a73e8', fillOpacity: 1, interactive: false }).addTo(g)
   }, [ready, me])
+
+  // Seekerne som deler posisjon. Det er disse hider følger med på.
+  useEffect(() => {
+    if (!ready) return
+    const g = groups.current.seekers.clearLayers()
+    for (const s of Object.values(seekers)) {
+      const fresh = Date.now() - s.t < STALE_MS
+      const at = new Date(s.t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      const speed = s.v === null ? '' : ` · ${Math.round(s.v * 3.6)} km/t`
+      L.circleMarker(ll(s.pos), { radius: 8, color: '#fff', weight: 2, fillColor: '#e8590c', fillOpacity: fresh ? 1 : 0.4 })
+        .bindTooltip(`Seeker · kl. ${at}${speed}`)
+        .addTo(g)
+    }
+  }, [ready, seekers])
 
   const findMe = async () => {
     setLocError('')
@@ -258,6 +283,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
             </>
           )}
         </div>
+        <GameStatus />
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">
             <span>Trykk på kartet: {pick.label.toLowerCase()}</span>
