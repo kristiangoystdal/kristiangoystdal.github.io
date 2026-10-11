@@ -44,8 +44,8 @@ export interface State {
 
   setSettings: (patch: Partial<Settings>) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
-  /** Hider svarer. Går utenom angre-loggen, som er seekernes. */
-  answerQuestion: (id: string, answer: string) => void
+  /** Hider svarer, eller trekker svaret med null. Går utenom angre-loggen, som er seekernes. */
+  answerQuestion: (id: string, answer: string | null) => void
   removeQuestion: (id: string) => void
   setNote: (id: string, note: string) => void
   undo: () => void

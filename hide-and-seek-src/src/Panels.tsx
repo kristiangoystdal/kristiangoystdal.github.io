@@ -70,7 +70,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
       {!hiderView && <EndgameControl result={result} />}
       <Section title="Kartlag">
         <div className="flex flex-wrap gap-1.5">
-          {LAYERS.filter((l) => l.key !== 'zones' || hiderView || endgame).map((l) => (
+          {LAYERS.filter((l) => l.key !== 'zones' || (!hiderView && endgame)).map((l) => (
             <button key={l.key} className={`btn ${layers[l.key] ? 'btn-on' : ''}`} aria-pressed={layers[l.key]} onClick={() => toggleLayer(l.key)}>
               {l.label}
             </button>
@@ -87,7 +87,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
         </div>
       </Section>
       {hiderView ? (
-        <p className="text-sm text-muted">Som hider ser du bare din egen sone på kartet. Hvilke stasjoner seekerne har igjen, vises ikke.</p>
+        <p className="text-sm text-muted">Som hider ser du alltid din egen sone på kartet, og bare den. Hvilke stasjoner seekerne har igjen, vises ikke.</p>
       ) : (
       <Section title={`Mulige stasjoner (${result.stations.length})`}>
         {result.stations.length === 0 && <p className="text-sm text-bad">Ingen stasjoner passer med svarene. Sjekk loggen for et feil svar.</p>}

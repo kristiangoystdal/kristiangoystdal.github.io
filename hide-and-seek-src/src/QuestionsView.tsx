@@ -22,7 +22,7 @@ import {
 } from './form'
 import { ANSWER_CANT, ANSWER_NULL, METRO_LINES, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
-import type { GeoData, Question } from './types'
+import type { GeoData, LngLat, Question } from './types'
 import { PAUSE_TEXT, PointInput, Section, locate, useGameNow } from './ui'
 
 const UNSURE_M = 30
@@ -112,7 +112,20 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
   const missing = !hasData(form, data)
   const walked = form.pos && form.pos2 ? dist(form.pos, form.pos2) : 0
 
-  const seeker = <PointInput label="Seekers posisjon" value={form.pos} onChange={(pos) => set({ pos })} stations={data.stations} />
+  // Kollektivlinje: neste stopp foreslås fra der seeker er, som stasjonen på linjen nærmest posisjonen.
+  const nextStop = (line: string, pos: LngLat | null) => {
+    const order = data.lines.features.find((f) => f.properties.line === line)?.properties.stations ?? []
+    const near = pos && nearestStation(data.stations.filter((x) => order.includes(x.id)), pos)
+    return near ? Math.max(0, order.indexOf(near.id)) : 0
+  }
+  const seeker = (
+    <PointInput
+      label="Seekers posisjon"
+      value={form.pos}
+      onChange={(pos) => set(form.kind === 'transit' ? { pos, next: nextStop(form.line, pos) } : { pos })}
+      stations={data.stations}
+    />
+  )
 
   return (
     <div>
@@ -171,6 +184,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       )}
       {form.kind === 'transit' && (
         <>
+          {seeker}
           <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">Kan bare stilles mens dere er om bord og i bevegelse. Svaret er ja hvis T-banen dere sitter på stopper ved hiders stasjon på resten av turen.</p>
           <div className="mb-3">
             <span className="label">Linje</span>
@@ -183,7 +197,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
                     type="button"
                     className={`btn w-11 ${form.line === f.properties.line ? 'btn-on' : ''}`}
                     style={{ borderBottom: `3px solid ${f.properties.color}` }}
-                    onClick={() => set({ line: f.properties.line, next: 0 })}
+                    onClick={() => set({ line: f.properties.line, next: nextStop(f.properties.line, form.pos) })}
                   >
                     {f.properties.line}
                   </button>
@@ -212,7 +226,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
           </label>
         </>
       )}
-      {['admin', 'nearest', 'measure', 'namelen', 'border', 'tentacles', 'geodist', 'landmass'].includes(form.kind) && seeker}
+      {['admin', 'nearest', 'measure', 'namelen', 'border', 'tentacles', 'geodist', 'landmass', 'manual'].includes(form.kind) && seeker}
       {(form.kind === 'nearest' || form.kind === 'measure' || (form.kind === 'tentacles' && form.poiType !== METRO_LINES)) && (
         <p className="-mt-2 mb-3 text-xs text-muted">
           Stedene er hentet fra OpenStreetMap og kan avvike fra kartappen dere bruker. Er dere uenige om hva som teller, sender seekerne et skjermbilde til hider.
@@ -301,7 +315,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
 
-  const answer = (q: Question, value: string) => answerQuestion(q.id, value)
+  const answer = (q: Question, value: string | null) => answerQuestion(q.id, value)
 
   /** Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå. */
   const answerFromGps = async (q: Question) => {
@@ -347,6 +361,10 @@ function HiderQuestions({ data }: { data: GeoData }) {
                 {q.answer !== null && (
                   <p className="text-sm">
                     Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
+                    {/* Trykket hider feil, kan svaret trekkes og gis på nytt. Seekerne ser at det er endret. */}
+                    <button className="ml-2 text-xs text-muted underline" onClick={() => answer(q, null)}>
+                      angre svaret
+                    </button>
                   </p>
                 )}
                 <AnswerHistory q={q} />
@@ -492,7 +510,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   return (
     <div>
       <div className="mb-4 flex gap-2">
-        <button className={`btn flex-1 ${isHider ? '' : 'btn-primary'}`} disabled={!first || (!isHider && !!blocked)} onClick={() => first && setDraft(newForm(first, lastPos))}>
+        <button className={`btn flex-1 ${isHider ? '' : 'btn-primary'}`} disabled={!first || (!isHider && !!blocked)} onClick={() => first && setDraft(newForm(first, lastPos ?? null))}>
           {isHider ? '+ Legg inn spørsmål selv' : '+ Nytt spørsmål'}
         </button>
         <button className="btn" onClick={undo} disabled={!canUndo}>
@@ -529,7 +547,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                       )}
                     </span>
                     <span className="flex gap-1.5">
-                      {/* Besvarte spørsmål er låst, så loggen viser det som faktisk ble spurt og svart. */}
+                      {/* Trykket seeker feil, kan spørsmålet rettes eller slettes helt til hider har svart. Etter det er det låst. */}
                       <button className="btn min-h-9!" disabled={q.answer !== null} onClick={() => setDraft(questionToForm(q))}>
                         Rediger
                       </button>

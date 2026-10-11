@@ -62,7 +62,7 @@ export type QuestionBody =
   /** Eldre logger: fritt valgt linjenummer. Nye spørsmål bruker «transit». */
   | { kind: 'line'; line: string }
   /** Matching: stopper T-banen seekerne sitter på ved hiders stasjon? `next` er plassen i linjens stasjonsliste. */
-  | { kind: 'transit'; line: string; dir: 1 | -1; next: number }
+  | { kind: 'transit'; line: string; dir: 1 | -1; next: number; pos?: LngLat }
   /** Measuring: avstand til kystlinjen, nærmeste vann eller riksgrensen. */
   | { kind: 'geodist'; ref: ShapeKey; pos: LngLat }
   /** Matching: er hider på samme landmasse som seeker. */
@@ -77,7 +77,7 @@ export type QuestionBody =
   /** Measuring: avstand til nærmeste fylkes- eller kommunegrense. */
   | { kind: 'border'; level: 'fylke' | 'kommune'; pos: LngLat }
   /** Spørsmål appen ikke har data til å regne ut. Hider svarer selv, og svaret loggføres uten å krympe kartet. */
-  | { kind: 'manual'; family: 'matching' | 'measuring'; subject: string }
+  | { kind: 'manual'; family: 'matching' | 'measuring'; subject: string; pos?: LngLat }
 
 export type Question = Base & QuestionBody
 export type Kind = Question['kind']

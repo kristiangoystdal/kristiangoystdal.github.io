@@ -190,7 +190,7 @@ export function formToBody(f: Form): (QuestionBody & { item: string }) | null {
       case 'line':
         return { kind: 'line', line: f.line }
       case 'transit':
-        return { kind: 'transit', line: f.line, dir: f.dir, next: f.next }
+        return f.pos && { kind: 'transit', line: f.line, dir: f.dir, next: f.next, pos: f.pos }
       case 'geodist':
         return f.pos && { kind: 'geodist', ref: f.ref as ShapeKey, pos: f.pos }
       case 'landmass':
@@ -208,7 +208,7 @@ export function formToBody(f: Form): (QuestionBody & { item: string }) | null {
       case 'tentacles':
         return f.pos && f.radiusM > 0 ? { kind: 'tentacles', poiType: f.poiType, pos: f.pos, radiusM: f.radiusM } : null
       case 'manual':
-        return { kind: 'manual', family: f.family, subject: f.text }
+        return f.pos && { kind: 'manual', family: f.family, subject: f.text, pos: f.pos }
       case 'photo':
         return f.text.trim() ? { kind: 'photo', text: f.text.trim() } : null
     }
@@ -224,7 +224,7 @@ export function questionToForm(q: Question): Form {
       : q.kind === 'thermometer'
         ? { pos: q.from, pos2: q.to, radiusM: q.minM ?? 0 }
         : q.kind === 'manual'
-          ? { family: q.family, text: q.subject }
+          ? { family: q.family, text: q.subject, pos: q.pos ?? null }
           : q
   return { ...newForm(item, null), ...body, item: item.id, id: q.id, answer: q.answer, note: q.note }
 }
@@ -262,7 +262,7 @@ export function describe(q: Question, data: GeoData): string {
     case 'transit': {
       const order = data.lines.features.find((f) => f.properties.line === q.line)?.properties.stations ?? []
       const name = (id?: string) => data.stations.find((s) => s.id === id)?.name ?? 'ukjent'
-      return `Stopper T-banen vi sitter på ved stasjonen din? (linje ${q.line} mot ${name(q.dir === 1 ? order.at(-1) : order[0])}, neste stopp ${name(order[q.next])})`
+      return `Stopper T-banen vi sitter på ved stasjonen din? (linje ${q.line} mot ${name(q.dir === 1 ? order.at(-1) : order[0])}, neste stopp ${name(order[q.next])}${q.pos ? `, seeker ved ${place(q.pos, data.stations)}` : ''})`
     }
     case 'geodist':
       return `Er du nærmere ${SHAPE_NAMES[q.ref]} enn meg? (${place(q.pos, data.stations)})`
@@ -285,7 +285,7 @@ export function describe(q: Question, data: GeoData): string {
     case 'border':
       return `Er du nærmere ${q.level === 'fylke' ? 'fylkesgrensen' : 'kommunegrensen'} enn meg? (${place(q.pos, data.stations)})`
     case 'manual':
-      return q.family === 'matching' ? `Har vi samme nærmeste ${q.subject}?` : `Er du nærmere ${q.subject} enn meg?`
+      return `${q.family === 'matching' ? `Har vi samme nærmeste ${q.subject}?` : `Er du nærmere ${q.subject} enn meg?`}${q.pos ? ` (${place(q.pos, data.stations)})` : ''}`
     case 'tentacles':
       return `Av alle ${poiPlural(q.poiType)} innen ${fmtDist(q.radiusM)} fra meg, hvilken er du nærmest? (${place(q.pos, data.stations)})`
     case 'photo':

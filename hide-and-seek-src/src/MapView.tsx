@@ -157,8 +157,8 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     for (const s of data.stations) {
       if (!s.lines.some((l) => settings.lines.includes(l))) continue
       const on = possible.has(s.id)
-      // Seeker ser ikke stasjonssonene før endgame er markert. Hider ser bare sin egen.
-      if (layers.zones && on && (hiderView || endgame)) {
+      // Hider ser alltid sin egen sone. Seeker ser sonen først i endgame, og kan slå den av.
+      if (on && (hiderView || (endgame && layers.zones))) {
         L.circle([s.lat, s.lon], {
           radius: settings.zoneRadius,
           interactive: false,
