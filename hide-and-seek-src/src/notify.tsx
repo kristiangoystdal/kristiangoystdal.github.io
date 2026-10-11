@@ -37,8 +37,8 @@ export function announce(before: Question[], after: Question[], mode: 'seeker' |
     if (!prev && q.answer === null) {
       notify({
         title: mode === 'hider' ? 'Nytt spørsmål til deg' : 'Nytt spørsmål stilt',
-        body: `${category(q)}${mode === 'hider' ? '. Åpne Hider for å svare.' : ''}`,
-        tab: mode === 'hider' ? 'hider' : 'questions',
+        body: `${category(q)}${mode === 'hider' ? '. Åpne Spørsmål for å svare.' : ''}`,
+        tab: 'questions',
       })
     } else if (q.answer !== null && prev?.answer !== q.answer && mode === 'seeker') {
       notify({ title: 'Hider har svart', body: `${category(q)} → ${answerLabel(q, q.answer)}`, tab: 'questions' })

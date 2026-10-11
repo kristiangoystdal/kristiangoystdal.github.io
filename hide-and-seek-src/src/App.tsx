@@ -136,7 +136,7 @@ export default function App() {
               {t.key === 'round' && room && (
                 <span className={`absolute top-2 right-[26%] size-2.5 rounded-full ${online ? 'bg-ok' : 'bg-muted'}`} title={online ? 'Tilkoblet rom' : 'Frakoblet'} />
               )}
-              {(mode === 'hider' ? t.key === 'hider' : t.key === 'questions') && pending > 0 && (
+              {t.key === 'questions' && pending > 0 && (
                 <span className="absolute top-1.5 right-[22%] grid size-4 place-items-center rounded-full bg-accent text-[10px] text-accent-text">{pending}</span>
               )}
             </button>

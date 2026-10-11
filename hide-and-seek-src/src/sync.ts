@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { announce } from './notify'
-import { useGame, type Round, type State } from './store'
+import { GAME_SETTINGS, useGame, type Round, type State } from './store'
 import type { Question, RoundResult, Settings } from './types'
 
 // Realtime Database trenger bare adressen. Appen bruker ingen API-nøkkel, og
@@ -33,7 +33,7 @@ export interface Shared {
   players: string
 }
 type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'players'>
-type Setup = Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size'>
+type Setup = Pick<Settings, (typeof GAME_SETTINGS)[number]>
 
 const byId = <T extends { id: string }>(items: T[]) => Object.fromEntries(items.map((x) => [x.id, JSON.stringify(x)]))
 const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(map ?? {}).map((v) => JSON.parse(v) as T)

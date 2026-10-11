@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { BASEMAPS, depRate } from './MapView'
-import { AutoHint, Countdown, DrawNote, useAutoAnswer } from './QuestionsView'
-import { CATEGORIES, DRAWS, ITEMS, MAX_HAND, answerLabel, answerOptions, describe, itemOf } from './form'
-import { ADMIN_LEVELS, POI_TYPES, autoAnswer, autoPlayArea, dist, levelAreas, nearestStation, stationPos, type Result } from './geo'
+import { CATEGORIES, DRAWS, ITEMS, MAX_HAND } from './form'
+import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, dist, levelAreas, nearestStation, stationPos, type Result } from './geo'
 import { NotifyToggle } from './notify'
 import { useGame, useUi, type Layer } from './store'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
-import type { DayKey, GeoData, LngLat, Question, Settings } from './types'
-import { PointInput, Section, locate, useNow } from './ui'
+import type { DayKey, GeoData, LngLat, Settings } from './types'
+import { PointInput, Section, useNow } from './ui'
 
 const LAYERS: { key: Layer; label: string }[] = [
   { key: 'area', label: 'Mulig område' },
@@ -119,40 +118,13 @@ export function HiderPanel({ data }: { data: GeoData }) {
   const setMode = useGame((s) => s.setMode)
   const hider = useGame((s) => s.hider)
   const setHider = useGame((s) => s.setHider)
-  const questions = useGame((s) => s.questions)
-  const saveQuestion = useGame((s) => s.saveQuestion)
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
   const locked = useGame((s) => s.round.seekFrom !== null)
-  const endgame = useGame((s) => !!s.round.endgame)
-  const auto = useAutoAnswer(data)
-  const [busy, setBusy] = useState('')
-  const [error, setError] = useState('')
 
   // Hiders stasjon er alltid den nærmeste, så den følger posisjonen.
   const place = (pos: LngLat) => setHider({ stationId: nearestStation(data.stations, pos).id, pos })
   const station = hider.pos && nearestStation(data.stations, hider.pos)
   const away = station && hider.pos ? dist(stationPos(station), hider.pos) : 0
-  const answer = (q: Question, value: string) => {
-    const { id, time: _t, answer: _a, ...body } = q
-    saveQuestion(body as never, value, id)
-  }
-
-  /** Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå. */
-  const answerFromGps = async (q: Question) => {
-    setBusy(q.id)
-    setError('')
-    try {
-      const pos = await locate()
-      place(pos)
-      const a = autoAnswer(q, { pos, station: nearestStation(data.stations, pos) }, data)
-      if (a) answer(q, a.answer)
-      else setError('Dette spørsmålet kan ikke regnes ut. Svar selv under Spørsmål.')
-    } catch (e) {
-      setError((e as Error).message)
-    }
-    setBusy('')
-  }
-
   return (
     <div>
       <Section title="Rolle">
@@ -186,67 +158,7 @@ export function HiderPanel({ data }: { data: GeoData }) {
             )}
           </Section>
 
-          {endgame && (
-            <p className="mb-5 rounded-lg border border-accent p-3 text-sm">
-              <b>Endgame er startet.</b> Seekerne er i en sone. Er det din, må du stå stille der du er.
-            </p>
-          )}
-          <Section title="Spørsmål til deg">
-            {questions.length === 0 && <p className="text-sm text-muted">Ingen spørsmål ennå. De dukker opp her når seekerne stiller dem.</p>}
-            {error && <p className="mb-2 text-xs text-bad">{error}</p>}
-            <ul className="flex flex-col gap-2">
-              {questions.map((q) => {
-                const a = auto(q)
-                return (
-                  <li key={q.id} className="card">
-                    <p className="mb-1 text-sm">{describe(q, data)}</p>
-                    {itemOf(q.item)?.rules && <p className="mb-1 text-xs">Krav til bildet: {itemOf(q.item)!.rules}</p>}
-                    <DrawNote q={q} log={questions} />
-                    <Countdown q={q} />
-                    {q.answer !== null && (
-                      <p className="text-sm">
-                        Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
-                      </p>
-                    )}
-                    {a && q.answer !== a.answer && <AutoHint q={q} auto={a} />}
-                    {q.kind === 'photo' ? (
-                      q.answer === null && (
-                        <div className="mt-2">
-                          <p className="mb-2 text-xs text-muted">Send bildet til seekerne på melding, og kvitter her.</p>
-                          <button className="btn btn-primary" onClick={() => answer(q, 'Bilde sendt')}>
-                            Bilde sendt
-                          </button>
-                        </div>
-                      )
-                    ) : q.kind === 'manual' ? (
-                      <div className="mt-2">
-                        <p className="mb-2 text-xs text-muted">Appen kan ikke regne ut dette. Svar selv:</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {answerOptions(q, data).map((o) => (
-                            <button key={o} className={`btn ${q.answer === o ? 'btn-primary' : ''}`} onClick={() => answer(q, o)}>
-                              {answerLabel(q, o)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {a && q.answer !== a.answer && (
-                          <button className="btn btn-primary" onClick={() => answer(q, a.answer)}>
-                            Svar: {answerLabel(q, a.answer)}
-                          </button>
-                        )}
-                        <button className="btn" disabled={busy === q.id} onClick={() => answerFromGps(q)}>
-                          {busy === q.id ? 'Henter posisjon…' : q.answer === null ? 'Svar med posisjonen min nå' : 'Svar på nytt med posisjonen min'}
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          </Section>
-
+          <p className="mb-5 text-sm">Spørsmålene fra seekerne ligger under <b>Spørsmål</b>. Der svarer du med posisjonen din.</p>
           <Section title="Regler for hider">
             <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
               <li>Du må være innenfor {zoneRadius} m fra stasjonen din når gjemmetiden er over.</li>
@@ -514,6 +426,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
   const set = useGame((x) => x.setSettings)
   const asked = useGame((x) => x.questions.length)
   const setDraw = useUi((x) => x.setDraw)
+  const locked = useGame((x) => x.round.seekFrom !== null)
   const hours = [...Array(25).keys()]
 
   return (
@@ -523,14 +436,14 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
           {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : 'Hele T-banenettet.'}
         </p>
         <div className="flex flex-wrap gap-1.5">
-          <button className="btn btn-primary" onClick={() => set({ playArea: autoPlayArea(data.stations, s) })}>
+          <button className="btn btn-primary" disabled={locked} onClick={() => set({ playArea: autoPlayArea(data.stations, s) })}>
             Auto fra stasjonene
           </button>
-          <button className="btn" onClick={() => setDraw([])}>
+          <button className="btn" disabled={locked} onClick={() => setDraw([])}>
             {s.playArea ? 'Tegn på nytt' : 'Tegn område på kartet'}
           </button>
           {s.playArea && (
-            <button className="btn" onClick={() => set({ playArea: null })}>
+            <button className="btn" disabled={locked} onClick={() => set({ playArea: null })}>
               Bruk hele nettet
             </button>
           )}
@@ -540,10 +453,15 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
         </p>
       </Section>
 
+      {locked && (
+        <p className="mb-5 rounded-lg border border-border bg-panel-2 p-3 text-sm">
+          🔒 Spilloppsettet er låst mens runden pågår. Det er likt for alle i rommet.
+        </p>
+      )}
       <Section title="Spillstørrelse">
         <div className="flex gap-1.5">
           {(['S', 'M', 'L'] as const).map((k) => (
-            <button key={k} className={`btn flex-1 ${s.size === k ? 'btn-on' : ''}`} aria-pressed={s.size === k} onClick={() => set({ size: k })}>
+            <button key={k} className={`btn flex-1 ${s.size === k ? 'btn-on' : ''}`} aria-pressed={s.size === k} disabled={locked} onClick={() => set({ size: k })}>
               {{ S: 'Small', M: 'Medium', L: 'Large' }[k]}
             </button>
           ))}
@@ -554,7 +472,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
       </Section>
 
       <Section title={`Sonestørrelse: ${s.zoneRadius} m`}>
-        <input className="w-full accent-accent" type="range" min={250} max={1000} step={50} value={s.zoneRadius} aria-label="Sonestørrelse i meter" onChange={(e) => set({ zoneRadius: +e.target.value })} />
+        <input className="w-full accent-accent" type="range" min={250} max={1000} step={50} value={s.zoneRadius} aria-label="Sonestørrelse i meter" disabled={locked} onChange={(e) => set({ zoneRadius: +e.target.value })} />
         <p className="text-xs text-muted">Hvor langt fra stasjonen hider kan gjemme seg.</p>
       </Section>
 
@@ -568,6 +486,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
                 className={`btn w-11 ${on ? 'btn-on' : 'opacity-50'}`}
                 style={{ borderBottom: `3px solid ${l.color}` }}
                 aria-pressed={on}
+                disabled={locked}
                 title={l.name}
                 onClick={() => set({ lines: on ? s.lines.filter((x) => x !== l.line) : [...s.lines, l.line].sort() })}
               >

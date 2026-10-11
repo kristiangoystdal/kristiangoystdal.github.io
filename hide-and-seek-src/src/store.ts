@@ -20,6 +20,9 @@ export const DEFAULT_SETTINGS: Settings = {
   playArea: null,
 }
 
+/** Innstillingene som er felles for alle i spillet og deles i rommet. */
+export const GAME_SETTINGS = ['size', 'zoneRadius', 'lines', 'playArea'] as const satisfies readonly (keyof Settings)[]
+
 export type Layer = 'lines' | 'zones' | 'area' | 'admin' | 'poi'
 
 export interface Round {
@@ -85,7 +88,9 @@ export const useGame = create<State>()(
         players: [],
         results: [],
 
-        setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+        // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
+        setSettings: (patch) =>
+          set((s) => (s.round.seekFrom !== null && GAME_SETTINGS.some((k) => k in patch) ? s : { settings: { ...s.settings, ...patch } })),
         saveQuestion: (body, answer, id) =>
           editQuestions((qs) =>
             id
