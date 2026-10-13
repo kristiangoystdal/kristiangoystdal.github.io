@@ -217,7 +217,7 @@ export function gameFromHash(hash: string): SharedGame | null {
   }
 }
 
-export type Tab = 'map' | 'questions' | 'hider' | 'round' | 'settings'
+export type Tab = 'map' | 'questions' | 'game' | 'settings'
 
 interface UiState {
   tab: Tab

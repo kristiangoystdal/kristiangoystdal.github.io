@@ -117,22 +117,27 @@ export function shareSeekerPos(p: SeekerPos | null) {
 }
 let emulated = false
 
-const withTimeout = <T>(p: Promise<T>) =>
+export const withTimeout = <T>(p: Promise<T>) =>
   Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Fikk ikke kontakt. Sjekk nettet og prøv igjen.')), TIMEOUT_MS))])
+
+/** Åpner databasen. Firebase lastes først når noen faktisk bruker et rom eller delte presets. */
+export async function openDb() {
+  const [{ initializeApp, getApps }, db] = await Promise.all([import('firebase/app'), import('firebase/database')])
+  const app = getApps()[0] ?? initializeApp(CONFIG)
+  const database = db.getDatabase(app)
+  if (EMULATOR && !emulated) {
+    const [host, port] = EMULATOR.split(':')
+    db.connectDatabaseEmulator(database, host, +port)
+    emulated = true
+  }
+  return { db, database }
+}
 
 async function connect(code: string, how: 'create' | 'join' | 'resume') {
   leaveRoom()
   useSync.setState({ room: code, status: 'connecting', error: '' })
   try {
-    // Firebase lastes først når noen faktisk bruker et rom.
-    const [{ initializeApp, getApps }, db] = await Promise.all([import('firebase/app'), import('firebase/database')])
-    const app = getApps()[0] ?? initializeApp(CONFIG)
-    const database = db.getDatabase(app)
-    if (EMULATOR && !emulated) {
-      const [host, port] = EMULATOR.split(':')
-      db.connectDatabaseEmulator(database, host, +port)
-      emulated = true
-    }
+    const { db, database } = await openDb()
     const room = db.ref(database, `rooms/${code}`)
 
     if (how === 'create') {

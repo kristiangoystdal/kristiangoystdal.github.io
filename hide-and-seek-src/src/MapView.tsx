@@ -273,7 +273,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
                 Sonen din: <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
               </>
             ) : (
-              'Sett posisjonen din under Hider'
+              'Sett posisjonen din under Kart'
             )
           ) : (
             <>

@@ -36,6 +36,7 @@ trenger dem som «data mangler», og resten virker som før.
 - `src/clock.ts`: rundens klokke. Pause og svartid som går ut stopper hiders tid.
 - `src/sync.ts`: sanntidsrom i Firebase Realtime Database. Reglene ligger i `database.rules.json`
   og må publiseres i Firebase-konsollen når de endres. Seekernes posisjon ligger under `seekers/`.
+- `src/presets.ts`: lagrede spilloppsett. De ligger på telefonen og deles under `presets/` i databasen.
 - `src/notify.tsx`: varsler om nye spørsmål og svar.
 - `src/store.ts`: Zustand. `useGame` lagres i localStorage, `useUi` gjør ikke det.
 - `src/MapView.tsx`: Leaflet-kartet og bakgrunnskartene (`BASEMAPS`, ingen krever nøkkel). `QuestionsView.tsx` og `Panels.tsx` er skjermene.

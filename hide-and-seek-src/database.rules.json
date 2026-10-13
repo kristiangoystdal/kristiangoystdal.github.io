@@ -4,14 +4,43 @@
       "$code": {
         ".read": "$code.matches(/^[A-Z0-9]{6}$/)",
         ".write": "$code.matches(/^[A-Z0-9]{6}$/)",
-        "created": { ".validate": "newData.isNumber()" },
-        "round": { ".validate": "newData.isString() && newData.val().length < 2000" },
-        "setup": { ".validate": "newData.isString() && newData.val().length < 20000" },
-        "players": { ".validate": "newData.isString() && newData.val().length < 2000" },
-        "questions": { "$id": { ".validate": "newData.isString() && newData.val().length < 2000" } },
-        "seekers": { "$id": { ".validate": "newData.isString() && newData.val().length < 200" } },
-        "results": { "$id": { ".validate": "newData.isString() && newData.val().length < 500" } },
-        "$other": { ".validate": false }
+        "created": {
+          ".validate": "newData.isNumber()"
+        },
+        "round": {
+          ".validate": "newData.isString() && newData.val().length < 2000"
+        },
+        "setup": {
+          ".validate": "newData.isString() && newData.val().length < 20000"
+        },
+        "players": {
+          ".validate": "newData.isString() && newData.val().length < 2000"
+        },
+        "questions": {
+          "$id": {
+            ".validate": "newData.isString() && newData.val().length < 2000"
+          }
+        },
+        "seekers": {
+          "$id": {
+            ".validate": "newData.isString() && newData.val().length < 200"
+          }
+        },
+        "results": {
+          "$id": {
+            ".validate": "newData.isString() && newData.val().length < 500"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "presets": {
+      ".read": true,
+      "$id": {
+        ".write": "$id.matches(/^[a-z0-9-]{1,40}$/)",
+        ".validate": "newData.isString() && newData.val().length < 20000"
       }
     }
   }

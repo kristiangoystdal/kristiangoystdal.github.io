@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BASEMAPS, depRate } from './MapView'
 import { PLANNING_MINUTES, hiderSeconds } from './clock'
 import { CATEGORIES, ITEMS, SIZE_RULES, enabledIds } from './form'
 import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, dist, hiderStation, levelAreas, stationPos, stationsInReach, type Result } from './geo'
 import { NotifyToggle } from './notify'
+import { allPresets, applyPreset, deletePreset, loadPresets, presetId, savePreset, usePresets } from './presets'
 import { useGame, useUi, type Layer } from './store'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
 import type { DayKey, GeoData, LngLat, RoundResult, Settings } from './types'
@@ -64,10 +65,11 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   const hiderView = useGame((s) => s.mode === 'hider')
   const endgame = useGame((s) => !!s.round.endgame)
   const lineColor = Object.fromEntries(data.lines.features.map((f) => [f.properties.line, f.properties.color]))
+  const hours = [...Array(25).keys()]
 
   return (
     <div>
-      {!hiderView && <EndgameControl result={result} />}
+      {hiderView ? <HiderPosition data={data} /> : <EndgameControl result={result} />}
       <Section title="Kartlag">
         <div className="flex flex-wrap gap-1.5">
           {LAYERS.filter((l) => l.key !== 'zones' || (!hiderView && endgame)).map((l) => (
@@ -86,6 +88,43 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
           ))}
         </div>
       </Section>
+      <Section title="Avganger">
+        <div className="grid grid-cols-3 gap-1.5">
+          <select className="field" value={settings.day} aria-label="Dag" onChange={(e) => setSettings({ day: e.target.value as DayKey })}>
+            {Object.entries(DAYS).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+          <select className="field" value={settings.hourFrom} aria-label="Fra klokken" onChange={(e) => setSettings({ hourFrom: +e.target.value, hourTo: Math.max(settings.hourTo, +e.target.value + 1) })}>
+            {hours.slice(0, 24).map((h) => (
+              <option key={h} value={h}>
+                fra {String(h).padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+          <select className="field" value={settings.hourTo} aria-label="Til klokken" onChange={(e) => setSettings({ hourTo: +e.target.value })}>
+            {hours.slice(settings.hourFrom + 1).map((h) => (
+              <option key={h} value={h}>
+                til {String(h).padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="mt-1 text-xs text-muted">Styrer avganger per time i stasjonslisten og på kartet.</p>
+      </Section>
+
+      <Section title="Områdegrenser på kartet">
+        <select className="field" value={settings.adminLevel} onChange={(e) => setSettings({ adminLevel: e.target.value as Settings['adminLevel'] })}>
+          {ADMIN_LEVELS.map((l) => (
+            <option key={l.key} value={l.key}>
+              {l.label}
+            </option>
+          ))}
+        </select>
+      </Section>
+
       {hiderView ? (
         <p className="text-sm text-muted">Som hider ser du alltid din egen sone på kartet, og bare den. Hvilke stasjoner seekerne har igjen, vises ikke.</p>
       ) : (
@@ -114,13 +153,11 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   )
 }
 
-export function HiderPanel({ data }: { data: GeoData }) {
-  const mode = useGame((s) => s.mode)
-  const setMode = useGame((s) => s.setMode)
+/** Hider setter posisjonen sin her, og velger stasjon når flere har hider i sonen. Blir på telefonen. */
+function HiderPosition({ data }: { data: GeoData }) {
   const hider = useGame((s) => s.hider)
   const setHider = useGame((s) => s.setHider)
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
-  const locked = useGame((s) => s.round.seekFrom !== null)
 
   // Hider velger selv blant stasjonene som har hider i sonen sin. Uten et valg gjelder den nærmeste.
   const place = (pos: LngLat) => setHider({ stationId: hiderStation(data.stations, pos, zoneRadius, hider.stationId).id, pos })
@@ -128,67 +165,68 @@ export function HiderPanel({ data }: { data: GeoData }) {
   const reach = hider.pos ? stationsInReach(data.stations, hider.pos, zoneRadius) : []
   const away = station && hider.pos ? dist(stationPos(station), hider.pos) : 0
   return (
-    <div>
-      <Section title="Rolle">
-        <div className="flex gap-1.5">
-          {(['seeker', 'hider'] as const).map((m) => (
-            <button key={m} className={`btn flex-1 ${mode === m ? 'btn-primary' : ''}`} aria-pressed={mode === m} disabled={locked && mode !== m} onClick={() => setMode(m)}>
-              {m === 'seeker' ? 'Seeker' : 'Hider'}
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-muted">
-          {locked
-            ? 'Rollen er låst til runden er ferdig.'
-            : mode === 'hider'
-              ? 'Gjemmestedet ditt blir på denne telefonen. Seekerne ser det aldri. Rollen låses når runden starter.'
-              : 'Velg hider før runden starter hvis det er du som gjemmer deg. Rollen låses når runden starter.'}
+    <Section title="Hvor er du">
+      <PointInput label="Posisjonen din" value={hider.pos} onChange={place} stations={data.stations} />
+      {station && (
+        <p className={`text-xs ${away > zoneRadius ? 'text-bad' : 'text-muted'}`}>
+          Stasjonen din er {station.name}.{away > zoneRadius && ` Du er ${Math.round(away)} m unna, utenfor sonen på ${zoneRadius} m.`}
         </p>
-        {mode === 'seeker' && (
-          <p className="mt-2 text-sm">Som seeker stiller du spørsmål under Spørsmål. Hider svarer fra sin telefon, og svaret dukker opp i loggen din.</p>
-        )}
-      </Section>
-      {mode === 'seeker' && <SharePanel />}
-
-      {mode === 'hider' && (
-        <>
-          <Section title="Hvor er du">
-            <PointInput label="Posisjonen din" value={hider.pos} onChange={place} stations={data.stations} />
-            {station && (
-              <p className={`text-xs ${away > zoneRadius ? 'text-bad' : 'text-muted'}`}>
-                Stasjonen din er {station.name}.{away > zoneRadius && ` Du er ${Math.round(away)} m unna, utenfor sonen på ${zoneRadius} m.`}
-              </p>
-            )}
-            {hider.pos && reach.length > 1 && (
-              <label className="mt-3 block">
-                <span className="label">Velg stasjonen som er din</span>
-                <select className="field" value={station?.id ?? ''} onChange={(e) => setHider({ stationId: e.target.value, pos: hider.pos })}>
-                  {reach.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({Math.round(dist(stationPos(s), hider.pos!))} m)
-                    </option>
-                  ))}
-                </select>
-                <span className="mt-1 block text-xs text-muted">Du står i sonen til flere stasjoner. Spørsmål om stasjonen din svares ut fra den du velger.</span>
-              </label>
-            )}
-          </Section>
-
-          <p className="mb-5 text-sm">Spørsmålene fra seekerne ligger under <b>Spørsmål</b>. Der svarer du med posisjonen din.</p>
-          <Section title="Regler for hider">
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-              <li>Du må være innenfor {zoneRadius} m fra stasjonen din når gjemmetiden er over.</li>
-              <li>Avstander regnes i luftlinje fra der du faktisk står, ikke fra stasjonen.</li>
-              <li>Står du nær en grense, varsler appen. Da bør du måle selv før du svarer.</li>
-              <li>Fotospørsmål har ingen fasit i appen. Svaret loggføres som notat.</li>
-              <li>Svarer du ikke innen svartiden, står klokken din til svaret kommer.</li>
-              <li>I endgame må gjemmestedet være innen ca. 3 m fra en vei eller sti, og offentlig tilgjengelig hele spilletiden.</li>
-              <li>Seekerne som deler posisjon, vises som oransje punkter på kartet ditt.</li>
-            </ul>
-          </Section>
-        </>
       )}
-    </div>
+      {hider.pos && reach.length > 1 && (
+        <label className="mt-3 block">
+          <span className="label">Velg stasjonen som er din</span>
+          <select className="field" value={station?.id ?? ''} onChange={(e) => setHider({ stationId: e.target.value, pos: hider.pos })}>
+            {reach.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} ({Math.round(dist(stationPos(s), hider.pos!))} m)
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-muted">Du står i sonen til flere stasjoner. Spørsmål om stasjonen din svares ut fra den du velger.</span>
+        </label>
+      )}
+      <p className="mt-2 text-xs text-muted">Seekerne ser aldri posisjonen din. Sonen din vises alltid på kartet.</p>
+    </Section>
+  )
+}
+
+/** Hvem telefonen spiller som. Velges før runden og er låst mens den pågår. */
+function RolePanel() {
+  const mode = useGame((s) => s.mode)
+  const setMode = useGame((s) => s.setMode)
+  const zoneRadius = useGame((s) => s.settings.zoneRadius)
+  const locked = useGame((s) => s.round.seekFrom !== null)
+  return (
+    <Section title="Rolle">
+      <div className="flex gap-1.5">
+        {(['seeker', 'hider'] as const).map((m) => (
+          <button key={m} className={`btn flex-1 ${mode === m ? 'btn-primary' : ''}`} aria-pressed={mode === m} disabled={locked && mode !== m} onClick={() => setMode(m)}>
+            {m === 'seeker' ? '🔍 Seeker' : '🙈 Hider'}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        {locked
+          ? 'Rollen er låst til runden er ferdig.'
+          : mode === 'hider'
+            ? 'Du gjemmer deg. Sett posisjonen din under Kart, og svar på spørsmålene under Spørsmål. Rollen låses når runden starter.'
+            : 'Du leter. Still spørsmål under Spørsmål, så dukker hiders svar opp i loggen. Rollen låses når runden starter.'}
+      </p>
+      {mode === 'hider' && (
+        <details className="card mt-2">
+          <summary className="cursor-pointer text-sm font-medium">Regler for hider</summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
+            <li>Du må være innenfor {zoneRadius} m fra stasjonen din når gjemmetiden er over.</li>
+            <li>Avstander regnes i luftlinje fra der du faktisk står, ikke fra stasjonen.</li>
+            <li>Står du nær en grense, varsler appen. Da bør du måle selv før du svarer.</li>
+            <li>Fotospørsmål har ingen fasit i appen. Svaret loggføres som notat.</li>
+            <li>Svarer du ikke innen svartiden, står klokken din til svaret kommer.</li>
+            <li>I endgame må gjemmestedet være innen ca. 3 m fra en vei eller sti, og offentlig tilgjengelig hele spilletiden.</li>
+            <li>Seekerne som deler posisjon, vises som oransje punkter på kartet ditt.</li>
+          </ul>
+        </details>
+      )}
+    </Section>
   )
 }
 
@@ -342,13 +380,14 @@ export function BonusPrompt() {
           <input className="field" type="number" min={0} inputMode="numeric" autoFocus value={minutes} placeholder="0" onChange={(e) => setMinutes(e.target.value)} />
         </label>
         <button className="btn btn-primary w-full">Lagre</button>
-        <p className="mt-2 text-xs text-muted">Kan rettes etterpå under Runde.</p>
+        <p className="mt-2 text-xs text-muted">Kan rettes etterpå under Spill.</p>
       </form>
     </div>
   )
 }
 
-export function RoundPanel() {
+/** Alt som gjelder selve spillet: rom, rolle, runde og poeng. */
+export function GamePanel() {
   const wall = useNow()
   const now = useGameNow()
   const g = useGame()
@@ -369,6 +408,7 @@ export function RoundPanel() {
   return (
     <div>
       <RoomPanel />
+      <RolePanel />
       <Section title="Runde">
         <div className="card text-center">
           {seekFrom === null ? (
@@ -546,6 +586,66 @@ export function RoundPanel() {
   )
 }
 
+/** Lagrede spilloppsett: spørsmål, størrelse, sone, linjer, spillområde og gjemmetid. */
+function PresetPanel({ locked }: { locked: boolean }) {
+  const presets = usePresets()
+  const [name, setName] = useState('')
+  const list = allPresets(presets)
+  useEffect(() => void loadPresets(), [])
+
+  return (
+    <Section title="Lagrede oppsett">
+      {list.length === 0 && <p className="mb-2 text-sm text-muted">Ingen lagrede oppsett ennå. Sett opp spillet under, og lagre det her.</p>}
+      <ul className="mb-2 flex flex-col gap-1.5">
+        {list.map((p) => (
+          <li key={p.id} className="card flex items-center justify-between gap-2 py-2!">
+            <span className="min-w-0 text-sm">
+              <b className="block truncate">{p.name}</b>
+              <span className="text-xs text-muted">
+                {SIZE_NAMES[p.setup.size]} · {p.setup.questions ? `${p.setup.questions.length} spørsmål` : 'standard spørsmål'} · {p.hidingMinutes} min · {p.shared ? 'delt med alle' : 'bare denne telefonen'}
+              </span>
+            </span>
+            <span className="flex shrink-0 gap-1.5">
+              <button className="btn btn-primary min-h-9!" disabled={locked} onClick={() => applyPreset(p)}>
+                Bruk
+              </button>
+              <button
+                className="btn min-h-9! text-bad"
+                aria-label={`Slett ${p.name}`}
+                onClick={() => {
+                  if (confirm(`Slette «${p.name}»? ${p.shared ? 'Det fjernes for alle.' : ''}`)) void deletePreset(p.id)
+                }}
+              >
+                Slett
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <form
+        className="flex gap-1.5"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (list.some((p) => p.id === presetId(name)) && !confirm(`Det finnes alt et oppsett med navnet «${name.trim()}». Erstatte det?`)) return
+          void savePreset(name)
+          setName('')
+        }}
+      >
+        <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Navn på oppsettet" aria-label="Navn på oppsettet" maxLength={40} />
+        <button className="btn" disabled={!presetId(name)}>
+          Lagre
+        </button>
+      </form>
+      {presets.note && (
+        <p className="mt-1 text-xs text-muted" role="status">
+          {presets.note}
+        </p>
+      )}
+      <p className="mt-1 text-xs text-muted">Lagrer spørsmålsutvalg, størrelse, sone, linjer, spillområde og gjemmetid. Oppsettet deles med alle som bruker appen, og hvem som helst kan endre eller slette det.</p>
+    </Section>
+  )
+}
+
 const SIZE_NAMES = { S: 'Small', M: 'Medium', L: 'Large' }
 /** Tentacles-spørsmålene reglene har fra Medium og opp. */
 const TENTACLES_2KM = ITEMS.filter((i) => i.category === 'Tentacles' && i.sizes.includes('M')).map((i) => i.id)
@@ -559,12 +659,12 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
   const asked = useGame((x) => x.questions.length)
   const setDraw = useUi((x) => x.setDraw)
   const locked = useGame((x) => x.round.seekFrom !== null)
-  const hours = [...Array(25).keys()]
   const enabled = enabledIds(s)
   const tentacles = TENTACLES_2KM.every((id) => enabled.includes(id))
 
   return (
     <div>
+      <PresetPanel locked={locked} />
       <Section title="Spillområde">
         <p className="mb-2 text-sm">
           {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : 'Hele T-banenettet.'}
@@ -714,43 +814,6 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
             )
           })}
         </div>
-      </Section>
-
-      <Section title="Avganger">
-        <div className="grid grid-cols-3 gap-1.5">
-          <select className="field" value={s.day} aria-label="Dag" onChange={(e) => set({ day: e.target.value as DayKey })}>
-            {Object.entries(DAYS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select className="field" value={s.hourFrom} aria-label="Fra klokken" onChange={(e) => set({ hourFrom: +e.target.value, hourTo: Math.max(s.hourTo, +e.target.value + 1) })}>
-            {hours.slice(0, 24).map((h) => (
-              <option key={h} value={h}>
-                fra {String(h).padStart(2, '0')}
-              </option>
-            ))}
-          </select>
-          <select className="field" value={s.hourTo} aria-label="Til klokken" onChange={(e) => set({ hourTo: +e.target.value })}>
-            {hours.slice(s.hourFrom + 1).map((h) => (
-              <option key={h} value={h}>
-                til {String(h).padStart(2, '0')}
-              </option>
-            ))}
-          </select>
-        </div>
-        <p className="mt-1 text-xs text-muted">Styrer avganger per time i stasjonslisten og på kartet.</p>
-      </Section>
-
-      <Section title="Områdegrenser på kartet">
-        <select className="field" value={s.adminLevel} onChange={(e) => set({ adminLevel: e.target.value as Settings['adminLevel'] })}>
-          {ADMIN_LEVELS.map((l) => (
-            <option key={l.key} value={l.key}>
-              {l.label}
-            </option>
-          ))}
-        </select>
       </Section>
 
       <Section title="Utseende">

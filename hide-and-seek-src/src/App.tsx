@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import MapView from './MapView'
-import { BonusPrompt, HiderPanel, MapPanel, RoundPanel, SettingsPanel } from './Panels'
+import { BonusPrompt, GamePanel, MapPanel, SettingsPanel } from './Panels'
 import QuestionsView from './QuestionsView'
 import { loadData } from './data'
 import { clipData, dist, solve } from './geo'
@@ -12,13 +12,9 @@ import type { GeoData, LngLat } from './types'
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'map', label: 'Kart', icon: '🗺️' },
   { key: 'questions', label: 'Spørsmål', icon: '❓' },
-  // Den midterste fanen viser rollen telefonen har. Se ROLE_TAB.
-  { key: 'hider', label: 'Hider', icon: '🙈' },
-  { key: 'round', label: 'Runde', icon: '⏱️' },
+  { key: 'game', label: 'Spill', icon: '⏱️' },
   { key: 'settings', label: 'Oppsett', icon: '⚙️' },
 ]
-
-const ROLE_TAB = { hider: { label: 'Hider', icon: '🙈' }, seeker: { label: 'Seeker', icon: '🔍' } }
 
 function useTheme() {
   const theme = useGame((s) => s.settings.theme)
@@ -159,12 +155,11 @@ export default function App() {
           </div>
           {tab === 'map' && <MapPanel data={data} result={result} />}
           {tab === 'questions' && <QuestionsView data={data} result={result} />}
-          {tab === 'hider' && <HiderPanel data={data} />}
-          {tab === 'round' && <RoundPanel />}
+          {tab === 'game' && <GamePanel />}
           {tab === 'settings' && <SettingsPanel data={data} result={result} />}
         </div>
         <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Skjermer">
-          {TABS.map((tab0) => ({ ...tab0, ...(tab0.key === 'hider' ? ROLE_TAB[mode] : {}) })).map((t) => (
+          {TABS.map((t) => (
             <button
               key={t.key}
               className={`relative flex min-h-14 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${tab === t.key ? 'text-accent' : 'text-muted'}`}
@@ -175,7 +170,7 @@ export default function App() {
                 {t.icon}
               </span>
               {t.label}
-              {t.key === 'round' && room && (
+              {t.key === 'game' && room && (
                 <span className={`absolute top-2 right-[26%] size-2.5 rounded-full ${online ? 'bg-ok' : 'bg-muted'}`} title={online ? 'Tilkoblet rom' : 'Frakoblet'} />
               )}
               {t.key === 'questions' && pending > 0 && (

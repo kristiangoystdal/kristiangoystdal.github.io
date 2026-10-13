@@ -338,7 +338,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
 
   return (
     <>
-      {!hasPos && <p className="mb-3 text-xs text-muted">Appen henter posisjonen din når du svarer. Du kan også sette den selv under Hider.</p>}
+      {!hasPos && <p className="mb-3 text-xs text-muted">Appen henter posisjonen din når du svarer. Du kan også sette den selv under Kart.</p>}
       {endgame && (
         <p className="mb-5 rounded-lg border border-accent p-3 text-sm">
           <b>Endgame er startet.</b> Seekerne er i en sone. Er det din, må du stå stille der du er.
