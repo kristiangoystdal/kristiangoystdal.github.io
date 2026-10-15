@@ -308,6 +308,17 @@ trigger autosave — only `mutate()` does, since those are bulk replacements,
 not incremental edits, and a Gist pull immediately autosaving back to the
 same Gist would be a pointless round-trip.
 
+**Auto-pull.** `autoPullFromGist()` runs on page load and on
+`visibilitychange` → visible (throttled to once per 30 s, skipped while any
+`<dialog>` is open). With a token + Gist id saved, it GETs the Gist and does
+nothing if `updated_at` matches our stored value; otherwise it pulls
+(`fetchGistState`, shared with the manual "Hent fra Gist" button). A
+`kortbok-gist-dirty` flag (`"1"` set by `mutate()`/`replaceState()`, `"0"`
+after a successful push or pull) decides how: clean → applied silently with
+a toast; dirty → `confirmDialog` first. A *missing* flag counts as dirty, so
+a browser that predates it asks once instead of silently overwriting.
+Not gated by the autosave checkbox.
+
 **Conflict check (last-write-wins guard).** `kortbok-gist-updated-at`
 (`localStorage`) stores `{gistId, updatedAt}` from the Gist's `updated_at`
 field as of our last successful push or pull — `getStoredGistUpdatedAt`/

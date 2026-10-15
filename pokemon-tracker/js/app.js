@@ -10,8 +10,10 @@
 	const GIST_ID_KEY = "kortbok-gist-id";
 	const GIST_UPDATED_KEY = "kortbok-gist-updated-at";
 	const AUTO_SYNC_KEY = "kortbok-gist-autosync";
+	const GIST_DIRTY_KEY = "kortbok-gist-dirty";
 	const GIST_FILENAME = "kortbok-data.json";
 	const AUTO_GIST_DELAY_MS = 2500;
+	const AUTO_PULL_MIN_INTERVAL_MS = 30000;
 	const PLATFORMS = ["Finn", "Facebook", "Vipps / lokalt", "Cardmarket", "Annet"];
 
 	let storageOk = true;
@@ -21,6 +23,8 @@
 	let lastParsed = null; // { rows, meta } from the last CSV picked for import
 	let editingCardId = null; // card id being edited in the card dialog, or null when adding
 	let autoGistTimer = null; // debounce handle for scheduleAutoGistPush
+	let lastAutoPullAt = 0; // throttles autoPullFromGist on tab refocus
+	let toastTimer = null;
 
 	// TCGdex "Legg til kort" search dialog state.
 	let findResults = []; // brief search results for the current query
@@ -94,6 +98,7 @@
 	function mutate(fn) {
 		fn(state);
 		saveState();
+		markGistDirty(true);
 		renderAll();
 		scheduleAutoGistPush();
 	}
@@ -103,6 +108,7 @@
 		obj.purchases = Array.isArray(obj.purchases) ? obj.purchases : [];
 		state = obj;
 		saveState();
+		markGistDirty(true); // a Gist pull clears this right after
 		selectedIds = new Set();
 		renderAll();
 	}
@@ -172,6 +178,13 @@
 	}
 	function clearWarning() {
 		document.getElementById("warningBanner").classList.add("hidden");
+	}
+	function showToast(msg) {
+		const el = document.getElementById("toast");
+		el.textContent = msg;
+		el.classList.remove("hidden");
+		clearTimeout(toastTimer);
+		toastTimer = setTimeout(() => el.classList.add("hidden"), 4000);
 	}
 
 	// ---------- derived data ----------
@@ -2590,6 +2603,96 @@
 		localStorage.setItem(GIST_UPDATED_KEY, JSON.stringify({ gistId, updatedAt }));
 	}
 
+	// "Local changes not yet pushed". Set by mutate() and replaceState(),
+	// cleared ("0") by a successful push or pull. A missing key (browser that
+	// predates this flag) counts as dirty, so the first auto-pull there asks
+	// instead of silently overwriting.
+	function markGistDirty(dirty) {
+		localStorage.setItem(GIST_DIRTY_KEY, dirty ? "1" : "0");
+	}
+	function isGistDirty() {
+		return localStorage.getItem(GIST_DIRTY_KEY) !== "0";
+	}
+
+	// Fetches the Gist and its parsed Kortbok state. The Gist API cuts
+	// `content` off at ~1 MB and sets `truncated`; the full file then has to
+	// come from `raw_url`. Also falls back when `content` doesn't parse, in
+	// case the flag is ever missing. Pass `data` to reuse a Gist response
+	// already fetched.
+	async function fetchGistState(token, gistId, data) {
+		if (!data) {
+			const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+				headers: ghHeaders(token),
+				cache: "no-store",
+			});
+			if (!res.ok) throw new Error(`GitHub API-feil (${res.status})`);
+			data = await res.json();
+		}
+		const file = data.files[GIST_FILENAME];
+		if (!file) throw new Error(`Fant ingen ${GIST_FILENAME} i denne Gisten.`);
+		let parsed = null;
+		if (!file.truncated) {
+			try {
+				parsed = JSON.parse(file.content);
+			} catch (_) {}
+		}
+		if (!parsed) {
+			const rawRes = await fetch(file.raw_url, { cache: "no-store" });
+			if (!rawRes.ok) throw new Error(`Kunne ikke hente hele filen (${rawRes.status})`);
+			parsed = JSON.parse(await rawRes.text());
+		}
+		if (!isValidState(parsed)) throw new Error("Innholdet er ikke gyldig Kortbok-data.");
+		return { data, parsed };
+	}
+
+	function applyPulledState(gistId, data, parsed) {
+		setStoredGistUpdatedAt(gistId, data.updated_at);
+		replaceState(parsed);
+		markGistDirty(false);
+	}
+
+	// Runs on page load and when the tab becomes visible again. Only pulls
+	// when the Gist's `updated_at` differs from what we last synced; with no
+	// unpushed local changes it just applies it, otherwise it asks first.
+	// Skipped while a dialog is open so it never yanks state mid-edit.
+	async function autoPullFromGist() {
+		const token = localStorage.getItem(TOKEN_KEY);
+		const gistId = localStorage.getItem(GIST_ID_KEY);
+		if (!token || !gistId) return;
+		if (document.querySelector("dialog[open]")) return;
+		if (Date.now() - lastAutoPullAt < AUTO_PULL_MIN_INTERVAL_MS) return;
+		lastAutoPullAt = Date.now();
+		try {
+			const metaRes = await fetch(`https://api.github.com/gists/${gistId}`, {
+				headers: ghHeaders(token),
+				cache: "no-store",
+			});
+			if (!metaRes.ok) throw new Error(`GitHub API-feil (${metaRes.status})`);
+			const meta = await metaRes.json();
+			if (meta.updated_at === getStoredGistUpdatedAt(gistId)) return;
+
+			const { data, parsed } = await fetchGistState(token, gistId, meta);
+			if (isGistDirty()) {
+				const ok = await confirmDialog(
+					"Gisten har nyere data (fra en annen enhet), men du har også endringer her som ikke er lastet opp. Hente fra Gist? Endringene i denne nettleseren går da tapt.",
+				);
+				if (!ok) {
+					setSyncStatus(
+						"Gisten har nyere data som ikke er hentet. Last opp for å overskrive den, eller hent for å bruke den.",
+						"err",
+					);
+					return;
+				}
+			}
+			applyPulledState(gistId, data, parsed);
+			setSyncStatus("Hentet nyere data fra Gist automatisk.", "ok");
+			showToast("Hentet nyere data fra Gist.");
+		} catch (err) {
+			console.error(err);
+			setSyncStatus(`Automatisk henting feilet: ${err.message}`, "err");
+		}
+	}
+
 	function ghHeaders(token) {
 		return {
 			Authorization: `token ${token}`,
@@ -2628,6 +2731,7 @@
 				if (known) {
 					const checkRes = await fetch(`https://api.github.com/gists/${gistId}`, {
 						headers: ghHeaders(token),
+						cache: "no-store",
 					});
 					if (checkRes.ok) {
 						const remote = await checkRes.json();
@@ -2668,6 +2772,7 @@
 			localStorage.setItem(TOKEN_KEY, token);
 			localStorage.setItem(GIST_ID_KEY, data.id);
 			setStoredGistUpdatedAt(data.id, data.updated_at);
+			markGistDirty(false);
 			setSyncStatus(
 				silent ? `Autolagret til Gist ${data.id}.` : `Lastet opp til Gist ${data.id}.`,
 				"ok",
@@ -2756,29 +2861,7 @@
 			}
 			setSyncStatus("Henter…", "");
 			try {
-				const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-					headers: ghHeaders(token),
-				});
-				if (!res.ok) throw new Error(`GitHub API-feil (${res.status})`);
-				const data = await res.json();
-				const file = data.files[GIST_FILENAME];
-				if (!file) throw new Error(`Fant ingen ${GIST_FILENAME} i denne Gisten.`);
-				// The Gist API cuts `content` off at ~1 MB and sets `truncated`;
-				// the full file then has to come from `raw_url`.
-				// Also falls back when `content` doesn't parse, in case the flag is
-				// ever missing.
-				let parsed = null;
-				if (!file.truncated) {
-					try {
-						parsed = JSON.parse(file.content);
-					} catch (_) {}
-				}
-				if (!parsed) {
-					const rawRes = await fetch(file.raw_url, { cache: "no-store" });
-					if (!rawRes.ok) throw new Error(`Kunne ikke hente hele filen (${rawRes.status})`);
-					parsed = JSON.parse(await rawRes.text());
-				}
-				if (!isValidState(parsed)) throw new Error("Innholdet er ikke gyldig Kortbok-data.");
+				const { data, parsed } = await fetchGistState(token, gistId);
 				const ok = await confirmDialog(
 					"Dette overskriver dataene dine i denne nettleseren med innholdet fra Gisten. Fortsette?",
 				);
@@ -2788,8 +2871,7 @@
 				}
 				localStorage.setItem(TOKEN_KEY, token);
 				localStorage.setItem(GIST_ID_KEY, gistId);
-				setStoredGistUpdatedAt(gistId, data.updated_at);
-				replaceState(parsed);
+				applyPulledState(gistId, data, parsed);
 				setSyncStatus("Hentet fra Gist.", "ok");
 			} catch (err) {
 				console.error(err);
@@ -2852,6 +2934,10 @@
 	initKjopEvents();
 	initImportEvents();
 	renderAll();
+	autoPullFromGist();
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible") autoPullFromGist();
+	});
 
 	window.KB.app = { mutate, replaceState, uid };
 })();
