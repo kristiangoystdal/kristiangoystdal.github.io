@@ -3,8 +3,8 @@
 Static page, no build step. Classic `<script>` tags (not ES modules) sharing
 `window.KB`, so it also works from `file://`.
 
-- `index.html` — all CSS inline in `<head><style>`, markup for the four tabs
-  (Oversikt, Samling, Salg, Import og data) and five `<dialog>` elements.
+- `index.html` — all CSS inline in `<head><style>`, markup for the five tabs
+  (Oversikt, Samling, Salg, Kjøp, Import og data) and the `<dialog>` elements.
 - `js/csv.js` → `KB.csv` — RFC 4180 parser (`parse`), locale-ish number
   parsing (`parseNumber`), Collectr export → card rows (`parseCollectrCSV`),
   the reverse mapping for CSV export (`toCollectrCSV`), and the id builder
@@ -31,8 +31,17 @@ Stored as one JSON document in `localStorage["kortbok.v1"]`:
   sales: [{ id, date, title, platform, note, price, shipping, items: [...] }],
   meta: { lastImport, lastBackup, priceDate },
   priceHistory: [{ date, prices: { [cardId]: price } }],
+  purchases: [{ id, date, amount, note }],
 }
 ```
+
+**Purchase log (`purchases`, "Kjøp" tab).** A plain list of money spent on
+cards ("200 kr here, 1700 kr there") — deliberately *not* tied to any card,
+so it doesn't bring back per-card cost tracking (see below). Oversikt shows
+"Brukt på kjøp" (sum of `amount`), "Netto" (`salesTotals().revenue` minus
+that) and "Netto inkl. samlingen" (Netto plus `collectionTotals().value`).
+Missing on older backups/Gists — `loadState`/`replaceState` default it to
+`[]`. `renderKjop`/`openPurchaseDialog`/`initKjopEvents` in `app.js`.
 
 **No cost tracking.** Kortbok deliberately has no concept of purchase cost
 anywhere — not on a card, not on a sale, not on a sale item. Every "how am I
@@ -278,7 +287,9 @@ Same pattern as `pokedex/index.html`: a personal access token (`gist`
 scope) and a Gist id, both kept in `localStorage` (`kortbok-gh-token`,
 `kortbok-gist-id`), sent directly to `api.github.com`. Push writes the whole
 state as one JSON file in the Gist; pull overwrites local state after a
-confirm dialog. This is optional — the page works fully offline via
+confirm dialog. The Gist API truncates file `content` at ~1 MB
+(`truncated: true`), so pull falls back to fetching `raw_url` in that case;
+push writes compact (non-indented) JSON to stay small. This is optional — the page works fully offline via
 `localStorage` alone.
 
 **Autosave.** The manual push button and autosave both funnel through one

@@ -856,6 +856,7 @@
 					Samling
 				</button>
 				<button type="button" class="tab-btn" data-tab="salg">Salg</button>
+				<button type="button" class="tab-btn" data-tab="kjop">Kjøp</button>
 				<button type="button" class="tab-btn" data-tab="import">
 					Import og data
 				</button>
@@ -895,6 +896,25 @@
 						<div class="stat-card">
 							<div class="stat-label">Kort igjen</div>
 							<div class="stat-value" id="statCardsLeft">0</div>
+						</div>
+					</div>
+
+					<div class="section-title">Kjøp</div>
+					<div class="stats-grid">
+						<div class="stat-card">
+							<div class="stat-label">Brukt på kjøp</div>
+							<div class="stat-value" id="statSpent">0 kr</div>
+							<div class="stat-note" id="statSpentNote"></div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">Netto</div>
+							<div class="stat-value" id="statNet">0 kr</div>
+							<div class="stat-note">Omsatt minus brukt på kjøp</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">Netto inkl. samlingen</div>
+							<div class="stat-value" id="statNetWithValue">0 kr</div>
+							<div class="stat-note">Netto pluss verdien av kortene du har igjen</div>
 						</div>
 					</div>
 
@@ -1010,6 +1030,15 @@
 					/>
 				</div>
 				<div id="salesList"></div>
+			</section>
+
+			<!-- Kjøp -->
+			<section id="view-kjop" class="view">
+				<div style="margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+					<button type="button" class="btn" id="addPurchaseBtn">Legg til kjøp</button>
+					<span class="muted" id="purchaseSummary"></span>
+				</div>
+				<div id="purchaseList"></div>
 			</section>
 
 			<!-- Import og data -->
@@ -1377,6 +1406,32 @@
 						Avbryt
 					</button>
 					<button type="submit" class="btn">Lagre salg</button>
+				</div>
+			</form>
+		</dialog>
+
+		<!-- Legg til / rediger kjøp -->
+		<dialog id="purchaseDialog">
+			<h2 id="purchaseDialogTitle">Legg til kjøp</h2>
+			<form id="purchaseForm">
+				<div class="dialog-field">
+					<label for="purchaseAmount">Beløp (kr)</label>
+					<input type="number" id="purchaseAmount" min="0" step="0.01" inputmode="decimal" />
+				</div>
+				<div class="dialog-field">
+					<label for="purchaseDate">Dato</label>
+					<input type="date" id="purchaseDate" />
+				</div>
+				<div class="dialog-field">
+					<label for="purchaseNote">Beskrivelse (valgfritt)</label>
+					<input type="text" id="purchaseNote" placeholder="F.eks. booster box, lot fra Finn…" />
+				</div>
+				<div class="dialog-error" id="purchaseError"></div>
+				<div class="dialog-actions">
+					<button type="button" class="btn secondary" id="purchaseCancelBtn">
+						Avbryt
+					</button>
+					<button type="submit" class="btn">Lagre kjøp</button>
 				</div>
 			</form>
 		</dialog>

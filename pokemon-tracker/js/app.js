@@ -36,6 +36,7 @@
 	let editingSaleId = null; // sale id being edited via the new-sale dialog, or null when adding
 	let editingSaleShipping = null; // shipping carried through from an edited sale (no UI control for it anymore)
 	let editingManualSaleId = null; // sale id being edited via the no-card manual dialog, or null when adding
+	let editingPurchaseId = null; // purchase id being edited in the purchase dialog, or null when adding
 
 	// ---------- storage ----------
 
@@ -45,6 +46,7 @@
 			sales: [],
 			meta: { lastImport: null, lastBackup: null, priceDate: null },
 			priceHistory: [],
+			purchases: [],
 		};
 	}
 
@@ -68,6 +70,7 @@
 			parsed.meta.lastBackup = parsed.meta.lastBackup || null;
 			parsed.meta.priceDate = parsed.meta.priceDate || null;
 			parsed.priceHistory = Array.isArray(parsed.priceHistory) ? parsed.priceHistory : [];
+			parsed.purchases = Array.isArray(parsed.purchases) ? parsed.purchases : [];
 			return parsed;
 		} catch (err) {
 			console.error("Kortbok: could not load state", err);
@@ -96,6 +99,8 @@
 	}
 
 	function replaceState(obj) {
+		// Backups/Gists from before the purchase log have no `purchases`.
+		obj.purchases = Array.isArray(obj.purchases) ? obj.purchases : [];
 		state = obj;
 		saveState();
 		selectedIds = new Set();
@@ -261,6 +266,10 @@
 		});
 		const count = state.sales.length - draftCount;
 		return { revenue, overMarket, cardsSold, draftCount, count };
+	}
+
+	function purchasesTotal() {
+		return state.purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
 	}
 
 	function portfolioBreakdown() {
@@ -508,7 +517,8 @@
 	// ---------- render: Oversikt ----------
 
 	function renderOversikt() {
-		const hasData = state.cards.length > 0 || state.sales.length > 0;
+		const hasData =
+			state.cards.length > 0 || state.sales.length > 0 || state.purchases.length > 0;
 		document.getElementById("emptyState").classList.toggle("hidden", hasData);
 		document
 			.getElementById("oversiktContent")
@@ -529,6 +539,20 @@
 			? `+ ${st.draftCount} kladd${st.draftCount === 1 ? "" : "er"} (ikke med her)`
 			: "";
 		document.getElementById("statCardsLeft").textContent = String(ct.qty);
+
+		const spent = purchasesTotal();
+		document.getElementById("statSpent").textContent = fmtMoney0(spent);
+		document.getElementById("statSpentNote").textContent = state.purchases.length
+			? `${state.purchases.length} kjøp`
+			: "Ingen kjøp registrert";
+		const net = st.revenue - spent;
+		const netEl = document.getElementById("statNet");
+		netEl.textContent = fmtMoney0(net);
+		netEl.className = `stat-value ${gainClass(net)}`;
+		const withValue = net + ct.value;
+		const withValueEl = document.getElementById("statNetWithValue");
+		withValueEl.textContent = fmtMoney0(withValue);
+		withValueEl.className = `stat-value ${gainClass(withValue)}`;
 
 		document.getElementById("statValue").textContent = fmtMoney0(ct.value);
 		document.getElementById("statPriceDate").textContent = state.meta.priceDate
@@ -2101,6 +2125,96 @@
 			});
 	}
 
+	// ---------- render: Kjøp ----------
+
+	function renderKjop() {
+		const total = purchasesTotal();
+		document.getElementById("purchaseSummary").textContent = state.purchases.length
+			? `${state.purchases.length} kjøp · totalt ${fmtMoney0(total)}`
+			: "";
+		const list = document.getElementById("purchaseList");
+		if (!state.purchases.length) {
+			list.innerHTML = `<p class="muted">Ingen kjøp registrert.</p>`;
+			return;
+		}
+		list.innerHTML = sortSalesNewestFirst(state.purchases)
+			.map(
+				(p) => `
+				<div class="sale-card" data-purchase-id="${escapeHTML(p.id)}">
+					<div class="sale-head">
+						<span class="sale-title">${escapeHTML(p.note || "Kjøp")}</span>
+						<span class="sale-price mono">${fmtMoney0(p.amount)}</span>
+					</div>
+					<div class="sale-foot">
+						<span class="sale-meta">${fmtDate(p.date)}</span>
+						<div class="sale-actions">
+							<button type="button" class="btn-sm edit-purchase-btn" data-id="${escapeHTML(p.id)}">Rediger</button>
+							<button type="button" class="btn-sm danger delete-purchase-btn" data-id="${escapeHTML(p.id)}">Slett</button>
+						</div>
+					</div>
+				</div>`,
+			)
+			.join("");
+	}
+
+	function openPurchaseDialog(editId) {
+		editingPurchaseId = editId || null;
+		document.getElementById("purchaseForm").reset();
+		document.getElementById("purchaseError").textContent = "";
+		const p = editingPurchaseId && state.purchases.find((x) => x.id === editingPurchaseId);
+		document.getElementById("purchaseDialogTitle").textContent = p
+			? "Rediger kjøp"
+			: "Legg til kjøp";
+		document.getElementById("purchaseAmount").value = p ? p.amount : "";
+		document.getElementById("purchaseDate").value = p ? p.date : todayLocalISO();
+		document.getElementById("purchaseNote").value = p ? p.note || "" : "";
+		document.getElementById("purchaseDialog").showModal();
+	}
+
+	function initKjopEvents() {
+		document
+			.getElementById("addPurchaseBtn")
+			.addEventListener("click", () => openPurchaseDialog(null));
+
+		document.getElementById("purchaseCancelBtn").addEventListener("click", () => {
+			document.getElementById("purchaseDialog").close();
+		});
+
+		document.getElementById("purchaseList").addEventListener("click", async (e) => {
+			const editBtn = e.target.closest(".edit-purchase-btn");
+			const delBtn = e.target.closest(".delete-purchase-btn");
+			if (editBtn) {
+				openPurchaseDialog(editBtn.dataset.id);
+			} else if (delBtn) {
+				const ok = await confirmDialog("Slette dette kjøpet?");
+				if (!ok) return;
+				mutate((s) => {
+					s.purchases = s.purchases.filter((x) => x.id !== delBtn.dataset.id);
+				});
+			}
+		});
+
+		document.getElementById("purchaseForm").addEventListener("submit", (e) => {
+			e.preventDefault();
+			const amount = parseFloat(
+				document.getElementById("purchaseAmount").value.replace(",", "."),
+			);
+			const date = document.getElementById("purchaseDate").value || todayLocalISO();
+			const note = document.getElementById("purchaseNote").value.trim();
+			if (isNaN(amount) || amount < 0) {
+				document.getElementById("purchaseError").textContent = "Oppgi et gyldig beløp.";
+				return;
+			}
+			mutate((s) => {
+				const existing = editingPurchaseId && s.purchases.find((x) => x.id === editingPurchaseId);
+				if (existing) Object.assign(existing, { amount, date, note });
+				else s.purchases.push({ id: uid(), date, amount, note });
+			});
+			editingPurchaseId = null;
+			document.getElementById("purchaseDialog").close();
+		});
+	}
+
 	// ---------- render: Import og data ----------
 
 	const PRICE_HISTORY_LIMIT = 12; // keep the last N import snapshots, oldest dropped first
@@ -2503,7 +2617,7 @@
 		const body = {
 			description: "Kortbok data",
 			files: {
-				[GIST_FILENAME]: { content: JSON.stringify(state, null, 2) },
+				[GIST_FILENAME]: { content: JSON.stringify(state) },
 			},
 		};
 		setSyncStatus(silent ? "Autolagrer…" : "Sender…", "");
@@ -2649,7 +2763,15 @@
 				const data = await res.json();
 				const file = data.files[GIST_FILENAME];
 				if (!file) throw new Error(`Fant ingen ${GIST_FILENAME} i denne Gisten.`);
-				const parsed = JSON.parse(file.content);
+				// The Gist API cuts `content` off at ~1 MB and sets `truncated`;
+				// the full file then has to come from `raw_url`.
+				let content = file.content;
+				if (file.truncated) {
+					const rawRes = await fetch(file.raw_url);
+					if (!rawRes.ok) throw new Error(`Kunne ikke hente hele filen (${rawRes.status})`);
+					content = await rawRes.text();
+				}
+				const parsed = JSON.parse(content);
 				if (!isValidState(parsed)) throw new Error("Innholdet er ikke gyldig Kortbok-data.");
 				const ok = await confirmDialog(
 					"Dette overskriver dataene dine i denne nettleseren med innholdet fra Gisten. Fortsette?",
@@ -2704,6 +2826,7 @@
 		renderOversikt();
 		renderSamling();
 		renderSalg();
+		renderKjop();
 		renderBackupReminder();
 		if (storageOk) clearWarning();
 	}
@@ -2720,6 +2843,7 @@
 	initFindCardDialog();
 	initNewSaleDialog();
 	initSalgEvents();
+	initKjopEvents();
 	initImportEvents();
 	renderAll();
 
