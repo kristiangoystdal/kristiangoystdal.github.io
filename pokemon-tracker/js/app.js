@@ -2765,13 +2765,19 @@
 				if (!file) throw new Error(`Fant ingen ${GIST_FILENAME} i denne Gisten.`);
 				// The Gist API cuts `content` off at ~1 MB and sets `truncated`;
 				// the full file then has to come from `raw_url`.
-				let content = file.content;
-				if (file.truncated) {
-					const rawRes = await fetch(file.raw_url);
-					if (!rawRes.ok) throw new Error(`Kunne ikke hente hele filen (${rawRes.status})`);
-					content = await rawRes.text();
+				// Also falls back when `content` doesn't parse, in case the flag is
+				// ever missing.
+				let parsed = null;
+				if (!file.truncated) {
+					try {
+						parsed = JSON.parse(file.content);
+					} catch (_) {}
 				}
-				const parsed = JSON.parse(content);
+				if (!parsed) {
+					const rawRes = await fetch(file.raw_url, { cache: "no-store" });
+					if (!rawRes.ok) throw new Error(`Kunne ikke hente hele filen (${rawRes.status})`);
+					parsed = JSON.parse(await rawRes.text());
+				}
 				if (!isValidState(parsed)) throw new Error("Innholdet er ikke gyldig Kortbok-data.");
 				const ok = await confirmDialog(
 					"Dette overskriver dataene dine i denne nettleseren med innholdet fra Gisten. Fortsette?",
