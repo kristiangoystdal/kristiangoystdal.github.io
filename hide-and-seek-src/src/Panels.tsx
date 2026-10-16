@@ -158,6 +158,8 @@ function HiderPosition({ data }: { data: GeoData }) {
   const hider = useGame((s) => s.hider)
   const setHider = useGame((s) => s.setHider)
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
+  const gps = useGame((s) => s.hiderGps)
+  const setGps = useGame((s) => s.setHiderGps)
 
   // Hider velger selv blant stasjonene som har hider i sonen sin. Uten et valg gjelder den nærmeste.
   const place = (pos: LngLat) => setHider({ stationId: hiderStation(data.stations, pos, zoneRadius, hider.stationId).id, pos })
@@ -166,7 +168,19 @@ function HiderPosition({ data }: { data: GeoData }) {
   const away = station && hider.pos ? dist(stationPos(station), hider.pos) : 0
   return (
     <Section title="Hvor er du">
-      <PointInput label="Posisjonen din" value={hider.pos} onChange={place} stations={data.stations} />
+      <button className={`btn mb-3 w-full ${gps ? 'btn-on' : ''}`} aria-pressed={gps} onClick={() => setGps(!gps)}>
+        {gps ? '📍 Følger GPS automatisk' : '📍 Følg GPS automatisk'}
+      </button>
+      <PointInput
+        label="Posisjonen din"
+        value={hider.pos}
+        // Setter hider posisjonen selv, skal ikke GPS flytte den igjen.
+        onChange={(p) => {
+          setGps(false)
+          place(p)
+        }}
+        stations={data.stations}
+      />
       {station && (
         <p className={`text-xs ${away > zoneRadius ? 'text-bad' : 'text-muted'}`}>
           Stasjonen din er {station.name}.{away > zoneRadius && ` Du er ${Math.round(away)} m unna, utenfor sonen på ${zoneRadius} m.`}
@@ -355,7 +369,8 @@ const ASK_BONUS_MS = 30 * 60000
 export function BonusPrompt() {
   const round = useGame((s) => {
     const last = s.results.at(-1)
-    const mine = s.mode === 'hider' && s.round.seekFrom === null && last && last.id !== s.bonusAsked
+    // Har en annen telefon alt lagt inn bonusen, spørres det ikke igjen.
+    const mine = s.mode === 'hider' && s.round.seekFrom === null && last && last.id !== s.bonusAsked && !last.bonusMinutes
     return mine && Date.now() - (last.at ?? 0) < ASK_BONUS_MS ? last : null
   })
   const answerBonus = useGame((s) => s.answerBonus)

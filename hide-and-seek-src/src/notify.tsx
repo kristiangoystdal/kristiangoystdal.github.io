@@ -17,7 +17,7 @@ const useToast = create<{ note: Note | null }>(() => ({ note: null }))
 const supported = () => typeof Notification !== 'undefined'
 
 /** Viser beskjeden i appen, og som systemvarsel når appen ligger i bakgrunnen. */
-function notify(note: Note) {
+export function notify(note: Note) {
   useToast.setState({ note })
   navigator.vibrate?.(200)
   if (!supported() || Notification.permission !== 'granted' || !document.hidden) return

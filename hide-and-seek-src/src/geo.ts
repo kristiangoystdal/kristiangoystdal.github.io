@@ -13,6 +13,7 @@ import {
   polygon,
   union,
 } from '@turf/turf'
+import type { Lookup, LookupKind } from './online'
 import type { AdminArea, AdminLevel, Area, GeoData, LngLat, Poi, Question, Settings, ShapeKey, Station } from './types'
 
 /** Ytre ramme for alt som regnes ut. Dekker hele T-banenettet med god margin. */
@@ -500,8 +501,15 @@ const NOTHING: AutoAnswer = { answer: ANSWER_NULL, detail: 'Det spørsmålet han
 
 const m = (d: number) => (d >= 1000 ? `${(d / 1000).toFixed(2)} km` : `${Math.round(d)} m`)
 
+/** Oppslag i Kartverkets API-er for spørsmål appen ikke har data til. undefined = ikke hentet ennå. */
+export type Look = (kind: LookupKind, p: LngLat) => Lookup | undefined
+
+/** Matching og Measuring som slås opp på nett i stedet for i kartdataene. */
+export const STREET_ITEM = 'm-street'
+export const SEALEVEL_ITEM = 'me-sealevel'
+
 /** Svaret hider skal gi, regnet direkte fra hiders posisjon. */
-export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }, data: GeoData): AutoAnswer | null {
+export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }, data: GeoData, look?: Look): AutoAnswer | null {
   switch (q.kind) {
     case 'radar': {
       const d = dist(hider.pos, q.center)
@@ -591,9 +599,34 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
       const theirs = landmassOf(data, q.pos)
       return { answer: mine === theirs ? 'yes' : 'no', detail: `du: ${name(mine)}, seeker: ${name(theirs)}` }
     }
-    case 'manual':
+    case 'manual': {
       // Oslo har ingen høyhastighetsbane, så svaret er alltid null.
-      return q.subject === HIGH_SPEED ? NOTHING : null
+      if (q.subject === HIGH_SPEED) return NOTHING
+      if (!look || !q.pos) return null
+      if (q.item === SEALEVEL_ITEM) {
+        const a = look('height', hider.pos)
+        const b = look('height', q.pos)
+        if (a?.status !== 'ok' || b?.status !== 'ok' || !('height' in a) || !('height' in b)) return null
+        // Nærmere havnivå = lavere.
+        return { answer: a.height <= b.height ? 'closer' : 'further', marginM: Math.abs(a.height - b.height), detail: `du: ${Math.round(a.height)} moh., seeker: ${Math.round(b.height)} moh. (Kartverket)` }
+      }
+      if (q.item === STREET_ITEM) {
+        const a = look('street', hider.pos)
+        const b = look('street', q.pos)
+        if (a?.status !== 'ok' || b?.status !== 'ok' || !('streets' in a) || !('streets' in b)) return null
+        const [mine, mine2] = a.streets
+        const [theirs, theirs2] = b.streets
+        if (!mine || !theirs) return null
+        // Ligger neste gate nesten like nær, kan svaret snu. Margin er avstanden til at det skjer.
+        const margin = Math.min(mine2 ? mine2.d - mine.d : Infinity, theirs2 ? theirs2.d - theirs.d : Infinity)
+        return {
+          answer: mine.name === theirs.name ? 'yes' : 'no',
+          marginM: Number.isFinite(margin) ? margin / 2 : undefined,
+          detail: `du: ${mine.name}, seeker: ${theirs.name} (nærmeste adresse hos Kartverket, stier uten navn er ikke med)`,
+        }
+      }
+      return null
+    }
     default:
       return null
   }

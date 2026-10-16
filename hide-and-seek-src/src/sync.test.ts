@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS } from './store'
-import { cleanCode, diff, fromShared, roomFromHash, toShared } from './sync'
+import { clashLosers, cleanCode, diff, fromShared, roomFromHash, toShared } from './sync'
 import type { Question } from './types'
 
 const q = (id: string, time: number, answer: string | null = null): Question => ({ id, time, answer, kind: 'radar', center: [10.7, 59.9], radiusM: 1000 })
@@ -50,5 +50,16 @@ describe('romsynk', () => {
     expect(cleanCode(' ab-c 23x9 ')).toBe('ABC23X')
     expect(roomFromHash('#rom=abc234')).toBe('ABC234')
     expect(roomFromHash('#spill=abc')).toBeNull()
+  })
+})
+
+describe('spørsmål stilt samtidig', () => {
+  const open = (id: string, time: number, by: string) => ({ id, time, by, answer: null, kind: 'photo', text: 'x' }) as Question
+  it('bare det første blir stående, og bare eieren trekker sitt tilbake', () => {
+    const qs = [open('b', 2, 'B'), open('a', 1, 'A')]
+    expect(clashLosers(qs, 'A')).toEqual([])
+    expect(clashLosers(qs, 'B').map((q) => q.id)).toEqual(['b'])
+    expect(clashLosers([open('b', 1, 'B'), open('a', 1, 'A')], 'B').map((q) => q.id)).toEqual(['b'])
+    expect(clashLosers([open('a', 1, 'A')], 'A')).toEqual([])
   })
 })

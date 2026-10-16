@@ -4,7 +4,7 @@ import { BonusPrompt, GamePanel, MapPanel, SettingsPanel } from './Panels'
 import QuestionsView from './QuestionsView'
 import { loadData } from './data'
 import { movedAt } from './clock'
-import { clipData, dist, solve } from './geo'
+import { clipData, dist, hiderStation, solve } from './geo'
 import { Rules } from './Rules'
 import { gameFromHash, useGame, useUi, type Tab } from './store'
 import { Toast } from './notify'
@@ -55,6 +55,33 @@ function useSharedLink() {
 }
 
 const SHARE_EVERY_MS = 10000
+
+const HIDER_MOVE_M = 10
+
+/**
+ * Hiders posisjon følger GPS mens appen er åpen, så svarforslagene alltid gjelder
+ * der hider står nå. Stasjonen hider har valgt beholdes så lenge hider er i sonen dens.
+ * Posisjonen blir på telefonen og deles aldri.
+ */
+function useHiderLocation(data: GeoData | null) {
+  const on = useGame((s) => s.mode === 'hider' && s.hiderGps)
+  // Ny runde nullstiller posisjonen. GPS melder bare fra når telefonen flytter seg, så da startes den på nytt.
+  const missing = useGame((s) => s.hider.pos === null)
+  useEffect(() => {
+    if (!on || !data || !navigator.geolocation) return
+    const watch = navigator.geolocation.watchPosition(
+      (p) => {
+        const pos: LngLat = [p.coords.longitude, p.coords.latitude]
+        const { hider, settings, setHider } = useGame.getState()
+        if (hider.pos && dist(hider.pos, pos) < HIDER_MOVE_M) return
+        setHider({ stationId: hiderStation(data.stations, pos, settings.zoneRadius, hider.stationId).id, pos })
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000 },
+    )
+    return () => navigator.geolocation.clearWatch(watch)
+  }, [on, data, missing])
+}
 
 /** En pause med sluttid (Move) slutter av seg selv. Den som ser det først, starter klokkene igjen. */
 function useAutoResume() {
@@ -124,6 +151,7 @@ export default function App() {
   useSharedLink()
   useShareLocation()
   useAutoResume()
+  useHiderLocation(loaded)
   useEffect(() => {
     loadData().then(setData, () => setError(true))
   }, [])

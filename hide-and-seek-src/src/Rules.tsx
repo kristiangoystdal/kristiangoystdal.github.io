@@ -104,6 +104,9 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
           <li>
             <b>Ett spørsmål om gangen.</b> Et nytt kan ikke stilles før det forrige er besvart.
           </li>
+          <li>
+            <b>Hider svarer ut fra der hider står akkurat nå,</b> ikke fra stasjonen. Unntakene er spørsmålene som handler om stasjonen: kollektivlinje, lengde på stasjonsnavn og bilder «synlig fra stasjonen». Seekerne spør ut fra der de selv står.
+          </li>
           <li>Hider må svare sant, innen svartiden. Går den ut, står hiders klokke til svaret kommer, og hider trekker ingen kort for spørsmålet.</li>
           <li>
             <b>Gjentakelse:</b> et spørsmål som er stilt, kan stilles igjen mot dobbel kostnad. Hider trekker da to ganger hver for seg. Tredje gang er trippel kostnad, og så videre.

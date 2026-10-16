@@ -56,6 +56,8 @@ interface Base {
   note?: string
   /** Randomize: spørsmålet (id i ITEMS) seekerne skal stille i stedet. */
   swap?: string
+  /** Telefonen som stilte spørsmålet. */
+  by?: string
 }
 
 export type QuestionBody =

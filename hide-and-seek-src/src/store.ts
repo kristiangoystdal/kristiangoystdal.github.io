@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PLANNING_MINUTES, resume, type PauseKind, type Round } from './clock'
+import { deviceId } from './device'
 import type { Form } from './form'
 import type { LngLat, Question, QuestionBody, RoundResult, Settings } from './types'
 
@@ -41,6 +42,8 @@ export interface State {
   bonusAsked: string | null
   /** Seeker deler posisjonen sin i rommet. */
   sharePos: boolean
+  /** Hiders posisjon følger GPS. Slås av når hider setter posisjonen selv. */
+  hiderGps: boolean
 
   setSettings: (patch: Partial<Settings>) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
@@ -62,6 +65,7 @@ export interface State {
   /** Hider oppgir tidsbonusen for runden som nettopp er ferdig. */
   answerBonus: (id: string, minutes: number) => void
   setSharePos: (on: boolean) => void
+  setHiderGps: (on: boolean) => void
   shufflePlayers: () => void
   addPlayer: (name: string) => void
   removePlayer: (name: string) => void
@@ -106,6 +110,7 @@ export const useGame = create<State>()(
         results: [],
         bonusAsked: null,
         sharePos: false,
+        hiderGps: true,
 
         // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
         setSettings: (patch) =>
@@ -114,7 +119,7 @@ export const useGame = create<State>()(
           editQuestions((qs) =>
             id
               ? qs.map((q) => (q.id === id ? { ...body, id, time: q.time, answer, note: q.note, extraMs: q.extraMs, history: historyOf(q, answer), answeredAt: answer === null ? undefined : (q.answeredAt ?? Date.now()) } : q))
-              : [...qs, { ...body, id: uid(), time: Date.now(), answer, answeredAt: answer === null ? undefined : Date.now() }],
+              : [...qs, { ...body, id: uid(), time: Date.now(), answer, by: deviceId(), answeredAt: answer === null ? undefined : Date.now() }],
           ),
         // Første svar avgjør om svartiden ble holdt. Svarer hider på nytt, står tidspunktet.
         answerQuestion: (id, answer, swap) =>
@@ -124,7 +129,8 @@ export const useGame = create<State>()(
         setNote: (id, note) => set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, note: note || undefined } : q)) })),
         undo: () => set((s) => (s.past.length ? { questions: s.past[s.past.length - 1], past: s.past.slice(0, -1) } : s)),
         // Rollen er låst mens en runde pågår, så ingen kan kikke på den andre siden.
-        setMode: (mode) => set((s) => (s.round.seekFrom !== null ? s : { mode })),
+        // Den som bytter til hider, gjemte seg ikke forrige runde og skal ikke spørres om tidsbonusen for den.
+        setMode: (mode) => set((s) => (s.round.seekFrom !== null ? s : { mode, bonusAsked: mode === 'hider' && s.mode !== 'hider' ? (s.results.at(-1)?.id ?? s.bonusAsked) : s.bonusAsked })),
         setHider: (hider) => set({ hider }),
         toggleLayer: (layer) => set((s) => ({ layers: { ...s.layers, [layer]: !s.layers[layer] } })),
         setRound: (patch) => set((s) => ({ round: { ...s.round, ...patch } })),
@@ -152,6 +158,7 @@ export const useGame = create<State>()(
         resumeGame: () => set((s) => resume(s.round, s.questions, Date.now())),
         answerBonus: (id, minutes) => set((s) => ({ bonusAsked: id, results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         setSharePos: (sharePos) => set({ sharePos }),
+        setHiderGps: (hiderGps) => set({ hiderGps }),
         shufflePlayers: () =>
           set((s) => {
             const players = [...s.players]

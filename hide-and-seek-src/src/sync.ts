@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { announce, announceRound } from './notify'
+import { deviceId } from './device'
+import { announce, announceRound, notify } from './notify'
 import { GAME_SETTINGS, useGame, type Round, type State } from './store'
 import type { LngLat, Question, RoundResult, Settings } from './types'
 
@@ -11,7 +12,6 @@ const CONFIG = {
 const EMULATOR = import.meta.env.VITE_FIREBASE_EMULATOR as string | undefined
 
 const ROOM_KEY = 'hideandseek.room'
-const DEVICE_KEY = 'hideandseek.device'
 export const CODE_LENGTH = 6
 // Uten 0/O og 1/I/L, som er lette å forveksle når koden leses opp.
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -40,11 +40,14 @@ export interface SeekerPos {
   v: number | null
 }
 
-/** Telefonens egen nøkkel under `seekers` i rommet. */
-function deviceId() {
-  let id = localStorage.getItem(DEVICE_KEY)
-  if (!id) localStorage.setItem(DEVICE_KEY, (id = Math.random().toString(36).slice(2, 10)))
-  return id
+/**
+ * Trykket to seekere «Still spørsmål» samtidig, ligger det to ubesvarte spørsmål i rommet.
+ * Det som ble stilt først står. Telefonen som stilte et av de andre, trekker sitt tilbake.
+ * Alle telefoner sorterer likt, så nøyaktig ett blir stående.
+ */
+export function clashLosers(questions: Question[], me: string): Question[] {
+  const open = questions.filter((q) => q.answer === null).sort((a, b) => a.time - b.time || a.id.localeCompare(b.id))
+  return open.slice(1).filter((q) => q.by === me)
 }
 
 type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'players'>
@@ -189,6 +192,11 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       // Ikke varsle om alt som lå i rommet fra før da vi koblet til.
       if (!first && othersChanged) announce(local.questions, next.questions, local.mode)
       if (!first) announceRound(local.round, next.round, local.mode)
+      const losers = clashLosers(next.questions, deviceId())
+      if (losers.length) {
+        for (const q of losers) useGame.getState().removeQuestion(q.id)
+        notify({ title: 'Spørsmålet ditt ble trukket tilbake', body: 'En annen seeker stilte et spørsmål samtidig. Vent på svaret på det, og still ditt etterpå.', tab: 'questions' })
+      }
       // Sender det som eventuelt ble endret lokalt mens rommets tilstand ble lagt inn.
       push()
     })

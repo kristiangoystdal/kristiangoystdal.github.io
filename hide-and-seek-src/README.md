@@ -15,7 +15,9 @@ Pages bygger ikke noe selv (repoet serveres rett fra `main`), så husk
 
 ## Data
 
-Alt ligger ferdig bygget i `public/data/`. Appen kaller ingen API-er ved kjøring.
+Alt ligger ferdig bygget i `public/data/`. Det eneste appen henter under spill er
+høyde og nærmeste adresse fra Kartverkets åpne API-er (`src/online.ts`), for
+spørsmålene om havnivå og gate. Uten nett svarer hider selv.
 
 | Fil | Kilde | Script |
 |---|---|---|

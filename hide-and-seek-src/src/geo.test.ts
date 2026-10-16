@@ -535,3 +535,30 @@ describe('kort', () => {
     expect(solve([before, radar('b', 'r-1000', 'in', 3)], data, settings, null, 2).stations.length).toBeLessThan(101)
   })
 })
+
+describe('oppslag hos Kartverket', () => {
+  const at = (item: string, subject: string, family: 'matching' | 'measuring'): Question => ({ id: 'q', time: 0, answer: null, item, kind: 'manual', family, subject, pos: pos('Jernbanetorget') })
+  const hider = { pos: pos('Majorstuen'), station: byName('Majorstuen') }
+  const heights = (h: number, s: number) => (_: string, p: LngLat) => ({ status: 'ok' as const, height: p === hider.pos ? h : s })
+  const streets = (h: string[], s: string[]) => (_: string, p: LngLat) => ({ status: 'ok' as const, streets: (p === hider.pos ? h : s).map((name, i) => ({ name, d: 10 + i * 40 })) })
+
+  it('havnivå: lavere enn seeker er nærmere', () => {
+    const q = at('me-sealevel', 'havnivå (høyde over havet)', 'measuring')
+    expect(autoAnswer(q, hider, data, heights(12, 80))?.answer).toBe('closer')
+    expect(autoAnswer(q, hider, data, heights(80, 12))?.answer).toBe('further')
+    expect(autoAnswer(q, hider, data, heights(80, 12))?.marginM).toBe(68)
+  })
+
+  it('gate: samme nærmeste gate gir ja', () => {
+    const q = at('m-street', 'gate eller sti', 'matching')
+    expect(autoAnswer(q, hider, data, streets(['Bogstadveien', 'Kirkeveien'], ['Bogstadveien']))?.answer).toBe('yes')
+    expect(autoAnswer(q, hider, data, streets(['Kirkeveien'], ['Bogstadveien']))?.answer).toBe('no')
+  })
+
+  it('uten svar fra Kartverket må hider svare selv', () => {
+    const q = at('me-sealevel', 'havnivå (høyde over havet)', 'measuring')
+    expect(autoAnswer(q, hider, data)).toBeNull()
+    expect(autoAnswer(q, hider, data, () => ({ status: 'error' }))).toBeNull()
+    expect(autoAnswer(q, hider, data, () => undefined)).toBeNull()
+  })
+})

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { deadline, movedAt } from './clock'
 import {
   CATEGORIES,
@@ -25,7 +25,8 @@ import {
   type Item,
   type Locks,
 } from './form'
-import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
+import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEALEVEL_ITEM, STREET_ITEM, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
+import { fetchLookup, lookup, useLookups } from './online'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, LngLat, Question } from './types'
 import { MoveInfo, PAUSE_TEXT, PointInput, Section, locate, useGameNow, useNow } from './ui'
@@ -58,12 +59,22 @@ const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-d
 export function useAutoAnswer(data: GeoData) {
   const mode = useGame((s) => s.mode)
   const hider = useGame((s) => s.hider)
+  // Tegnes på nytt når et oppslag hos Kartverket kommer tilbake.
+  useLookups()
   return (q: Question): AutoAnswer | null => {
     if (mode !== 'hider' || !hider.pos) return null
     const station = data.stations.find((s) => s.id === hider.stationId) ?? nearestStation(data.stations, hider.pos)
-    return autoAnswer(q, { pos: hider.pos, station }, data)
+    return autoAnswer(q, { pos: hider.pos, station }, data, lookup)
   }
 }
+
+/** Henter det et spørsmål trenger fra Kartverket for begge posisjonene. */
+async function prefetch(q: Question, hider: LngLat) {
+  const kind = q.item === SEALEVEL_ITEM ? 'height' : q.item === STREET_ITEM ? 'street' : null
+  if (!kind || q.kind !== 'manual' || !q.pos) return
+  await Promise.all([fetchLookup(kind, hider), fetchLookup(kind, q.pos)])
+}
+const online = (q: Question) => q.item === SEALEVEL_ITEM || q.item === STREET_ITEM
 
 export function AutoHint({ q, auto }: { q: Question; auto: AutoAnswer }) {
   return (
@@ -146,13 +157,33 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
     const near = pos && nearestStation(data.stations.filter((x) => order.includes(x.id)), pos)
     return near ? Math.max(0, order.indexOf(near.id)) : 0
   }
+  // Nytt spørsmål fra seeker: posisjonen hentes fra GPS med en gang. Har seeker valgt et punkt selv i mellomtiden, står det.
+  const [locating, setLocating] = useState(!form.id && !isHider)
+  useEffect(() => {
+    if (form.id || isHider) return
+    const start = useUi.getState().draft?.pos ?? null
+    locate()
+      .then((pos) => {
+        const d = useUi.getState().draft
+        if (!d || d.id || d.pos !== start) return
+        setDraft({ ...d, answer: null, pos, ...(d.kind === 'transit' ? { next: nextStop(d.line, pos) } : {}) })
+      })
+      .catch(() => {})
+      .finally(() => setLocating(false))
+    // Bare når skjemaet åpnes, ikke når spørsmålet byttes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const seeker = (
-    <PointInput
-      label="Seekers posisjon"
-      value={form.pos}
-      onChange={(pos) => set(form.kind === 'transit' ? { pos, next: nextStop(form.line, pos) } : { pos })}
-      stations={data.stations}
-    />
+    <>
+      <PointInput
+        label="Seekers posisjon"
+        value={form.pos}
+        onChange={(pos) => set(form.kind === 'transit' ? { pos, next: nextStop(form.line, pos) } : { pos })}
+        stations={data.stations}
+      />
+      {locating && <p className="-mt-2 mb-3 text-xs text-muted">Henter posisjonen din fra GPS…</p>}
+    </>
   )
 
   return (
@@ -207,6 +238,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       {form.kind === 'thermometer' && (
         <>
           <PointInput label="Startpunkt" value={form.pos} onChange={(pos) => set({ pos })} stations={data.stations} />
+          {locating && <p className="-mt-2 mb-3 text-xs text-muted">Henter posisjonen din fra GPS…</p>}
           <PointInput label="Sluttpunkt" value={form.pos2} onChange={(pos2) => set({ pos2 })} stations={data.stations} />
           {walked > 0 && walked < form.radiusM && (
             <p className="mb-3 text-xs text-bad">
@@ -270,7 +302,9 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       )}
       {form.kind === 'manual' && (
         <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">
-          Appen har ikke data til å regne ut dette. Hider svarer selv, og svaret loggføres uten at kartet krymper.
+          {item.id === STREET_ITEM || item.id === SEALEVEL_ITEM
+            ? 'Hiders app slår opp svaret hos Kartverket, og hider bekrefter det. Svaret loggføres uten at kartet krymper.'
+            : 'Appen har ikke data til å regne ut dette. Hider svarer selv, og svaret loggføres uten at kartet krymper.'}
         </p>
       )}
       {item.rules && (
@@ -371,9 +405,10 @@ function HiderQuestions({ data }: { data: GeoData }) {
       const { hider, settings } = useGame.getState()
       const station = hiderStation(data.stations, pos, settings.zoneRadius, hider.stationId)
       setHider({ stationId: station.id, pos })
-      const a = autoAnswer(q, { pos, station }, data)
+      await prefetch(q, pos)
+      const a = autoAnswer(q, { pos, station }, data, lookup)
       if (a) answer(q, a.answer)
-      else setError('Dette spørsmålet kan ikke regnes ut. Svar selv.')
+      else setError(online(q) ? 'Fikk ikke svar fra Kartverket. Sjekk nettet, eller svar selv.' : 'Dette spørsmålet kan ikke regnes ut. Svar selv.')
     } catch (e) {
       setError((e as Error).message)
     }
@@ -395,10 +430,12 @@ function HiderQuestions({ data }: { data: GeoData }) {
         {questions.length === 0 && <p className="text-sm text-muted">Ingen spørsmål ennå. De dukker opp her når seekerne stiller dem.</p>}
         {error && <p className="mb-2 text-xs text-bad">{error}</p>}
         <ul className="flex flex-col gap-2">
-          {questions.map((q) => {
-            // Er spørsmålet besvart med et kort, er det ingenting mer å svare.
-            const card = q.answer === ANSWER_VETO || q.answer === ANSWER_RANDOM
-            const a = card ? null : auto(q)
+          {/* Det hider skal svare på står øverst, resten med det nyeste først. */}
+          {[...questions.filter((q) => q.answer === null), ...questions.filter((q) => q.answer !== null).reverse()].map((q) => {
+            // Et svar som er gitt, gjaldt der hider sto da. Flytter hider seg senere, skal det ikke foreslås et nytt.
+            // Feiltrykk rettes med «angre svaret».
+            const open = q.answer === null
+            const a = open ? auto(q) : null
             return (
               <li key={q.id} className="card">
                 <p className="mb-1 text-sm">{describe(q, data)}</p>
@@ -415,9 +452,9 @@ function HiderQuestions({ data }: { data: GeoData }) {
                   </p>
                 )}
                 <AnswerHistory q={q} />
-                {a && q.answer !== a.answer && <AutoHint q={q} auto={a} />}
-                {card ? null : q.kind === 'photo' ? (
-                  q.answer === null && (
+                {a && <AutoHint q={q} auto={a} />}
+                {!open ? null : q.kind === 'photo' ? (
+                  (
                     <div className="mt-2">
                       <p className="mb-2 text-xs text-muted">Send bildet til seekerne på melding, og kvitter her.</p>
                       <button className="btn btn-primary" onClick={() => answer(q, 'Bilde sendt')}>
@@ -427,24 +464,31 @@ function HiderQuestions({ data }: { data: GeoData }) {
                   )
                 ) : q.kind === 'manual' ? (
                   <div className="mt-2">
-                    <p className="mb-2 text-xs text-muted">Appen kan ikke regne ut dette. Svar selv:</p>
+                    <p className="mb-2 text-xs text-muted">
+                      {a ? 'Forslaget er hentet fra Kartverket. Sjekk at det stemmer, og svar:' : online(q) ? 'Henter fra Kartverket… Du kan også svare selv:' : 'Appen kan ikke regne ut dette. Svar selv:'}
+                    </p>
                     <div className="flex flex-wrap gap-1.5">
                       {answerOptions(q, data).map((o) => (
-                        <button key={o} className={`btn ${q.answer === o ? 'btn-primary' : ''}`} onClick={() => answer(q, o)}>
+                        <button key={o} className={`btn ${a?.answer === o ? 'btn-primary' : ''}`} onClick={() => answer(q, o)}>
                           {answerLabel(q, o)}
                         </button>
                       ))}
+                      {online(q) && (
+                        <button className="btn" disabled={busy === q.id} onClick={() => answerFromGps(q)}>
+                          {busy === q.id ? 'Henter…' : 'Svar med posisjonen min nå'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : (
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {a && q.answer !== a.answer && (
+                    {a && (
                       <button className="btn btn-primary" onClick={() => answer(q, a.answer)}>
                         Svar: {answerLabel(q, a.answer)}
                       </button>
                     )}
                     <button className="btn" disabled={busy === q.id} onClick={() => answerFromGps(q)}>
-                      {busy === q.id ? 'Henter posisjon…' : q.answer === null ? 'Svar med posisjonen min nå' : 'Svar på nytt med posisjonen min'}
+                      {busy === q.id ? 'Henter posisjon…' : 'Svar med posisjonen min nå'}
                     </button>
                   </div>
                 )}
