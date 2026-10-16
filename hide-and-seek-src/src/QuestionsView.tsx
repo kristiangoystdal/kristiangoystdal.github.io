@@ -561,7 +561,16 @@ function HiderCards({ data }: { data: GeoData }) {
   const resumeGame = useGame((s) => s.resumeGame)
   const [picks, setPicks] = useState(['', '', ''])
 
-  if (round.seekFrom === null) return null
+  // Før runden vises bare hva som finnes, så hider vet hvor kortene er.
+  if (round.seekFrom === null) {
+    return (
+      <Section title="Kort">
+        <p className="card text-sm text-muted">
+          Move, Drained Brain og Spotty Memory spilles her, og Veto og Randomize på hvert spørsmål, når runden er startet under Spill. <RulesLink section="kort" label="Alle kort" />
+        </p>
+      </Section>
+    )
+  }
   const seeking = now >= round.seekFrom
   const moving = round.pause?.kind === 'move'
   const station = data.stations.find((x) => x.id === hider.stationId) ?? (hider.pos ? nearestStation(data.stations, hider.pos) : null)
@@ -672,7 +681,11 @@ function HiderCards({ data }: { data: GeoData }) {
           </div>
         </details>
         <p className="text-xs text-muted">
-          Veto og Randomize spiller du på spørsmålet du skal svare på. Andre kort spilles utenfor appen. <RulesLink section="kort" label="Alle kort" />
+          Veto og Randomize spiller du på spørsmålet du skal svare på. Andre kort spilles utenfor appen.{' '}
+          <button type="button" className="cursor-pointer text-xs text-muted underline" onClick={() => useUi.getState().setTab('map')}>
+            📏 Mål avstand for en forbannelse
+          </button>{' '}
+          <RulesLink section="kort" label="Alle kort" />
         </p>
       </div>
     </Section>

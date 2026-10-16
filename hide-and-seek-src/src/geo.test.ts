@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { booleanPointInPolygon, destination } from '@turf/turf'
 import { describe, expect, it } from 'vitest'
 import { ITEMS, SIZE_RULES, enabledIds, formToQuestion, itemsFor, lockedBy, newForm, questionKey, randomSwap, responseMinutes, usedKeys } from './form'
-import { ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, HIGH_SPEED, areaAt, autoAnswer, autoPlayArea, clipData, dist, hiderStation, isPositive, landmassOf, nearestStation, polylineDist, regionOf, shapeDist, solve, stationPos, stationsInReach, transitStops, voronoiCell } from './geo'
+import { ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, HIGH_SPEED, WORLD, applyQuestion, disc, areaAt, autoAnswer, autoPlayArea, clipData, dist, hiderStation, isPositive, landmassOf, nearestStation, polylineDist, regionOf, shapeDist, solve, stationPos, stationsInReach, transitStops, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
 const raw = JSON.parse(readFileSync('public/data/stations.json', 'utf8'))
@@ -415,6 +415,30 @@ describe.skipIf(!existsSync(shapeFile('coast')))('kyst, vann, riksgrense og land
     const closer = solve([q(body, 'closer')], real, settings).stations.map((s) => s.name)
     expect(closer).toContain('Jernbanetorget')
     expect(closer).not.toContain('Sognsvann')
+  })
+
+  it('kystsvaret tegnes som et område, og i endgame skjærer det sonen', () => {
+    const body: QuestionBody = { kind: 'geodist', ref: 'coast', pos: pos('Majorstuen') }
+    const d = shapeDist(real, 'coast', pos('Majorstuen'))
+    const t = performance.now()
+    const area = applyQuestion(WORLD, q(body, 'closer'), real)!
+    expect(performance.now() - t).toBeLessThan(3000)
+    // Rutene er grove over hele kartet, så det sjekkes bare godt unna kanten.
+    expect(booleanPointInPolygon(pos('Jernbanetorget'), area)).toBe(true)
+    expect(booleanPointInPolygon(pos('Sognsvann'), area)).toBe(false)
+
+    // Endgame ved Majorstuen: sonen deles der avstanden til kysten er lik seekerens.
+    const zone = disc(pos('Majorstuen'), 500)
+    const cut = applyQuestion(zone, q({ kind: 'geodist', ref: 'coast', pos: pos('Majorstuen') }, 'closer'), real)!
+    expect(cut).not.toBeNull()
+    for (const [dx, dy] of [[-0.006, -0.002], [0.006, 0.003], [0, -0.004], [0.002, 0.004]]) {
+      const p: LngLat = [pos('Majorstuen')[0] + dx, pos('Majorstuen')[1] + dy]
+      const off = shapeDist(real, 'coast', p) - d
+      // Mer enn 30 m fra kanten skal fasiten stemme.
+      if (Math.abs(off) > 30 && booleanPointInPolygon(p, zone)) expect(booleanPointInPolygon(p, cut)).toBe(off < 0)
+    }
+    const further = applyQuestion(zone, q({ kind: 'geodist', ref: 'coast', pos: pos('Majorstuen') }, 'further'), real)
+    expect(further).not.toBeNull()
   })
 
   it('Sognsvann stasjon ligger rett ved vannet', () => {

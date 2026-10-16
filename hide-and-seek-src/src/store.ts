@@ -44,6 +44,8 @@ export interface State {
   sharePos: boolean
   /** Hiders posisjon følger GPS. Slås av når hider setter posisjonen selv. */
   hiderGps: boolean
+  /** Måleverktøyet, f.eks. til kostnaden for en forbannelse. Bare på denne telefonen, og teller ikke som spørsmål. */
+  tools: Tools
 
   setSettings: (patch: Partial<Settings>) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
@@ -66,6 +68,7 @@ export interface State {
   answerBonus: (id: string, minutes: number) => void
   setSharePos: (on: boolean) => void
   setHiderGps: (on: boolean) => void
+  setTools: (patch: Partial<Tools>) => void
   shufflePlayers: () => void
   addPlayer: (name: string) => void
   removePlayer: (name: string) => void
@@ -75,6 +78,14 @@ export interface State {
   newGame: () => void
   importGame: (game: SharedGame) => void
 }
+
+/** En radar eller et termometer med fritt valgt avstand. null = ikke i bruk. */
+export interface Tools {
+  radar: { center: LngLat | null; radiusM: number } | null
+  /** `at` er der telefonen er nå, oppdatert fra GPS. */
+  thermo: { start: LngLat | null; at: LngLat | null; minM: number } | null
+}
+const NO_TOOLS: Tools = { radar: null, thermo: null }
 
 /** Det som deles mellom spillere: spørsmålsloggen og innstillingene som påvirker geometrien. */
 export interface SharedGame {
@@ -111,6 +122,7 @@ export const useGame = create<State>()(
         bonusAsked: null,
         sharePos: false,
         hiderGps: true,
+        tools: NO_TOOLS,
 
         // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
         setSettings: (patch) =>
@@ -159,6 +171,7 @@ export const useGame = create<State>()(
         answerBonus: (id, minutes) => set((s) => ({ bonusAsked: id, results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         setSharePos: (sharePos) => set({ sharePos }),
         setHiderGps: (hiderGps) => set({ hiderGps }),
+        setTools: (patch) => set((s) => ({ tools: { ...s.tools, ...patch } })),
         shufflePlayers: () =>
           set((s) => {
             const players = [...s.players]

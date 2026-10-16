@@ -72,13 +72,31 @@ export function GameStatus({ stations }: { stations: Station[] }) {
   )
 }
 
+/** Siste posisjon fra en GPS-følging som alt går (posisjonsdeling, hider, termometer). */
+let lastFix: { pos: LngLat; t: number } | null = null
+const FRESH_MS = 10000
+const USABLE_MS = 120000
+export const rememberFix = (pos: LngLat) => void (lastFix = { pos, t: Date.now() })
+
+/**
+ * Henter posisjonen. Følger telefonen alt GPS, brukes den siste posisjonen derfra,
+ * og den er også reserven hvis et nytt GPS-kall ikke svarer.
+ */
 export function locate(): Promise<LngLat> {
   return new Promise((resolve, reject) => {
+    if (lastFix && Date.now() - lastFix.t < FRESH_MS) return resolve(lastFix.pos)
     if (!navigator.geolocation) return reject(new Error('Nettleseren støtter ikke posisjon'))
     navigator.geolocation.getCurrentPosition(
-      (p) => resolve([p.coords.longitude, p.coords.latitude]),
-      () => reject(new Error('Fikk ikke hentet posisjonen. Sjekk at nettsiden har lov til å bruke den.')),
-      { enableHighAccuracy: true, timeout: 15000 },
+      (p) => {
+        const pos: LngLat = [p.coords.longitude, p.coords.latitude]
+        rememberFix(pos)
+        resolve(pos)
+      },
+      () =>
+        lastFix && Date.now() - lastFix.t < USABLE_MS
+          ? resolve(lastFix.pos)
+          : reject(new Error('Fikk ikke hentet posisjonen. Sjekk at nettsiden har lov til å bruke den.')),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
     )
   })
 }

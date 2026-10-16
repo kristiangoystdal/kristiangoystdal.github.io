@@ -1,4 +1,5 @@
 import {
+  bbox,
   bboxPolygon,
   booleanIntersects,
   booleanPointInPolygon,
@@ -8,6 +9,8 @@ import {
   distance,
   featureCollection,
   intersect,
+  isobands,
+  pointGrid,
   pointToLineDistance,
   pointToPolygonDistance,
   polygon,
@@ -68,7 +71,7 @@ const GAP_M = 300
 /** Avstand i meter. */
 export const dist = (a: LngLat, b: LngLat) => distance(a, b, { units: 'meters' })
 export const stationPos = (s: Station): LngLat => [s.lon, s.lat]
-const disc = (c: LngLat, radiusM: number, steps = 64): Area => circle(c, radiusM / 1000, { steps, units: 'kilometers' })
+export const disc = (c: LngLat, radiusM: number, steps = 64): Area => circle(c, radiusM / 1000, { steps, units: 'kilometers' })
 
 // Voronoi og midtnormaler regnes i et lokalt plan der én enhet er like lang
 // i begge retninger. Rå lengde/breddegrader ville strukket alt med 2x øst-vest på 60°N.
@@ -315,6 +318,110 @@ export function regionOf(q: Question, data: GeoData): Area | null {
   }
 }
 
+const GRID_CELLS = 120
+const DEG_M = 111320
+type Box = [number, number, number, number]
+const lineRegionCache = new WeakMap<object, Map<string, Area | null>>()
+const ringCache = new WeakMap<AdminArea[], LngLat[][]>()
+
+const PIECE_POINTS = 16
+const pieceCache = new WeakMap<LngLat[][], { line: LngLat[]; box: Box }[]>()
+/** Linjene delt i korte stykker med hver sin boks, så stykker langt unna kan hoppes over. */
+function piecesOf(lines: LngLat[][]) {
+  let pieces = pieceCache.get(lines)
+  if (!pieces) {
+    pieces = []
+    for (const l of lines) {
+      for (let i = 0; i < l.length - 1; i += PIECE_POINTS - 1) {
+        const line = l.slice(i, i + PIECE_POINTS)
+        const xs = line.map((p) => p[0])
+        const ys = line.map((p) => p[1])
+        pieces.push({ line, box: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] })
+      }
+    }
+    pieceCache.set(lines, pieces)
+  }
+  return pieces
+}
+
+/** Kantene til områdene på et nivå, som linjer. */
+function borderRings(data: GeoData, level: 'fylke' | 'kommune'): LngLat[][] {
+  const areas = levelAreas(data, level)
+  let rings = ringCache.get(areas)
+  if (!rings) {
+    rings = areas.flatMap((f) => (f.geometry.type === 'Polygon' ? f.geometry.coordinates : f.geometry.coordinates.flat()) as LngLat[][])
+    ringCache.set(areas, rings)
+  }
+  return rings
+}
+
+/**
+ * Området innenfor `d` meter fra linjene, regnet i et rutenett over `box`.
+ * Kanten er like nøyaktig som rutene: noen meter i en endgame-sone, noen hundre
+ * meter over hele kartet. Stasjonene avgjøres uansett av den nøyaktige avstanden.
+ */
+export function nearLines(lines: LngLat[][], d: number, box: Box): Area | null {
+  const b: Box = [Math.max(box[0], BOUNDS[0]), Math.max(box[1], BOUNDS[1]), Math.min(box[2], BOUNDS[2]), Math.min(box[3], BOUNDS[3])]
+  if (b[0] >= b[2] || b[1] >= b[3]) return null
+  let cache = lineRegionCache.get(lines)
+  if (!cache) lineRegionCache.set(lines, (cache = new Map()))
+  const key = `${Math.round(d)}:${b.map((x) => x.toFixed(4)).join(',')}`
+  if (cache.has(key)) return cache.get(key)!
+
+  // Bare stykkene som kan ligge innenfor d fra boksen, trengs.
+  const cos = Math.cos(((b[1] + b[3]) / 2) * RAD)
+  const padLat = d / DEG_M
+  const padLon = padLat / cos
+  const near = piecesOf(lines).filter((p) => p.box[2] >= b[0] - padLon && p.box[0] <= b[2] + padLon && p.box[3] >= b[1] - padLat && p.box[1] <= b[3] + padLat)
+  let region: Area | null = null
+  if (near.length) {
+    const side = Math.max((b[2] - b[0]) * DEG_M * cos, (b[3] - b[1]) * DEG_M) / GRID_CELLS
+    const grid = pointGrid(b, side, { units: 'meters' })
+    // Alt lenger unna enn cap er «langt unna». Stykker som ikke kan komme nærmere, hoppes over.
+    const cap = d * 2 + 1
+    for (const pt of grid.features) {
+      const [x, y] = pt.geometry.coordinates
+      let best = cap
+      for (const piece of near) {
+        const dx = Math.max(piece.box[0] - x, 0, x - piece.box[2]) * DEG_M * cos
+        const dy = Math.max(piece.box[1] - y, 0, y - piece.box[3]) * DEG_M
+        if (dx * dx + dy * dy >= best * best) continue
+        best = Math.min(best, polylineDist([x, y], [piece.line]))
+      }
+      pt.properties = { z: best }
+    }
+    const band = isobands(grid, [-1, d], { zProperty: 'z' }).features[0]
+    region = band && band.geometry.coordinates.length ? (band as unknown as Area) : null
+  }
+  cache.set(key, region)
+  return region
+}
+
+// Sjøen teller også som vann. Listen lages én gang, så rutenettene kan gjenbrukes.
+const waterCache = new WeakMap<object, LngLat[][]>()
+function waterLines(data: GeoData) {
+  let lines = waterCache.get(data.shapes)
+  if (!lines) waterCache.set(data.shapes, (lines = [...(data.shapes.water ?? []), ...(data.shapes.coast ?? [])]))
+  return lines
+}
+
+/** Området «nærmere enn seeker» for spørsmål om avstand til en linje: kyst, vann, riksgrense og grenser. */
+function lineRegion(q: Question, data: GeoData, within: Area): Area | null {
+  let lines: LngLat[][]
+  let d: number
+  if (q.kind === 'geodist') {
+    if (!hasData(q, data)) return null
+    lines = q.ref === 'water' ? waterLines(data) : (data.shapes[q.ref] ?? [])
+    d = shapeDist(data, q.ref, q.pos)
+  } else if (q.kind === 'border') {
+    if (!hasData(q, data)) return null
+    lines = borderRings(data, q.level)
+    d = borderDist(data, q.level, q.pos)
+  } else return null
+  if (!Number.isFinite(d) || !lines.length) return null
+  return nearLines(lines, d, (within === WORLD ? BOUNDS : bbox(within)) as Box)
+}
+
 /** Området hider kan være i før noen spørsmål er stilt. */
 export function startArea(settings: Pick<Settings, 'playArea'>): Area {
   const ring = settings.playArea
@@ -365,7 +472,7 @@ export function autoPlayArea(stations: Station[], settings: Pick<Settings, 'line
 
 export function applyQuestion(area: Area | null, q: Question, data: GeoData): Area | null {
   if (!area || !shrinks(q)) return area
-  const region = regionOf(q, data)
+  const region = regionOf(q, data) ?? lineRegion(q, data, area)
   if (!region) return area
   const pair = featureCollection([area, region])
   return isPositive(q) ? intersect(pair) : difference(pair)

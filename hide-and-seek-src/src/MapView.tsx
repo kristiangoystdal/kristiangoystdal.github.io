@@ -7,7 +7,9 @@ import { useSync } from './sync'
 import type { GeoData, LngLat, Settings, Station } from './types'
 import { GameStatus, locate } from './ui'
 
-const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'seekers', 'me'] as const
+const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'tools', 'seekers', 'me'] as const
+/** Måleverktøyet tegnes i en egen farge, så det ikke forveksles med spørsmål. */
+const TOOL_COLOR = '#8e44ad'
 type Group = (typeof GROUPS)[number]
 const LABEL_ZOOM = 13
 const METRO_SUFFIX = ' (T-bane)'
@@ -66,6 +68,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   const setDraw = useUi((s) => s.setDraw)
   const setSettings = useGame((s) => s.setSettings)
   const seekers = useSync((s) => s.seekers)
+  const tools = useGame((s) => s.tools)
 
   // Hider ser bare sin egen sone, aldri hvilke stasjoner seekerne har igjen.
   const hiderView = mode === 'hider'
@@ -236,6 +239,25 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     const g = groups.current.me.clearLayers()
     if (me) L.circleMarker(ll(me), { radius: 7, color: '#fff', weight: 2.5, fillColor: '#1a73e8', fillOpacity: 1, interactive: false }).addTo(g)
   }, [ready, me])
+
+  useEffect(() => {
+    if (!ready) return
+    const g = groups.current.tools.clearLayers()
+    const style = { color: TOOL_COLOR, weight: 2.5, dashArray: '4 6', fillColor: TOOL_COLOR, fillOpacity: 0.08, interactive: false }
+    const pin = (p: LngLat, text: string) =>
+      L.circleMarker(ll(p), { radius: 6, color: '#fff', weight: 2, fillColor: TOOL_COLOR, fillOpacity: 1 }).bindTooltip(text, { direction: 'top' }).addTo(g)
+    const { radar, thermo } = tools
+    if (radar?.center) {
+      L.circle(ll(radar.center), { ...style, radius: radar.radiusM }).addTo(g)
+      pin(radar.center, `Egen radar · ${(radar.radiusM / 1000).toLocaleString('nb-NO')} km`)
+    }
+    if (thermo?.start) {
+      // Sirkelen viser hvor langt man må komme. Streken er reist så langt.
+      L.circle(ll(thermo.start), { ...style, fillOpacity: 0, radius: thermo.minM }).addTo(g)
+      pin(thermo.start, 'Termometer: start')
+      if (thermo.at) L.polyline([ll(thermo.start), ll(thermo.at)], { color: TOOL_COLOR, weight: 3, interactive: false }).addTo(g)
+    }
+  }, [ready, tools])
 
   // Seekerne som deler posisjon. Det er disse hider følger med på.
   useEffect(() => {

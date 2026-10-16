@@ -6,8 +6,10 @@ import { loadData } from './data'
 import { movedAt } from './clock'
 import { clipData, dist, hiderStation, solve } from './geo'
 import { Rules } from './Rules'
+import { useThermoGps } from './Tools'
 import { gameFromHash, useGame, useUi, type Tab } from './store'
 import { Toast } from './notify'
+import { rememberFix } from './ui'
 import { joinRoom, resumeRoom, roomFromHash, shareSeekerPos, useSync, type SeekerPos } from './sync'
 import type { GeoData, LngLat } from './types'
 
@@ -72,6 +74,7 @@ function useHiderLocation(data: GeoData | null) {
     const watch = navigator.geolocation.watchPosition(
       (p) => {
         const pos: LngLat = [p.coords.longitude, p.coords.latitude]
+        rememberFix(pos)
         const { hider, settings, setHider } = useGame.getState()
         if (hider.pos && dist(hider.pos, pos) < HIDER_MOVE_M) return
         setHider({ stationId: hiderStation(data.stations, pos, settings.zoneRadius, hider.stationId).id, pos })
@@ -108,6 +111,7 @@ function useShareLocation() {
     const watch = navigator.geolocation.watchPosition(
       (p) => {
         here = [p.coords.longitude, p.coords.latitude]
+        rememberFix(here)
         speed = p.coords.speed
       },
       () => {},
@@ -151,6 +155,7 @@ export default function App() {
   useSharedLink()
   useShareLocation()
   useAutoResume()
+  useThermoGps()
   useHiderLocation(loaded)
   useEffect(() => {
     loadData().then(setData, () => setError(true))

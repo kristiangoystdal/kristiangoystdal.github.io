@@ -6,6 +6,7 @@ import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, dist, hiderStation, levelAreas, 
 import { NotifyToggle } from './notify'
 import { allPresets, applyPreset, deletePreset, loadPresets, presetId, savePreset, usePresets } from './presets'
 import { useGame, useUi, type Layer } from './store'
+import { ToolsPanel } from './Tools'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
 import type { DayKey, GeoData, LngLat, RoundResult, Settings } from './types'
 import { PAUSE_TEXT, PointInput, Section, useGameNow, useNow } from './ui'
@@ -70,6 +71,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   return (
     <div>
       {hiderView ? <HiderPosition data={data} /> : <EndgameControl result={result} />}
+      <ToolsPanel stations={data.stations} />
       <Section title="Kartlag">
         <div className="flex flex-wrap gap-1.5">
           {LAYERS.filter((l) => l.key !== 'zones' || (!hiderView && endgame)).map((l) => (
