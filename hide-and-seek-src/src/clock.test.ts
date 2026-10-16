@@ -46,4 +46,13 @@ describe('klokken', () => {
     const paused = round({ seekFrom: 60 * MIN, pause: { at: 10 * MIN, kind: 'rest' } })
     expect(resume(paused, [], 25 * MIN).round).toMatchObject({ seekFrom: 75 * MIN, pause: null })
   })
+
+  it('Move står bare til sluttiden, selv om noen trykker fortsett senere', () => {
+    const moving = round({ pause: { at: 20 * MIN, kind: 'move', until: 80 * MIN }, moves: [{ at: 20 * MIN, from: null }] })
+    const after = resume(moving, [], 95 * MIN)
+    expect(after.round).toMatchObject({ pause: null, stoppedMs: 60 * MIN })
+    expect(hiderSeconds(after.round, [], 'M', 95 * MIN)).toBe(35 * 60)
+    // Hider er fremme før tiden er ute.
+    expect(resume(moving, [], 50 * MIN).round.stoppedMs).toBe(30 * MIN)
+  })
 })

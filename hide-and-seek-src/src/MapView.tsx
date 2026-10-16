@@ -283,7 +283,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
             </>
           )}
         </div>
-        <GameStatus />
+        <GameStatus stations={data.stations} />
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">
             <span>Trykk på kartet: {pick.label.toLowerCase()}</span>
@@ -318,6 +318,9 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
         {locError && <div className="card pointer-events-auto px-3! py-1.5! text-xs text-bad shadow-lg">{locError}</div>}
       </div>
       <div className="absolute right-3 bottom-7 z-[1000] flex flex-col items-end gap-2">
+        <button className="btn shadow-lg" onClick={() => useUi.getState().setRules('')}>
+          📖 Regler
+        </button>
         <button
           className="btn shadow-lg"
           aria-label={`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}. Trykk for å bytte.`}

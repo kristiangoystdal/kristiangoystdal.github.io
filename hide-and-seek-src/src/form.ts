@@ -1,4 +1,4 @@
-import { ANSWER_CANT, ANSWER_NULL, METRO_LINES, POI_TYPES, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
+import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, POI_TYPES, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
 import type { AdminLevel, GameSize, GeoData, Kind, LngLat, Question, QuestionBody, Settings, ShapeKey, Station } from './types'
 
 /** Skjemaet for et spørsmål: flatt og med valgfrie punkter, så det kan være halvferdig. */
@@ -150,6 +150,11 @@ export const available = (i: Item, rules: Rules) => (rules.questions ? rules.que
 export const itemsFor = (category: Category, rules: Rules) => ITEMS.filter((i) => i.category === category && available(i, rules))
 /** Spørsmålene som er med, som en liste med id-er. Utgangspunktet når utvalget tilpasses. */
 export const enabledIds = (rules: Rules) => ITEMS.filter((i) => available(i, rules)).map((i) => i.id)
+
+/** Kortene hider har spilt som stenger spørsmål resten av runden. */
+export type Locks = { drained?: string[]; spotty?: string | null }
+/** Hvorfor spørsmålet ikke kan stilles nå, eller null. Drained Brain og Spotty Memory stenger selv mot økt kostnad. */
+export const lockedBy = (i: Item, locks: Locks) => (locks.drained?.includes(i.id) ? 'Drained Brain' : locks.spotty === i.category ? 'Spotty Memory' : null)
 
 // Spørsmål lagret før regelboklisten kom har ingen item. Da gjettes kategorien fra typen.
 const LEGACY_CATEGORY: Record<Kind, Category> = {
@@ -307,6 +312,8 @@ const ANSWER_LABELS: Record<string, string> = {
 const SPECIAL_LABELS: Record<string, string> = {
   [ANSWER_NULL]: 'Nullsvar (finnes ikke innenfor kartet)',
   [ANSWER_CANT]: 'Kan ikke svare',
+  [ANSWER_VETO]: 'Veto (ikke besvart)',
+  [ANSWER_RANDOM]: 'Randomize (byttet spørsmål)',
 }
 export const answerLabel = (q: Pick<Question, 'kind'> & { poiType?: string }, answer: string) =>
   SPECIAL_LABELS[answer] ?? (q.kind === 'photo' ? answer : q.poiType === METRO_LINES && !ANSWER_LABELS[answer] ? `Linje ${answer}` : (ANSWER_LABELS[answer] ?? answer))
@@ -356,7 +363,17 @@ export function questionKey(q: Question): string {
   }
 }
 
-/** Nøklene til alle spørsmål som alt er stilt, for å merke hva som er brukt. */
-export const usedKeys = (log: Question[]) => new Set(log.map(questionKey))
+/** Nøklene til alle spørsmål som alt er stilt, for å merke hva som er brukt. Et spørsmål hider byttet ut med Randomize regnes ikke som stilt. */
+export const usedKeys = (log: Question[]) => new Set(log.filter((q) => q.answer !== ANSWER_RANDOM).map(questionKey))
+
+/**
+ * Randomize: et tilfeldig spørsmål i samme kategori som ikke er stilt og ikke er stengt.
+ * null når det ikke finnes noe å bytte til.
+ */
+export function randomSwap(q: Question, log: Question[], rules: Rules, locks: Locks, rnd = Math.random): Item | null {
+  const used = usedKeys(log.filter((x) => x.id !== q.id))
+  const options = itemsFor(categoryOf(q), rules).filter((i) => i.id !== q.item && !isUsed(used, i.id) && !lockedBy(i, locks))
+  return options.length ? options[Math.floor(rnd() * options.length)] : null
+}
 /** Er spørsmålet i katalogen stilt før, i en eller annen variant? */
 export const isUsed = (used: Set<string>, itemId: string) => [...used].some((k) => k === itemId || k.startsWith(`${itemId}:`))

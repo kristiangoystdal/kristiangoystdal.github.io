@@ -54,6 +54,8 @@ interface Base {
   item?: string
   /** Seekernes eget notat. */
   note?: string
+  /** Randomize: spørsmålet (id i ITEMS) seekerne skal stille i stedet. */
+  swap?: string
 }
 
 export type QuestionBody =

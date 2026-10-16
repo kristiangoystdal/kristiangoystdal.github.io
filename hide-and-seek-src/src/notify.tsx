@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 import { answerLabel, categoryOf, itemOf } from './form'
+import type { Round } from './clock'
 import { useUi, type Tab } from './store'
 import type { Question } from './types'
 
@@ -41,8 +42,25 @@ export function announce(before: Question[], after: Question[], mode: 'seeker' |
         tab: 'questions',
       })
     } else if (q.answer !== null && prev?.answer !== q.answer && mode === 'seeker') {
-      notify({ title: 'Hider har svart', body: `${category(q)} → ${answerLabel(q, q.answer)}`, tab: 'questions' })
+      const swap = q.swap && itemOf(q.swap)
+      notify({ title: 'Hider har svart', body: `${category(q)} → ${answerLabel(q, q.answer)}${swap ? `. Still «${swap.label}» i stedet.` : ''}`, tab: 'questions' })
     }
+  }
+}
+
+/** Seekerne får beskjed når hider spiller et kort som endrer spillet for dem. */
+export function announceRound(before: Round, after: Round, mode: 'seeker' | 'hider') {
+  if (mode !== 'seeker') return
+  if ((after.moves?.length ?? 0) > (before.moves?.length ?? 0)) {
+    notify({ title: 'Hider har spilt Move', body: 'Bli stående. Ingen spørsmål før hider er i ny sone.', tab: 'questions' })
+  } else if (before.pause?.kind === 'move' && !after.pause) {
+    notify({ title: 'Hider er i ny sone', body: 'Spillet fortsetter. Kartet starter på nytt.', tab: 'questions' })
+  }
+  if ((after.drained?.length ?? 0) > (before.drained?.length ?? 0)) {
+    notify({ title: 'Hider har spilt Drained Brain', body: `${after.drained!.map((id) => itemOf(id)?.label).join(', ')} kan ikke stilles.`, tab: 'questions' })
+  }
+  if (after.spotty && after.spotty !== before.spotty) {
+    notify({ title: 'Spotty Memory', body: `${after.spotty} er slått ut.`, tab: 'questions' })
   }
 }
 

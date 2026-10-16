@@ -23,10 +23,40 @@ export function useGameNow() {
 export const PAUSE_TEXT: Record<PauseKind, { title: string; body: string }> = {
   pause: { title: '⏸ Spillet er på pause', body: 'Alle klokker står. Alle blir stående der de er til spillet fortsetter.' },
   rest: { title: '🌙 Hvileperiode', body: 'Alle klokker står. Før spillet fortsetter må alle tilbake til nøyaktig samme sted.' },
+  move: { title: '🧳 Hider har spilt Move', body: 'Hiders klokke står mens hider finner en ny sone. Seekerne blir stående og kan ikke stille spørsmål.' },
+}
+
+/** Tid igjen som m:ss, eller h:mm:ss. */
+export const left = (ms: number) => {
+  const t = Math.max(0, Math.round(ms / 1000))
+  const h = Math.floor(t / 3600)
+  const mm = String(Math.floor((t % 3600) / 60)).padStart(h ? 2 : 1, '0')
+  return `${h ? `${h}:` : ''}${mm}:${String(t % 60).padStart(2, '0')}`
+}
+
+/** Hvor lenge Move varer, og hvilken stasjon hider forlot. */
+export function MoveInfo({ stations }: { stations: Station[] }) {
+  const now = useNow()
+  const pause = useGame((s) => s.round.pause)
+  const from = useGame((s) => s.round.moves?.at(-1)?.from)
+  if (pause?.kind !== 'move') return null
+  const name = stations.find((x) => x.id === from)?.name
+  return (
+    <span className="block text-xs">
+      {pause.until && <>Ny sone innen {left(pause.until - now)}. </>}
+      {name ? (
+        <>
+          Hider forlot <b>{name}</b>.
+        </>
+      ) : (
+        'Hider sier fra hvilken stasjon som ble forlatt.'
+      )}
+    </span>
+  )
 }
 
 /** Det alle må vite akkurat nå: pause, eller at hiders klokke står fordi svartiden er ute. */
-export function GameStatus() {
+export function GameStatus({ stations }: { stations: Station[] }) {
   const now = useGameNow()
   const pause = useGame((s) => s.round.pause)
   const running = useGame((s) => s.round.seekFrom !== null)
@@ -37,6 +67,7 @@ export function GameStatus() {
     <div className="card pointer-events-auto border-accent! px-3! py-2! text-sm shadow-lg" role="status">
       <b className="block">{text.title}</b>
       <span className="text-xs text-muted">{text.body}</span>
+      <MoveInfo stations={stations} />
     </div>
   )
 }

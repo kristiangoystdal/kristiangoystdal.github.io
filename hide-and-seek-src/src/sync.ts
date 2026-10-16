@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { announce } from './notify'
+import { announce, announceRound } from './notify'
 import { GAME_SETTINGS, useGame, type Round, type State } from './store'
 import type { LngLat, Question, RoundResult, Settings } from './types'
 
@@ -188,6 +188,7 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       applying = false
       // Ikke varsle om alt som lå i rommet fra før da vi koblet til.
       if (!first && othersChanged) announce(local.questions, next.questions, local.mode)
+      if (!first) announceRound(local.round, next.round, local.mode)
       // Sender det som eventuelt ble endret lokalt mens rommets tilstand ble lagt inn.
       push()
     })

@@ -54,8 +54,12 @@ const POSITIVE_ANSWERS = ['yes', 'in', 'warmer', 'closer']
 export const ANSWER_NULL = 'none'
 /** Endgame: hider kan ikke ta bildet uten å flytte seg. */
 export const ANSWER_CANT = 'cant'
-const NEUTRAL_ANSWERS = [ANSWER_NULL, ANSWER_CANT]
-/** Besvart med et svar som sier noe om hvor hider er. Nullsvar og «kan ikke svare» krymper ikke kartet. */
+/** Hider spilte Veto: seekerne får ikke svar, men spørsmålet regnes som stilt. */
+export const ANSWER_VETO = 'veto'
+/** Hider spilte Randomize: et annet spørsmål stilles i stedet, og dette regnes ikke som stilt. */
+export const ANSWER_RANDOM = 'random'
+const NEUTRAL_ANSWERS = [ANSWER_NULL, ANSWER_CANT, ANSWER_VETO, ANSWER_RANDOM]
+/** Besvart med et svar som sier noe om hvor hider er. Nullsvar, «kan ikke svare» og kort som spilles i stedet for svar krymper ikke kartet. */
 export const shrinks = (q: Question) => q.answer !== null && !NEUTRAL_ANSWERS.includes(q.answer)
 
 const GAP_M = 300
@@ -428,10 +432,11 @@ function zoneFits(s: Station, q: Question, region: Area | null, zoneRadius: numb
   return isPositive(q) ? booleanIntersects(zone, region) : difference(featureCollection([zone, region])) !== null
 }
 
-export function solve(questions: Question[], data: GeoData, settings: Settings, endgame: Endgame | null = null): Result {
+/** `since`: hider spilte Move da, så eldre svar sier ingenting om den nye sonen. */
+export function solve(questions: Question[], data: GeoData, settings: Settings, endgame: Endgame | null = null, since = 0): Result {
   const base = startArea(settings)
   const target = endgame && data.stations.find((s) => s.id === endgame.stationId)
-  const live = questions.filter(shrinks)
+  const live = questions.filter((q) => shrinks(q) && q.time >= since)
   const roaming = live.filter((q) => !target || q.time < endgame!.time)
 
   let left = data.stations.filter(

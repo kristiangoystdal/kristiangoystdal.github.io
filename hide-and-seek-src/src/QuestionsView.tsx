@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { deadline } from './clock'
+import { deadline, movedAt } from './clock'
 import {
   CATEGORIES,
   ITEMS,
@@ -13,19 +13,45 @@ import {
   isUsed,
   itemOf,
   itemsFor,
+  lockedBy,
   newForm,
   questionToForm,
+  randomSwap,
   responseMinutes,
   switchItem,
   usedKeys,
+  type Category,
   type Form,
+  type Item,
+  type Locks,
 } from './form'
-import { ANSWER_CANT, ANSWER_NULL, METRO_LINES, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
+import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
 import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
 import type { GeoData, LngLat, Question } from './types'
-import { PAUSE_TEXT, PointInput, Section, locate, useGameNow } from './ui'
+import { MoveInfo, PAUSE_TEXT, PointInput, Section, locate, useGameNow, useNow } from './ui'
 
 const UNSURE_M = 30
+/** Kortene som stenger spørsmål. Hver for seg, så Zustand ikke lager et nytt objekt ved hver endring. */
+function useLocks(): Locks {
+  const drained = useGame((s) => s.round.drained)
+  const spotty = useGame((s) => s.round.spotty)
+  return { drained, spotty }
+}
+
+/** Der seeker sto da spørsmålet ble stilt. */
+const posOf = (q: Question): LngLat | null => ('pos' in q && q.pos ? q.pos : 'center' in q ? q.center : 'to' in q ? q.to : null)
+
+const openRules = (section: string) => useUi.getState().setRules(section)
+
+/** Lenke til regelavsnittet. */
+function RulesLink({ section, label = 'Regler' }: { section: string; label?: string }) {
+  return (
+    <button type="button" className="cursor-pointer text-xs text-muted underline" onClick={() => openRules(section)}>
+      📖 {label}
+    </button>
+  )
+}
+
 const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
 
 /** Hiders fasitsvar på et spørsmål, eller null når appen ikke er i hider-modus. */
@@ -95,16 +121,18 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
   const endgame = useGame((s) => !!s.round.endgame)
   const lines = useGame((s) => s.settings.lines)
   const waiting = useBlocked(form.id)
+  const locks = useLocks()
   const set = (patch: Partial<Form>) => setDraft({ ...form, answer: null, ...patch })
 
   const item = itemOf(form.item)!
+  const lock = lockedBy(item, locks)
   const items = itemsFor(item.category, rules)
   const groups = [...new Set(items.map((i) => i.group))]
   // Merker hvilke spørsmål som alt er stilt, så man ser hva som er igjen.
   const used = usedKeys(questions.filter((x) => x.id !== form.id))
   const q = formToQuestion(form)
   // Hider som legger inn spørsmål og svar samlet, er ikke bundet av køen.
-  const blocked = !form.id && !(isHider && form.answer !== null) ? waiting : null
+  const blocked = lock && !form.id ? `Dette spørsmålet er stengt av ${lock} resten av runden.` : !form.id && !(isHider && form.answer !== null) ? waiting : null
   const route = data.lines.features.find((f) => f.properties.line === form.line)?.properties.stations ?? []
   const stationName = (id?: string) => data.stations.find((x) => x.id === id)?.name ?? ''
   const special = [ANSWER_NULL, ...(form.kind === 'photo' && endgame ? [ANSWER_CANT] : [])]
@@ -131,7 +159,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
     <div>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {CATEGORIES.map((c) => {
-          const first = itemsFor(c, rules)[0]
+          const first = itemsFor(c, rules).find((i) => !lockedBy(i, locks))
           return (
             <button key={c} type="button" className={`btn ${c === item.category ? 'btn-on' : ''}`} disabled={!first} onClick={() => first && setDraft(switchItem(form, first))}>
               {c}
@@ -140,6 +168,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
         })}
       </div>
       {itemsFor('Tentacles', rules).length === 0 && <p className="-mt-1 mb-3 text-xs text-muted">Tentacles er ikke med i dette spillet. Det kan slås på under Oppsett.</p>}
+      {locks.spotty && <p className="-mt-1 mb-3 text-xs text-muted">{locks.spotty} er slått ut av Spotty Memory.</p>}
 
       <label className="mb-3 block">
         <span className="label">Spørsmål</span>
@@ -149,15 +178,19 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
               {items
                 .filter((i) => i.group === g)
                 .map((i) => (
-                  <option key={i.id} value={i.id}>
+                  <option key={i.id} value={i.id} disabled={!!lockedBy(i, locks)}>
                     {isUsed(used, i.id) ? '✓ ' : ''}
                     {i.label}
+                    {lockedBy(i, locks) ? ` (${lockedBy(i, locks)})` : ''}
                   </option>
                 ))}
             </optgroup>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-muted">✓ = stilt før.</span>
+        <span className="mt-1 flex justify-between text-xs text-muted">
+          <span>✓ = stilt før.</span>
+          <RulesLink section={item.category.toLowerCase()} label={`Regler for ${item.category}`} />
+        </span>
       </label>
 
       {form.kind === 'radar' && (
@@ -315,7 +348,18 @@ function HiderQuestions({ data }: { data: GeoData }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
 
+  const rules = useGame((s) => s.settings)
+  const locks = useLocks()
   const answer = (q: Question, value: string | null) => answerQuestion(q.id, value)
+
+  const veto = (q: Question) => {
+    if (confirm('Spille Veto? Seekerne får ikke svar, og spørsmålet regnes som stilt. Du trekker ingen kort for det.')) answer(q, ANSWER_VETO)
+  }
+  const randomize = (q: Question) => {
+    const swap = randomSwap(q, questions, rules, locks)
+    if (!swap) return
+    if (confirm(`Spille Randomize? Seekerne må stille «${swap.label}» (${swap.category}) i stedet, og dette spørsmålet regnes ikke som stilt.`)) answerQuestion(q.id, ANSWER_RANDOM, swap.id)
+  }
 
   /** Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå. */
   const answerFromGps = async (q: Question) => {
@@ -352,7 +396,9 @@ function HiderQuestions({ data }: { data: GeoData }) {
         {error && <p className="mb-2 text-xs text-bad">{error}</p>}
         <ul className="flex flex-col gap-2">
           {questions.map((q) => {
-            const a = auto(q)
+            // Er spørsmålet besvart med et kort, er det ingenting mer å svare.
+            const card = q.answer === ANSWER_VETO || q.answer === ANSWER_RANDOM
+            const a = card ? null : auto(q)
             return (
               <li key={q.id} className="card">
                 <p className="mb-1 text-sm">{describe(q, data)}</p>
@@ -361,6 +407,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                 {q.answer !== null && (
                   <p className="text-sm">
                     Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
+                    {q.swap && <span className="block text-xs text-muted">Seekerne skal stille «{itemOf(q.swap)?.label}» i stedet.</span>}
                     {/* Trykket hider feil, kan svaret trekkes og gis på nytt. Seekerne ser at det er endret. */}
                     <button className="ml-2 text-xs text-muted underline" onClick={() => answer(q, null)}>
                       angre svaret
@@ -369,7 +416,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                 )}
                 <AnswerHistory q={q} />
                 {a && q.answer !== a.answer && <AutoHint q={q} auto={a} />}
-                {q.kind === 'photo' ? (
+                {card ? null : q.kind === 'photo' ? (
                   q.answer === null && (
                     <div className="mt-2">
                       <p className="mb-2 text-xs text-muted">Send bildet til seekerne på melding, og kvitter her.</p>
@@ -411,6 +458,17 @@ function HiderQuestions({ data }: { data: GeoData }) {
                           Kan ikke svare
                         </button>
                       )}
+                      <button className="btn" onClick={() => veto(q)} title="Kortet Veto: seekerne får ikke svar">
+                        🚫 Veto
+                      </button>
+                      <button
+                        className="btn"
+                        disabled={!randomSwap(q, questions, rules, locks)}
+                        onClick={() => randomize(q)}
+                        title={randomSwap(q, questions, rules, locks) ? 'Kortet Randomize: et annet spørsmål i samme kategori stilles i stedet' : 'Ingen ustilte spørsmål igjen i denne kategorien'}
+                      >
+                        🎲 Randomize
+                      </button>
                     </div>
                 )}
               </li>
@@ -418,7 +476,162 @@ function HiderQuestions({ data }: { data: GeoData }) {
           })}
         </ul>
       </Section>
+      <HiderCards data={data} />
     </>
+  )
+}
+
+/** Kortene som stenger spørsmål resten av runden. Vises for alle. */
+function LocksNotice() {
+  const { drained, spotty } = useLocks()
+  if (!drained?.length && !spotty) return null
+  return (
+    <div className="mb-4 rounded-lg border border-accent p-3 text-sm">
+      {!!drained?.length && (
+        <p>
+          <b>Drained Brain:</b> {drained.map((id) => `${itemOf(id)?.label} (${itemOf(id)?.category})`).join(', ')} kan ikke stilles resten av runden.
+        </p>
+      )}
+      {spotty && (
+        <p className={drained?.length ? 'mt-1' : ''}>
+          <b>Spotty Memory:</b> {spotty} er slått ut.
+        </p>
+      )}
+    </div>
+  )
+}
+
+const DICE = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
+
+/**
+ * Kortene hider spiller utenom et svar. Kortstokken er fysisk, så appen holder
+ * ikke styr på hånden, bare på det kortene gjør med spillet.
+ */
+function HiderCards({ data }: { data: GeoData }) {
+  const now = useNow()
+  const round = useGame((s) => s.round)
+  const rules = useGame((s) => s.settings)
+  const hider = useGame((s) => s.hider)
+  const setRound = useGame((s) => s.setRound)
+  const playMove = useGame((s) => s.playMove)
+  const resumeGame = useGame((s) => s.resumeGame)
+  const [picks, setPicks] = useState(['', '', ''])
+
+  if (round.seekFrom === null) return null
+  const seeking = now >= round.seekFrom
+  const moving = round.pause?.kind === 'move'
+  const station = data.stations.find((x) => x.id === hider.stationId) ?? (hider.pos ? nearestStation(data.stations, hider.pos) : null)
+  const moveBlocked = !seeking ? 'Kan spilles når letingen har startet.' : round.endgame ? 'Kan ikke spilles i endgame.' : round.pause ? 'Spillet står allerede.' : null
+
+  const move = () => {
+    const where = station ? `Seekerne får vite at du forlot ${station.name}.` : 'Si fra til seekerne hvilken stasjon du forlot.'
+    if (confirm(`Spille Move? Klokken din står i opptil ${round.hidingMinutes} min mens du finner en ny sone, og seekerne må bli stående. Kast hele hånden. ${where}`)) playMove(station?.id ?? null)
+  }
+
+  const items = ITEMS.filter((i) => available(i, rules))
+  const chosen = picks.filter(Boolean).map((id) => itemOf(id)!)
+  const sameCategory = new Set(chosen.map((i) => i.category)).size < chosen.length
+  const roll = () => setRound({ spotty: CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)] })
+
+  return (
+    <Section title="Kort">
+      <div className="flex flex-col gap-2">
+        <div className="card">
+          <div className="flex items-baseline justify-between gap-2">
+            <b className="text-sm">🧳 Move</b>
+            <RulesLink section="kort" />
+          </div>
+          {moving ? (
+            <>
+              <p className="mt-1 text-sm">Finn en ny sone. Klokken din står, og seekerne kan ikke stille spørsmål.</p>
+              <MoveInfo stations={data.stations} />
+              <button className="btn btn-primary mt-2 w-full" onClick={resumeGame}>
+                Jeg er i ny sone
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-xs text-muted">Ny sone. Klokken din står i opptil {round.hidingMinutes} min, og kartet til seekerne starter på nytt.</p>
+              <button className="btn mt-2 w-full" disabled={!!moveBlocked} onClick={move}>
+                Spill Move
+              </button>
+              {moveBlocked && <p className="mt-1 text-xs text-muted">{moveBlocked}</p>}
+            </>
+          )}
+        </div>
+
+        <details className="card">
+          <summary className="cursor-pointer text-sm font-semibold">🧠 Drained Brain{round.drained?.length ? ' (aktiv)' : ''}</summary>
+          {round.drained?.length ? (
+            <>
+              <p className="mt-2 text-sm">Stengt resten av runden: {round.drained.map((id) => itemOf(id)?.label).join(', ')}.</p>
+              <button className="btn mt-2" onClick={() => setRound({ drained: [] })}>
+                Fjern
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 mb-2 text-xs text-muted">Velg spørsmålene kortet stenger, i ulike kategorier. De kan ikke stilles resten av runden, heller ikke mot økt kostnad.</p>
+              {picks.map((v, n) => (
+                <select key={n} className="field mb-1.5" value={v} aria-label={`Spørsmål ${n + 1}`} onChange={(e) => setPicks(picks.map((p, m) => (m === n ? e.target.value : p)))}>
+                  <option value="">Spørsmål {n + 1}…</option>
+                  {CATEGORIES.map((c) => (
+                    <optgroup key={c} label={c}>
+                      {items
+                        .filter((i) => i.category === c)
+                        .map((i) => (
+                          <option key={i.id} value={i.id}>
+                            {i.label}
+                          </option>
+                        ))}
+                    </optgroup>
+                  ))}
+                </select>
+              ))}
+              {sameCategory && <p className="mb-1.5 text-xs text-bad">Spørsmålene må være i ulike kategorier.</p>}
+              <button
+                className="btn w-full"
+                disabled={!chosen.length || sameCategory}
+                onClick={() => {
+                  setRound({ drained: chosen.map((i) => i.id) })
+                  setPicks(['', '', ''])
+                }}
+              >
+                Spill Drained Brain
+              </button>
+            </>
+          )}
+        </details>
+
+        <details className="card">
+          <summary className="cursor-pointer text-sm font-semibold">🎲 Spotty Memory{round.spotty ? ` (${round.spotty} slått ut)` : ''}</summary>
+          <p className="mt-2 mb-2 text-xs text-muted">
+            En terning avgjør hvilken kategori som er slått ut: {CATEGORIES.map((c, n) => `${n + 1} ${c}`).join(', ')}. Kast på nytt når kortet sier det.
+          </p>
+          {round.spotty && (
+            <p className="mb-2 text-sm">
+              {DICE[CATEGORIES.indexOf(round.spotty as Category)]} <b>{round.spotty}</b> er slått ut.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            <button className="btn flex-1" onClick={roll}>
+              {round.spotty ? 'Kast på nytt' : 'Kast terning'}
+            </button>
+            <select className="field w-auto! flex-1" value={round.spotty ?? ''} aria-label="Velg kategori selv" onChange={(e) => setRound({ spotty: e.target.value || null })}>
+              <option value="">{round.spotty ? 'Ingen (fjern)' : 'Eller velg selv…'}</option>
+              {CATEGORIES.map((c, n) => (
+                <option key={c} value={c}>
+                  {n + 1}: {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        </details>
+        <p className="text-xs text-muted">
+          Veto og Randomize spiller du på spørsmålet du skal svare på. Andre kort spilles utenfor appen. <RulesLink section="kort" label="Alle kort" />
+        </p>
+      </div>
+    </Section>
   )
 }
 
@@ -491,6 +704,9 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const isHider = useGame((s) => s.mode === 'hider')
   const blocked = useBlocked()
   const rules = useGame((s) => s.settings)
+  const locks = useLocks()
+  const since = useGame((s) => movedAt(s.round))
+  const open = (item: Item | undefined) => item && !lockedBy(item, locks)
 
   if (draft) {
     return (
@@ -501,11 +717,11 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   }
 
   // Nytt spørsmål starter der seeker sto sist.
-  const last = questions.findLast((q) => 'pos' in q || 'center' in q || 'to' in q)
-  const lastPos = !last ? null : 'pos' in last ? last.pos : 'center' in last ? last.center : 'to' in last ? last.to : null
+  const last = questions.findLast((q) => posOf(q) !== null)
+  const lastPos = last ? posOf(last) : null
   const total = data.stations.length
-  // Radar er vanligst å åpne med. Er det tatt ut av spillet, brukes det første som er med.
-  const first = itemsFor('Radar', rules)[0] ?? ITEMS.find((i) => available(i, rules))
+  // Radar er vanligst å åpne med. Er det tatt ut av spillet eller stengt av et kort, brukes det første som kan stilles.
+  const first = itemsFor('Radar', rules).find(open) ?? ITEMS.find((i) => available(i, rules) && open(i))
 
   return (
     <div>
@@ -518,6 +734,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
         </button>
       </div>
       {!isHider && blocked && <p className="-mt-2 mb-4 text-xs text-muted">{blocked}</p>}
+      <LocksNotice />
       {isHider ? (
         <HiderQuestions data={data} />
       ) : (
@@ -533,7 +750,9 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     <span>
                       {i + 1}. {categoryOf(q)} · {time(q.time)}
                     </span>
-                    <span className="tabular-nums">{isHider || !shrinks(q) || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}</span>
+                    <span className="tabular-nums">
+                      {q.time < since ? 'Før Move, teller ikke' : isHider || !shrinks(q) || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}
+                    </span>
                   </div>
                   <p className="mt-1 text-sm">{describe(q, data)}</p>
                   {itemOf(q.item)?.rules && <p className="mt-1 text-xs text-muted">Krav: {itemOf(q.item)!.rules}</p>}
@@ -556,6 +775,17 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                       </button>
                     </span>
                   </div>
+                  {q.answer === ANSWER_RANDOM && q.swap && (
+                    <div className="mt-2 rounded-lg bg-panel-2 p-2 text-sm">
+                      Hider spilte Randomize. Still dette i stedet: <b>«{itemOf(q.swap)?.label}»</b> ({itemOf(q.swap)?.category})
+                      {!questions.some((x) => x.time > q.time && x.item === q.swap) && (
+                        <button className="btn btn-primary mt-2 w-full" disabled={!!blocked || !open(itemOf(q.swap))} onClick={() => setDraft(newForm(itemOf(q.swap)!, posOf(q) ?? lastPos))}>
+                          Still «{itemOf(q.swap)?.label}»
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {q.answer === ANSWER_VETO && <p className="mt-1 text-xs text-muted">Hider spilte Veto. Spørsmålet regnes som stilt.</p>}
                   <AnswerHistory q={q} />
                   {!isHider && (
                     <input

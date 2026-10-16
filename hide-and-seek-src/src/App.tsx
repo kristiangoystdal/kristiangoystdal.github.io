@@ -3,7 +3,9 @@ import MapView from './MapView'
 import { BonusPrompt, GamePanel, MapPanel, SettingsPanel } from './Panels'
 import QuestionsView from './QuestionsView'
 import { loadData } from './data'
+import { movedAt } from './clock'
 import { clipData, dist, solve } from './geo'
+import { Rules } from './Rules'
 import { gameFromHash, useGame, useUi, type Tab } from './store'
 import { Toast } from './notify'
 import { joinRoom, resumeRoom, roomFromHash, shareSeekerPos, useSync, type SeekerPos } from './sync'
@@ -54,6 +56,16 @@ function useSharedLink() {
 
 const SHARE_EVERY_MS = 10000
 
+/** En pause med sluttid (Move) slutter av seg selv. Den som ser det først, starter klokkene igjen. */
+function useAutoResume() {
+  const until = useGame((s) => s.round.pause?.until ?? null)
+  useEffect(() => {
+    if (until === null) return
+    const t = setTimeout(() => useGame.getState().resumeGame(), Math.max(0, until - Date.now()))
+    return () => clearTimeout(t)
+  }, [until])
+}
+
 /**
  * Deler seekers posisjon i rommet så hider kan følge med. Nettleseren gir bare
  * posisjon mens appen er åpen. Hiders posisjon deles aldri.
@@ -103,6 +115,7 @@ export default function App() {
   const settings = useGame((s) => s.settings)
   const mode = useGame((s) => s.mode)
   const endgame = useGame((s) => s.round.endgame ?? null)
+  const since = useGame((s) => movedAt(s.round))
   const pending = questions.filter((q) => q.answer === null).length
   const room = useSync((s) => s.room)
   const online = useSync((s) => s.status === 'online')
@@ -110,6 +123,7 @@ export default function App() {
   useTheme()
   useSharedLink()
   useShareLocation()
+  useAutoResume()
   useEffect(() => {
     loadData().then(setData, () => setError(true))
   }, [])
@@ -118,10 +132,10 @@ export default function App() {
   const data = useMemo(() => loaded && clipData(loaded, settings.playArea), [loaded, settings.playArea])
   const result = useMemo(
     // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
-    () => data && (mode === 'hider' ? solve([], data, settings) : solve(questions, data, settings, endgame)),
+    () => data && (mode === 'hider' ? solve([], data, settings) : solve(questions, data, settings, endgame, since)),
     // Bare sonestørrelse, linjevalg og spillområde påvirker geometrien.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, questions, mode, endgame, settings.zoneRadius, settings.lines, settings.playArea],
+    [data, questions, mode, endgame, since, settings.zoneRadius, settings.lines, settings.playArea],
   )
 
   if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
@@ -133,6 +147,7 @@ export default function App() {
         <MapView data={data} result={result} />
         <Toast />
         <BonusPrompt />
+        <Rules />
       </main>
       <aside className={`flex ${tab === 'map' ? 'max-h-[38dvh]' : 'max-h-[62dvh]'} flex-col border-t border-border bg-bg md:h-full md:max-h-none md:w-96 md:border-t-0 md:border-r`}>
         <button
@@ -149,9 +164,14 @@ export default function App() {
             <h1 className="text-lg font-bold">
               Hide and Seek <span className="text-accent">Oslo</span>
             </h1>
-            <a className="text-xs text-muted underline" href="../">
-              Til forsiden
-            </a>
+            <span className="flex gap-3">
+              <button className="cursor-pointer text-xs text-muted underline" onClick={() => useUi.getState().setRules('')}>
+                Regler
+              </button>
+              <a className="text-xs text-muted underline" href="../">
+                Til forsiden
+              </a>
+            </span>
           </div>
           {tab === 'map' && <MapPanel data={data} result={result} />}
           {tab === 'questions' && <QuestionsView data={data} result={result} />}

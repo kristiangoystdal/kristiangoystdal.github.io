@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { booleanPointInPolygon, destination } from '@turf/turf'
 import { describe, expect, it } from 'vitest'
-import { ITEMS, SIZE_RULES, enabledIds, formToQuestion, itemsFor, newForm, questionKey, responseMinutes, usedKeys } from './form'
-import { ANSWER_NULL, HIGH_SPEED, areaAt, autoAnswer, autoPlayArea, clipData, dist, hiderStation, isPositive, landmassOf, nearestStation, polylineDist, regionOf, shapeDist, solve, stationPos, stationsInReach, transitStops, voronoiCell } from './geo'
+import { ITEMS, SIZE_RULES, enabledIds, formToQuestion, itemsFor, lockedBy, newForm, questionKey, randomSwap, responseMinutes, usedKeys } from './form'
+import { ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, HIGH_SPEED, areaAt, autoAnswer, autoPlayArea, clipData, dist, hiderStation, isPositive, landmassOf, nearestStation, polylineDist, regionOf, shapeDist, solve, stationPos, stationsInReach, transitStops, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
 const raw = JSON.parse(readFileSync('public/data/stations.json', 'utf8'))
@@ -493,5 +493,45 @@ describe('steder utenfor kartgrensen finnes ikke', () => {
   it('tentacles uten noen steder innen rekkevidde gir nullsvar', () => {
     const none: QuestionBody = { kind: 'tentacles', poiType: 'kino', pos: pos('Kolsås'), radiusM: 2000 }
     expect(autoAnswer(q(none), hider, data)!.answer).toBe(ANSWER_NULL)
+  })
+})
+
+describe('kort', () => {
+  const radar = (id: string, item: string, answer: string | null, time = 0): Question => ({ id, time, answer, item, kind: 'radar', center: pos('Majorstuen'), radiusM: 1000 })
+
+  it('Veto og Randomize krymper ikke kartet', () => {
+    expect(names([radar('a', 'r-1000', ANSWER_VETO)])).toHaveLength(101)
+    expect(names([radar('a', 'r-1000', ANSWER_RANDOM)])).toHaveLength(101)
+  })
+
+  it('Veto regnes som stilt, Randomize gjør det ikke', () => {
+    expect(usedKeys([radar('a', 'r-1000', ANSWER_VETO)]).has('r-1000')).toBe(true)
+    expect(usedKeys([radar('a', 'r-1000', ANSWER_RANDOM)]).has('r-1000')).toBe(false)
+  })
+
+  it('Randomize velger et ustilt og åpent spørsmål i samme kategori', () => {
+    const asked = [radar('a', 'r-500', 'in'), radar('b', 'r-2000', null)]
+    const locks = { drained: ['r-5000'] }
+    const picks = new Set(Array.from({ length: 200 }, (_, n) => randomSwap(asked[1], asked, settings, locks, () => n / 200)?.id))
+    expect(picks.has('r-500')).toBe(false)
+    expect(picks.has('r-2000')).toBe(false)
+    expect(picks.has('r-5000')).toBe(false)
+    expect(picks.has('r-1000')).toBe(true)
+    expect([...picks].every((id) => id?.startsWith('r-'))).toBe(true)
+  })
+
+  it('Drained Brain og Spotty Memory stenger spørsmål', () => {
+    const r = ITEMS.find((i) => i.id === 'r-1000')!
+    expect(lockedBy(r, {})).toBeNull()
+    expect(lockedBy(r, { drained: ['r-1000'] })).toBe('Drained Brain')
+    expect(lockedBy(r, { spotty: 'Radar' })).toBe('Spotty Memory')
+    expect(lockedBy(r, { spotty: 'Photos' })).toBeNull()
+  })
+
+  it('etter Move krymper bare spørsmål stilt etter flyttingen kartet', () => {
+    const before = radar('a', 'r-1000', 'in', 1)
+    expect(solve([before], data, settings).stations.length).toBeLessThan(101)
+    expect(solve([before], data, settings, null, 2).stations).toHaveLength(101)
+    expect(solve([before, radar('b', 'r-1000', 'in', 3)], data, settings, null, 2).stations.length).toBeLessThan(101)
   })
 })

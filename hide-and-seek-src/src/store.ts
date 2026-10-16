@@ -44,8 +44,8 @@ export interface State {
 
   setSettings: (patch: Partial<Settings>) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
-  /** Hider svarer, eller trekker svaret med null. Går utenom angre-loggen, som er seekernes. */
-  answerQuestion: (id: string, answer: string | null) => void
+  /** Hider svarer, eller trekker svaret med null. Går utenom angre-loggen, som er seekernes. `swap` er spørsmålet Randomize ga. */
+  answerQuestion: (id: string, answer: string | null, swap?: string) => void
   removeQuestion: (id: string) => void
   setNote: (id: string, note: string) => void
   undo: () => void
@@ -56,6 +56,8 @@ export interface State {
   startRound: () => void
   cancelRound: () => void
   pauseGame: (kind: PauseKind) => void
+  /** Hider spiller Move: klokkene står i like lang tid som gjemmetiden, mens hider finner en ny sone. */
+  playMove: (from: string | null) => void
   resumeGame: () => void
   /** Hider oppgir tidsbonusen for runden som nettopp er ferdig. */
   answerBonus: (id: string, minutes: number) => void
@@ -83,7 +85,7 @@ const historyOf = (q: Question, answer: string | null) =>
   q.answer !== null && q.answer !== answer ? [...(q.history ?? []), { answer: q.answer, at: Date.now() }].slice(-HISTORY_LIMIT) : q.history
 
 /** Rundens tilstand når ingen runde er i gang. */
-const IDLE: Partial<Round> = { seekFrom: null, endgame: null, pause: null, stoppedMs: 0, planUntil: null }
+const IDLE: Partial<Round> = { seekFrom: null, endgame: null, pause: null, stoppedMs: 0, planUntil: null, moves: [], drained: [], spotty: null }
 
 export const useGame = create<State>()(
   persist(
@@ -115,8 +117,8 @@ export const useGame = create<State>()(
               : [...qs, { ...body, id: uid(), time: Date.now(), answer, answeredAt: answer === null ? undefined : Date.now() }],
           ),
         // Første svar avgjør om svartiden ble holdt. Svarer hider på nytt, står tidspunktet.
-        answerQuestion: (id, answer) =>
-          set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, answer, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() } : q)) })),
+        answerQuestion: (id, answer, swap) =>
+          set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, answer, swap, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() } : q)) })),
         removeQuestion: (id) => editQuestions((qs) => qs.filter((q) => q.id !== id)),
         // Notater går utenom angre-loggen, ellers ville hvert tastetrykk blitt et angresteg.
         setNote: (id, note) => set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, note: note || undefined } : q)) })),
@@ -136,6 +138,17 @@ export const useGame = create<State>()(
           })),
         cancelRound: () => set((s) => ({ round: { ...s.round, ...IDLE } })),
         pauseGame: (kind) => set((s) => (s.round.seekFrom === null || s.round.pause ? s : { round: { ...s.round, pause: { at: Date.now(), kind } } })),
+        playMove: (from) =>
+          set((s) => {
+            const now = Date.now()
+            const { seekFrom, pause, endgame } = s.round
+            if (seekFrom === null || now < seekFrom || pause || endgame) return s
+            return {
+              // Den nye sonen er ikke valgt ennå.
+              hider: { stationId: null, pos: s.hider.pos },
+              round: { ...s.round, pause: { at: now, kind: 'move', until: now + s.round.hidingMinutes * 60000 }, moves: [...(s.round.moves ?? []), { at: now, from }] },
+            }
+          }),
         resumeGame: () => set((s) => resume(s.round, s.questions, Date.now())),
         answerBonus: (id, minutes) => set((s) => ({ bonusAsked: id, results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         setSharePos: (sharePos) => set({ sharePos }),
@@ -229,11 +242,14 @@ interface UiState {
   draw: LngLat[] | null
   /** På mobil: panelet er slått sammen så kartet fyller skjermen. */
   collapsed: boolean
+  /** Regelvisningen er åpen, med avsnittet som skal vises først. null = lukket, '' = fra starten. */
+  rules: string | null
   setTab: (tab: Tab) => void
   setCollapsed: (collapsed: boolean) => void
   setDraft: (draft: UiState['draft']) => void
   setPick: (pick: UiState['pick']) => void
   setDraw: (draw: UiState['draw']) => void
+  setRules: (rules: string | null) => void
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -242,10 +258,12 @@ export const useUi = create<UiState>((set) => ({
   draft: null,
   pick: null,
   draw: null,
+  rules: null,
   // Trykk på fanen som alt er åpen slår panelet sammen eller ut igjen.
   setTab: (tab) => set((s) => ({ tab, collapsed: s.tab === tab ? !s.collapsed : false })),
   setCollapsed: (collapsed) => set({ collapsed }),
   setDraft: (draft) => set({ draft, collapsed: false }),
   setPick: (pick) => set({ pick }),
   setDraw: (draw) => set({ draw }),
+  setRules: (rules) => set({ rules }),
 }))

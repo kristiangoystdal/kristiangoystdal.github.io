@@ -32,7 +32,9 @@ trenger dem som «data mangler», og resten virker som før.
 - `src/geo.ts`: all geometri. `regionOf` gir området et spørsmål peker ut,
   `solve` krymper det mulige området spørsmål for spørsmål, `autoAnswer` regner
   ut hiders svar direkte fra avstander.
-- `src/form.ts`: regelbokens spørsmål (`ITEMS`), svartid og tekstene i loggen. Kort finnes ikke i appen.
+- `src/form.ts`: regelbokens spørsmål (`ITEMS`), svartid og tekstene i loggen. Kortstokken er fysisk. Appen har bare
+  kortene som endrer spillet: Veto, Randomize, Move, Drained Brain og Spotty Memory (`lockedBy`, `randomSwap`).
+- `src/Rules.tsx`: regelvisningen. Avstander og bildekrav hentes fra `ITEMS`, så de alltid stemmer med appen.
 - `src/clock.ts`: rundens klokke. Pause og svartid som går ut stopper hiders tid.
 - `src/sync.ts`: sanntidsrom i Firebase Realtime Database. Reglene ligger i `database.rules.json`
   og må publiseres i Firebase-konsollen når de endres. Seekernes posisjon ligger under `seekers/`.

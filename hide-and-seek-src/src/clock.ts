@@ -2,12 +2,20 @@ import { responseMinutes } from './form'
 import type { Endgame } from './geo'
 import type { GameSize, Question } from './types'
 
-/** Hvorfor klokkene står: vanlig pause eller avtalt hvileperiode. */
-export type PauseKind = 'pause' | 'rest'
+/** Hvorfor klokkene står: vanlig pause, avtalt hvileperiode, eller hider som har spilt Move. */
+export type PauseKind = 'pause' | 'rest' | 'move'
 
 export interface Pause {
   at: number
   kind: PauseKind
+  /** Pausen slutter av seg selv på dette tidspunktet. Brukes av Move. */
+  until?: number
+}
+
+/** Hider spilte Move ved `at`, og oppga stasjonen sin da. */
+export interface Move {
+  at: number
+  from: string | null
 }
 
 export interface Round {
@@ -23,9 +31,18 @@ export interface Round {
   stoppedMs?: number
   /** Neste hider har planleggingstid til dette tidspunktet. */
   planUntil?: number | null
+  /** Hver gang hider har spilt Move denne runden. Spørsmål stilt før siste Move krymper ikke kartet. */
+  moves?: Move[]
+  /** Drained Brain: spørsmålene (id i ITEMS) som ikke kan stilles resten av runden. */
+  drained?: string[]
+  /** Spotty Memory: kategorien som er slått ut. */
+  spotty?: string | null
 }
 
 export const PLANNING_MINUTES = 10
+
+/** Når hider sist spilte Move, eller 0. Spørsmål fra før dette sier ingenting om den nye sonen. */
+export const movedAt = (round: Pick<Round, 'moves'>) => round.moves?.at(-1)?.at ?? 0
 
 /** Tiden klokkene viser. Den står stille mens spillet er på pause. */
 export const gameNow = (round: Pick<Round, 'pause'>, now: number) => (round.pause ? Math.min(now, round.pause.at) : now)
@@ -61,7 +78,8 @@ export const waitingForAnswer = (questions: Question[], size: GameSize, now: num
 export function resume(round: Round, questions: Question[], now: number): { round: Round; questions: Question[] } {
   const { pause, seekFrom } = round
   if (!pause) return { round, questions }
-  const ms = Math.max(0, now - pause.at)
+  // En pause med sluttid regnes bare frem til sluttiden, uansett når noen trykker fortsett.
+  const ms = Math.max(0, Math.min(now, pause.until ?? now) - pause.at)
   const hiding = seekFrom !== null && pause.at < seekFrom
   return {
     round: {
