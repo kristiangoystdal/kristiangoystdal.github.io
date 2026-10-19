@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useArchivedView } from './Archive'
 import MapView from './MapView'
 import { BonusPrompt, GamePanel, MapPanel, SettingsPanel } from './Panels'
 import QuestionsView from './QuestionsView'
+import { cityOf } from './cities'
 import { loadData } from './data'
 import { movedAt } from './clock'
 import { clipData, dist, hiderStation, solve } from './geo'
 import { Rules } from './Rules'
 import { useThermoGps } from './Tools'
-import { gameFromHash, useGame, useUi, type Tab } from './store'
+import { gameFromHash, useGame, useHiderPos, useUi, type Tab } from './store'
 import { Toast } from './notify'
 import { rememberFix } from './ui'
 import { joinRoom, resumeRoom, roomFromHash, shareSeekerPos, useSync, type SeekerPos } from './sync'
@@ -61,29 +63,32 @@ const SHARE_EVERY_MS = 10000
 const HIDER_MOVE_M = 10
 
 /**
- * Hiders posisjon følger GPS mens appen er åpen, så svarforslagene alltid gjelder
- * der hider står nå. Stasjonen hider har valgt beholdes så lenge hider er i sonen dens.
- * Posisjonen blir på telefonen og deles aldri.
+ * Hiders posisjon følger GPS hele tiden mens appen er åpen, så svarforslagene alltid
+ * gjelder der hider står nå. Den lagres ikke, og deles aldri. Stasjonen hider har
+ * valgt beholdes så lenge hider er i sonen dens.
  */
 function useHiderLocation(data: GeoData | null) {
-  const on = useGame((s) => s.mode === 'hider' && s.hiderGps)
-  // Ny runde nullstiller posisjonen. GPS melder bare fra når telefonen flytter seg, så da startes den på nytt.
-  const missing = useGame((s) => s.hider.pos === null)
+  const on = useGame((s) => s.mode === 'hider')
   useEffect(() => {
-    if (!on || !data || !navigator.geolocation) return
+    if (!on || !data) return
+    if (!navigator.geolocation) return void useHiderPos.setState({ error: 'Nettleseren støtter ikke posisjon.' })
     const watch = navigator.geolocation.watchPosition(
       (p) => {
         const pos: LngLat = [p.coords.longitude, p.coords.latitude]
         rememberFix(pos)
+        const last = useHiderPos.getState().pos
+        // Små GPS-hopp gir ikke nye svarforslag, men tidspunktet viser at posisjonen er fersk.
+        const here = last && dist(last, pos) < HIDER_MOVE_M ? last : pos
+        useHiderPos.setState({ pos: here, t: Date.now(), accuracy: p.coords.accuracy, error: '' })
         const { hider, settings, setHider } = useGame.getState()
-        if (hider.pos && dist(hider.pos, pos) < HIDER_MOVE_M) return
-        setHider({ stationId: hiderStation(data.stations, pos, settings.zoneRadius, hider.stationId).id, pos })
+        const id = hiderStation(data.stations, here, settings.zoneRadius, hider.stationId).id
+        if (id !== hider.stationId) setHider({ stationId: id })
       },
-      () => {},
+      (e) => useHiderPos.setState({ error: e.code === e.PERMISSION_DENIED ? 'Nettsiden har ikke lov til å bruke posisjonen. Slå det på i innstillingene.' : 'Finner ikke posisjonen din akkurat nå.' }),
       { enableHighAccuracy: true, maximumAge: 5000 },
     )
     return () => navigator.geolocation.clearWatch(watch)
-  }, [on, data, missing])
+  }, [on, data])
 }
 
 /** En pause med sluttid (Move) slutter av seg selv. Den som ser det først, starter klokkene igjen. */
@@ -157,12 +162,32 @@ export default function App() {
   useAutoResume()
   useThermoGps()
   useHiderLocation(loaded)
+  // Kartdataene hører til byen. Bytter noen by (her eller i rommet), lastes den nye byen inn.
+  const cityId = useGame((s) => s.settings.city)
   useEffect(() => {
-    loadData().then(setData, () => setError(true))
-  }, [])
+    let live = true
+    setData(null)
+    setError(false)
+    loadData(cityId).then(
+      (d) => {
+        if (!live) return
+        // Ny by: alle linjene i nettet er med til noen velger annet.
+        const all = d.lines.features.map((f) => f.properties.line)
+        const { settings } = useGame.getState()
+        if (!settings.lines.some((l) => all.includes(l))) useGame.setState({ settings: { ...settings, lines: all } })
+        setData(d)
+      },
+      () => live && setError(true),
+    )
+    return () => {
+      live = false
+    }
+  }, [cityId])
+  useEffect(() => void (document.title = `Hide and Seek ${cityOf(cityId).name}`), [cityId])
 
   // Steder utenfor spillområdet regnes som om de ikke finnes.
   const data = useMemo(() => loaded && clipData(loaded, settings.playArea), [loaded, settings.playArea])
+  const past = useArchivedView(loaded)
   const result = useMemo(
     // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
     () => data && (mode === 'hider' ? solve([], data, settings) : solve(questions, data, settings, endgame, since)),
@@ -172,12 +197,12 @@ export default function App() {
   )
 
   if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
-  if (!data || !result) return <p className="p-6 text-muted">Laster T-banekartet…</p>
+  if (!data || !result) return <p className="p-6 text-muted">Laster kartet for {cityOf(cityId).name}…</p>
 
   return (
     <div className="flex h-dvh flex-col md:flex-row-reverse">
       <main className="relative min-h-0 flex-1">
-        <MapView data={data} result={result} />
+        <MapView data={past?.data ?? data} result={past?.result ?? result} past={past?.round} />
         <Toast />
         <BonusPrompt />
         <Rules />
@@ -195,7 +220,7 @@ export default function App() {
         <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 md:pt-4 ${pick || draw || collapsed ? 'hidden md:block' : ''}`}>
           <div className="mb-3 hidden items-baseline justify-between md:flex">
             <h1 className="text-lg font-bold">
-              Hide and Seek <span className="text-accent">Oslo</span>
+              Hide and Seek <span className="text-accent">{cityOf(cityId).name}</span>
             </h1>
             <span className="flex gap-3">
               <button className="cursor-pointer text-xs text-muted underline" onClick={() => useUi.getState().setRules('')}>
@@ -206,9 +231,9 @@ export default function App() {
               </a>
             </span>
           </div>
-          {tab === 'map' && <MapPanel data={data} result={result} />}
+          {tab === 'map' && <MapPanel data={past?.data ?? data} result={past?.result ?? result} past={!!past} />}
           {tab === 'questions' && <QuestionsView data={data} result={result} />}
-          {tab === 'game' && <GamePanel />}
+          {tab === 'game' && <GamePanel raw={loaded!} />}
           {tab === 'settings' && <SettingsPanel data={data} result={result} />}
         </div>
         <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Skjermer">

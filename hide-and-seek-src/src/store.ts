@@ -1,14 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { PLANNING_MINUTES, resume, type PauseKind, type Round } from './clock'
+import { PLANNING_MINUTES, resume, roundStats, type PauseKind, type Round } from './clock'
+import { DEFAULT_CITY } from './cities'
 import { deviceId } from './device'
 import type { Form } from './form'
-import type { LngLat, Question, QuestionBody, RoundResult, Settings } from './types'
+import type { LngLat, Question, QuestionBody, RoundResult, RoundStats, Settings } from './types'
 
 const UNDO_LIMIT = 30
 const uid = () => Math.random().toString(36).slice(2, 10)
 
 export const DEFAULT_SETTINGS: Settings = {
+  city: DEFAULT_CITY,
   zoneRadius: 400,
   lines: ['1', '2', '3', '4', '5'],
   day: 'wk',
@@ -22,7 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
 }
 
 /** Innstillingene som er felles for alle i spillet og deles i rommet. */
-export const GAME_SETTINGS = ['size', 'questions', 'zoneRadius', 'lines', 'playArea'] as const satisfies readonly (keyof Settings)[]
+export const GAME_SETTINGS = ['city', 'size', 'questions', 'zoneRadius', 'lines', 'playArea'] as const satisfies readonly (keyof Settings)[]
 
 export type Layer = 'lines' | 'zones' | 'area' | 'admin' | 'poi'
 
@@ -33,7 +35,8 @@ export interface State {
   questions: Question[]
   past: Question[][]
   mode: 'seeker' | 'hider'
-  hider: { stationId: string | null; pos: LngLat | null }
+  /** Stasjonen hider har valgt. Posisjonen lagres ikke, den ligger bare i `useHiderPos` mens appen er åpen. */
+  hider: { stationId: string | null }
   layers: Record<Layer, boolean>
   round: Round
   players: string[]
@@ -42,12 +45,14 @@ export interface State {
   bonusAsked: string | null
   /** Seeker deler posisjonen sin i rommet. */
   sharePos: boolean
-  /** Hiders posisjon følger GPS. Slås av når hider setter posisjonen selv. */
-  hiderGps: boolean
   /** Måleverktøyet, f.eks. til kostnaden for en forbannelse. Bare på denne telefonen, og teller ikke som spørsmål. */
   tools: Tools
+  /** Alle rundene som er spilt, med logg og oppsett, så de kan åpnes igjen. Nyeste sist. */
+  archive: ArchivedRound[]
 
   setSettings: (patch: Partial<Settings>) => void
+  /** Bytter by. Spillområde, linjer og spørsmålsutvalg hører til byen og nullstilles. */
+  setCity: (city: string) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
   /** Hider svarer, eller trekker svaret med null. Går utenom angre-loggen, som er seekernes. `swap` er spørsmålet Randomize ga. */
   answerQuestion: (id: string, answer: string | null, swap?: string) => void
@@ -58,8 +63,11 @@ export interface State {
   setHider: (hider: State['hider']) => void
   toggleLayer: (layer: Layer) => void
   setRound: (patch: Partial<Round>) => void
+  /** Endgame: et spørsmål fra før start skal skjære sonen, eller ikke lenger. */
+  toggleEndgameCut: (id: string) => void
   startRound: () => void
-  cancelRound: () => void
+  /** `room`: rommet runden ble spilt i, så arkivet vet hvor den hører til. */
+  cancelRound: (room?: string | null) => void
   pauseGame: (kind: PauseKind) => void
   /** Hider spiller Move: klokkene står i like lang tid som gjemmetiden, mens hider finner en ny sone. */
   playMove: (from: string | null) => void
@@ -67,12 +75,14 @@ export interface State {
   /** Hider oppgir tidsbonusen for runden som nettopp er ferdig. */
   answerBonus: (id: string, minutes: number) => void
   setSharePos: (on: boolean) => void
-  setHiderGps: (on: boolean) => void
   setTools: (patch: Partial<Tools>) => void
   shufflePlayers: () => void
   addPlayer: (name: string) => void
   removePlayer: (name: string) => void
-  finishRound: (seconds: number) => void
+  finishRound: (seconds: number, room?: string | null) => void
+  /** Legger inn runder fra rommet som denne telefonen ikke har. */
+  mergeArchive: (rounds: ArchivedRound[]) => void
+  removeArchived: (id: string) => void
   setBonus: (id: string, minutes: number) => void
   removeResult: (id: string) => void
   newGame: () => void
@@ -87,11 +97,52 @@ export interface Tools {
 }
 const NO_TOOLS: Tools = { radar: null, thermo: null }
 
+/** Alt fra én runde: loggen, klokken, kortene, endgame og oppsettet den ble spilt med. */
+export interface ArchivedRound {
+  /** Samme id som resultatet på poengtavlen når hider ble funnet. */
+  id: string
+  room: string | null
+  hider: string
+  /** Hvilken runde dette var for hider, 1 = første. */
+  nth: number
+  endedAt: number
+  outcome: 'found' | 'cancelled'
+  /** Tiden hider holdt seg skjult, uten tidsbonus. null når runden ble avbrutt. */
+  seconds: number | null
+  round: Round
+  questions: Question[]
+  setup: Pick<Settings, (typeof GAME_SETTINGS)[number]>
+  stats: RoundStats
+}
+const ARCHIVE_LIMIT = 100
+const byEnd = (a: ArchivedRound, b: ArchivedRound) => a.endedAt - b.endedAt
+
+/** Lager arkivoppføringen for runden som pågår. */
+function archived(s: State, id: string, outcome: ArchivedRound['outcome'], seconds: number | null, room: string | null, now: number): ArchivedRound {
+  const hider = s.round.hider || 'Ukjent'
+  const setup = Object.fromEntries(GAME_SETTINGS.map((k) => [k, s.settings[k] ?? null])) as ArchivedRound['setup']
+  return {
+    id,
+    room,
+    hider,
+    nth: s.archive.filter((a) => a.hider === hider && (a.room === room || !room)).length + 1,
+    endedAt: now,
+    outcome,
+    seconds,
+    round: s.round,
+    questions: s.questions,
+    setup,
+    stats: roundStats(s.round, s.questions, s.settings.size, now),
+  }
+}
+const addArchive = (list: ArchivedRound[], r: ArchivedRound) => [...list.filter((a) => a.id !== r.id), r].sort(byEnd).slice(-ARCHIVE_LIMIT)
+
 /** Det som deles mellom spillere: spørsmålsloggen og innstillingene som påvirker geometrien. */
 export interface SharedGame {
   v: 1
   questions: Question[]
-  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size' | 'questions'>
+  /** `city` mangler i lenker fra før byvalget fantes. Da gjelder Oslo. */
+  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size' | 'questions'> & { city?: string }
 }
 
 const HISTORY_LIMIT = 10
@@ -114,19 +165,25 @@ export const useGame = create<State>()(
         questions: [],
         past: [],
         mode: 'seeker',
-        hider: { stationId: null, pos: null },
+        hider: { stationId: null },
         layers: { lines: true, zones: true, area: true, admin: false, poi: false },
         round: { hidingMinutes: 60, hider: '', seekFrom: null },
         players: [],
         results: [],
         bonusAsked: null,
         sharePos: false,
-        hiderGps: true,
         tools: NO_TOOLS,
+        archive: [],
 
         // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
         setSettings: (patch) =>
           set((s) => (s.round.seekFrom !== null && GAME_SETTINGS.some((k) => k in patch) ? s : { settings: { ...s.settings, ...patch } })),
+        setCity: (city) =>
+          set((s) =>
+            s.round.seekFrom !== null || s.settings.city === city
+              ? s
+              : { settings: { ...s.settings, city, playArea: null, questions: null, lines: [] }, hider: { stationId: null } },
+          ),
         saveQuestion: (body, answer, id) =>
           editQuestions((qs) =>
             id
@@ -146,15 +203,27 @@ export const useGame = create<State>()(
         setHider: (hider) => set({ hider }),
         toggleLayer: (layer) => set((s) => ({ layers: { ...s.layers, [layer]: !s.layers[layer] } })),
         setRound: (patch) => set((s) => ({ round: { ...s.round, ...patch } })),
+        toggleEndgameCut: (id) =>
+          set((s) => {
+            const eg = s.round.endgame
+            if (!eg) return s
+            const include = eg.include?.includes(id) ? eg.include.filter((x) => x !== id) : [...(eg.include ?? []), id]
+            return { round: { ...s.round, endgame: { ...eg, include } } }
+          }),
         // Ny runde, ny hider: forrige rundes spørsmål teller ikke som stilt, og gjemmestedet er et annet.
         startRound: () =>
           set((s) => ({
             questions: [],
             past: s.questions.length ? [...s.past, s.questions].slice(-UNDO_LIMIT) : s.past,
-            hider: { stationId: null, pos: null },
+            hider: { stationId: null },
             round: { ...s.round, ...IDLE, seekFrom: Date.now() + s.round.hidingMinutes * 60000 },
           })),
-        cancelRound: () => set((s) => ({ round: { ...s.round, ...IDLE } })),
+        // En avbrutt runde arkiveres også, så loggen ikke går tapt. Uten spørsmål er det ingenting å ta vare på.
+        cancelRound: (room = null) =>
+          set((s) => ({
+            round: { ...s.round, ...IDLE },
+            archive: s.questions.length && s.round.seekFrom !== null ? addArchive(s.archive, archived(s, uid(), 'cancelled', null, room, Date.now())) : s.archive,
+          })),
         pauseGame: (kind) => set((s) => (s.round.seekFrom === null || s.round.pause ? s : { round: { ...s.round, pause: { at: Date.now(), kind } } })),
         playMove: (from) =>
           set((s) => {
@@ -163,14 +232,13 @@ export const useGame = create<State>()(
             if (seekFrom === null || now < seekFrom || pause || endgame) return s
             return {
               // Den nye sonen er ikke valgt ennå.
-              hider: { stationId: null, pos: s.hider.pos },
+              hider: { stationId: null },
               round: { ...s.round, pause: { at: now, kind: 'move', until: now + s.round.hidingMinutes * 60000 }, moves: [...(s.round.moves ?? []), { at: now, from }] },
             }
           }),
         resumeGame: () => set((s) => resume(s.round, s.questions, Date.now())),
         answerBonus: (id, minutes) => set((s) => ({ bonusAsked: id, results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         setSharePos: (sharePos) => set({ sharePos }),
-        setHiderGps: (hiderGps) => set({ hiderGps }),
         setTools: (patch) => set((s) => ({ tools: { ...s.tools, ...patch } })),
         shufflePlayers: () =>
           set((s) => {
@@ -183,22 +251,28 @@ export const useGame = create<State>()(
           }),
         addPlayer: (name) => set((s) => (s.players.includes(name) ? s : { players: [...s.players, name] })),
         removePlayer: (name) => set((s) => ({ players: s.players.filter((p) => p !== name) })),
-        finishRound: (seconds) =>
+        finishRound: (seconds, room = null) =>
           set((s) => {
             // Neste i rekkefølgen gjemmer seg, og får planleggingstid.
             const next = s.players[(s.players.indexOf(s.round.hider) + 1) % (s.players.length || 1)]
+            const id = uid()
+            const now = Date.now()
+            seconds = Math.round(seconds)
             return {
-              results: [...s.results, { id: uid(), hider: s.round.hider || 'Ukjent', at: Date.now(), seconds, bonusMinutes: 0 }],
+              archive: addArchive(s.archive, archived(s, id, 'found', seconds, room, now)),
+              results: [...s.results, { id, hider: s.round.hider || 'Ukjent', at: now, seconds, bonusMinutes: 0, stats: roundStats(s.round, s.questions, s.settings.size, now) }],
               round: { ...s.round, ...IDLE, hider: s.players.includes(s.round.hider) ? next : s.round.hider, planUntil: Date.now() + PLANNING_MINUTES * 60000 },
             }
           }),
+        mergeArchive: (rounds) => set((s) => ({ archive: rounds.reduce(addArchive, s.archive) })),
+        removeArchived: (id) => set((s) => ({ archive: s.archive.filter((a) => a.id !== id) })),
         setBonus: (id, minutes) => set((s) => ({ results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         removeResult: (id) => set((s) => ({ results: s.results.filter((r) => r.id !== id) })),
         newGame: () =>
           set((s) => ({
             questions: [],
             past: [...s.past, s.questions].slice(-UNDO_LIMIT),
-            hider: { stationId: null, pos: null },
+            hider: { stationId: null },
             round: { ...s.round, ...IDLE },
           })),
         importGame: (game) =>
@@ -211,10 +285,13 @@ export const useGame = create<State>()(
     },
     {
       name: 'hideandseek.v1',
-      version: 5,
+      version: 7,
       // v1 hadde nivået «delbydel», som er erstattet av postsone. v3 og v4 la til spillområde og kartvalg.
+      // v6 sluttet å lagre hiders posisjon.
+      // v7 la til byvalget. Eldre spill er i Oslo (DEFAULT_SETTINGS).
       migrate: (old) => {
-        const s = old as State
+        const { hiderGps: _g, ...s } = old as State & { hiderGps?: boolean }
+        s.hider = { stationId: s.hider?.stationId ?? null }
         const fix = (level: string) => (level === 'delbydel' ? 'postsone' : level)
         const questions = s.questions.map((q) => (q.kind === 'admin' ? { ...q, level: fix(q.level) } : q))
         return { ...s, settings: { ...DEFAULT_SETTINGS, ...s.settings, adminLevel: fix(s.settings.adminLevel) }, questions, past: [] } as State
@@ -226,7 +303,7 @@ export const useGame = create<State>()(
 export const exportGame = (s: Pick<State, 'questions' | 'settings'>): SharedGame => ({
   v: 1,
   questions: s.questions,
-  settings: { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null },
+  settings: { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null },
 })
 
 export function parseGame(text: string): SharedGame {
@@ -250,6 +327,12 @@ export function gameFromHash(hash: string): SharedGame | null {
   }
 }
 
+/**
+ * Hiders posisjon akkurat nå, fra GPS. Lagres aldri, verken på telefonen eller i rommet,
+ * så den er borte når appen lukkes. `error` er satt når telefonen ikke gir posisjon.
+ */
+export const useHiderPos = create<{ pos: LngLat | null; t: number; accuracy: number | null; error: string }>(() => ({ pos: null, t: 0, accuracy: null, error: '' }))
+
 export type Tab = 'map' | 'questions' | 'game' | 'settings'
 
 interface UiState {
@@ -264,6 +347,9 @@ interface UiState {
   collapsed: boolean
   /** Regelvisningen er åpen, med avsnittet som skal vises først. null = lukket, '' = fra starten. */
   rules: string | null
+  /** Tidligere runde (id i arkivet) som vises på kartet. null = runden som pågår. */
+  viewing: string | null
+  setViewing: (id: string | null) => void
   setTab: (tab: Tab) => void
   setCollapsed: (collapsed: boolean) => void
   setDraft: (draft: UiState['draft']) => void
@@ -279,6 +365,8 @@ export const useUi = create<UiState>((set) => ({
   pick: null,
   draw: null,
   rules: null,
+  viewing: null,
+  setViewing: (viewing) => set({ viewing }),
   // Trykk på fanen som alt er åpen slår panelet sammen eller ut igjen.
   setTab: (tab) => set((s) => ({ tab, collapsed: s.tab === tab ? !s.collapsed : false })),
   setCollapsed: (collapsed) => set({ collapsed }),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gameNow, hiderSeconds, overtimeMs, resume, type Round } from './clock'
+import { gameNow, hiderSeconds, overtimeMs, resume, roundStats, type Round } from './clock'
 import type { Question } from './types'
 
 const MIN = 60000
@@ -54,5 +54,33 @@ describe('klokken', () => {
     expect(hiderSeconds(after.round, [], 'M', 95 * MIN)).toBe(35 * 60)
     // Hider er fremme før tiden er ute.
     expect(resume(moving, [], 50 * MIN).round.stoppedMs).toBe(30 * MIN)
+  })
+})
+
+describe('rundestatistikk', () => {
+  it('teller spørsmål per kategori, kort, sene svar og endgame', () => {
+    const qs = [
+      radar(0, { answer: 'in', answeredAt: 2 * MIN }),
+      radar(10 * MIN, { answer: 'veto', answeredAt: 11 * MIN }),
+      radar(20 * MIN, { answer: 'random', answeredAt: 21 * MIN }),
+      radar(30 * MIN, { answer: 'out', answeredAt: 38 * MIN }),
+      radar(40 * MIN),
+    ]
+    const s = roundStats(round({ endgame: { stationId: 'x', time: 50 * MIN }, moves: [{ at: 5 * MIN, from: null }] }), qs, 'M', 55 * MIN)
+    expect(s.asked).toBe(3)
+    expect(s.byCategory).toEqual({ Radar: 3 })
+    expect(s.vetoes).toBe(1)
+    expect(s.randomized).toBe(1)
+    expect(s.late).toBe(1)
+    expect(s.answerSec).toBe(((2 + 1 + 1 + 8) * 60) / 4)
+    expect(s.endgameSec).toBe(5 * 60)
+    expect(s.moves).toBe(1)
+  })
+
+  it('regner pausen frem til nå mens spillet står', () => {
+    const s = roundStats(round({ stoppedMs: MIN, pause: { at: 10 * MIN, kind: 'pause' } }), [], 'M', 13 * MIN)
+    expect(s.pausedSec).toBe(4 * 60)
+    expect(s.endgameSec).toBeNull()
+    expect(s.answerSec).toBeNull()
   })
 })

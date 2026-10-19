@@ -1,6 +1,6 @@
-import { responseMinutes } from './form'
-import type { Endgame } from './geo'
-import type { GameSize, Question } from './types'
+import { categoryOf, responseMinutes } from './form'
+import { ANSWER_RANDOM, ANSWER_VETO, type Endgame } from './geo'
+import type { GameSize, Question, RoundStats } from './types'
 
 /** Hvorfor klokkene står: vanlig pause, avtalt hvileperiode, eller hider som har spilt Move. */
 export type PauseKind = 'pause' | 'rest' | 'move'
@@ -88,5 +88,28 @@ export function resume(round: Round, questions: Question[], now: number): { roun
       ...(hiding ? { seekFrom: seekFrom + ms } : { stoppedMs: (round.stoppedMs ?? 0) + ms }),
     },
     questions: questions.map((q) => (q.answer === null ? { ...q, extraMs: (q.extraMs ?? 0) + ms } : q)),
+  }
+}
+
+/** Hva som har skjedd i runden så langt. Lagres med resultatet når hider er funnet. */
+export function roundStats(round: Round, questions: Question[], size: GameSize, now: number): RoundStats {
+  const t = gameNow(round, now)
+  const answered = questions.filter((q) => q.answer !== null)
+  const asked = answered.filter((q) => q.answer !== ANSWER_RANDOM)
+  const byCategory: Record<string, number> = {}
+  for (const q of asked) byCategory[categoryOf(q)] = (byCategory[categoryOf(q)] ?? 0) + 1
+  const waits = answered.map((q) => Math.max(0, (q.answeredAt ?? q.time) - q.time - (q.extraMs ?? 0)))
+  const paused = (round.stoppedMs ?? 0) + (round.pause && round.seekFrom !== null && round.pause.at >= round.seekFrom ? Math.min(now, round.pause.until ?? now) - round.pause.at : 0)
+  return {
+    asked: asked.length,
+    byCategory,
+    vetoes: answered.filter((q) => q.answer === ANSWER_VETO).length,
+    randomized: answered.filter((q) => q.answer === ANSWER_RANDOM).length,
+    late: answered.filter((q) => overtimeMs(q, size, t) > 0).length,
+    answerSec: waits.length ? Math.round(waits.reduce((a, b) => a + b, 0) / waits.length / 1000) : null,
+    hidingMinutes: round.hidingMinutes,
+    endgameSec: round.endgame ? Math.max(0, Math.round((t - round.endgame.time) / 1000)) : null,
+    moves: round.moves?.length ?? 0,
+    pausedSec: Math.round(paused / 1000),
   }
 }

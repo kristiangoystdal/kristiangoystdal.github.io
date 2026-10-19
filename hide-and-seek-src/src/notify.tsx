@@ -50,6 +50,16 @@ export function announce(before: Question[], after: Question[], mode: 'seeker' |
 
 /** Seekerne får beskjed når hider spiller et kort som endrer spillet for dem. */
 export function announceRound(before: Round, after: Round, mode: 'seeker' | 'hider') {
+  // Endgame startes av en seeker. Hider må vite det med en gang for å stå stille. Hider får ikke vite stasjonen.
+  if (after.endgame && !before.endgame) {
+    notify(
+      mode === 'hider'
+        ? { title: 'Endgame er startet', body: 'Seekerne er i en sone. Er det din, står du stille der du er nå.', tab: 'questions' }
+        : { title: 'Endgame er startet', body: 'En annen seeker startet endgame. Bare den ene sonen er gyldig nå.', tab: 'map' },
+    )
+  } else if (!after.endgame && before.endgame && after.seekFrom !== null) {
+    notify({ title: 'Endgame er avsluttet', body: mode === 'hider' ? 'Seekerne har avsluttet endgame.' : 'Kartet viser igjen alle stasjonene svarene peker ut.', tab: mode === 'hider' ? 'questions' : 'map' })
+  }
   if (mode !== 'seeker') return
   if ((after.moves?.length ?? 0) > (before.moves?.length ?? 0)) {
     notify({ title: 'Hider har spilt Move', body: 'Bli stående. Ingen spørsmål før hider er i ny sone.', tab: 'questions' })

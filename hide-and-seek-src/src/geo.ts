@@ -16,17 +16,40 @@ import {
   polygon,
   union,
 } from '@turf/turf'
+import { DEFAULT_CITY, city, cityOf } from './cities'
 import type { Lookup, LookupKind } from './online'
 import type { AdminArea, AdminLevel, Area, GeoData, LngLat, Poi, Question, Settings, ShapeKey, Station } from './types'
 
-/** Ytre ramme for alt som regnes ut. Dekker hele T-banenettet med god margin. */
-export const BOUNDS: [number, number, number, number] = [10.2, 59.7, 11.25, 60.2]
-export const WORLD: Area = bboxPolygon(BOUNDS)
+type Box4 = [number, number, number, number]
+/** Ytre ramme for alt som regnes ut. Dekker hele nettet i byen med god margin. Settes av `useBounds`. */
+export let BOUNDS: Box4 = cityOf(DEFAULT_CITY).bounds
+/** Hele rammen. Brukes også som merke for «ingen spillområde», så den sammenlignes på identitet. */
+export let WORLD: Area = bboxPolygon(BOUNDS)
+// Skyggen går langt utenfor rammen, så kanten aldri synes når man zoomer ut.
+const shadeOf = ([w, s, e, n]: Box4): Area => bboxPolygon([w - 6, s - 3, e + 6, n + 3])
+let SHADE: Area = shadeOf(BOUNDS)
+
+/** Bytter rammen når en annen by lastes inn. */
+export function setBounds(bounds: Box4) {
+  if (bounds.every((v, i) => v === BOUNDS[i])) return
+  BOUNDS = bounds
+  WORLD = bboxPolygon(bounds)
+  SHADE = shadeOf(bounds)
+}
 
 /** `icon` er merket stedene får på kartet. */
 export const POI_TYPES: { key: string; icon: string; label: string; plural: string }[] = [
   { key: 'flyplass', icon: '✈️', label: 'flyplass', plural: 'flyplasser' },
-  { key: 'jernbanestasjon', icon: '🚆', label: 'jernbane- eller T-banestasjon', plural: 'jernbane- og T-banestasjoner' },
+  {
+    key: 'jernbanestasjon',
+    icon: '🚆',
+    get label() {
+      return `jernbane- eller ${city().network}stasjon`
+    },
+    get plural() {
+      return `jernbane- og ${city().network}stasjoner`
+    },
+  },
   { key: 'fjell', icon: '⛰️', label: 'fjell', plural: 'fjell' },
   { key: 'park', icon: '🌳', label: 'park', plural: 'parker' },
   { key: 'fornoyelsespark', icon: '🎢', label: 'fornøyelsespark', plural: 'fornøyelsesparker' },
@@ -41,16 +64,11 @@ export const POI_TYPES: { key: string; icon: string; label: string; plural: stri
 ]
 /** Emnet i det manuelle spørsmålet om høyhastighetsbane (se ITEMS i form.ts). */
 export const HIGH_SPEED = 'høyhastighetsbane'
-/** Tentacles kan også spørre om T-banelinjer, som ikke er punkter. */
+/** Tentacles kan også spørre om linjene i nettet, som ikke er punkter. */
 export const METRO_LINES = 'metrolinje'
 
-export const ADMIN_LEVELS: { key: AdminLevel; label: string }[] = [
-  { key: 'fylke', label: 'Fylke' },
-  { key: 'kommune', label: 'Kommune' },
-  { key: 'bydel', label: 'Bydel' },
-  { key: 'postsone', label: 'Postsone (3 første siffer)' },
-  { key: 'postnummer', label: 'Postnummer' },
-]
+/** Områdenivåene i byen som er lastet inn, grovest først. */
+export const adminLevels = () => city().adminLevels
 
 const POSITIVE_ANSWERS = ['yes', 'in', 'warmer', 'closer']
 
@@ -527,7 +545,17 @@ export interface Result {
 export interface Endgame {
   stationId: string
   time: number
+  /** Spørsmål fra før endgame som seekerne har valgt skal skjære sonen. De etter start gjør det alltid. */
+  include?: string[]
 }
+
+/** Spørsmål som avgjøres per stasjon eller ikke krymper kartet, og derfor ikke kan skjære en sone. */
+const NO_AREA: Question['kind'][] = ['photo', 'manual', 'line', 'transit', 'namelen']
+/** Kan svaret skjære endgame-sonen? */
+export const canCutZone = (q: Question) => shrinks(q) && !NO_AREA.includes(q.kind)
+
+/** Skjærer spørsmålet endgame-sonen? Alt etter start gjør det, det fra før bare når seekerne har valgt det. */
+export const cutsZone = (q: Pick<Question, 'id' | 'time'>, endgame: Endgame) => q.time >= endgame.time || !!endgame.include?.includes(q.id)
 
 /**
  * Kan hider ha stått et sted i denne stasjonens sone da spørsmålet ble besvart?
@@ -566,9 +594,10 @@ export function solve(questions: Question[], data: GeoData, settings: Settings, 
     // I endgame står hider stille, så svarene skjærer sonen nøyaktig.
     let area: Area | null = disc(stationPos(target), settings.zoneRadius)
     for (const q of live) {
-      if (q.time < endgame!.time) continue
+      if (!cutsZone(q, endgame!)) continue
       area = applyQuestion(area, q, data)
-      counts.set(q.id, area ? 1 : 0)
+      // Spørsmål fra før beholder tallet fra da de ble stilt.
+      if (q.time >= endgame!.time) counts.set(q.id, area ? 1 : 0)
     }
     return { area, stations: area ? [target] : [], steps: steps(questions, counts, left.length) }
   }
@@ -588,8 +617,6 @@ function steps(questions: Question[], counts: Map<string, number>, start: number
   return questions.map((q) => ({ count: (count = counts.get(q.id) ?? count) }))
 }
 
-// Skyggen går langt utenfor BOUNDS, så kanten aldri synes når man zoomer ut.
-const SHADE: Area = bboxPolygon([4, 57, 18, 63])
 
 /** Alt utenfor det mulige området, til skyggelegging på kartet. */
 export function excluded(area: Area | null): Area | null {
@@ -707,9 +734,10 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
       return { answer: mine === theirs ? 'yes' : 'no', detail: `du: ${name(mine)}, seeker: ${name(theirs)}` }
     }
     case 'manual': {
-      // Oslo har ingen høyhastighetsbane, så svaret er alltid null.
-      if (q.subject === HIGH_SPEED) return NOTHING
-      if (!look || !q.pos) return null
+      // Har byen ingen høyhastighetsbane (som Oslo), er svaret alltid null. Ellers svarer hider selv.
+      if (q.subject === HIGH_SPEED) return city().highSpeed ? null : NOTHING
+      // Høyde og adresser slås opp hos Kartverket, som bare dekker Norge.
+      if (!look || !q.pos || !city().norway) return null
       if (q.item === SEALEVEL_ITEM) {
         const a = look('height', hider.pos)
         const b = look('height', q.pos)

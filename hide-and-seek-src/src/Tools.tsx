@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fmtDist } from './form'
 import { dist } from './geo'
-import { useGame } from './store'
+import { useGame, useHiderPos } from './store'
 import { useSync } from './sync'
 import type { LngLat, Station } from './types'
 import { PointInput, Section, locate, rememberFix } from './ui'
@@ -74,7 +74,7 @@ function Radar({ stations }: { stations: Station[] }) {
   const radar = useGame((s) => s.tools.radar)
   const setTools = useGame((s) => s.setTools)
   const isHider = useGame((s) => s.mode === 'hider')
-  const hiderPos = useGame((s) => s.hider.pos)
+  const hiderPos = useHiderPos((s) => s.pos)
   const [me, setMe] = useState<LngLat | null>(null)
 
   if (!radar) {

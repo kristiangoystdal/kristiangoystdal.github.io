@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
+import { ArchivePanel, StatsList } from './Archive'
+import { CITIES, city } from './cities'
 import { BASEMAPS, depRate } from './MapView'
-import { PLANNING_MINUTES, hiderSeconds } from './clock'
-import { CATEGORIES, ITEMS, SIZE_RULES, enabledIds } from './form'
-import { ADMIN_LEVELS, POI_TYPES, autoPlayArea, dist, hiderStation, levelAreas, stationPos, stationsInReach, type Result } from './geo'
+import { PLANNING_MINUTES, hiderSeconds, movedAt, roundStats } from './clock'
+import { CATEGORIES, ITEMS, SIZE_RULES, answerLabel, describe, enabledIds, place } from './form'
+import { POI_TYPES, adminLevels, autoPlayArea, canCutZone, cutsZone, dist, hiderStation, levelAreas, stationPos, stationsInReach, type Result } from './geo'
 import { NotifyToggle } from './notify'
 import { allPresets, applyPreset, deletePreset, loadPresets, presetId, savePreset, usePresets } from './presets'
-import { useGame, useUi, type Layer } from './store'
+import { useGame, useHiderPos, useUi, type Layer } from './store'
 import { ToolsPanel } from './Tools'
-import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, roomLink, useSync } from './sync'
-import type { DayKey, GeoData, LngLat, RoundResult, Settings } from './types'
-import { PAUSE_TEXT, PointInput, Section, useGameNow, useNow } from './ui'
+import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoom, recentRooms, roomLink, saveArchive, useSync } from './sync'
+import type { DayKey, GeoData, RoundResult, Settings } from './types'
+import { PAUSE_TEXT, Section, useGameNow, useNow } from './ui'
 
 const LAYERS: { key: Layer; label: string }[] = [
   { key: 'area', label: 'Mulig område' },
@@ -20,57 +22,135 @@ const LAYERS: { key: Layer; label: string }[] = [
 ]
 
 /** Seekerne starter endgame når de er fremme i sonen de tror hider er i. */
-function EndgameControl({ result }: { result: Result }) {
+function EndgameControl({ data, result }: { data: GeoData; result: Result }) {
+  const now = useNow()
   const endgame = useGame((s) => s.round.endgame)
+  const seekFrom = useGame((s) => s.round.seekFrom)
+  const pause = useGame((s) => s.round.pause)
   const setRound = useGame((s) => s.setRound)
+  const lines = useGame((s) => s.settings.lines)
+  const questions = useGame((s) => s.questions)
+  const since = useGame((s) => movedAt(s.round))
+  const toggleCut = useGame((s) => s.toggleEndgameCut)
   const [picked, setPicked] = useState('')
-  const stationId = result.stations.some((s) => s.id === picked) ? picked : (result.stations[0]?.id ?? '')
+  const active = data.stations.filter((s) => s.lines.some((l) => lines.includes(l)))
+  // Stasjonene svarene peker ut står først. De andre kan også velges, i tilfelle et svar var feil.
+  const others = active.filter((s) => !result.stations.includes(s)).sort((a, b) => a.name.localeCompare(b.name, 'nb'))
+  const stationId = active.some((s) => s.id === picked) ? picked : (result.stations[0]?.id ?? '')
 
   if (endgame) {
+    const target = data.stations.find((s) => s.id === endgame.stationId)
+    // Spørsmål fra før endgame gjelder der hider sto da, og hider kan ha flyttet seg i sonen siden. Seekerne velger selv hvilke som skal telle.
+    const earlier = questions.filter((q) => q.time < endgame.time && q.time >= since && canCutZone(q))
     return (
       <Section title="Endgame">
-        <p className="mb-2 text-sm">
-          Bare sonen ved <b>{result.stations[0]?.name ?? 'stasjonen'}</b> er gyldig. Hider står stille, så svar på nye spørsmål skjærer sonen nøyaktig.
-        </p>
-        {!result.area && <p className="mb-2 text-sm text-bad">Svarene utelukker hele sonen. Hider er trolig ved en annen stasjon.</p>}
-        <button className="btn" onClick={() => setRound({ endgame: null })}>
-          Avslutt endgame
-        </button>
+        <div className="card border-accent!">
+          <p className="mb-1 text-sm">
+            Endgame ved <b>{target?.name ?? 'stasjonen'}</b>, startet kl. {new Date(endgame.time).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} ({clock((now - endgame.time) / 1000)} siden).
+          </p>
+          <p className="mb-2 text-xs text-muted">Bare denne sonen er gyldig. Hider står stille, så alle svar på nye spørsmål skjærer sonen nøyaktig.</p>
+          {earlier.length > 0 && (
+            <div className="mb-2">
+              <span className="label">Spørsmål fra før endgame</span>
+              <p className="mb-1.5 text-xs text-muted">Velg de som også skal gjøre sonen mindre, f.eks. når dere vet at hider ikke har flyttet seg siden.</p>
+              <ul className="flex flex-col gap-1.5">
+                {earlier.map((q) => {
+                  const on = cutsZone(q, endgame)
+                  return (
+                    <li key={q.id}>
+                      <button type="button" role="switch" aria-checked={on} className={`btn h-auto! w-full justify-between! py-1.5! text-left whitespace-normal! ${on ? 'btn-on' : ''}`} onClick={() => toggleCut(q.id)}>
+                        <span className="text-xs">
+                          {describe(q, data)} <b>{answerLabel(q, q.answer!)}</b>
+                        </span>
+                        <span className="shrink-0 text-xs">{on ? '✓ Skjærer sonen' : 'Teller ikke'}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+              {earlier.length > 1 && (
+                <div className="mt-1.5 flex gap-1.5">
+                  <button className="btn min-h-9! flex-1" onClick={() => setRound({ endgame: { ...endgame, include: earlier.map((q) => q.id) } })}>
+                    Alle
+                  </button>
+                  <button className="btn min-h-9! flex-1" onClick={() => setRound({ endgame: { ...endgame, include: [] } })}>
+                    Ingen
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {!result.area && <p className="mb-2 text-sm text-bad">Svarene etter endgame-start utelukker hele sonen. Hider er trolig ved en annen stasjon. Avslutt endgame og velg en annen.</p>}
+          <button
+            className="btn w-full"
+            onClick={() => {
+              if (confirm('Avslutte endgame? Kartet viser igjen alle stasjonene svarene peker ut.')) setRound({ endgame: null })
+            }}
+          >
+            Avslutt endgame
+          </button>
+        </div>
       </Section>
     )
   }
+  const blocked = seekFrom === null ? 'Starter når runden er i gang.' : now < seekFrom ? 'Kan startes når gjemmetiden er over.' : pause ? 'Ikke mens spillet står.' : null
   return (
     <Section title="Endgame">
       <div className="flex gap-1.5">
         <select className="field" value={stationId} aria-label="Stasjon for endgame" onChange={(e) => setPicked(e.target.value)}>
-          {result.stations.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
+          {!stationId && <option value="">Velg stasjon…</option>}
+          <optgroup label={`Mulige (${result.stations.length})`}>
+            {result.stations.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Utelukket av svarene">
+            {others.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </optgroup>
         </select>
-        <button className="btn btn-primary" disabled={!stationId} onClick={() => setRound({ endgame: { stationId, time: Date.now() } })}>
+        <button
+          className="btn btn-primary"
+          disabled={!stationId || !!blocked}
+          onClick={() => {
+            const name = data.stations.find((s) => s.id === stationId)?.name
+            const out = !result.stations.some((s) => s.id === stationId)
+            if (confirm(`Starte endgame ved ${name}?${out ? ' Svarene har utelukket denne stasjonen.' : ''} Hider får beskjed om å stå stille.`)) setRound({ endgame: { stationId, time: Date.now() } })
+          }}
+        >
           Start endgame
         </button>
       </div>
-      <p className="mt-1 text-xs text-muted">Start når dere er fremme ved stasjonen. Først da vises sonen på kartet, og hider må stå stille.</p>
+      <p className="mt-1 text-xs text-muted">{blocked ?? 'Start når dere er inne i sonen og har gått av transportmiddelet. Da vises sonen på kartet, og hider må stå stille.'}</p>
     </Section>
   )
 }
 
-export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
+/** `past`: en tidligere runde vises. Da kan ingenting i runden som pågår endres herfra. */
+export function MapPanel({ data, result, past = false }: { data: GeoData; result: Result; past?: boolean }) {
   const layers = useGame((s) => s.layers)
   const toggleLayer = useGame((s) => s.toggleLayer)
   const settings = useGame((s) => s.settings)
   const setSettings = useGame((s) => s.setSettings)
-  const hiderView = useGame((s) => s.mode === 'hider')
+  const hiderView = useGame((s) => s.mode === 'hider') && !past
   const endgame = useGame((s) => !!s.round.endgame)
   const lineColor = Object.fromEntries(data.lines.features.map((f) => [f.properties.line, f.properties.color]))
   const hours = [...Array(25).keys()]
 
   return (
     <div>
-      {hiderView ? <HiderPosition data={data} /> : <EndgameControl result={result} />}
+      {past ? (
+        <p className="mb-4 rounded-lg border border-accent p-3 text-sm">Kartet viser en tidligere runde. Trykk «Tilbake til spillet» øverst for å gå tilbake.</p>
+      ) : hiderView ? (
+        <HiderPosition data={data} />
+      ) : (
+        <EndgameControl data={data} result={result} />
+      )}
       <ToolsPanel stations={data.stations} />
       <Section title="Kartlag">
         <div className="flex flex-wrap gap-1.5">
@@ -119,7 +199,7 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
 
       <Section title="Områdegrenser på kartet">
         <select className="field" value={settings.adminLevel} onChange={(e) => setSettings({ adminLevel: e.target.value as Settings['adminLevel'] })}>
-          {ADMIN_LEVELS.map((l) => (
+          {adminLevels().map((l) => (
             <option key={l.key} value={l.key}>
               {l.label}
             </option>
@@ -155,53 +235,54 @@ export function MapPanel({ data, result }: { data: GeoData; result: Result }) {
   )
 }
 
-/** Hider setter posisjonen sin her, og velger stasjon når flere har hider i sonen. Blir på telefonen. */
+/** Hvor hider er, rett fra GPS. Hider velger stasjon når flere har hider i sonen. Posisjonen lagres ikke. */
 function HiderPosition({ data }: { data: GeoData }) {
-  const hider = useGame((s) => s.hider)
+  const now = useNow()
+  const stationId = useGame((s) => s.hider.stationId)
   const setHider = useGame((s) => s.setHider)
   const zoneRadius = useGame((s) => s.settings.zoneRadius)
-  const gps = useGame((s) => s.hiderGps)
-  const setGps = useGame((s) => s.setHiderGps)
+  const { pos, t, accuracy, error } = useHiderPos()
 
-  // Hider velger selv blant stasjonene som har hider i sonen sin. Uten et valg gjelder den nærmeste.
-  const place = (pos: LngLat) => setHider({ stationId: hiderStation(data.stations, pos, zoneRadius, hider.stationId).id, pos })
-  const station = hider.pos && hiderStation(data.stations, hider.pos, zoneRadius, hider.stationId)
-  const reach = hider.pos ? stationsInReach(data.stations, hider.pos, zoneRadius) : []
-  const away = station && hider.pos ? dist(stationPos(station), hider.pos) : 0
+  const station = pos && hiderStation(data.stations, pos, zoneRadius, stationId)
+  const reach = pos ? stationsInReach(data.stations, pos, zoneRadius) : []
+  const away = station && pos ? dist(stationPos(station), pos) : 0
+  const age = Math.round((now - t) / 1000)
   return (
     <Section title="Hvor er du">
-      <button className={`btn mb-3 w-full ${gps ? 'btn-on' : ''}`} aria-pressed={gps} onClick={() => setGps(!gps)}>
-        {gps ? '📍 Følger GPS automatisk' : '📍 Følg GPS automatisk'}
-      </button>
-      <PointInput
-        label="Posisjonen din"
-        value={hider.pos}
-        // Setter hider posisjonen selv, skal ikke GPS flytte den igjen.
-        onChange={(p) => {
-          setGps(false)
-          place(p)
-        }}
-        stations={data.stations}
-      />
+      <div className="card text-sm">
+        {pos ? (
+          <>
+            <p>
+              📍 {place(pos, data.stations)}
+              <span className="block text-xs text-muted">
+                Fra GPS{accuracy !== null ? `, ±${Math.round(accuracy)} m` : ''}, {age < 5 ? 'akkurat nå' : `for ${age} s siden`}.
+              </span>
+            </p>
+          </>
+        ) : (
+          <p className="text-muted">{error || 'Venter på GPS…'}</p>
+        )}
+        {pos && error && <p className="mt-1 text-xs text-bad">{error}</p>}
+      </div>
       {station && (
-        <p className={`text-xs ${away > zoneRadius ? 'text-bad' : 'text-muted'}`}>
+        <p className={`mt-2 text-xs ${away > zoneRadius ? 'text-bad' : 'text-muted'}`}>
           Stasjonen din er {station.name}.{away > zoneRadius && ` Du er ${Math.round(away)} m unna, utenfor sonen på ${zoneRadius} m.`}
         </p>
       )}
-      {hider.pos && reach.length > 1 && (
+      {pos && reach.length > 1 && (
         <label className="mt-3 block">
           <span className="label">Velg stasjonen som er din</span>
-          <select className="field" value={station?.id ?? ''} onChange={(e) => setHider({ stationId: e.target.value, pos: hider.pos })}>
+          <select className="field" value={station?.id ?? ''} onChange={(e) => setHider({ stationId: e.target.value })}>
             {reach.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} ({Math.round(dist(stationPos(s), hider.pos!))} m)
+                {s.name} ({Math.round(dist(stationPos(s), pos))} m)
               </option>
             ))}
           </select>
           <span className="mt-1 block text-xs text-muted">Du står i sonen til flere stasjoner. Spørsmål om stasjonen din svares ut fra den du velger.</span>
         </label>
       )}
-      <p className="mt-2 text-xs text-muted">Seekerne ser aldri posisjonen din. Sonen din vises alltid på kartet.</p>
+      <p className="mt-2 text-xs text-muted">Posisjonen følger GPS mens appen er åpen. Den lagres ikke, og seekerne ser den aldri.</p>
     </Section>
   )
 }
@@ -225,7 +306,7 @@ function RolePanel() {
         {locked
           ? 'Rollen er låst til runden er ferdig.'
           : mode === 'hider'
-            ? 'Du gjemmer deg. Sett posisjonen din under Kart, og svar på spørsmålene under Spørsmål. Rollen låses når runden starter.'
+            ? 'Du gjemmer deg. Posisjonen din følger GPS mens appen er åpen. Svar på spørsmålene under Spørsmål. Rollen låses når runden starter.'
             : 'Du leter. Still spørsmål under Spørsmål, så dukker hiders svar opp i loggen. Rollen låses når runden starter.'}
       </p>
       {mode === 'hider' && (
@@ -259,6 +340,8 @@ function RoomPanel() {
   const [code, setCode] = useState('')
   const [copied, setCopied] = useState(false)
   const hasGame = useGame((s) => s.questions.length > 0)
+  // Leses på nytt når man forlater et rom, så det dukker opp i listen.
+  const recent = room ? [] : recentRooms()
 
   const join = () => {
     if (hasGame && !confirm('Spørsmålene på denne telefonen erstattes av rommets. Fortsette?')) return
@@ -322,6 +405,28 @@ function RoomPanel() {
                 Bli med
               </button>
             </form>
+            {recent.length > 0 && (
+              <div className="mt-3">
+                <span className="label">Tidligere rom</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {recent.map((r) => (
+                    <button
+                      key={r.code}
+                      className="btn min-h-9! font-mono"
+                      title={`Sist brukt ${new Date(r.at).toLocaleString('nb-NO')}`}
+                      onClick={() => {
+                        if (hasGame && !confirm('Spørsmålene på denne telefonen erstattes av rommets. Fortsette?')) return
+                        void joinRoom(r.code)
+                      }}
+                    >
+                      {r.code}
+                      <span className="font-sans text-xs text-muted">{new Date(r.at).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' })}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-muted">Rommene slettes ikke. Gå tilbake til et for å se poengtavlen og rundene der.</p>
+              </div>
+            )}
           </>
         )}
         {error && <p className="mt-2 text-xs text-bad">{error}</p>}
@@ -404,7 +509,7 @@ export function BonusPrompt() {
 }
 
 /** Alt som gjelder selve spillet: rom, rolle, runde og poeng. */
-export function GamePanel() {
+export function GamePanel({ raw }: { raw: GeoData }) {
   const wall = useNow()
   const now = useGameNow()
   const g = useGame()
@@ -484,20 +589,35 @@ export function GamePanel() {
                     Start letingen nå
                   </button>
                 ) : (
-                  <button className="btn btn-primary flex-1" disabled={!!pause} onClick={() => g.finishRound(hiderSeconds(g.round, g.questions, size, Date.now()))}>
+                  <button className="btn btn-primary flex-1" disabled={!!pause} onClick={() => {
+                      g.finishRound(hiderSeconds(g.round, g.questions, size, Date.now()), useSync.getState().room)
+                      void saveArchive(useGame.getState().archive.at(-1)!)
+                    }}>
                     Funnet!
                   </button>
                 )}
                 <button
                   className="btn"
                   onClick={() => {
-                    if (confirm('Avbryte runden uten å lagre tiden?')) g.cancelRound()
+                    if (!confirm('Avbryte runden uten å lagre tiden? Loggen tas vare på under Tidligere runder.')) return
+                    const before = useGame.getState().archive.at(-1)?.id
+                    g.cancelRound(useSync.getState().room)
+                    const last = useGame.getState().archive.at(-1)
+                    if (last && last.id !== before) void saveArchive(last)
                   }}
                 >
                   Avbryt
                 </button>
               </div>
               {!hiding && <p className="mt-2 text-xs text-muted">Hider er funnet når seekerne er innen ca. 1,5 m og har sett hider.</p>}
+              {!hiding && (
+                <details className="mt-3 border-t border-border pt-3 text-left">
+                  <summary className="cursor-pointer text-sm font-medium">Statistikk for runden</summary>
+                  <div className="mt-2">
+                    <StatsList stats={roundStats(g.round, g.questions, size, wall)} />
+                  </div>
+                </details>
+              )}
               <div className="mt-3 flex gap-2 border-t border-border pt-3">
                 {pause ? (
                   <button className="btn btn-primary flex-1" onClick={g.resumeGame}>
@@ -570,36 +690,81 @@ export function GamePanel() {
         {g.results.length > 0 && (
           <>
             <h3 className="label">Runder</h3>
-            <p className="mb-1 text-xs text-muted">Hider legger inn tidsbonusen når runden er over. ★ = spillerens beste runde.</p>
+            <p className="mb-1 text-xs text-muted">Hider legger inn tidsbonusen når runden er over. ★ = spillerens beste runde. Trykk på en runde for statistikken.</p>
             <ul className="divide-y divide-border text-sm">
               {g.results.map((r, i) => (
-                <li key={r.id} className="flex items-center justify-between py-1.5">
-                  <span className={best.get(r.hider) === r ? 'font-semibold' : ''}>
-                    {i + 1}. {r.hider} {best.get(r.hider) === r && <span className="text-accent">★</span>}
-                  </span>
-                  <span className="flex items-center gap-2 text-muted tabular-nums">
-                    {clock(r.seconds)} +
-                    <input
-                      className="field min-h-9! w-14! px-1.5! text-center"
-                      type="number"
-                      min={0}
-                      value={r.bonusMinutes || ''}
-                      placeholder="0"
-                      aria-label={`Tidsbonus i minutter for runde ${i + 1}`}
-                      onChange={(e) => g.setBonus(r.id, Math.max(0, +e.target.value || 0))}
-                    />
-                    min
-                    <button className="text-xs underline" onClick={() => g.removeResult(r.id)}>
-                      slett
-                    </button>
-                  </span>
+                <li key={r.id} className="py-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className={best.get(r.hider) === r ? 'font-semibold' : ''}>
+                      {i + 1}. {r.hider}
+                      {rounds(r.hider) > 1 && <span className="text-xs text-muted"> ({g.results.slice(0, i + 1).filter((x) => x.hider === r.hider).length}. runde)</span>}{' '}
+                      {best.get(r.hider) === r && <span className="text-accent">★</span>}
+                    </span>
+                    <span className="flex items-center gap-2 text-muted tabular-nums">
+                      {clock(r.seconds)} +
+                      <input
+                        className="field min-h-9! w-14! px-1.5! text-center"
+                        type="number"
+                        min={0}
+                        value={r.bonusMinutes || ''}
+                        placeholder="0"
+                        aria-label={`Tidsbonus i minutter for runde ${i + 1}`}
+                        onChange={(e) => g.setBonus(r.id, Math.max(0, +e.target.value || 0))}
+                      />
+                      min
+                      <button className="text-xs underline" onClick={() => g.removeResult(r.id)}>
+                        slett
+                      </button>
+                    </span>
+                  </div>
+                  {r.stats && (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-xs text-muted">
+                        {r.stats.asked} spørsmål{r.stats.endgameSec !== null ? ` · endgame ${clock(r.stats.endgameSec)}` : ''}
+                        {r.at ? ` · ${new Date(r.at).toLocaleString('nb-NO', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}
+                      </summary>
+                      <div className="mt-1 mb-1 rounded-lg bg-panel-2 p-2">
+                        <StatsList stats={r.stats} />
+                      </div>
+                    </details>
+                  )}
                 </li>
               ))}
             </ul>
           </>
         )}
       </Section>
+      <ArchivePanel raw={raw} />
     </div>
+  )
+}
+
+/** Byen spillet foregår i. Kartdata, stasjoner og linjer følger byen, og valget deles i rommet. */
+function CityPicker({ locked }: { locked: boolean }) {
+  const current = useGame((s) => s.settings.city)
+  const setCity = useGame((s) => s.setCity)
+  return (
+    <Section title="By">
+      <div className="flex flex-wrap gap-1.5">
+        {CITIES.map((c) => (
+          <button
+            key={c.id}
+            className={`btn flex-1 ${current === c.id ? 'btn-on' : ''}`}
+            aria-pressed={current === c.id}
+            disabled={locked}
+            onClick={() => {
+              if (current !== c.id && confirm(`Bytte til ${c.name}? Spillområde, linjevalg og spørsmålsutvalg nullstilles, og alle i rommet får samme by.`)) setCity(c.id)
+            }}
+          >
+            {c.name}
+            <span className="text-xs text-muted">{c.network}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        {CITIES.length === 1 ? 'Flere byer kommer. Hver by har sitt eget kollektivnett og sine egne kartdata.' : 'Hver by har sitt eget kollektivnett og sine egne kartdata.'}
+      </p>
+    </Section>
   )
 }
 
@@ -682,9 +847,10 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
   return (
     <div>
       <PresetPanel locked={locked} />
+      <CityPicker locked={locked} />
       <Section title="Spillområde">
         <p className="mb-2 text-sm">
-          {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : 'Hele T-banenettet.'}
+          {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : `Hele ${city().networkWhole}.`}
         </p>
         <div className="flex flex-wrap gap-1.5">
           <button className="btn btn-primary" disabled={locked} onClick={() => set({ playArea: autoPlayArea(data.stations, s) })}>
@@ -846,7 +1012,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
       <Section title="Data">
         <ul className="text-xs text-muted">
           <li>{data.stations.length} stasjoner og {data.lines.features.length} linjer fra Ruter GTFS</li>
-          {ADMIN_LEVELS.map((l) => {
+          {adminLevels().map((l) => {
             return <li key={l.key}>{l.label}: {levelAreas(data, l.key).length || 'mangler'}</li>
           })}
           {POI_TYPES.map((t) => (

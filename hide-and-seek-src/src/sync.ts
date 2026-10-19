@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { deviceId } from './device'
 import { announce, announceRound, notify } from './notify'
-import { GAME_SETTINGS, useGame, type Round, type State } from './store'
+import { GAME_SETTINGS, useGame, type ArchivedRound, type Round, type State } from './store'
 import type { LngLat, Question, RoundResult, Settings } from './types'
 
 // Realtime Database trenger bare adressen. Appen bruker ingen API-nøkkel, og
@@ -16,6 +16,7 @@ export const CODE_LENGTH = 6
 // Uten 0/O og 1/I/L, som er lette å forveksle når koden leses opp.
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 const TIMEOUT_MS = 10000
+const ARCHIVE_DELAY_MS = 4000
 
 export const cleanCode = (text: string) => text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CODE_LENGTH)
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(CODE_LENGTH)), (b) => ALPHABET[b % ALPHABET.length]).join('')
@@ -61,7 +62,7 @@ const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(ma
  * Rolle, kartvalg og tema hører også til telefonen.
  */
 export function toShared(s: Synced): Shared {
-  const setup: Setup = { zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null }
+  const setup: Setup = { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null }
   return {
     questions: byId(s.questions),
     results: byId(s.results),
@@ -192,6 +193,8 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       // Ikke varsle om alt som lå i rommet fra før da vi koblet til.
       if (!first && othersChanged) announce(local.questions, next.questions, local.mode)
       if (!first) announceRound(local.round, next.round, local.mode)
+      // En annen telefon avsluttet en runde. Den lagrer runden i arkivet like etter.
+      if (!first && next.results.length > local.results.length) setTimeout(() => void loadArchive(code), ARCHIVE_DELAY_MS)
       const losers = clashLosers(next.questions, deviceId())
       if (losers.length) {
         for (const q of losers) useGame.getState().removeQuestion(q.id)
@@ -211,6 +214,8 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       offStatus()
     }
     localStorage.setItem(ROOM_KEY, code)
+    rememberRoom(code)
+    void loadArchive()
   } catch (e) {
     const denied = /permission/i.test((e as Error).message)
     useSync.setState({ room: null, status: 'off', error: denied ? 'Databasen slipper ikke inn. Sikkerhetsreglene er ikke satt opp.' : (e as Error).message })
@@ -237,3 +242,55 @@ export function resumeRoom() {
 
 export const roomLink = (code: string) => `${location.origin}${location.pathname}#rom=${code}`
 export const roomFromHash = (hash: string) => hash.match(/rom=([A-Za-z0-9]{6})\b/)?.[1].toUpperCase() ?? null
+
+const RECENT_KEY = 'hideandseek.rooms'
+const RECENT_LIMIT = 10
+export interface RecentRoom {
+  code: string
+  /** Sist telefonen var i rommet. */
+  at: number
+}
+
+/** Rommene telefonen har vært i, nyeste først, så man kan gå tilbake til et. */
+export function recentRooms(): RecentRoom[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as RecentRoom[]
+  } catch {
+    return []
+  }
+}
+function rememberRoom(code: string) {
+  const list = [{ code, at: Date.now() }, ...recentRooms().filter((r) => r.code !== code)].slice(0, RECENT_LIMIT)
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list))
+  } catch {
+    // Full lagring hindrer ikke spillet.
+  }
+}
+
+/**
+ * Arkivet ligger utenfor selve rommet (`archive/<kode>/<runde>`), så telefonene ikke
+ * laster ned alle gamle runder hver gang en seeker sender posisjonen sin.
+ */
+export async function saveArchive(round: ArchivedRound) {
+  if (!round.room) return
+  try {
+    const { db, database } = await openDb()
+    await withTimeout(db.set(db.ref(database, `archive/${round.room}/${round.id}`), JSON.stringify(round)))
+  } catch {
+    useSync.setState({ error: 'Runden er lagret på telefonen, men kunne ikke lagres i rommet.' })
+  }
+}
+
+/** Henter rundene i rommet som telefonen ikke har, f.eks. de en annen telefon avsluttet. */
+export async function loadArchive(code = useSync.getState().room) {
+  if (!code) return
+  try {
+    const { db, database } = await openDb()
+    const snap = await withTimeout(db.get(db.ref(database, `archive/${code}`)))
+    const rounds = Object.values((snap.val() ?? {}) as Record<string, string>).map((v) => JSON.parse(v) as ArchivedRound)
+    if (rounds.length) useGame.getState().mergeArchive(rounds)
+  } catch {
+    // Uten nett vises rundene telefonen har selv.
+  }
+}

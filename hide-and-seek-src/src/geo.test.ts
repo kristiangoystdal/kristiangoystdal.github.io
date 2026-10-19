@@ -5,7 +5,7 @@ import { ITEMS, SIZE_RULES, enabledIds, formToQuestion, itemsFor, lockedBy, newF
 import { ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, HIGH_SPEED, WORLD, applyQuestion, disc, areaAt, autoAnswer, autoPlayArea, clipData, dist, hiderStation, isPositive, landmassOf, nearestStation, polylineDist, regionOf, shapeDist, solve, stationPos, stationsInReach, transitStops, voronoiCell } from './geo'
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
-const raw = JSON.parse(readFileSync('public/data/stations.json', 'utf8'))
+const raw = JSON.parse(readFileSync('public/data/oslo/stations.json', 'utf8'))
 const stations: Station[] = raw.stations
 const byName = (name: string) => stations.find((s) => s.name === name)!
 const pos = (name: string) => stationPos(byName(name))
@@ -24,7 +24,7 @@ const data: GeoData = {
     ],
   },
 }
-const settings: Settings = { zoneRadius: 500, lines: ['1', '2', '3', '4', '5'], day: 'wk', hourFrom: 10, hourTo: 18, adminLevel: 'bydel', theme: 'auto', basemap: 'clean', size: 'M', playArea: null }
+const settings: Settings = { city: 'oslo', zoneRadius: 500, lines: ['1', '2', '3', '4', '5'], day: 'wk', hourFrom: 10, hourTo: 18, adminLevel: 'bydel', theme: 'auto', basemap: 'clean', size: 'M', playArea: null }
 const q = (body: QuestionBody, answer: string | null = null): Question => ({ id: 'q', time: 0, answer, ...body })
 const names = (qs: Question[]) => solve(qs, data, settings).stations.map((s) => s.name)
 
@@ -101,6 +101,14 @@ describe('endgame', () => {
     expect(booleanPointInPolygon(north, before.area!)).toBe(true)
     expect(booleanPointInPolygon(north, after.area!)).toBe(false)
     expect(booleanPointInPolygon(pos('Frøen'), after.area!)).toBe(true)
+  })
+
+  it('spørsmål fra før skjærer sonen når seekerne velger det', () => {
+    const cut: QuestionBody = { kind: 'radar', center: pos('Majorstuen'), radiusM: 700 }
+    const north = destination(pos('Frøen'), 0.4, 0, { units: 'kilometers' }).geometry.coordinates as LngLat
+    const res = solve([at('a', 1, cut, 'in')], data, settings, { ...endgame, include: ['a'] })
+    expect(booleanPointInPolygon(north, res.area!)).toBe(false)
+    expect(booleanPointInPolygon(pos('Frøen'), res.area!)).toBe(true)
   })
 
   it('svar som utelukker hele sonen gir null stasjoner', () => {
@@ -293,7 +301,7 @@ describe('hiders autosvar stemmer med geometrien', () => {
 })
 
 // Grenser og steder hentes av scripts/fetch_geodata.py og er valgfrie.
-const ADMIN_FILE = 'public/data/admin.geojson'
+const ADMIN_FILE = 'public/data/oslo/admin.geojson'
 describe.skipIf(!existsSync(ADMIN_FILE))('administrative grenser', () => {
   const real: GeoData = { ...data, admin: existsSync(ADMIN_FILE) ? JSON.parse(readFileSync(ADMIN_FILE, 'utf8')).features : [] }
   const name = (level: AdminLevel, station: string) => areaAt(real, level, pos(station))?.properties.name
@@ -350,8 +358,8 @@ describe.skipIf(!existsSync(ADMIN_FILE))('administrative grenser', () => {
   })
 })
 
-const LINES_FILE = 'public/data/lines.geojson'
-const shapeFile = (k: string) => `public/data/${k}.geojson`
+const LINES_FILE = 'public/data/oslo/lines.geojson'
+const shapeFile = (k: string) => `public/data/oslo/${k}.geojson`
 const outline = (f: { geometry: { type: string; coordinates: unknown } }) => (f.geometry.type === 'Polygon' ? (f.geometry.coordinates as LngLat[][]) : [f.geometry.coordinates as LngLat[]])
 
 describe('kollektivlinje', () => {

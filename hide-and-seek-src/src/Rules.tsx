@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { city } from './cities'
 import { ITEMS, SIZE_RULES, type Category } from './form'
 import { useGame, useUi } from './store'
 import type { GameSize } from './types'
@@ -50,7 +51,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     title: 'Spillet i korte trekk',
     body: () => (
       <List>
-        <li>Én spiller (hider) reiser kollektivt til et gjemmested ved en T-banestasjon.</li>
+        <li>Én spiller (hider) reiser kollektivt til et gjemmested ved en {city().network}stasjon.</li>
         <li>De andre (seekerne) samarbeider om å finne hider ved å stille spørsmål fra seks kategorier.</li>
         <li>Hver gang hider svarer, trekker hider kort fra hider-kortstokken.</li>
         <li>Når hider er funnet, er det nestemann sin tur. Den som holdt seg skjult lengst, vinner.</li>
@@ -137,7 +138,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     body: () => (
       <List>
         <li>
-          <b>Kollektivlinje:</b> seekerne må være om bord og i bevegelse. Svaret er ja hvis T-banen de sitter på stopper ved hiders stasjon. Passerer den uten å stoppe, er svaret nei.
+          <b>Kollektivlinje:</b> seekerne må være om bord og i bevegelse. Svaret er ja hvis {city().network === 'T-bane' ? 'T-banen' : 'det'} de sitter på stopper ved hiders stasjon. Passerer den uten å stoppe, er svaret nei.
         </li>
         <li>
           <b>Lengde på stasjonsnavn:</b> antall tegn slik kartappen skriver navnet. Mellomrom og bindestrek teller.
@@ -164,7 +165,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     body: () => (
       <List>
         <li>
-          <b>Jernbanestasjon:</b> T-banestasjoner teller med.
+          <b>Jernbanestasjon:</b> {city().network}stasjoner teller med.
         </li>
         <li>
           <b>Vann:</b> navngitt i kartappen, ikke basseng. <b>Kystlinje:</b> der land møter sjøen.
@@ -343,7 +344,7 @@ export function Rules() {
         </div>
         <div ref={box} className="overflow-y-auto overscroll-contain px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))] text-sm">
           <p className="mb-2 text-xs text-muted">
-            Jetlag Hide and Seek, tilpasset Oslo T-bane. Spillet er satt til {SIZE_NAMES[size]}. Avstandene er appens avrundede verdier.
+            Jetlag Hide and Seek, tilpasset {city().name} {city().network}. Spillet er satt til {SIZE_NAMES[size]}. Avstandene er appens avrundede verdier.
           </p>
           {SECTIONS.map((s) => (
             <details key={s.id} id={`regel-${s.id}`} className="border-b border-border py-1 last:border-0" open={section === s.id}>

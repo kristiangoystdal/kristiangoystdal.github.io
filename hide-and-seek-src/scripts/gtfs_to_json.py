@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
-"""Bygger stations.json og lines.geojson fra Ruters GTFS (kun T-bane, route_type 401).
+"""Bygger stations.json og lines.geojson for en by fra GTFS-feeden i scripts/cities.json.
+
+Bare rutene med typene i `routeTypes` blir med (Oslo: T-bane, route_type 401).
+Filene skrives til public/data/<by>/.
 
 Bruk:
-    curl -O https://storage.googleapis.com/marduk-production/outbound/gtfs/rb_rut-aggregated-gtfs.zip
-    python3 scripts/gtfs_to_json.py rb_rut-aggregated-gtfs.zip public/data
+    curl -o gtfs.zip <gtfs.url fra cities.json>
+    python3 scripts/gtfs_to_json.py <by> gtfs.zip
 """
 import csv
 import io
 import json
 import math
+import os
 import sys
 import zipfile
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 
-METRO_ROUTE_TYPE = "401"
-# Ruters GTFS har samme farge på alle T-banelinjer, så linjefargene settes her.
-LINE_COLORS = {"1": "#2f9ad6", "2": "#f0732a", "3": "#9461b3", "4": "#1d4f9c", "5": "#3aa648"}
+CITIES = os.path.join(os.path.dirname(__file__), "cities.json")
 DAY_KEYS = {"wk": 2, "sa": 5, "su": 6}  # onsdag, lørdag, søndag
 SIMPLIFY_M = 4.0
 
@@ -57,10 +59,16 @@ def simplify(points, tol_m):
     return [p for p, k in zip(points, keep) if k]
 
 
-def main(src, out_dir):
+def main(city, src):
+    with open(CITIES, encoding="utf-8") as f:
+        gtfs = json.load(f)[city]["gtfs"]
+    out_dir = os.path.join(os.path.dirname(__file__), "..", "public", "data", city)
+    os.makedirs(out_dir, exist_ok=True)
+    # Noen feeder (som Ruters) har samme farge på alle linjene, så fargene kan settes i cities.json.
+    line_colors = gtfs.get("lineColors", {})
     zf = zipfile.ZipFile(src)
 
-    routes = {r["route_id"]: r for r in rows(zf, "routes.txt") if r["route_type"] == METRO_ROUTE_TYPE}
+    routes = {r["route_id"]: r for r in rows(zf, "routes.txt") if r["route_type"] in gtfs["routeTypes"]}
     trips = {t["trip_id"]: t for t in rows(zf, "trips.txt") if t["route_id"] in routes}
 
     service_dates = defaultdict(set)
@@ -145,14 +153,15 @@ def main(src, out_dir):
         coords = simplify([[round(lon, 5), round(lat, 5)] for _, lon, lat in pts], SIMPLIFY_M)
         line = route["route_short_name"]
         order = [station_of(s).split(":")[-1] for _, s, _ in trip_stops[best_trip[route["route_id"]][1]]]
+        color = line_colors.get(line) or (f"#{route['route_color']}" if route.get("route_color") else "#888888")
         features.append({
             "type": "Feature",
-            "properties": {"line": line, "name": route["route_long_name"], "color": LINE_COLORS.get(line, "#888888"), "stations": order},
+            "properties": {"line": line, "name": route["route_long_name"], "color": color, "stations": order},
             "geometry": {"type": "LineString", "coordinates": coords},
         })
     features.sort(key=lambda f: f["properties"]["line"])
 
-    meta = {"source": "Ruter GTFS (Entur)", "feedStart": min(all_dates), "feedEnd": max(all_dates), "days": rep}
+    meta = {"source": gtfs.get("source", "GTFS"), "feedStart": min(all_dates), "feedEnd": max(all_dates), "days": rep}
     with open(f"{out_dir}/stations.json", "w", encoding="utf-8") as f:
         json.dump({"meta": meta, "stations": stations}, f, ensure_ascii=False, separators=(",", ":"))
     with open(f"{out_dir}/lines.geojson", "w", encoding="utf-8") as f:

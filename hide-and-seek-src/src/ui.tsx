@@ -78,13 +78,18 @@ const FRESH_MS = 10000
 const USABLE_MS = 120000
 export const rememberFix = (pos: LngLat) => void (lastFix = { pos, t: Date.now() })
 
+/** Med `fresh` brukes bare en posisjon fra de siste sekundene. */
+const NOW_MS = 3000
+
 /**
  * Henter posisjonen. Følger telefonen alt GPS, brukes den siste posisjonen derfra,
  * og den er også reserven hvis et nytt GPS-kall ikke svarer.
+ * `fresh`: posisjonen skal gjelde akkurat nå, f.eks. når hider svarer. Da brukes
+ * ingen gammel posisjon i stedet, og kallet feiler heller.
  */
-export function locate(): Promise<LngLat> {
+export function locate({ fresh = false } = {}): Promise<LngLat> {
   return new Promise((resolve, reject) => {
-    if (lastFix && Date.now() - lastFix.t < FRESH_MS) return resolve(lastFix.pos)
+    if (lastFix && Date.now() - lastFix.t < (fresh ? NOW_MS : FRESH_MS)) return resolve(lastFix.pos)
     if (!navigator.geolocation) return reject(new Error('Nettleseren støtter ikke posisjon'))
     navigator.geolocation.getCurrentPosition(
       (p) => {
@@ -93,10 +98,10 @@ export function locate(): Promise<LngLat> {
         resolve(pos)
       },
       () =>
-        lastFix && Date.now() - lastFix.t < USABLE_MS
+        !fresh && lastFix && Date.now() - lastFix.t < USABLE_MS
           ? resolve(lastFix.pos)
           : reject(new Error('Fikk ikke hentet posisjonen. Sjekk at nettsiden har lov til å bruke den.')),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+      { enableHighAccuracy: true, timeout: fresh ? 10000 : 15000, maximumAge: fresh ? 0 : 5000 },
     )
   })
 }

@@ -1,0 +1,16 @@
+{
+  "oslo": {
+    "name": "Oslo",
+    "gtfs": {
+      "url": "https://storage.googleapis.com/marduk-production/outbound/gtfs/rb_rut-aggregated-gtfs.zip",
+      "source": "Ruter GTFS (Entur)",
+      "routeTypes": ["401"],
+      "lineColors": { "1": "#2f9ad6", "2": "#f0732a", "3": "#9461b3", "4": "#1d4f9c", "5": "#3aa648" }
+    },
+    "bbox": "59.78,10.38,60.06,11.00",
+    "wide": "59.0,9.8,60.4,11.8",
+    "coastBbox": "59.6,10.1,60.1,11.0",
+    "borderBbox": "58.9,10.9,61.3,12.9",
+    "admin": "oslo"
+  }
+}

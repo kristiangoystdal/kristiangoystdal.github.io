@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { city } from './cities'
 import { deadline, movedAt } from './clock'
 import {
   CATEGORIES,
@@ -15,6 +16,7 @@ import {
   itemsFor,
   lockedBy,
   newForm,
+  questionKey,
   questionToForm,
   randomSwap,
   responseMinutes,
@@ -25,9 +27,9 @@ import {
   type Item,
   type Locks,
 } from './form'
-import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEALEVEL_ITEM, STREET_ITEM, autoAnswer, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
+import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEALEVEL_ITEM, STREET_ITEM, autoAnswer, canCutZone, cutsZone, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
 import { fetchLookup, lookup, useLookups } from './online'
-import { exportGame, gameLink, parseGame, useGame, useUi } from './store'
+import { exportGame, gameLink, parseGame, useGame, useHiderPos, useUi } from './store'
 import type { GeoData, LngLat, Question } from './types'
 import { MoveInfo, PAUSE_TEXT, PointInput, Section, locate, useGameNow, useNow } from './ui'
 
@@ -58,23 +60,24 @@ const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-d
 /** Hiders fasitsvar på et spørsmål, eller null når appen ikke er i hider-modus. */
 export function useAutoAnswer(data: GeoData) {
   const mode = useGame((s) => s.mode)
-  const hider = useGame((s) => s.hider)
+  const stationId = useGame((s) => s.hider.stationId)
+  const pos = useHiderPos((s) => s.pos)
   // Tegnes på nytt når et oppslag hos Kartverket kommer tilbake.
   useLookups()
   return (q: Question): AutoAnswer | null => {
-    if (mode !== 'hider' || !hider.pos) return null
-    const station = data.stations.find((s) => s.id === hider.stationId) ?? nearestStation(data.stations, hider.pos)
-    return autoAnswer(q, { pos: hider.pos, station }, data, lookup)
+    if (mode !== 'hider' || !pos) return null
+    const station = data.stations.find((s) => s.id === stationId) ?? nearestStation(data.stations, pos)
+    return autoAnswer(q, { pos, station }, data, lookup)
   }
 }
 
 /** Henter det et spørsmål trenger fra Kartverket for begge posisjonene. */
 async function prefetch(q: Question, hider: LngLat) {
   const kind = q.item === SEALEVEL_ITEM ? 'height' : q.item === STREET_ITEM ? 'street' : null
-  if (!kind || q.kind !== 'manual' || !q.pos) return
+  if (!kind || q.kind !== 'manual' || !q.pos || !city().norway) return
   await Promise.all([fetchLookup(kind, hider), fetchLookup(kind, q.pos)])
 }
-const online = (q: Question) => q.item === SEALEVEL_ITEM || q.item === STREET_ITEM
+const online = (q: Question) => city().norway && (q.item === SEALEVEL_ITEM || q.item === STREET_ITEM)
 
 export function AutoHint({ q, auto }: { q: Question; auto: AutoAnswer }) {
   return (
@@ -142,6 +145,11 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
   // Merker hvilke spørsmål som alt er stilt, så man ser hva som er igjen.
   const used = usedKeys(questions.filter((x) => x.id !== form.id))
   const q = formToQuestion(form)
+  // Samme spørsmål stilt før i runden. Randomize teller ikke, for da ble det ikke stilt.
+  const repeats = q ? questions.filter((x) => x.id !== form.id && x.answer !== ANSWER_RANDOM && questionKey(x) === questionKey(q)) : []
+  const repeatText = repeats.length
+    ? `Dette spørsmålet er stilt ${repeats.length === 1 ? 'før' : `${repeats.length} ganger før`} i runden (sist kl. ${time(repeats.at(-1)!.time)}). Stilles det igjen, koster det ${repeats.length + 1} ganger så mye: hider trekker ${repeats.length + 1} ganger hver for seg.`
+    : ''
   // Hider som legger inn spørsmål og svar samlet, er ikke bundet av køen.
   const blocked = lock && !form.id ? `Dette spørsmålet er stengt av ${lock} resten av runden.` : !form.id && !(isHider && form.answer !== null) ? waiting : null
   const route = data.lines.features.find((f) => f.properties.line === form.line)?.properties.stations ?? []
@@ -201,28 +209,44 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       {itemsFor('Tentacles', rules).length === 0 && <p className="-mt-1 mb-3 text-xs text-muted">Tentacles er ikke med i dette spillet. Det kan slås på under Oppsett.</p>}
       {locks.spotty && <p className="-mt-1 mb-3 text-xs text-muted">{locks.spotty} er slått ut av Spotty Memory.</p>}
 
-      <label className="mb-3 block">
+      {/* Knapper i stedet for en nedtrekksliste: telefonene viser ikke farger i en liste, og stilte spørsmål skal stå i rødt. */}
+      <div className="mb-3" role="radiogroup" aria-label="Spørsmål">
         <span className="label">Spørsmål</span>
-        <select className="field" value={item.id} onChange={(e) => setDraft(switchItem(form, itemOf(e.target.value)!))}>
-          {groups.map((g) => (
-            <optgroup key={g} label={g}>
+        {groups.map((g) => (
+          <div key={g} className="mb-2">
+            {groups.length > 1 && <span className="mb-1 block text-xs text-muted">{g}</span>}
+            <div className="flex flex-wrap gap-1.5">
               {items
                 .filter((i) => i.group === g)
-                .map((i) => (
-                  <option key={i.id} value={i.id} disabled={!!lockedBy(i, locks)}>
-                    {isUsed(used, i.id) ? '✓ ' : ''}
-                    {i.label}
-                    {lockedBy(i, locks) ? ` (${lockedBy(i, locks)})` : ''}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </select>
-        <span className="mt-1 flex justify-between text-xs text-muted">
-          <span>✓ = stilt før.</span>
+                .map((i) => {
+                  const asked = isUsed(used, i.id)
+                  const on = i.id === item.id
+                  return (
+                    <button
+                      key={i.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      className={`btn min-h-9! whitespace-normal! py-1 text-left ${on ? 'btn-primary' : asked ? 'text-bad!' : ''}`}
+                      disabled={!!lockedBy(i, locks)}
+                      onClick={() => setDraft(switchItem(form, i))}
+                    >
+                      {asked ? '✓ ' : ''}
+                      {i.label}
+                      {lockedBy(i, locks) ? ` (${lockedBy(i, locks)})` : ''}
+                    </button>
+                  )
+                })}
+            </div>
+          </div>
+        ))}
+        <span className="flex justify-between text-xs text-muted">
+          <span>
+            <span className="text-bad">Rød ✓</span> = stilt før.{isUsed(used, item.id) && <b className="text-bad"> Dette er stilt før.</b>}
+          </span>
           <RulesLink section={item.category.toLowerCase()} label={`Regler for ${item.category}`} />
         </span>
-      </label>
+      </div>
 
       {form.kind === 'radar' && (
         <>
@@ -302,7 +326,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       )}
       {form.kind === 'manual' && (
         <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">
-          {item.id === STREET_ITEM || item.id === SEALEVEL_ITEM
+          {city().norway && (item.id === STREET_ITEM || item.id === SEALEVEL_ITEM)
             ? 'Hiders app slår opp svaret hos Kartverket, og hider bekrefter det. Svaret loggføres uten at kartet krymper.'
             : 'Appen har ikke data til å regne ut dette. Hider svarer selv, og svaret loggføres uten at kartet krymper.'}
         </p>
@@ -349,6 +373,12 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
           {auto(q) && <AutoHint q={q} auto={auto(q)!} />}
         </div>
       )}
+      {repeatText && !form.id && (
+        <p className="mb-3 rounded-lg border border-bad p-2 text-sm text-bad" role="alert">
+          <b className="block">Stilt før</b>
+          {repeatText}
+        </p>
+      )}
       {blocked && <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">{blocked}</p>}
 
       <div className="flex gap-2">
@@ -356,6 +386,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
           className="btn btn-primary flex-1"
           disabled={!q || missing || !!blocked}
           onClick={() => {
+            if (repeatText && !form.id && !confirm(`${repeatText}\n\nStille det på nytt?`)) return
             const { id, time: _t, answer, ...body } = q!
             saveQuestion(body as never, answer, form.id)
             setDraft(null)
@@ -376,7 +407,10 @@ function HiderQuestions({ data }: { data: GeoData }) {
   const questions = useGame((s) => s.questions)
   const answerQuestion = useGame((s) => s.answerQuestion)
   const setHider = useGame((s) => s.setHider)
-  const hasPos = useGame((s) => s.hider.pos !== null)
+  const hasPos = useHiderPos((s) => s.pos !== null)
+  const gpsError = useHiderPos((s) => s.error)
+  // Spørsmål der GPS ikke svarte. Da svarer hider selv.
+  const [manual, setManual] = useState<string[]>([])
   const endgame = useGame((s) => !!s.round.endgame)
   const auto = useAutoAnswer(data)
   const [busy, setBusy] = useState('')
@@ -395,20 +429,32 @@ function HiderQuestions({ data }: { data: GeoData }) {
     if (confirm(`Spille Randomize? Seekerne må stille «${swap.label}» (${swap.category}) i stedet, og dette spørsmålet regnes ikke som stilt.`)) answerQuestion(q.id, ANSWER_RANDOM, swap.id)
   }
 
-  /** Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå. */
-  const answerFromGps = async (q: Question) => {
+  /**
+   * Henter posisjonen på nytt og svarer ut fra der hider står akkurat nå, ikke der
+   * GPS sist meldte. Får telefonen ikke posisjon, svarer hider selv.
+   */
+  const answerFromGps = async (q: Question, shown?: string) => {
     setBusy(q.id)
     setError('')
     try {
-      const pos = await locate()
+      let pos: LngLat
+      try {
+        pos = await locate({ fresh: true })
+      } catch (e) {
+        setManual((m) => [...m, q.id])
+        throw new Error(`${(e as Error).message} Svar selv ut fra der du står.`)
+      }
       // Stasjonen hider har valgt gjelder så lenge hider står i sonen dens.
       const { hider, settings } = useGame.getState()
       const station = hiderStation(data.stations, pos, settings.zoneRadius, hider.stationId)
-      setHider({ stationId: station.id, pos })
+      useHiderPos.setState({ pos, t: Date.now(), error: '' })
+      setHider({ stationId: station.id })
       await prefetch(q, pos)
       const a = autoAnswer(q, { pos, station }, data, lookup)
-      if (a) answer(q, a.answer)
-      else setError(online(q) ? 'Fikk ikke svar fra Kartverket. Sjekk nettet, eller svar selv.' : 'Dette spørsmålet kan ikke regnes ut. Svar selv.')
+      if (a) {
+        answer(q, a.answer)
+        if (shown !== undefined && shown !== a.answer) setError(`Du har flyttet deg, så svaret ble «${answerLabel(q, a.answer)}» ut fra der du står nå.`)
+      } else setError(online(q) ? 'Fikk ikke svar fra Kartverket. Sjekk nettet, eller svar selv.' : 'Dette spørsmålet kan ikke regnes ut. Svar selv.')
     } catch (e) {
       setError((e as Error).message)
     }
@@ -417,7 +463,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
 
   return (
     <>
-      {!hasPos && <p className="mb-3 text-xs text-muted">Appen henter posisjonen din når du svarer. Du kan også sette den selv under Kart.</p>}
+      {!hasPos && <p className="mb-3 text-xs text-muted">{gpsError || 'Venter på GPS. Appen henter posisjonen din når du svarer.'}</p>}
       {endgame && (
         <p className="mb-5 rounded-lg border border-accent p-3 text-sm">
           <b>Endgame er startet.</b> Seekerne er i en sone. Er det din, må du stå stille der du er.
@@ -481,15 +527,24 @@ function HiderQuestions({ data }: { data: GeoData }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {a && (
-                      <button className="btn btn-primary" onClick={() => answer(q, a.answer)}>
-                        Svar: {answerLabel(q, a.answer)}
-                      </button>
-                    )}
-                    <button className="btn" disabled={busy === q.id} onClick={() => answerFromGps(q)}>
-                      {busy === q.id ? 'Henter posisjon…' : 'Svar med posisjonen min nå'}
+                  <div className="mt-2">
+                    {/* Svaret regnes alltid ut på nytt fra der hider står når knappen trykkes. Forslaget over er bare en forhåndsvisning. */}
+                    <button className="btn btn-primary w-full" disabled={busy === q.id} onClick={() => answerFromGps(q, a?.answer)}>
+                      {busy === q.id ? 'Henter posisjonen din…' : a ? `Svar: ${answerLabel(q, a.answer)}` : 'Svar med posisjonen min nå'}
                     </button>
+                    <p className="mt-1 text-xs text-muted">Posisjonen hentes på nytt når du trykker, så svaret gjelder der du står akkurat da.</p>
+                    {manual.includes(q.id) && (
+                      <>
+                        <p className="mt-2 mb-1 text-xs text-muted">Uten GPS svarer du selv:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {answerOptions(q, data).map((o) => (
+                            <button key={o} className="btn" onClick={() => answer(q, o)}>
+                              {answerLabel(q, o)}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
                 {q.answer === null && (
@@ -555,7 +610,8 @@ function HiderCards({ data }: { data: GeoData }) {
   const now = useNow()
   const round = useGame((s) => s.round)
   const rules = useGame((s) => s.settings)
-  const hider = useGame((s) => s.hider)
+  const stationId = useGame((s) => s.hider.stationId)
+  const pos = useHiderPos((s) => s.pos)
   const setRound = useGame((s) => s.setRound)
   const playMove = useGame((s) => s.playMove)
   const resumeGame = useGame((s) => s.resumeGame)
@@ -573,7 +629,7 @@ function HiderCards({ data }: { data: GeoData }) {
   }
   const seeking = now >= round.seekFrom
   const moving = round.pause?.kind === 'move'
-  const station = data.stations.find((x) => x.id === hider.stationId) ?? (hider.pos ? nearestStation(data.stations, hider.pos) : null)
+  const station = data.stations.find((x) => x.id === stationId) ?? (pos ? nearestStation(data.stations, pos) : null)
   const moveBlocked = !seeking ? 'Kan spilles når letingen har startet.' : round.endgame ? 'Kan ikke spilles i endgame.' : round.pause ? 'Spillet står allerede.' : null
 
   const move = () => {
@@ -763,6 +819,8 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const rules = useGame((s) => s.settings)
   const locks = useLocks()
   const since = useGame((s) => movedAt(s.round))
+  const endgame = useGame((s) => s.round.endgame ?? null)
+  const toggleCut = useGame((s) => s.toggleEndgameCut)
   const open = (item: Item | undefined) => item && !lockedBy(item, locks)
 
   if (draft) {
@@ -808,7 +866,15 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                       {i + 1}. {categoryOf(q)} · {time(q.time)}
                     </span>
                     <span className="tabular-nums">
-                      {q.time < since ? 'Før Move, teller ikke' : isHider || !shrinks(q) || q.kind === 'photo' ? '' : `${before} → ${after} stasjoner`}
+                      {q.time < since
+                        ? 'Før Move, teller ikke'
+                        : isHider || !shrinks(q) || q.kind === 'photo'
+                          ? ''
+                          : endgame && q.time >= endgame.time
+                            ? canCutZone(q)
+                              ? 'Skjærer endgame-sonen'
+                              : ''
+                            : `${before} → ${after} stasjoner`}
                     </span>
                   </div>
                   <p className="mt-1 text-sm">{describe(q, data)}</p>
@@ -841,6 +907,12 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                         </button>
                       )}
                     </div>
+                  )}
+                  {/* I endgame velger seekerne om spørsmål fra før skal gjøre sonen mindre. */}
+                  {!isHider && endgame && q.time < endgame.time && q.time >= since && canCutZone(q) && (
+                    <button type="button" role="switch" aria-checked={cutsZone(q, endgame)} className={`btn mt-2 min-h-9! w-full ${cutsZone(q, endgame) ? 'btn-on' : ''}`} onClick={() => toggleCut(q.id)}>
+                      {cutsZone(q, endgame) ? '✓ Skjærer endgame-sonen' : 'Bruk i endgame-sonen'}
+                    </button>
                   )}
                   {q.answer === ANSWER_VETO && <p className="mt-1 text-xs text-muted">Hider spilte Veto. Spørsmålet regnes som stilt.</p>}
                   <AnswerHistory q={q} />

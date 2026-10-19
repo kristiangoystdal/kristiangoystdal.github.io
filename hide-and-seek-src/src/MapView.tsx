@@ -1,8 +1,11 @@
 import L from 'leaflet'
+import 'leaflet-rotate'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { formToQuestion } from './form'
 import { POI_TYPES, excluded, levelAreas, regionOf, type Result } from './geo'
-import { useGame, useUi } from './store'
+import { ArchiveBanner } from './Archive'
+import { city, networkSuffix } from './cities'
+import { useGame, useHiderPos, useUi, type ArchivedRound } from './store'
 import { useSync } from './sync'
 import type { GeoData, LngLat, Settings, Station } from './types'
 import { GameStatus, locate } from './ui'
@@ -12,7 +15,6 @@ const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', '
 const TOOL_COLOR = '#8e44ad'
 type Group = (typeof GROUPS)[number]
 const LABEL_ZOOM = 13
-const METRO_SUFFIX = ' (T-bane)'
 /** Eldre posisjoner enn dette tegnes svakere. */
 const STALE_MS = 120000
 
@@ -48,19 +50,26 @@ export function depRate(s: Station, day: keyof Station['dep'], from: number, to:
   return hours.reduce((a, b) => a + b, 0) / hours.length
 }
 
-export default function MapView({ data, result }: { data: GeoData; result: Result }) {
+/** `past`: en tidligere runde som vises i stedet for den som pågår. */
+export default function MapView({ data, result, past = null }: { data: GeoData; result: Result; past?: ArchivedRound | null }) {
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const groups = useRef({} as Record<Group, L.LayerGroup>)
-  const [ready, setReady] = useState(false)
+  // Øker hver gang kartet lages på nytt (ny by), så alle lagene tegnes inn i det nye kartet.
+  const [ready, setReady] = useState(0)
   const [me, setMe] = useState<LngLat | null>(null)
   const [locError, setLocError] = useState('')
+  const [bearing, setBearing] = useState(0)
+  const [follow, setFollow] = useState(false)
 
   const settings = useGame((s) => s.settings)
   const layers = useGame((s) => s.layers)
   const mode = useGame((s) => s.mode)
   const hider = useGame((s) => s.hider)
-  const endgame = useGame((s) => !!s.round.endgame)
+  const hiderPos = useHiderPos((s) => s.pos)
+  const liveEndgame = useGame((s) => s.round.endgame?.stationId ?? null)
+  const endgameAt = past ? (past.round.endgame?.stationId ?? null) : liveEndgame
+  const endgame = endgameAt !== null
   const draft = useUi((s) => s.draft)
   const pick = useUi((s) => s.pick)
   const setPick = useUi((s) => s.setPick)
@@ -71,7 +80,8 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   const tools = useGame((s) => s.tools)
 
   // Hider ser bare sin egen sone, aldri hvilke stasjoner seekerne har igjen.
-  const hiderView = mode === 'hider'
+  // En tidligere runde vises likt for alle, også hider.
+  const hiderView = mode === 'hider' && !past
   const possible = useMemo(
     () => new Set(hiderView ? (hider.stationId ? [hider.stationId] : []) : result.stations.map((s) => s.id)),
     [result, hiderView, hider.stationId],
@@ -83,7 +93,8 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
   )
 
   useEffect(() => {
-    const m = L.map(el.current!, { zoomControl: false, preferCanvas: true })
+    // Kartet kan roteres med to fingre. Kompassknappen setter nord opp igjen, eller lar kartet følge telefonen.
+    const m = L.map(el.current!, { zoomControl: false, preferCanvas: true, rotate: true, touchRotate: true, rotateControl: false, bearing: 0 })
     m.fitBounds(L.latLngBounds(data.stations.map((s) => [s.lat, s.lon])), { padding: [20, 20] })
     L.control.zoom({ position: 'topright' }).addTo(m)
     for (const g of GROUPS) groups.current[g] = L.layerGroup().addTo(m)
@@ -99,11 +110,12 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     const showLabels = () => el.current?.classList.toggle('hide-labels', m.getZoom() < LABEL_ZOOM)
     m.on('zoomend', showLabels)
     showLabels()
+    m.on('rotate', () => setBearing(m.getBearing()))
 
     const ro = new ResizeObserver(() => m.invalidateSize())
     ro.observe(el.current!)
     map.current = m
-    setReady(true)
+    setReady((n) => n + 1)
     return () => {
       ro.disconnect()
       m.remove()
@@ -115,7 +127,8 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
 
   useEffect(() => {
     if (!ready || !map.current) return
-    const { url, maxZoom, attribution } = BASEMAPS[settings.basemap] ?? BASEMAPS.clean
+    // Kartverkets kart dekker bare Norge. Utenfor Norge brukes OpenStreetMap i stedet.
+    const { url, maxZoom, attribution } = settings.basemap === 'clean' && !city().norway ? BASEMAPS.standard : (BASEMAPS[settings.basemap] ?? BASEMAPS.clean)
     const tiles = L.tileLayer(url, { maxZoom, attribution }).addTo(map.current)
     map.current.setMaxZoom(maxZoom)
     return () => void tiles.remove()
@@ -186,6 +199,25 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     }
   }, [ready, data, possible, hiderView, endgame, layers.zones, settings, lineColor])
 
+  // Kartet kan ikke zoomes lenger ut enn at hele spillområdet så vidt får plass. Uten
+  // spillområde gjelder sonene rundt stasjonene som er med. Mens spillområdet tegnes, er det fritt.
+  const drawing = draw !== null
+  useEffect(() => {
+    const m = map.current
+    if (!ready || !m) return
+    if (drawing) return void m.setMinZoom(0)
+    const pad = settings.zoneRadius / 111000
+    const bounds = settings.playArea?.length
+      ? L.latLngBounds(settings.playArea.map(ll))
+      : L.latLngBounds(data.stations.filter((s) => s.lines.some((l) => settings.lines.includes(l))).map((s) => [s.lat, s.lon]))
+    const area = settings.playArea?.length ? bounds : L.latLngBounds([bounds.getSouth() - pad, bounds.getWest() - 2 * pad], [bounds.getNorth() + pad, bounds.getEast() + 2 * pad])
+    const fit = () => m.setMinZoom(m.getBoundsZoom(area, false))
+    fit()
+    // Panelet endrer høyden på kartet, og da endres hvor langt ut som trengs.
+    m.on('resize', fit)
+    return () => void m.off('resize', fit)
+  }, [ready, drawing, data.stations, settings.playArea, settings.lines, settings.zoneRadius])
+
   // Når et svar krymper området, zoomes kartet inn på stasjonene som står igjen.
   useEffect(() => {
     const left = data.stations.filter((s) => possible.has(s.id))
@@ -198,6 +230,15 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, possible])
 
+  // Endgame: kartet zoomer inn på sonen, også når svarene alt hadde snevret det inn til én stasjon.
+  useEffect(() => {
+    const s = data.stations.find((x) => x.id === endgameAt)
+    if (!ready || !s || hiderView) return
+    map.current?.invalidateSize()
+    map.current?.fitBounds(L.latLng(s.lat, s.lon).toBounds(settings.zoneRadius * 2.4))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, endgameAt])
+
   // Punktet/området for spørsmålet som redigeres, pluss stedene det handler om.
   useEffect(() => {
     if (!ready) return
@@ -209,13 +250,13 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
       const type = POI_TYPES.find((t) => t.key === key)
       const icon = L.divIcon({ className: 'poi-icon', html: type?.icon ?? '•', iconSize: [22, 22] })
       for (const p of data.poi[key] ?? []) {
-        // T-banestasjonene tegnes alt som stasjoner.
-        if (p.name.endsWith(METRO_SUFFIX)) continue
+        // Stasjonene i nettet tegnes alt som stasjoner.
+        if (p.name.endsWith(networkSuffix())) continue
         L.marker(ll(p.pos), { icon, keyboard: false }).bindTooltip(`${p.name} · ${type?.label ?? key}`).addTo(poi)
       }
     }
-    if (mode === 'hider' && hider.pos) {
-      L.circleMarker(ll(hider.pos), { radius: 8, color: '#fff', weight: 2, fillColor: css('--ok'), fillOpacity: 1 }).bindTooltip('Hider (deg)').addTo(g)
+    if (mode === 'hider' && hiderPos) {
+      L.circleMarker(ll(hiderPos), { radius: 8, color: '#fff', weight: 2, fillColor: css('--ok'), fillOpacity: 1 }).bindTooltip('Hider (deg)').addTo(g)
     }
     if (draw) {
       const style = { color: '#3b6ceb', weight: 2.5, dashArray: '6 5', fillOpacity: 0.1, interactive: false }
@@ -232,7 +273,7 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
       p && L.circleMarker(ll(p), { radius: 7, color: '#fff', weight: 2, fillColor: '#3b6ceb', fillOpacity: 1 }).bindTooltip(text, { permanent: true, direction: 'top' }).addTo(g)
     pin(draft.pos, draft.kind === 'thermometer' ? 'Start' : 'Seeker')
     if (draft.kind === 'thermometer') pin(draft.pos2, 'Slutt')
-  }, [ready, data, draft, draw, layers.poi, mode, hider.pos, settings.theme])
+  }, [ready, data, draft, draw, layers.poi, mode, hiderPos, settings.theme])
 
   useEffect(() => {
     if (!ready) return
@@ -284,28 +325,56 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
     }
   }
 
+  const north = () => {
+    map.current?.compassBearing.disable()
+    map.current?.touchRotate.enable()
+    map.current?.setBearing(0)
+    setFollow(false)
+  }
+  const followCompass = async () => {
+    // iPhone krever at brukeren gir lov til kompasset, og det må skje fra et trykk.
+    const ask = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission
+    if (ask && (await ask().catch(() => 'denied')) !== 'granted') return setLocError('Fikk ikke bruke kompasset. Gi nettsiden lov under innstillingene.')
+    map.current?.compassBearing.enable()
+    setFollow(!!map.current?.compassBearing.enabled())
+    if (!map.current?.compassBearing.enabled()) setLocError('Telefonen har ikke kompass, eller nettleseren gir ikke tilgang til det.')
+  }
+
   return (
     <div className={`relative h-full w-full ${pick || draw ? 'picking' : ''}`}>
       <div ref={el} data-basemap={settings.basemap} className="h-full w-full [&.hide-labels_.station-label]:hidden" />
       <div className="pointer-events-none absolute top-[calc(0.75rem+env(safe-area-inset-top))] left-3 z-[1000] flex max-w-[85%] flex-col items-start gap-2 md:max-w-[70%]">
+        {past && <ArchiveBanner round={past} />}
         <div className="card pointer-events-auto px-3! py-1.5! text-sm shadow-lg">
           {hiderView ? (
-            hider.stationId ? (
-              <>
-                Sonen din: <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
-              </>
-            ) : (
-              'Sett posisjonen din under Kart'
-            )
+            <>
+              {endgame && <span className="block text-xs font-semibold text-accent uppercase">Endgame: står seekerne i din sone, står du stille</span>}
+              {hider.stationId ? (
+                <>
+                  Sonen din: <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
+                </>
+              ) : (
+                'Venter på GPS…'
+              )}
+            </>
           ) : (
             <>
-              {endgame && <span className="block text-xs font-semibold text-accent uppercase">Endgame</span>}
-              <b className="text-accent tabular-nums">{result.stations.length}</b> {result.stations.length === 1 ? `stasjon igjen: ${result.stations[0].name}` : 'stasjoner igjen'}
-              {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
+              {endgame ? (
+                <>
+                  <span className="block text-xs font-semibold text-accent uppercase">Endgame</span>
+                  Sonen ved <b className="text-accent">{data.stations.find((s) => s.id === endgameAt)?.name}</b>
+                  {!result.area && <span className="block text-xs text-bad">Svarene utelukker hele sonen</span>}
+                </>
+              ) : (
+                <>
+                  <b className="text-accent tabular-nums">{result.stations.length}</b> {result.stations.length === 1 ? `stasjon igjen: ${result.stations[0].name}` : 'stasjoner igjen'}
+                  {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
+                </>
+              )}
             </>
           )}
         </div>
-        <GameStatus stations={data.stations} />
+        {!past && <GameStatus stations={data.stations} />}
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">
             <span>Trykk på kartet: {pick.label.toLowerCase()}</span>
@@ -349,6 +418,17 @@ export default function MapView({ data, result }: { data: GeoData; result: Resul
           onClick={() => setSettings({ basemap: BASEMAP_ORDER[(BASEMAP_ORDER.indexOf(settings.basemap) + 1) % BASEMAP_ORDER.length] })}
         >
           ◫ {BASEMAPS[settings.basemap].label}
+        </button>
+        <button
+          className={`btn shadow-lg ${follow ? 'btn-on' : ''}`}
+          onClick={() => (follow || Math.round(bearing) % 360 !== 0 ? north() : followCompass())}
+          aria-label={follow ? 'Kartet følger kompasset. Trykk for nord opp.' : bearing ? 'Sett nord opp' : 'La kartet følge kompasset'}
+          title={follow ? 'Følger kompasset' : bearing ? 'Nord opp' : 'Følg kompasset. Roter med to fingre.'}
+        >
+          <span className="inline-block" style={{ transform: `rotate(${bearing}deg)` }} aria-hidden>
+            ⬆
+          </span>
+          {follow ? 'Kompass' : 'N'}
         </button>
         <button className="btn shadow-lg" onClick={findMe} aria-label="Vis min posisjon">
           ◎ Meg

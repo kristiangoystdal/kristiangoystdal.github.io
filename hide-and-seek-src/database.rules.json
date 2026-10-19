@@ -28,11 +28,20 @@
         },
         "results": {
           "$id": {
-            ".validate": "newData.isString() && newData.val().length < 500"
+            ".validate": "newData.isString() && newData.val().length < 1500"
           }
         },
         "$other": {
           ".validate": false
+        }
+      }
+    },
+    "archive": {
+      "$code": {
+        ".read": "$code.matches(/^[A-Z0-9]{6}$/)",
+        "$id": {
+          ".write": "$code.matches(/^[A-Z0-9]{6}$/) && $id.matches(/^[a-z0-9]{1,20}$/)",
+          ".validate": "newData.isString() && newData.val().length < 500000"
         }
       }
     },

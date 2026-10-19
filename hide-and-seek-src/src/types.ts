@@ -87,6 +87,8 @@ export type Question = Base & QuestionBody
 export type Kind = Question['kind']
 
 export interface Settings {
+  /** Byen spillet foregår i (id i CITIES i cities.ts). Bestemmer kartdata og kollektivnett. */
+  city: string
   zoneRadius: number
   lines: string[]
   day: DayKey
@@ -111,4 +113,25 @@ export interface RoundResult {
   seconds: number
   /** Tidsbonus i minutter. Hider legger den inn når runden er over. */
   bonusMinutes: number
+  /** Hva som skjedde i runden. Mangler for runder fra før statistikken fantes. */
+  stats?: RoundStats
+}
+
+export interface RoundStats {
+  /** Spørsmål som er besvart og regnes som stilt. Randomize teller ikke, Veto gjør det. */
+  asked: number
+  /** Per kategori, samme tall som `asked`. */
+  byCategory: Record<string, number>
+  vetoes: number
+  randomized: number
+  /** Svar som kom etter at svartiden var ute. */
+  late: number
+  /** Snittlig tid fra spørsmål til svar, i sekunder. Pause er trukket fra. */
+  answerSec: number | null
+  hidingMinutes: number
+  /** Hvor lenge endgame varte, i sekunder. null = ingen endgame. */
+  endgameSec: number | null
+  moves: number
+  /** Samlet tid klokkene sto stille under letingen, i sekunder. */
+  pausedSec: number
 }

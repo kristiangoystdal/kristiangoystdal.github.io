@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Henter administrative grenser og steder (POI) én gang og skriver dem til public/data/.
+"""Henter administrative grenser og steder (POI) for en by og skriver dem til public/data/<by>/.
 
 Kilder:
   - Fylke og kommune: Kartverket (ws.geonorge.no/kommuneinfo)
@@ -8,8 +8,12 @@ Kilder:
   - POI: OpenStreetMap via Overpass
   - Kystlinje, øyer, vann og riksgrense: OpenStreetMap via Overpass
 
+Byene og områdene som hentes, står i scripts/cities.json. Grensene er bygget for
+hver by for seg (`admin` i cities.json, se ADMIN_BUILDERS). Har byen ingen, hoppes
+grensene over, og appen slår av spørsmålene som trenger dem.
+
 Bruk:
-    python3 scripts/fetch_geodata.py public/data [cache-mappe] [admin|poi|shapes|<stedstype>]
+    python3 scripts/fetch_geodata.py <by> [cache-mappe] [admin|poi|shapes|<stedstype>]
 """
 import json
 import math
@@ -22,37 +26,45 @@ import urllib.request
 
 UA = "hide-and-seek-oslo-databuild/1.0 (github.com/kristiangoystdal)"
 OVERPASS = "https://overpass-api.de/api/interpreter"
-BBOX = "59.78,10.38,60.06,11.00"  # dekker alle T-banestasjoner med margin
+CITIES = os.path.join(os.path.dirname(__file__), "cities.json")
+# Områdene settes fra cities.json i `use_city`. BBOX dekker alle stasjonene i nettet med margin.
+BBOX = WIDE = COAST_BBOX = BORDER_BBOX = ""
 KARTVERKET = "https://ws.geonorge.no/kommuneinfo/v1"
-POSTNUMMER_WFS = ("https://wfs.geonorge.no/skwms1/wfs.postnummeromrader?" + urllib.parse.urlencode({
-    "service": "WFS", "version": "2.0.0", "request": "GetFeature", "typeNames": "app:Postnummerområde",
-    "srsName": "urn:ogc:def:crs:EPSG::4258", "bbox": BBOX + ",urn:ogc:def:crs:EPSG::4258"}))
 KOMMUNER = {"0301": "Oslo", "3201": "Bærum"}
 
-# Sjeldne steder letes etter i et større område, siden nærmeste kan ligge langt unna.
-WIDE = "59.0,9.8,60.4,11.8"
 
-# Filnavnene må stemme med POI_TYPES i src/geo.ts. Verdien er (område, velgere).
+def use_city(cfg):
+    global BBOX, WIDE, COAST_BBOX, BORDER_BBOX
+    # WIDE: sjeldne steder letes etter i et større område, siden nærmeste kan ligge langt unna.
+    # COAST_BBOX: kystlinjen hentes litt utenfor kartet, så nærmeste kyst alltid er med.
+    # BORDER_BBOX: riksgrensen, langt nok ut til at nærmeste punkt fra byen er med.
+    BBOX, WIDE, COAST_BBOX, BORDER_BBOX = cfg["bbox"], cfg["wide"], cfg["coastBbox"], cfg["borderBbox"]
+
+
+def postnummer_wfs():
+    return ("https://wfs.geonorge.no/skwms1/wfs.postnummeromrader?" + urllib.parse.urlencode({
+        "service": "WFS", "version": "2.0.0", "request": "GetFeature", "typeNames": "app:Postnummerområde",
+        "srsName": "urn:ogc:def:crs:EPSG::4258", "bbox": BBOX + ",urn:ogc:def:crs:EPSG::4258"}))
+
+
+# Filnavnene må stemme med POI_TYPES i src/geo.ts. Verdien er (område, velgere), der
+# området er "BBOX" eller "WIDE" og slås opp når byen er valgt.
 POI_TYPES = {
-    "flyplass": (WIDE, ('nwr["aeroway"="aerodrome"]["iata"]',)),
-    "jernbanestasjon": (BBOX, ('nwr["railway"="station"]["station"!="subway"]["station"!="light_rail"]["subway"!="yes"]',)),
-    "fjell": (BBOX, ('node["natural"="peak"]["name"]',)),
-    "park": (BBOX, ('nwr["leisure"="park"]["name"]',)),
-    "fornoyelsespark": (WIDE, ('nwr["tourism"="theme_park"]',)),
-    "dyrepark": (WIDE, ('nwr["tourism"="zoo"]',)),
-    "akvarium": (WIDE, ('nwr["tourism"="aquarium"]',)),
-    "golfbane": (WIDE, ('nwr["leisure"="golf_course"]',)),
-    "museum": (BBOX, ('nwr["tourism"="museum"]',)),
-    "kino": (BBOX, ('nwr["amenity"="cinema"]',)),
-    "sykehus": (BBOX, ('nwr["amenity"="hospital"]',)),
-    "bibliotek": (BBOX, ('nwr["amenity"="library"]',)),
-    "konsulat": (BBOX, ('nwr["office"="diplomatic"]', 'nwr["amenity"="embassy"]')),
+    "flyplass": ("WIDE", ('nwr["aeroway"="aerodrome"]["iata"]',)),
+    "jernbanestasjon": ("BBOX", ('nwr["railway"="station"]["station"!="subway"]["station"!="light_rail"]["subway"!="yes"]',)),
+    "fjell": ("BBOX", ('node["natural"="peak"]["name"]',)),
+    "park": ("BBOX", ('nwr["leisure"="park"]["name"]',)),
+    "fornoyelsespark": ("WIDE", ('nwr["tourism"="theme_park"]',)),
+    "dyrepark": ("WIDE", ('nwr["tourism"="zoo"]',)),
+    "akvarium": ("WIDE", ('nwr["tourism"="aquarium"]',)),
+    "golfbane": ("WIDE", ('nwr["leisure"="golf_course"]',)),
+    "museum": ("BBOX", ('nwr["tourism"="museum"]',)),
+    "kino": ("BBOX", ('nwr["amenity"="cinema"]',)),
+    "sykehus": ("BBOX", ('nwr["amenity"="hospital"]',)),
+    "bibliotek": ("BBOX", ('nwr["amenity"="library"]',)),
+    "konsulat": ("BBOX", ('nwr["office"="diplomatic"]', 'nwr["amenity"="embassy"]')),
 }
 
-# Kystlinjen hentes litt utenfor kartet, så nærmeste kyst alltid er med.
-COAST_BBOX = "59.6,10.1,60.1,11.0"
-# Riksgrensen mot Sverige, langt nok nord og sør til at nærmeste punkt fra Oslo er med.
-BORDER_BBOX = "58.9,10.9,61.3,12.9"
 NOT_WATER = {"pool", "reflecting_pool", "fountain", "wastewater"}
 MIN_ISLAND_M = 60
 
@@ -278,7 +290,7 @@ def kartverket(kind, number):
 
 def build_postnummer():
     """Postnummerområder fra Kartverkets WFS (GML, koordinater som «lat lon»)."""
-    gml = fetch(POSTNUMMER_WFS, key="kv-postnummer.gml")
+    gml = fetch(postnummer_wfs(), key="kv-postnummer.gml")
     ring = lambda text: [[float(lon), float(lat)] for lat, lon in zip(*[iter(text.split())] * 2)]
     feats = []
     for member in re.findall(r"<wfs:member>(.*?)</wfs:member>", gml, re.S):
@@ -303,7 +315,8 @@ def write(path, features):
     print(f"{path}: {len(features)} objekter, {os.path.getsize(path) // 1024} kB")
 
 
-def build_admin(out_dir):
+def build_admin_oslo(out_dir):
+    """Oslo og Bærum: fylke og kommune fra Kartverket, bydeler fra OSM, postnummer fra Posten."""
     baerum = kartverket("kommuner", "3201")
     fylke = [feature("Oslo", kartverket("fylker", "03"), 15), feature("Akershus", kartverket("fylker", "32"), 40)]
     kommune = [feature("Oslo", kartverket("kommuner", "0301"), 10), feature("Bærum", baerum, 10)]
@@ -359,22 +372,37 @@ def poi_features(elements, extra=lambda tags: {}, skip=lambda tags: False):
 
 def build_poi(out_dir, only=None):
     os.makedirs(f"{out_dir}/poi", exist_ok=True)
-    for key, (bbox, selectors) in POI_TYPES.items():
+    for key, (area, selectors) in POI_TYPES.items():
         if only and key != only:
             continue
+        bbox = WIDE if area == "WIDE" else BBOX
         q = "(" + "".join(f"{s}({bbox});" for s in selectors) + ");out center tags;"
         skip = honorary if key == "konsulat" else lambda tags: False
         write(f"{out_dir}/poi/{key}.geojson", poi_features(overpass(q, f"op-poi-{key}.json")["elements"], skip=skip))
 
 
+# Grensene er bygget for hver by, siden kildene er ulike fra land til land.
+ADMIN_BUILDERS = {"oslo": build_admin_oslo}
+
+
 if __name__ == "__main__":
-    out = sys.argv[1]
-    CACHE = sys.argv[2] if len(sys.argv) > 2 else None
+    city = sys.argv[1]
+    with open(CITIES, encoding="utf-8") as f:
+        cfg = json.load(f)[city]
+    use_city(cfg)
+    out = os.path.join(os.path.dirname(__file__), "..", "public", "data", city)
+    os.makedirs(out, exist_ok=True)
+    # Ett hurtigbuffer per by, siden filnavnene i bufferet er like for alle byer.
+    CACHE = os.path.join(sys.argv[2], city) if len(sys.argv) > 2 else None
     if CACHE:
         os.makedirs(CACHE, exist_ok=True)
     only = sys.argv[3] if len(sys.argv) > 3 else None
     if only in (None, "admin"):
-        build_admin(out)
+        builder = ADMIN_BUILDERS.get(cfg.get("admin"))
+        if builder:
+            builder(out)
+        else:
+            print(f"{city}: ingen grenser bygget (mangler «admin» i cities.json)")
     if only in (None, "poi"):
         build_poi(out)
     if only in POI_TYPES:
