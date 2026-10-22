@@ -210,13 +210,16 @@ entry point into creating a sale — the simpler "Selg" (from Samling) and
 sale mixing cards already in the collection with cards that are *not* (and
 never get added to it).
 
-One search box drives two parallel, independently rendered result lists:
-`searchCollectionForSale` (synchronous substring match over `state.cards`)
-and `KB.tcgdex.searchCards` (same debounce/abort pattern as the TCGdex
-add-card dialog, `splitNameAndNumber` doing the same trailing-number-token
-split). Both can show a match for the same physical card — the user always
-picks which "Legg til" to click, nothing is auto-deduped between the two
-groups.
+One search box (`#newSaleSearchInput` — not `#saleSearchInput`, which is
+the Salg tab's own filter) searches the collection first:
+`searchCollectionForSale` (synchronous, every whitespace-separated word must
+match name/set/no/rarity/variant/pf). Only when that has no hits does it
+fall through to `KB.tcgdex.searchCards` (`runSaleApiSearch`, same
+debounce/abort pattern as the TCGdex add-card dialog, `splitNameAndNumber`
+doing the same trailing-number-token split). When the collection does have
+hits, the API group shows a "Søk i kortdatabasen" button instead, so a card
+outside the collection can still be added on demand. Nothing is
+auto-deduped between the two groups.
 
 Each added card becomes a draft row (`newSaleItems`, dialog-local, not
 persisted until submit) with independently editable `qty`, `price` (the

@@ -1466,16 +1466,17 @@
 		updateNewSaleSummary();
 	}
 
+	// Every whitespace-separated word must match somewhere on the card, so
+	// "charizard 004/102" or "pikachu base" finds the card too.
 	function searchCollectionForSale(query) {
-		const q = query.toLowerCase();
+		const words = query.toLowerCase().split(/\s+/).filter(Boolean);
 		return state.cards
-			.filter(
-				(c) =>
-					c.name.toLowerCase().includes(q) ||
-					c.set.toLowerCase().includes(q) ||
-					c.no.toLowerCase().includes(q) ||
-					(c.rarity || "").toLowerCase().includes(q),
-			)
+			.filter((c) => {
+				const hay = [c.name, c.set, c.no, c.rarity, c.variant, c.pf]
+					.map((v) => (v || "").toLowerCase())
+					.join(" ");
+				return words.every((w) => hay.includes(w));
+			})
 			.slice(0, 8);
 	}
 
@@ -1557,20 +1558,36 @@
 	let saleSearchController = null;
 	let saleSearchDebounceTimer = null;
 
+	// Collection first; TCGdex only runs automatically when the collection
+	// has no match (or on demand via the "Søk i kortdatabasen" button).
 	function runSaleSearch() {
-		const query = document.getElementById("saleSearchInput").value.trim();
+		const query = document.getElementById("newSaleSearchInput").value.trim();
 		const statusEl = document.getElementById("saleSearchStatus");
 		if (saleSearchController) saleSearchController.abort();
+		statusEl.textContent = "";
+		statusEl.className = "import-status";
 
 		if (!query) {
-			statusEl.textContent = "";
-			statusEl.className = "import-status";
 			document.getElementById("saleCollectionResults").innerHTML = "";
 			document.getElementById("saleApiResults").innerHTML = "";
 			return;
 		}
 
-		renderSaleCollectionResults(searchCollectionForSale(query));
+		const collectionHits = searchCollectionForSale(query);
+		renderSaleCollectionResults(collectionHits);
+
+		if (collectionHits.length) {
+			document.getElementById("saleApiResults").innerHTML =
+				`<button type="button" class="btn-sm" id="saleApiSearchBtn">Søk i kortdatabasen</button>`;
+			return;
+		}
+		runSaleApiSearch(query);
+	}
+
+	function runSaleApiSearch(query) {
+		const statusEl = document.getElementById("saleSearchStatus");
+		if (saleSearchController) saleSearchController.abort();
+		document.getElementById("saleApiResults").innerHTML = "";
 
 		const { name, no } = splitNameAndNumber(query);
 		const searchName = name || query;
@@ -1686,7 +1703,7 @@
 		editingSaleId = editSaleId || null;
 		newSaleItems = [];
 		document.getElementById("newSaleError").textContent = "";
-		document.getElementById("saleSearchInput").value = "";
+		document.getElementById("newSaleSearchInput").value = "";
 		document.getElementById("saleSearchStatus").textContent = "";
 		document.getElementById("saleCollectionResults").innerHTML = "";
 		document.getElementById("saleApiResults").innerHTML = "";
@@ -1793,7 +1810,7 @@
 	}
 
 	function initNewSaleDialog() {
-		document.getElementById("saleSearchInput").addEventListener("input", () => {
+		document.getElementById("newSaleSearchInput").addEventListener("input", () => {
 			clearTimeout(saleSearchDebounceTimer);
 			saleSearchDebounceTimer = setTimeout(runSaleSearch, 300);
 		});
@@ -1803,6 +1820,11 @@
 			if (btn) addCollectionCardToSale(btn.dataset.id);
 		});
 		document.getElementById("saleApiResults").addEventListener("click", (e) => {
+			if (e.target.closest("#saleApiSearchBtn")) {
+				const query = document.getElementById("newSaleSearchInput").value.trim();
+				if (query) runSaleApiSearch(query);
+				return;
+			}
 			const btn = e.target.closest(".sale-add-btn");
 			if (btn) addApiCardToSale(btn.dataset.id);
 		});
