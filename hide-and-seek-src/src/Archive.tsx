@@ -7,6 +7,7 @@ import { useGame, useUi, type ArchivedRound } from './store'
 import { loadArchive, useSync } from './sync'
 import type { GeoData, RoundStats } from './types'
 import { Section, left } from './ui'
+import type { Progress } from './replay'
 
 const clock = (sec: number) => left(sec * 1000)
 const when = (t: number) => new Date(t).toLocaleString('nb-NO', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -64,6 +65,71 @@ export function ArchiveBanner({ round }: { round: ArchivedRound }) {
       <button className="btn mt-1.5 min-h-9! w-full" onClick={() => setViewing(null)}>
         Tilbake til spillet
       </button>
+    </div>
+  )
+}
+
+const STAGES: Record<Progress['stage'], string> = { map: 'Regner ut kartet', tiles: 'Henter bakgrunnskart', video: 'Lager video' }
+
+/** Lager en video av runden: kartet som krymper, hvor spillerne var og spørsmålene som ble stilt. */
+function ReplayVideo({ a, raw }: { a: ArchivedRound; raw: GeoData }) {
+  const settings = useGame((s) => s.settings)
+  const [progress, setProgress] = useState<Progress | null>(null)
+  const [video, setVideo] = useState<{ url: string; file: File } | null>(null)
+  const [error, setError] = useState('')
+  useEffect(() => () => void (video && URL.revokeObjectURL(video.url)), [video])
+
+  const make = async () => {
+    setError('')
+    setVideo(null)
+    try {
+      const { renderReplay } = await import('./replay')
+      const data = clipData(raw, { ...settings, ...a.setup }.playArea)
+      const blob = await renderReplay(a, data, settings, setProgress)
+      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
+      const name = `hide-and-seek-${a.hider}-runde-${a.nth}.${ext}`.toLowerCase().replace(/[^a-z0-9æøå.-]+/g, '-')
+      setVideo({ url: URL.createObjectURL(blob), file: new File([blob], name, { type: blob.type }) })
+    } catch (e) {
+      setError((e as Error).message || 'Kunne ikke lage videoen.')
+    }
+    setProgress(null)
+  }
+  const share = async () => {
+    if (!video) return
+    try {
+      await navigator.share({ files: [video.file], title: title(a) })
+    } catch {
+      // Avbrutt deling er ikke en feil.
+    }
+  }
+  const canShare = !!video && !!navigator.canShare?.({ files: [video.file] })
+
+  return (
+    <div className="mb-3">
+      {!video && (
+        <button className="btn w-full" disabled={!!progress} onClick={make}>
+          {progress ? `${STAGES[progress.stage]} … ${Math.round(progress.done * 100)} %` : '🎬 Lag video av runden'}
+        </button>
+      )}
+      {error && <p className="mt-1 text-xs text-bad">{error}</p>}
+      {video && (
+        <div className="flex flex-col gap-1.5">
+          <video className="w-full rounded-lg bg-black" src={video.url} controls playsInline />
+          <div className="flex gap-1.5">
+            {canShare && (
+              <button className="btn btn-primary flex-1" onClick={share}>
+                Del
+              </button>
+            )}
+            <a className="btn flex-1 text-center" href={video.url} download={video.file.name}>
+              Last ned
+            </a>
+            <button className="btn" onClick={() => setVideo(null)}>
+              Lukk
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -151,6 +217,7 @@ function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close:
           Slett
         </button>
       </div>
+      <ReplayVideo a={a} raw={raw} />
       <h3 className="label">Logg ({a.questions.length})</h3>
       <ol className="flex flex-col gap-1.5">
         {a.questions.map((q, i) => {

@@ -7,6 +7,7 @@ import { cityOf } from './cities'
 import { loadData } from './data'
 import { movedAt } from './clock'
 import { clipData, dist, hiderStation, solve } from './geo'
+import { useHiderPath } from './hiderPath'
 import { Rules } from './Rules'
 import { useThermoGps } from './Tools'
 import { gameFromHash, useGame, useHiderPos, useUi, type Tab } from './store'
@@ -162,6 +163,7 @@ export default function App() {
   useAutoResume()
   useThermoGps()
   useHiderLocation(loaded)
+  useHiderPath()
   // Kartdataene hører til byen. Bytter noen by (her eller i rommet), lastes den nye byen inn.
   const cityId = useGame((s) => s.settings.city)
   useEffect(() => {

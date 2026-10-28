@@ -49,6 +49,11 @@ export interface State {
   tools: Tools
   /** Alle rundene som er spilt, med logg og oppsett, så de kan åpnes igjen. Nyeste sist. */
   archive: ArchivedRound[]
+  /**
+   * Bare på hiders telefon: der hider sto hver gang et spørsmål ble besvart og når endgame startet.
+   * Deles aldri i rommet mens runden pågår. Legges til runden i arkivet når den er over.
+   */
+  hiderPts: HiderPoint[]
 
   setSettings: (patch: Partial<Settings>) => void
   /** Bytter by. Spillområde, linjer og spørsmålsutvalg hører til byen og nullstilles. */
@@ -83,6 +88,10 @@ export interface State {
   /** Legger inn runder fra rommet som denne telefonen ikke har. */
   mergeArchive: (rounds: ArchivedRound[]) => void
   removeArchived: (id: string) => void
+  /** Hider husker hvor hen står nå (ved svar og når endgame starter). */
+  markHider: () => void
+  /** Legger hiders punkter til en arkivert runde. */
+  addHiderPath: (id: string, pts: HiderPoint[]) => void
   setBonus: (id: string, minutes: number) => void
   removeResult: (id: string) => void
   newGame: () => void
@@ -96,6 +105,19 @@ export interface Tools {
   thermo: { start: LngLat | null; at: LngLat | null; minM: number } | null
 }
 const NO_TOOLS: Tools = { radar: null, thermo: null }
+
+/** Der hider sto, som [tidspunkt, lengdegrad, breddegrad]. */
+export type HiderPoint = [number, number, number]
+const HIDER_POINTS = 300
+
+/** Hiders punkter som hører til runden: fra gjemmetiden startet til runden var over. */
+export function hiderPathFor(pts: HiderPoint[], round: Pick<Round, 'seekFrom' | 'hidingMinutes'>, endedAt: number): HiderPoint[] {
+  if (round.seekFrom === null) return []
+  // Pause i gjemmetiden flytter starten, så det regnes med litt slark.
+  const from = round.seekFrom - round.hidingMinutes * 60000 * 2
+  return pts.filter((p) => p[0] >= from && p[0] <= endedAt)
+}
+const longer = (a?: HiderPoint[], b?: HiderPoint[]) => ((b?.length ?? 0) > (a?.length ?? 0) ? b : a)
 
 /** Alt fra én runde: loggen, klokken, kortene, endgame og oppsettet den ble spilt med. */
 export interface ArchivedRound {
@@ -113,6 +135,8 @@ export interface ArchivedRound {
   questions: Question[]
   setup: Pick<Settings, (typeof GAME_SETTINGS)[number]>
   stats: RoundStats
+  /** Der hider sto ved hvert svar og i endgame. Kommer fra hiders telefon etter runden. */
+  hiderPath?: HiderPoint[]
 }
 const ARCHIVE_LIMIT = 100
 const byEnd = (a: ArchivedRound, b: ArchivedRound) => a.endedAt - b.endedAt
@@ -133,9 +157,14 @@ function archived(s: State, id: string, outcome: ArchivedRound['outcome'], secon
     questions: s.questions,
     setup,
     stats: roundStats(s.round, s.questions, s.settings.size, now),
+    hiderPath: hiderPathFor(s.hiderPts, s.round, now),
   }
 }
-const addArchive = (list: ArchivedRound[], r: ArchivedRound) => [...list.filter((a) => a.id !== r.id), r].sort(byEnd).slice(-ARCHIVE_LIMIT)
+// Samme runde fra rommet erstatter den på telefonen, men hiders punkter beholdes.
+const addArchive = (list: ArchivedRound[], r: ArchivedRound) => {
+  const hiderPath = longer(list.find((a) => a.id === r.id)?.hiderPath, r.hiderPath)
+  return [...list.filter((a) => a.id !== r.id), hiderPath?.length ? { ...r, hiderPath } : r].sort(byEnd).slice(-ARCHIVE_LIMIT)
+}
 
 /** Det som deles mellom spillere: spørsmålsloggen og innstillingene som påvirker geometrien. */
 export interface SharedGame {
@@ -143,6 +172,13 @@ export interface SharedGame {
   questions: Question[]
   /** `city` mangler i lenker fra før byvalget fantes. Da gjelder Oslo. */
   settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size' | 'questions'> & { city?: string }
+}
+
+/** Legger til der hider står nå, hvis telefonen vet det. GPS-en er alt på for hider, så det koster ikke strøm. */
+function withHiderPoint(pts: HiderPoint[]): HiderPoint[] {
+  const { pos } = useHiderPos.getState()
+  if (!pos) return pts
+  return [...pts, [Date.now(), Math.round(pos[0] * 1e5) / 1e5, Math.round(pos[1] * 1e5) / 1e5] as HiderPoint].slice(-HIDER_POINTS)
 }
 
 const HISTORY_LIMIT = 10
@@ -174,6 +210,7 @@ export const useGame = create<State>()(
         sharePos: false,
         tools: NO_TOOLS,
         archive: [],
+        hiderPts: [],
 
         // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
         setSettings: (patch) =>
@@ -192,7 +229,7 @@ export const useGame = create<State>()(
           ),
         // Første svar avgjør om svartiden ble holdt. Svarer hider på nytt, står tidspunktet.
         answerQuestion: (id, answer, swap) =>
-          set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, answer, swap, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() } : q)) })),
+          set((s) => ({ hiderPts: s.mode === 'hider' ? withHiderPoint(s.hiderPts) : s.hiderPts, questions: s.questions.map((q) => (q.id === id ? { ...q, answer, swap, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() } : q)) })),
         removeQuestion: (id) => editQuestions((qs) => qs.filter((q) => q.id !== id)),
         // Notater går utenom angre-loggen, ellers ville hvert tastetrykk blitt et angresteg.
         setNote: (id, note) => set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, note: note || undefined } : q)) })),
@@ -266,6 +303,8 @@ export const useGame = create<State>()(
           }),
         mergeArchive: (rounds) => set((s) => ({ archive: rounds.reduce(addArchive, s.archive) })),
         removeArchived: (id) => set((s) => ({ archive: s.archive.filter((a) => a.id !== id) })),
+        markHider: () => set((s) => (s.mode === 'hider' ? { hiderPts: withHiderPoint(s.hiderPts) } : s)),
+        addHiderPath: (id, pts) => set((s) => ({ archive: s.archive.map((a) => (a.id === id ? { ...a, hiderPath: longer(a.hiderPath, pts) } : a)) })),
         setBonus: (id, minutes) => set((s) => ({ results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         removeResult: (id) => set((s) => ({ results: s.results.filter((r) => r.id !== id) })),
         newGame: () =>
@@ -328,8 +367,8 @@ export function gameFromHash(hash: string): SharedGame | null {
 }
 
 /**
- * Hiders posisjon akkurat nå, fra GPS. Lagres aldri, verken på telefonen eller i rommet,
- * så den er borte når appen lukkes. `error` er satt når telefonen ikke gir posisjon.
+ * Hiders posisjon akkurat nå, fra GPS. Den lagres ikke fortløpende. Bare punktet ved hvert svar
+ * huskes på hiders telefon (`hiderPts`), og deles først når runden er over. `error` er satt når telefonen ikke gir posisjon.
  */
 export const useHiderPos = create<{ pos: LngLat | null; t: number; accuracy: number | null; error: string }>(() => ({ pos: null, t: 0, accuracy: null, error: '' }))
 

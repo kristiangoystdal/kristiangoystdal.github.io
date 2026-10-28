@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { deviceId } from './device'
 import { announce, announceRound, notify } from './notify'
-import { GAME_SETTINGS, useGame, type ArchivedRound, type Round, type State } from './store'
+import { GAME_SETTINGS, useGame, type ArchivedRound, type HiderPoint, type Round, type State } from './store'
 import type { LngLat, Question, RoundResult, Settings } from './types'
 
 // Realtime Database trenger bare adressen. Appen bruker ingen API-nøkkel, og
@@ -279,6 +279,25 @@ export async function saveArchive(round: ArchivedRound) {
     await withTimeout(db.set(db.ref(database, `archive/${round.room}/${round.id}`), JSON.stringify(round)))
   } catch {
     useSync.setState({ error: 'Runden er lagret på telefonen, men kunne ikke lagres i rommet.' })
+  }
+}
+
+/**
+ * Legger hiders punkter til runden i rommets arkiv. Runden leses og skrives i én
+ * transaksjon, så det ikke overskriver noe en annen telefon skrev samtidig.
+ */
+export async function saveHiderPath(room: string, id: string, pts: HiderPoint[]) {
+  try {
+    const { db, database } = await openDb()
+    await withTimeout(
+      db.runTransaction(db.ref(database, `archive/${room}/${id}`), (cur: string | null) => {
+        if (!cur) return cur
+        const r = JSON.parse(cur) as ArchivedRound
+        return (r.hiderPath?.length ?? 0) >= pts.length ? undefined : JSON.stringify({ ...r, hiderPath: pts })
+      }),
+    )
+  } catch {
+    // Punktene ligger fortsatt på telefonen og prøves igjen neste gang arkivet endres.
   }
 }
 
