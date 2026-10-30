@@ -60,7 +60,9 @@ export interface State {
   setCity: (city: string) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
   /** Hider svarer, eller trekker svaret med null. Går utenom angre-loggen, som er seekernes. `swap` er spørsmålet Randomize ga. */
-  answerQuestion: (id: string, answer: string | null, swap?: string) => void
+  answerQuestion: (id: string, answer: string | null, swap?: string, manual?: boolean) => void
+  /** Seekerne tar svaret ut av kartet, eller bruker det igjen. */
+  toggleIgnored: (id: string) => void
   removeQuestion: (id: string) => void
   setNote: (id: string, note: string) => void
   undo: () => void
@@ -228,8 +230,17 @@ export const useGame = create<State>()(
               : [...qs, { ...body, id: uid(), time: Date.now(), answer, by: deviceId(), answeredAt: answer === null ? undefined : Date.now() }],
           ),
         // Første svar avgjør om svartiden ble holdt. Svarer hider på nytt, står tidspunktet.
-        answerQuestion: (id, answer, swap) =>
-          set((s) => ({ hiderPts: s.mode === 'hider' ? withHiderPoint(s.hiderPts) : s.hiderPts, questions: s.questions.map((q) => (q.id === id ? { ...q, answer, swap, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() } : q)) })),
+        answerQuestion: (id, answer, swap, manual) =>
+          set((s) => ({
+            hiderPts: s.mode === 'hider' ? withHiderPoint(s.hiderPts) : s.hiderPts,
+            // Et nytt svar er ny informasjon: er det et annet enn det seekerne tok ut av kartet, gjelder det igjen.
+            questions: s.questions.map((q) =>
+              q.id === id
+                ? { ...q, answer, swap, manual: manual && answer !== null ? true : undefined, ignored: q.ignored && answer === q.answer ? true : undefined, history: historyOf(q, answer), answeredAt: q.answeredAt ?? Date.now() }
+                : q,
+            ),
+          })),
+        toggleIgnored: (id) => editQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ignored: q.ignored ? undefined : true } : q))),
         removeQuestion: (id) => editQuestions((qs) => qs.filter((q) => q.id !== id)),
         // Notater går utenom angre-loggen, ellers ville hvert tastetrykk blitt et angresteg.
         setNote: (id, note) => set((s) => ({ questions: s.questions.map((q) => (q.id === id ? { ...q, note: note || undefined } : q)) })),

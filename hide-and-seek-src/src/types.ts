@@ -61,6 +61,10 @@ interface Base {
   swap?: string
   /** Telefonen som stilte spørsmålet. */
   by?: string
+  /** Hider valgte svaret selv i stedet for det appen regnet ut, f.eks. fordi GPS eller kartdata var feil. */
+  manual?: true
+  /** Seekerne har tatt svaret ut av kartet, f.eks. fordi det var feil. Spørsmålet regnes fortsatt som stilt. */
+  ignored?: true
 }
 
 export type QuestionBody =

@@ -73,10 +73,12 @@ export function GameStatus({ stations }: { stations: Station[] }) {
 }
 
 /** Siste posisjon fra en GPS-følging som alt går (posisjonsdeling, hider, termometer). */
-let lastFix: { pos: LngLat; t: number } | null = null
+let lastFix: { pos: LngLat; t: number; accuracy: number | null } | null = null
 const FRESH_MS = 10000
 const USABLE_MS = 120000
-export const rememberFix = (pos: LngLat) => void (lastFix = { pos, t: Date.now() })
+export const rememberFix = (pos: LngLat, accuracy: number | null = null) => void (lastFix = { pos, t: Date.now(), accuracy })
+/** Hvor nøyaktig siste posisjon er, i meter. null = ukjent. */
+export const fixAccuracy = () => lastFix?.accuracy ?? null
 
 /** Med `fresh` brukes bare en posisjon fra de siste sekundene. */
 const NOW_MS = 3000
@@ -94,7 +96,7 @@ export function locate({ fresh = false } = {}): Promise<LngLat> {
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const pos: LngLat = [p.coords.longitude, p.coords.latitude]
-        rememberFix(pos)
+        rememberFix(pos, p.coords.accuracy)
         resolve(pos)
       },
       () =>

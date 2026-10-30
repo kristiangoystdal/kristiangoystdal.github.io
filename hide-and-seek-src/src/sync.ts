@@ -29,6 +29,13 @@ const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(CODE_LENG
  */
 export interface Shared {
   questions: Record<string, string>
+  /**
+   * Svar seekerne har tatt ut av kartet: spørsmåls-id → svaret de tok ut. Ligger for seg, så
+   * det aldri overskriver et svar hider gir samtidig, og gjelder bare så lenge svaret er det samme.
+   */
+  ignored: Record<string, string>
+  /** Seekernes notater per spørsmål. For seg av samme grunn. */
+  notes: Record<string, string>
   results: Record<string, string>
   round: string
   setup: string
@@ -55,6 +62,15 @@ type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'play
 type Setup = Pick<Settings, (typeof GAME_SETTINGS)[number]>
 
 const byId = <T extends { id: string }>(items: T[]) => Object.fromEntries(items.map((x) => [x.id, JSON.stringify(x)]))
+/** Stiene som bare seekernes merker ligger under. Sendes for seg, så en avvist skriving ikke stopper resten. */
+export const MARK_KEYS = ['ignored', 'notes'] as const
+const isMark = (path: string) => MARK_KEYS.some((k) => path.startsWith(`${k}/`))
+export const splitPatch = (patch: Record<string, string | null>) => {
+  const main: Record<string, string | null> = {}
+  const marks: Record<string, string | null> = {}
+  for (const [k, v] of Object.entries(patch)) (isMark(k) ? marks : main)[k] = v
+  return { main, marks }
+}
 const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(map ?? {}).map((v) => JSON.parse(v) as T)
 
 /**
@@ -63,8 +79,18 @@ const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(ma
  */
 export function toShared(s: Synced): Shared {
   const setup: Setup = { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null }
+  const ignored: Record<string, string> = {}
+  const notes: Record<string, string> = {}
+  const questions: Record<string, string> = {}
+  for (const { note, ignored: off, ...q } of s.questions) {
+    questions[q.id] = JSON.stringify(q)
+    if (off && q.answer !== null) ignored[q.id] = q.answer
+    if (note) notes[q.id] = note
+  }
   return {
-    questions: byId(s.questions),
+    questions,
+    ignored,
+    notes,
     results: byId(s.results),
     round: JSON.stringify(s.round),
     setup: JSON.stringify(setup),
@@ -75,7 +101,15 @@ export function toShared(s: Synced): Shared {
 export function fromShared(remote: Partial<Shared>, local: Synced): Synced {
   return {
     // Rekkefølgen i databasen er vilkårlig, så loggen sorteres på tidspunkt.
-    questions: fromIds<Question>(remote.questions).sort((a, b) => a.time - b.time || a.id.localeCompare(b.id)),
+    questions: fromIds<Question>(remote.questions)
+      .map(({ note, ignored: _, ...q }) => {
+        // Eldre versjoner av appen la notatet inni spørsmålet. Det brukes når det ikke ligger for seg.
+        const text = remote.notes?.[q.id] ?? note
+        // Merket gjelder bare svaret seekerne tok ut. Har hider svart noe annet siden, gjelder det nye svaret.
+        const off = q.answer !== null && remote.ignored?.[q.id] === q.answer
+        return { ...q, ...(text ? { note: text } : {}), ...(off ? { ignored: true as const } : {}) }
+      })
+      .sort((a, b) => a.time - b.time || a.id.localeCompare(b.id)),
     results: fromIds<RoundResult>(remote.results).sort((a, b) => (a.at ?? 0) - (b.at ?? 0)),
     round: remote.round ? (JSON.parse(remote.round) as Round) : local.round,
     settings: { ...local.settings, ...(remote.setup ? (JSON.parse(remote.setup) as Setup) : {}) },
@@ -86,7 +120,7 @@ export function fromShared(remote: Partial<Shared>, local: Synced): Synced {
 /** Endringene fra `prev` til `next` som stier i rommet. null = slett. */
 export function diff(prev: Shared, next: Shared): Record<string, string | null> {
   const patch: Record<string, string | null> = {}
-  for (const key of ['questions', 'results'] as const) {
+  for (const key of ['questions', 'results', ...MARK_KEYS] as const) {
     for (const id of Object.keys(next[key])) if (prev[key][id] !== next[key][id]) patch[`${key}/${id}`] = next[key][id]
     for (const id of Object.keys(prev[key])) if (!(id in next[key])) patch[`${key}/${id}`] = null
   }
@@ -96,6 +130,8 @@ export function diff(prev: Shared, next: Shared): Record<string, string | null> 
 
 const normalize = (v: Partial<Shared>): Shared => ({
   questions: v.questions ?? {},
+  ignored: v.ignored ?? {},
+  notes: v.notes ?? {},
   results: v.results ?? {},
   round: v.round ?? '',
   setup: v.setup ?? '',
@@ -166,7 +202,11 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       const patch = diff(synced, next)
       if (Object.keys(patch).length === 0) return
       synced = next
-      db.update(room, patch).catch(() => useSync.setState({ error: 'Kunne ikke lagre til rommet.' }))
+      const { main, marks } = splitPatch(patch)
+      if (Object.keys(main).length) db.update(room, main).catch(() => useSync.setState({ error: 'Kunne ikke lagre til rommet.' }))
+      // Merkene sendes for seg. Er databasereglene ikke oppdatert for dem, virker resten av spillet likevel.
+      if (Object.keys(marks).length)
+        db.update(room, marks).catch(() => useSync.setState({ error: 'Notater og svar tatt ut av kartet kunne ikke deles i rommet. Databasereglene må oppdateres.' }))
     }
     const offRemote = db.onValue(room, (snap) => {
       const value = snap.val() as (Partial<Shared> & { seekers?: Record<string, string> }) | null

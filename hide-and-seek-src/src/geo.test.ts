@@ -67,6 +67,13 @@ describe('radar', () => {
     expect(res.steps.map((x) => x.count)).toEqual([6, left.length])
   })
 
+  it('et svar seekerne har tatt ut av kartet krymper ingenting', () => {
+    const all = solve([], data, settings).stations.length
+    const res = solve([{ ...q(radar, 'in'), ignored: true }], data, settings)
+    expect(res.stations.length).toBe(all)
+    expect(names([q(radar, 'in')]).length).toBeLessThan(all)
+  })
+
   it('før endgame vises området svarene peker ut, ikke stasjonssonene', () => {
     const res = solve([q(radar, 'in')], data, settings)
     // Punkt 400 m nord for Vinderen: inni Vinderens sone, men over 1 km fra Majorstuen.

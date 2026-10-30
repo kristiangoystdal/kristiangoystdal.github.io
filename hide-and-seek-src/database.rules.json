@@ -26,6 +26,16 @@
             ".validate": "newData.isString() && newData.val().length < 200"
           }
         },
+        "ignored": {
+          "$id": {
+            ".validate": "newData.isString() && newData.val().length < 200"
+          }
+        },
+        "notes": {
+          "$id": {
+            ".validate": "newData.isString() && newData.val().length < 1000"
+          }
+        },
         "results": {
           "$id": {
             ".validate": "newData.isString() && newData.val().length < 1500"

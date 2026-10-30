@@ -11,8 +11,8 @@ import { booleanPointInPolygon, destination } from '@turf/turf'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { cityOf, linesOf, setActiveModes, setCity, type City, type Mode } from '../cities'
 import { loadData } from '../data'
-import { describe as describeQuestion } from '../form'
-import { METRO_LINES, POI_TYPES, autoAnswer, clipData, dist, hasData, levelAreas, nearestStation, onlyLines, setBounds, solve, stationPos } from '../geo'
+import { answerOptions, describe as describeQuestion } from '../form'
+import { ANSWER_CANT, ANSWER_NULL, METRO_LINES, POI_TYPES, autoAnswer, informs, clipData, dist, hasData, levelAreas, nearestStation, onlyLines, setBounds, solve, stationPos } from '../geo'
 import type { GeoData, LngLat, Question, QuestionBody, Settings, ShapeKey, Station } from '../types'
 
 const read = (id: string) => async (path: string) => {
@@ -130,6 +130,77 @@ function play(data: GeoData, settings: Settings, city: City, hider: { pos: LngLa
   return { questions, asked: questions.length, skipped, before: data.stations.length, after: result.stations.length, ms }
 }
 
+/** Der hider står ved hvert svar i midgame: rundt i sonen, men innenfor den. */
+const WANDER: [number, number][] = [
+  [0, 0],
+  [150, 30],
+  [300, 120],
+  [220, 210],
+  [320, 300],
+  [80, 260],
+]
+const WRONG_EVERY = 6
+const MANUAL_EVERY = 7
+
+interface Messy {
+  questions: Question[]
+  wrong: number
+  manual: number
+  before: number
+  after: number
+  /** Ville de feile svarene ha utelukket hiders stasjon hvis seekerne ikke tok dem ut? */
+  wrongHurts: boolean
+}
+
+/**
+ * Midgame slik det går i virkeligheten: hider flytter seg i sonen mellom svarene, noen svar
+ * er feil (GPS-en bommet, eller hider trykket feil) og seekerne tar dem ut av kartet, og noen
+ * svar gir hider for hånd. Hiders stasjon skal aldri utelukkes av svarene som står igjen.
+ */
+function playMidgame(data: GeoData, settings: Settings, city: City, station: Station, seekerStops: Station[]): Messy {
+  const center = stationPos(data.stations[Math.floor(data.stations.length / 2)])
+  const questions: Question[] = []
+  let wrong = 0
+  let manual = 0
+  let t = 0
+  for (const s of seekerStops) {
+    for (const body of questionsFrom(stationPos(s), center, data, city)) {
+      const q = { ...body, id: `q${questions.length}`, time: (t += 60000), answer: null } as Question
+      if (!hasData(q, data)) continue
+      const [m, b] = WANDER[questions.length % WANDER.length]
+      const pos = spotNear(station, m, b)
+      const a = autoAnswer(q, { pos, station }, data)
+      if (!a) continue
+      const n = questions.length + 1
+      // Et feil svar: et annet av svarene spørsmålet har. Nullsvar og «kan ikke svare» krymper ikke, så de brukes ikke.
+      const other = answerOptions(q, data).find((o) => o !== a.answer && o !== ANSWER_NULL && o !== ANSWER_CANT)
+      if (n % WRONG_EVERY === 0 && other) {
+        wrong++
+        questions.push({ ...q, answer: other, answeredAt: t + 1000, ignored: true } as Question)
+        continue
+      }
+      const byHand = n % MANUAL_EVERY === 0
+      if (byHand) manual++
+      const answered = { ...q, answer: a.answer, answeredAt: t + 1000, ...(byHand ? { manual: true } : {}) } as Question
+      // Hvert riktige svar for seg, der hider sto da, utelukker aldri stasjonen.
+      const one = solve([answered], data, settings)
+      if (!one.stations.some((x) => x.id === station.id)) throw new Error(`${q.kind}: ${describeQuestion(q, data)}, svar ${a.answer} ${m} m fra ${station.name}: utelukket stasjonen`)
+      questions.push(answered)
+    }
+  }
+  const result = solve(questions, data, settings)
+  expect(result.stations.map((x) => x.id)).toContain(station.id)
+  const unchecked = solve(questions.map(({ ignored: _, ...q }) => q as Question), data, settings)
+  return {
+    questions,
+    wrong,
+    manual,
+    before: data.stations.length,
+    after: result.stations.length,
+    wrongHurts: !unchecked.stations.some((x) => x.id === station.id),
+  }
+}
+
 /** Gjemmesteder spredt utover nettet, og hvor seekerne stiller spørsmål fra. */
 function scenarios(data: GeoData) {
   const sorted = [...data.stations].sort((a, b) => a.lat - b.lat || a.lon - b.lon)
@@ -143,8 +214,8 @@ function scenarios(data: GeoData) {
   })
 }
 
-/** Delene av en by: gjemmested 1, 2 og 3, og endgame. */
-export type Part = 0 | 1 | 2 | 'endgame'
+/** Delene av en by: gjemmested 1, 2 og 3, midgame med feil underveis, og endgame. */
+export type Part = 0 | 1 | 2 | 'midgame' | 'endgame'
 
 /** Definerer testene for en by. `parts` velger hvilke deler denne filen kjører. */
 export function simulateCity(cityId: string, parts: Part[]) {
@@ -182,6 +253,21 @@ export function simulateCity(cityId: string, parts: Part[]) {
             // Svarene regnes ut på telefonen, så de må være raske.
             expect(r.ms).toBeLessThan(30000)
             console.log(`${city.name} (${label}) #${i + 1} ${sc.station.name}: ${r.asked} spørsmål, ${r.before} → ${r.after} stasjoner, ${Math.round(r.ms)} ms${r.skipped.length ? `, svarer selv: ${[...new Set(r.skipped)].join(', ')}` : ''}`)
+          })
+        }
+
+        if (parts.includes('midgame')) {
+          it('midgame: hider flytter seg, feile svar tas ut av kartet, og stasjonen blir aldri utelukket', { timeout: 180000 }, () => {
+            const sc = scenarios(data)[0]
+            const r = playMidgame(data, settings, city, sc.station, sc.seekers)
+            expect(r.wrong).toBeGreaterThanOrEqual(3)
+            expect(r.manual).toBeGreaterThanOrEqual(2)
+            // Feile svar som er tatt ut, teller ikke, men spørsmålene er stilt.
+            expect(r.questions.filter((q) => q.ignored).every((q) => informs(q))).toBe(true)
+            expect(r.after).toBeLessThan(r.before / 2)
+            // Testen betyr noe bare hvis de feile svarene ville gjort skade uten at seekerne tok dem ut.
+            expect(r.wrongHurts).toBe(true)
+            console.log(`${city.name} (${label}) midgame ${sc.station.name}: ${r.questions.length} spørsmål, ${r.wrong} feil tatt ut, ${r.manual} for hånd, ${r.before} → ${r.after} stasjoner${r.wrongHurts ? ', de feile svarene ville utelukket hider' : ''}`)
           })
         }
 

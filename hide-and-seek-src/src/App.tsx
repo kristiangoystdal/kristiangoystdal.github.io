@@ -76,7 +76,7 @@ function useHiderLocation(data: GeoData | null) {
     const watch = navigator.geolocation.watchPosition(
       (p) => {
         const pos: LngLat = [p.coords.longitude, p.coords.latitude]
-        rememberFix(pos)
+        rememberFix(pos, p.coords.accuracy)
         const last = useHiderPos.getState().pos
         // Små GPS-hopp gir ikke nye svarforslag, men tidspunktet viser at posisjonen er fersk.
         const here = last && dist(last, pos) < HIDER_MOVE_M ? last : pos

@@ -85,7 +85,9 @@ export const ANSWER_VETO = 'veto'
 export const ANSWER_RANDOM = 'random'
 const NEUTRAL_ANSWERS = [ANSWER_NULL, ANSWER_CANT, ANSWER_VETO, ANSWER_RANDOM]
 /** Besvart med et svar som sier noe om hvor hider er. Nullsvar, «kan ikke svare» og kort som spilles i stedet for svar krymper ikke kartet. */
-export const shrinks = (q: Question) => q.answer !== null && !NEUTRAL_ANSWERS.includes(q.answer)
+export const informs = (q: Question) => q.answer !== null && !NEUTRAL_ANSWERS.includes(q.answer)
+/** Svaret krymper kartet: det sier noe om hvor hider er, og seekerne har ikke tatt det ut. */
+export const shrinks = (q: Question) => informs(q) && !q.ignored
 
 const GAP_M = 300
 
@@ -696,6 +698,29 @@ export interface AutoAnswer {
   /** Hvor mange meter hider er fra å få motsatt svar. Liten margin = usikkert svar. */
   marginM?: number
   detail: string
+}
+
+/** Under dette regnes et svar som usikkert selv med perfekt GPS. */
+export const UNSURE_M = 30
+
+/**
+ * Appen kan ikke vite svaret når hider står nærmere grensen for motsatt svar enn
+ * GPS-en kan bomme med (og aldri nærmere enn UNSURE_M). Da må hider måle opp selv.
+ */
+export function unsureAnswer(a: AutoAnswer, accuracyM: number | null): boolean {
+  if (a.marginM === undefined || !Number.isFinite(a.marginM)) return false
+  const slack = accuracyM !== null && Number.isFinite(accuracyM) ? Math.max(UNSURE_M, accuracyM) : UNSURE_M
+  return a.marginM < slack
+}
+
+/**
+ * Om et svar hider velger selv skal merkes som gitt for hånd. Har appen et forslag, merkes
+ * svaret bare når det er et annet. Uten forslag merkes det, unntatt på spørsmål appen
+ * aldri regner ut selv (`manual`), der det er vanlig å svare for hånd.
+ */
+export function byHand(kind: Question['kind'], value: string, suggested: string | undefined): boolean {
+  if (NEUTRAL_ANSWERS.includes(value)) return false
+  return suggested === undefined ? kind !== 'manual' : suggested !== value
 }
 
 const NOTHING: AutoAnswer = { answer: ANSWER_NULL, detail: 'Det spørsmålet handler om finnes ikke innenfor kartet.' }

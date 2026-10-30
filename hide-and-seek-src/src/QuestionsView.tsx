@@ -27,13 +27,12 @@ import {
   type Item,
   type Locks,
 } from './form'
-import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEALEVEL_ITEM, STREET_ITEM, autoAnswer, canCutZone, cutsZone, dist, hasData, hiderStation, nearestStation, shrinks, type AutoAnswer, type Result } from './geo'
+import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEALEVEL_ITEM, STREET_ITEM, autoAnswer, canCutZone, cutsZone, dist, hasData, byHand, hiderStation, informs, nearestStation, shrinks, unsureAnswer, UNSURE_M, type AutoAnswer, type Result } from './geo'
 import { fetchLookup, lookup, useLookups } from './online'
 import { exportGame, gameLink, parseGame, useGame, useHiderPos, useUi } from './store'
 import type { GeoData, LngLat, Question } from './types'
-import { MoveInfo, PAUSE_TEXT, PointInput, Section, locate, useGameNow, useNow } from './ui'
+import { MoveInfo, PAUSE_TEXT, PointInput, Section, fixAccuracy, locate, useGameNow, useNow } from './ui'
 
-const UNSURE_M = 30
 /** Kortene som stenger spørsmål. Hver for seg, så Zustand ikke lager et nytt objekt ved hver endring. */
 function useLocks(): Locks {
   const drained = useGame((s) => s.round.drained)
@@ -79,16 +78,21 @@ async function prefetch(q: Question, hider: LngLat) {
 }
 const online = (q: Question) => city().norway && (q.item === SEALEVEL_ITEM || q.item === STREET_ITEM)
 
-export function AutoHint({ q, auto }: { q: Question; auto: AutoAnswer }) {
+/** `accuracy`: hvor mye GPS-en kan bomme, i meter. Bommer den mer enn marginen, er svaret usikkert. */
+export function AutoHint({ q, auto, accuracy = null }: { q: Question; auto: AutoAnswer; accuracy?: number | null }) {
   return (
     <p className="mt-2 rounded-lg bg-panel-2 p-2 text-sm">
       Ditt svar som hider: <b className="text-ok">{answerLabel(q, auto.answer)}</b>
       <span className="block text-xs text-muted">{auto.detail}</span>
-      {auto.marginM !== undefined && auto.marginM < UNSURE_M && (
-        <span className="block text-xs text-bad">Bare {Math.round(auto.marginM)} m fra motsatt svar. Mål opp selv før du svarer.</span>
-      )}
+      {unsureAnswer(auto, accuracy) && <span className="block text-xs text-bad">{unsureText(auto.marginM!, accuracy)} Mål opp og svar selv.</span>}
     </p>
   )
+}
+
+/** Hvorfor svaret er usikkert. GPS-en nevnes bare når den er grunnen. */
+function unsureText(marginM: number, accuracy: number | null) {
+  const gps = accuracy !== null && accuracy > UNSURE_M ? `, og GPS-en kan bomme med ${Math.round(accuracy)} m` : ''
+  return `Bare ${Math.round(marginM)} m fra motsatt svar${gps}.`
 }
 
 /** Viser at hider har endret svaret, og hva det var før. */
@@ -409,8 +413,10 @@ function HiderQuestions({ data }: { data: GeoData }) {
   const setHider = useGame((s) => s.setHider)
   const hasPos = useHiderPos((s) => s.pos !== null)
   const gpsError = useHiderPos((s) => s.error)
-  // Spørsmål der GPS ikke svarte. Da svarer hider selv.
+  const accuracy = useHiderPos((s) => s.accuracy)
+  // Spørsmål der hider svarer selv: GPS svarte ikke, svaret var usikkert, eller hider valgte det.
   const [manual, setManual] = useState<string[]>([])
+  const openManual = (id: string) => setManual((m) => (m.includes(id) ? m : [...m, id]))
   const endgame = useGame((s) => !!s.round.endgame)
   const auto = useAutoAnswer(data)
   const [busy, setBusy] = useState('')
@@ -419,6 +425,14 @@ function HiderQuestions({ data }: { data: GeoData }) {
   const rules = useGame((s) => s.settings)
   const locks = useLocks()
   const answer = (q: Question, value: string | null) => answerQuestion(q.id, value)
+  /**
+   * Hider velger svaret selv. Er det et annet enn appen regner ut, spørres det først,
+   * og seekerne ser at svaret er gitt for hånd.
+   */
+  const answerByHand = (q: Question, value: string, suggested?: string) => {
+    if (suggested !== undefined && suggested !== value && !confirm(`Appen regner ut «${answerLabel(q, suggested)}» fra der du står. Svare «${answerLabel(q, value)}» likevel? Seekerne ser at du svarte selv.`)) return
+    answerQuestion(q.id, value, undefined, byHand(q.kind, value, suggested))
+  }
 
   const veto = (q: Question) => {
     if (confirm('Spille Veto? Seekerne får ikke svar, og spørsmålet regnes som stilt. Du trekker ingen kort for det.')) answer(q, ANSWER_VETO)
@@ -441,7 +455,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
       try {
         pos = await locate({ fresh: true })
       } catch (e) {
-        setManual((m) => [...m, q.id])
+        openManual(q.id)
         throw new Error(`${(e as Error).message} Svar selv ut fra der du står.`)
       }
       // Stasjonen hider har valgt gjelder så lenge hider står i sonen dens.
@@ -451,10 +465,19 @@ function HiderQuestions({ data }: { data: GeoData }) {
       setHider({ stationId: station.id })
       await prefetch(q, pos)
       const a = autoAnswer(q, { pos, station }, data, lookup)
-      if (a) {
+      // Står hider nærmere grensen for motsatt svar enn GPS-en bommer med, kan appen ikke vite svaret.
+      const accuracy = fixAccuracy()
+      const unsure = !!a && unsureAnswer(a, accuracy)
+      if (a && !unsure) {
         answer(q, a.answer)
         if (shown !== undefined && shown !== a.answer) setError(`Du har flyttet deg, så svaret ble «${answerLabel(q, a.answer)}» ut fra der du står nå.`)
-      } else setError(online(q) ? 'Fikk ikke svar fra Kartverket. Sjekk nettet, eller svar selv.' : 'Dette spørsmålet kan ikke regnes ut. Svar selv.')
+      } else if (a) {
+        openManual(q.id)
+        setError(`${unsureText(a.marginM!, accuracy)} Appen svarer ikke for deg, men tror «${answerLabel(q, a.answer)}». Mål opp og velg svaret selv.`)
+      } else {
+        openManual(q.id)
+        setError(online(q) ? 'Fikk ikke svar fra Kartverket. Sjekk nettet, eller svar selv.' : 'Dette spørsmålet kan ikke regnes ut. Svar selv.')
+      }
     } catch (e) {
       setError((e as Error).message)
     }
@@ -490,6 +513,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                 {q.answer !== null && (
                   <p className="text-sm">
                     Du svarte: <b className="text-accent">{answerLabel(q, q.answer)}</b>
+                    {q.manual && <span className="ml-1 text-xs text-muted">(selv)</span>}
                     {q.swap && <span className="block text-xs text-muted">Seekerne skal stille «{itemOf(q.swap)?.label}» i stedet.</span>}
                     {/* Trykket hider feil, kan svaret trekkes og gis på nytt. Seekerne ser at det er endret. */}
                     <button className="ml-2 text-xs text-muted underline" onClick={() => answer(q, null)}>
@@ -498,7 +522,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                   </p>
                 )}
                 <AnswerHistory q={q} />
-                {a && <AutoHint q={q} auto={a} />}
+                {a && <AutoHint q={q} auto={a} accuracy={accuracy} />}
                 {!open ? null : q.kind === 'photo' ? (
                   (
                     <div className="mt-2">
@@ -515,7 +539,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {answerOptions(q, data).map((o) => (
-                        <button key={o} className={`btn ${a?.answer === o ? 'btn-primary' : ''}`} onClick={() => answer(q, o)}>
+                        <button key={o} className={`btn ${a?.answer === o ? 'btn-primary' : ''}`} onClick={() => answerByHand(q, o, a?.answer)}>
                           {answerLabel(q, o)}
                         </button>
                       ))}
@@ -530,20 +554,26 @@ function HiderQuestions({ data }: { data: GeoData }) {
                   <div className="mt-2">
                     {/* Svaret regnes alltid ut på nytt fra der hider står når knappen trykkes. Forslaget over er bare en forhåndsvisning. */}
                     <button className="btn btn-primary w-full" disabled={busy === q.id} onClick={() => answerFromGps(q, a?.answer)}>
-                      {busy === q.id ? 'Henter posisjonen din…' : a ? `Svar: ${answerLabel(q, a.answer)}` : 'Svar med posisjonen min nå'}
+                      {busy === q.id ? 'Henter posisjonen din…' : a && unsureAnswer(a, accuracy) ? 'Sjekk posisjonen på nytt' : a ? `Svar: ${answerLabel(q, a.answer)}` : 'Svar med posisjonen min nå'}
                     </button>
                     <p className="mt-1 text-xs text-muted">Posisjonen hentes på nytt når du trykker, så svaret gjelder der du står akkurat da.</p>
-                    {manual.includes(q.id) && (
+                    {/* Er forslaget alt usikkert, vises valgene med en gang. */}
+                    {manual.includes(q.id) || (a && unsureAnswer(a, accuracy)) ? (
                       <>
-                        <p className="mt-2 mb-1 text-xs text-muted">Uten GPS svarer du selv:</p>
+                        <p className="mt-2 mb-1 text-xs text-muted">Svar selv ut fra der du står. Seekerne ser at svaret er gitt for hånd.</p>
                         <div className="flex flex-wrap gap-1.5">
                           {answerOptions(q, data).map((o) => (
-                            <button key={o} className="btn" onClick={() => answer(q, o)}>
+                            <button key={o} className="btn" onClick={() => answerByHand(q, o, a?.answer)}>
                               {answerLabel(q, o)}
                             </button>
                           ))}
                         </div>
                       </>
+                    ) : (
+                      // Appen kan ta feil: GPS-en bommer, eller et sted mangler i kartdataene. Da gjelder virkeligheten.
+                      <button className="mt-1 text-xs text-muted underline" onClick={() => openManual(q.id)}>
+                        Stemmer ikke svaret? Svar selv
+                      </button>
                     )}
                   </div>
                 )}
@@ -821,6 +851,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const since = useGame((s) => movedAt(s.round))
   const endgame = useGame((s) => s.round.endgame ?? null)
   const toggleCut = useGame((s) => s.toggleEndgameCut)
+  const toggleIgnored = useGame((s) => s.toggleIgnored)
   const open = (item: Item | undefined) => item && !lockedBy(item, locks)
 
   if (draft) {
@@ -868,7 +899,9 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     <span className="tabular-nums">
                       {q.time < since
                         ? 'Før Move, teller ikke'
-                        : isHider || !shrinks(q) || q.kind === 'photo'
+                        : q.ignored
+                          ? 'Ikke brukt på kartet'
+                          : isHider || !shrinks(q) || q.kind === 'photo'
                           ? ''
                           : endgame && q.time >= endgame.time
                             ? canCutZone(q)
@@ -915,7 +948,22 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     </button>
                   )}
                   {q.answer === ANSWER_VETO && <p className="mt-1 text-xs text-muted">Hider spilte Veto. Spørsmålet regnes som stilt.</p>}
+                  {q.manual && <p className="mt-1 text-xs text-muted">Hider svarte selv i stedet for å bruke appens utregning.</p>}
                   <AnswerHistory q={q} />
+                  {/* Er et svar feil, kan seekerne ta det ut av kartet. Spørsmålet regnes fortsatt som stilt. */}
+                  {!isHider && informs(q) && q.kind !== 'photo' && q.kind !== 'manual' && q.time >= since && (
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={!q.ignored}
+                      className="mt-1 text-xs text-muted underline"
+                      onClick={() => {
+                        if (q.ignored || confirm('Ta svaret ut av kartet? Bruk det når dere tror svaret er feil. Spørsmålet regnes fortsatt som stilt, og kan tas inn igjen.')) toggleIgnored(q.id)
+                      }}
+                    >
+                      {q.ignored ? 'Bruk svaret på kartet igjen' : 'Ta svaret ut av kartet'}
+                    </button>
+                  )}
                   {!isHider && (
                     <input
                       className="field mt-2 min-h-9! text-sm!"
