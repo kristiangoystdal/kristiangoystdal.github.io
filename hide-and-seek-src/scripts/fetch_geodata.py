@@ -25,23 +25,31 @@ import urllib.parse
 import urllib.request
 
 UA = "hide-and-seek-oslo-databuild/1.0 (github.com/kristiangoystdal)"
-OVERPASS = "https://overpass-api.de/api/interpreter"
+# Er hovedserveren opptatt, kan et speil brukes: OVERPASS_URL=https://overpass.kumi.systems/api/interpreter
+OVERPASS = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/interpreter")
 CITIES = os.path.join(os.path.dirname(__file__), "cities.json")
 # Områdene settes fra cities.json i `use_city`. BBOX dekker alle stasjonene i nettet med margin.
 BBOX = WIDE = COAST_BBOX = BORDER_BBOX = ""
 KARTVERKET = "https://ws.geonorge.no/kommuneinfo/v1"
 KOMMUNER = {"0301": "Oslo", "3201": "Bærum"}
+# Kommunene for byen som bygges, fra «admin.kommuner» i cities.json.
+ALL_KOMMUNER = {}
 
 
 def use_city(cfg):
-    global BBOX, WIDE, COAST_BBOX, BORDER_BBOX
+    global BBOX, WIDE, COAST_BBOX, BORDER_BBOX, ALL_KOMMUNER
     # WIDE: sjeldne steder letes etter i et større område, siden nærmeste kan ligge langt unna.
     # COAST_BBOX: kystlinjen hentes litt utenfor kartet, så nærmeste kyst alltid er med.
     # BORDER_BBOX: riksgrensen, langt nok ut til at nærmeste punkt fra byen er med.
-    BBOX, WIDE, COAST_BBOX, BORDER_BBOX = cfg["bbox"], cfg["wide"], cfg["coastBbox"], cfg["borderBbox"]
+    BBOX, WIDE, COAST_BBOX = cfg["bbox"], cfg["wide"], cfg["coastBbox"]
+    # Uten «borderBbox» er riksgrensen for langt unna til å bety noe, og spørsmålet slås av.
+    BORDER_BBOX = cfg.get("borderBbox", "")
+    admin = cfg.get("admin")
+    ALL_KOMMUNER = admin.get("kommuner", {}) if isinstance(admin, dict) else {}
 
 
 def postnummer_wfs():
+    # Bboxen gjelder bare utvalget som lastes ned. Kommunene filtreres etterpå.
     return ("https://wfs.geonorge.no/skwms1/wfs.postnummeromrader?" + urllib.parse.urlencode({
         "service": "WFS", "version": "2.0.0", "request": "GetFeature", "typeNames": "app:Postnummerområde",
         "srsName": "urn:ogc:def:crs:EPSG::4258", "bbox": BBOX + ",urn:ogc:def:crs:EPSG::4258"}))
@@ -76,7 +84,7 @@ def fetch(url, data=None, key=None):
     if path and os.path.exists(path):
         return open(path, encoding="utf-8").read()
     body = urllib.parse.urlencode(data).encode() if data else None
-    for attempt in range(6):
+    for attempt in range(int(os.environ.get("FETCH_TRIES", 6))):
         try:
             req = urllib.request.Request(url, data=body, headers={"User-Agent": UA})
             text = urllib.request.urlopen(req, timeout=180).read().decode("utf-8")
@@ -256,6 +264,12 @@ def build_shapes(out_dir):
     water.sort(key=lambda f: f["properties"]["name"])
     write(f"{out_dir}/water.geojson", water)
 
+    if not BORDER_BBOX:
+        riks = f"{out_dir}/riks.geojson"
+        if os.path.exists(riks):
+            os.remove(riks)
+        print("ingen riksgrense (mangler «borderBbox» i cities.json)")
+        return
     ways = overpass(f'way["boundary"="administrative"]["admin_level"="2"]["maritime"!="yes"]({BORDER_BBOX});out geom;', "op-riks.json")["elements"]
     closed, opened = chains([w.get("geometry") for w in ways if "border_type" not in w.get("tags", {})])
     write(f"{out_dir}/riks.geojson", [geo("LineString", simplify_line(l, 20)) for l in closed + opened if len(l) >= 2])
@@ -295,7 +309,7 @@ def build_postnummer():
     feats = []
     for member in re.findall(r"<wfs:member>(.*?)</wfs:member>", gml, re.S):
         kommune = re.search(r"<app:kommune>(\d+)", member).group(1)
-        if kommune not in KOMMUNER:
+        if kommune not in KOMMUNER and kommune not in ALL_KOMMUNER:
             continue
         polys = []
         for poly in re.findall(r"<gml:Polygon.*?</gml:Polygon>", member, re.S):
@@ -381,7 +395,54 @@ def build_poi(out_dir, only=None):
         write(f"{out_dir}/poi/{key}.geojson", poi_features(overpass(q, f"op-poi-{key}.json")["elements"], skip=skip))
 
 
+def ring_center(ring):
+    return sum(p[0] for p in ring) / len(ring), sum(p[1] for p in ring) / len(ring)
+
+
+def in_multi(geom, pt):
+    return any(ring_contains(poly[0], pt) for poly in geom["coordinates"])
+
+
+def build_admin_norway(out_dir, admin):
+    """
+    Norske byer: fylker og kommuner fra Kartverket, bydeler fra OSM og postnummer fra Posten.
+    Kommuner uten bydeler står inn som én bydel, så spørsmålet alltid har et svar.
+    """
+    fylke = [feature(name, kartverket("fylker", nr), 40) for nr, name in admin.get("fylker", {}).items()]
+    kommune = [feature(name, kartverket("kommuner", nr), 10) for nr, name in admin["kommuner"].items()]
+
+    try:
+        rels = overpass(f'relation["boundary"="administrative"]["admin_level"="9"]({BBOX});out geom;', "op-bydeler.json")
+    except SystemExit:
+        # Overpass er nede. Kommuner og postnummer kommer fra Kartverket og bygges likevel.
+        # Bydelene mangler da, og appen slår av det spørsmålet til skriptet kjøres på nytt.
+        print("Overpass svarer ikke: bygger uten bydeler", file=sys.stderr)
+        rels = None
+    bydel = []
+    for r in (rels or {"elements": []})["elements"]:
+        f = feature(r["tags"]["name"], relation_geometry(r), 5)
+        if not f["geometry"]["coordinates"]:
+            continue
+        # Bare bydeler i kommunene som er med.
+        c = ring_center(f["geometry"]["coordinates"][0][0])
+        if any(in_multi(k["geometry"], c) for k in kommune):
+            bydel.append(f)
+    for k in kommune if rels else []:
+        if not any(in_multi(k["geometry"], ring_center(b["geometry"]["coordinates"][0][0])) for b in bydel):
+            bydel.append(k)
+    bydel.sort(key=lambda f: f["properties"]["name"])
+
+    postnummer = build_postnummer()
+
+    write(f"{out_dir}/admin.geojson", [
+        {**f, "properties": {**f["properties"], "level": level}}
+        for level, feats in (("fylke", fylke), ("kommune", kommune), ("bydel", bydel), ("postnummer", postnummer))
+        for f in feats
+    ])
+
+
 # Grensene er bygget for hver by, siden kildene er ulike fra land til land.
+# Står «admin» i cities.json som et oppslag med fylker og kommuner, brukes build_admin_norway.
 ADMIN_BUILDERS = {"oslo": build_admin_oslo}
 
 
@@ -398,8 +459,11 @@ if __name__ == "__main__":
         os.makedirs(CACHE, exist_ok=True)
     only = sys.argv[3] if len(sys.argv) > 3 else None
     if only in (None, "admin"):
-        builder = ADMIN_BUILDERS.get(cfg.get("admin"))
-        if builder:
+        admin = cfg.get("admin")
+        builder = ADMIN_BUILDERS.get(admin) if isinstance(admin, str) else None
+        if isinstance(admin, dict):
+            build_admin_norway(out, admin)
+        elif builder:
             builder(out)
         else:
             print(f"{city}: ingen grenser bygget (mangler «admin» i cities.json)")

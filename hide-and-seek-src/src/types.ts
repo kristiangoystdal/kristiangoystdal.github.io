@@ -25,7 +25,7 @@ export interface Poi {
 export interface GeoData {
   stations: Station[]
   /** `stations` er stasjons-id-ene i kjørerekkefølge fra den ene endestasjonen til den andre. */
-  lines: FeatureCollection<LineString, { line: string; name: string; color: string; stations?: string[] }>
+  lines: FeatureCollection<LineString, { line: string; name: string; color: string; stations?: string[]; mode?: Mode }>
   admin: AdminArea[]
   /** Steder per type. Mangler nøkkelen, er dataene ikke lastet inn. Tom liste = ingen innenfor kartet. */
   poi: Record<string, Poi[]>
@@ -36,6 +36,9 @@ export interface GeoData {
 }
 
 export type ShapeKey = 'coast' | 'water' | 'riks'
+
+/** Transportmiddelet en linje hører til. Bybane er Bybanen i Bergen. */
+export type Mode = 'metro' | 'tram' | 'lightrail' | 'bus'
 
 export type GameSize = 'S' | 'M' | 'L'
 

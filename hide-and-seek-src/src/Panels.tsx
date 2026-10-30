@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArchivePanel, StatsList } from './Archive'
-import { CITIES, city } from './cities'
+import { CITIES, MODES, city as loadedCity, linesOf, modeOf, modesOf, transit } from './cities'
 import { BASEMAPS, depRate } from './MapView'
 import { PLANNING_MINUTES, hiderSeconds, movedAt, roundStats } from './clock'
 import { CATEGORIES, ITEMS, SIZE_RULES, answerLabel, describe, enabledIds, place } from './form'
@@ -757,7 +757,7 @@ function CityPicker({ locked }: { locked: boolean }) {
             }}
           >
             {c.name}
-            <span className="text-xs text-muted">{c.network}</span>
+            <span className="text-xs text-muted">{c.modes.map((m) => MODES[m].name).join(' · ')}</span>
           </button>
         ))}
       </div>
@@ -834,7 +834,8 @@ const TENTACLES_2KM = ITEMS.filter((i) => i.category === 'Tentacles' && i.sizes.
 const DAYS: Record<DayKey, string> = { wk: 'Hverdag', sa: 'Lørdag', su: 'Søndag' }
 const THEMES: Record<Settings['theme'], string> = { auto: 'Følg systemet', light: 'Lys', dark: 'Mørk' }
 
-export function SettingsPanel({ data, result }: { data: GeoData; result: Result }) {
+/** `all`: alle linjene i byen, også de som ikke er med, så de kan slås på igjen. */
+export function SettingsPanel({ data, all, result }: { data: GeoData; all: GeoData; result: Result }) {
   const s = useGame((x) => x.settings)
   const set = useGame((x) => x.setSettings)
   const setRound = useGame((x) => x.setRound)
@@ -843,6 +844,9 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
   const locked = useGame((x) => x.round.seekFrom !== null)
   const enabled = enabledIds(s)
   const tentacles = TENTACLES_2KM.every((id) => enabled.includes(id))
+  // Byen kartdataene er lastet for. Den kan henge litt etter valget rett etter et bytte.
+  const city = loadedCity()
+  const activeModes = modesOf(all, s.lines)
 
   return (
     <div>
@@ -850,7 +854,7 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
       <CityPicker locked={locked} />
       <Section title="Spillområde">
         <p className="mb-2 text-sm">
-          {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : `Hele ${city().networkWhole}.`}
+          {s.playArea ? `Egendefinert område${asked ? '' : ` med ${result.stations.length} stasjoner`}.` : `Hele ${transit().whole}.`}
         </p>
         <div className="flex flex-wrap gap-1.5">
           <button className="btn btn-primary" disabled={locked} onClick={() => set({ playArea: autoPlayArea(data.stations, s) })}>
@@ -978,25 +982,58 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
         <p className="text-xs text-muted">Hvor langt fra stasjonen hider kan gjemme seg.</p>
       </Section>
 
-      <Section title="Linjer som er med">
-        <div className="flex gap-1.5">
-          {data.lines.features.map(({ properties: l }) => {
-            const on = s.lines.includes(l.line)
-            return (
-              <button
-                key={l.line}
-                className={`btn w-11 ${on ? 'btn-on' : 'opacity-50'}`}
-                style={{ borderBottom: `3px solid ${l.color}` }}
-                aria-pressed={on}
-                disabled={locked}
-                title={l.name}
-                onClick={() => set({ lines: on ? s.lines.filter((x) => x !== l.line) : [...s.lines, l.line].sort() })}
-              >
-                {l.line}
-              </button>
-            )
-          })}
-        </div>
+      <Section title={city.modes.length > 1 ? 'Kollektiv og linjer som er med' : 'Linjer som er med'}>
+        {city.modes.length > 1 && (
+          <>
+            <div className="mb-1 flex flex-wrap gap-1.5">
+              {city.modes.map((m) => {
+                const on = activeModes.includes(m)
+                const mine = linesOf(all, [m])
+                return (
+                  <button
+                    key={m}
+                    className={`btn flex-1 ${on ? 'btn-on' : ''}`}
+                    aria-pressed={on}
+                    disabled={locked}
+                    onClick={() => set({ lines: on ? s.lines.filter((l) => !mine.includes(l)) : [...new Set([...s.lines, ...mine])] })}
+                  >
+                    {MODES[m].name}
+                    <span className="text-xs text-muted">{mine.length} linjer</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="mb-3 text-xs text-muted">Slå av og på et helt transportmiddel. Under kan enkeltlinjer velges bort.</p>
+          </>
+        )}
+        {city.modes.map((m) => {
+          const feats = all.lines.features.filter((f) => modeOf(f) === m)
+          if (!feats.length) return null
+          return (
+            <div key={m} className="mb-2">
+              {city.modes.length > 1 && <span className="label">{MODES[m].name}</span>}
+              <div className="flex flex-wrap gap-1.5">
+                {feats.map(({ properties: l }) => {
+                  const on = s.lines.includes(l.line)
+                  return (
+                    <button
+                      key={l.line}
+                      className={`btn min-w-11 px-2! ${on ? 'btn-on' : 'opacity-50'}`}
+                      style={{ borderBottom: `3px solid ${l.color}` }}
+                      aria-pressed={on}
+                      disabled={locked}
+                      title={l.name}
+                      onClick={() => set({ lines: on ? s.lines.filter((x) => x !== l.line) : [...s.lines, l.line] })}
+                    >
+                      {l.line}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+        {s.lines.length === 0 && <p className="text-xs text-bad">Ingen linjer er med. Velg minst én.</p>}
       </Section>
 
       <Section title="Utseende">
@@ -1011,7 +1048,9 @@ export function SettingsPanel({ data, result }: { data: GeoData; result: Result 
 
       <Section title="Data">
         <ul className="text-xs text-muted">
-          <li>{data.stations.length} stasjoner og {data.lines.features.length} linjer fra Ruter GTFS</li>
+          <li>
+            {data.stations.length} stasjoner og {data.lines.features.length} linjer ({city.modes.map((m) => MODES[m].name.toLowerCase()).join(', ')}) fra Entur (GTFS)
+          </li>
           {adminLevels().map((l) => {
             return <li key={l.key}>{l.label}: {levelAreas(data, l.key).length || 'mangler'}</li>
           })}

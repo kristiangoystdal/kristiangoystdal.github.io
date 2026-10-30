@@ -5,7 +5,8 @@ import { buildNet, checkpoints, frameAt, holdFor, paceText, pendingAt, posAt, pr
 import type { ArchivedRound } from './store'
 import type { GeoData, LngLat, Question, Settings, Station } from './types'
 
-const stations: Station[] = JSON.parse(readFileSync('public/data/oslo/stations.json', 'utf8')).stations
+// Testene gjelder T-banen. Trikkeholdeplassene i dataene er ikke med.
+const stations: Station[] = JSON.parse(readFileSync('public/data/oslo/stations.json', 'utf8')).stations.filter((s: Station) => s.lines.some((l) => ['1', '2', '3', '4', '5'].includes(l)))
 const byName = (name: string) => stations.find((s) => s.name === name)!
 const pos = (name: string) => stationPos(byName(name))
 const lines = JSON.parse(readFileSync('public/data/oslo/lines.geojson', 'utf8'))

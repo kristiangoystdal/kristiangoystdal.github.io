@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { formToQuestion } from './form'
 import { POI_TYPES, excluded, levelAreas, regionOf, type Result } from './geo'
 import { ArchiveBanner } from './Archive'
-import { city, networkSuffix } from './cities'
+import { city, modeOf, networkSuffix, type Mode } from './cities'
 import { useGame, useHiderPos, useUi, type ArchivedRound } from './store'
 import { useSync } from './sync'
 import type { GeoData, LngLat, Settings, Station } from './types'
@@ -15,6 +15,8 @@ const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', '
 const TOOL_COLOR = '#8e44ad'
 type Group = (typeof GROUPS)[number]
 const LABEL_ZOOM = 13
+/** T-bane tegnes tykkest, buss tynnest, så nettene er lette å skille. */
+const LINE_WEIGHT: Record<Mode, number> = { metro: 3.5, lightrail: 3.5, tram: 3, bus: 2.5 }
 /** Eldre posisjoner enn dette tegnes svakere. */
 const STALE_MS = 120000
 
@@ -160,7 +162,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     if (!layers.lines) return
     for (const f of data.lines.features) {
       if (!settings.lines.includes(f.properties.line)) continue
-      L.polyline(f.geometry.coordinates.map((c) => ll(c as LngLat)), { color: f.properties.color, weight: 3.5, opacity: 0.85, interactive: false }).addTo(g)
+      L.polyline(f.geometry.coordinates.map((c) => ll(c as LngLat)), { color: f.properties.color, weight: LINE_WEIGHT[modeOf(f)], opacity: 0.85, interactive: false }).addTo(g)
     }
   }, [ready, data, layers.lines, settings.lines])
 
@@ -170,6 +172,8 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     const st = groups.current.stations.clearLayers()
     const accent = css('--accent')
     const muted = css('--muted')
+    // Bussnett har hundrevis av holdeplasser. Da tegnes de mindre, så kartet ikke drukner.
+    const dense = data.stations.length > 200
     for (const s of data.stations) {
       if (!s.lines.some((l) => settings.lines.includes(l))) continue
       const on = possible.has(s.id)
@@ -187,9 +191,9 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       const rate = depRate(s, settings.day, settings.hourFrom, settings.hourTo)
       const dots = s.lines.map((l) => `<span style="color:${lineColor[l]}">●</span> ${l}`).join(' &nbsp;')
       L.circleMarker([s.lat, s.lon], {
-        radius: on ? 5.5 : 3.5,
+        radius: dense ? (on ? 4 : 2.5) : on ? 5.5 : 3.5,
         color: on ? css('--text') : muted,
-        weight: 1.5,
+        weight: dense ? 1 : 1.5,
         fillColor: on ? accent : css('--panel'),
         fillOpacity: 1,
       })
@@ -207,9 +211,11 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     if (!ready || !m) return
     if (drawing) return void m.setMinZoom(0)
     const pad = settings.zoneRadius / 111000
+    // Rett etter bytte av by er ingen linjer valgt ennå. Da gjelder alle stasjonene.
+    const onLines = data.stations.filter((s) => s.lines.some((l) => settings.lines.includes(l)))
     const bounds = settings.playArea?.length
       ? L.latLngBounds(settings.playArea.map(ll))
-      : L.latLngBounds(data.stations.filter((s) => s.lines.some((l) => settings.lines.includes(l))).map((s) => [s.lat, s.lon]))
+      : L.latLngBounds((onLines.length ? onLines : data.stations).map((s) => [s.lat, s.lon]))
     const area = settings.playArea?.length ? bounds : L.latLngBounds([bounds.getSouth() - pad, bounds.getWest() - 2 * pad], [bounds.getNorth() + pad, bounds.getEast() + 2 * pad])
     const fit = () => m.setMinZoom(m.getBoundsZoom(area, false))
     fit()

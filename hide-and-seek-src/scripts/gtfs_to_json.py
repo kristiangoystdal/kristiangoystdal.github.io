@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Bygger stations.json og lines.geojson for en by fra GTFS-feeden i scripts/cities.json.
 
-Bare rutene med typene i `routeTypes` blir med (Oslo: T-bane, route_type 401).
+En by kan ha flere nett (`networks` i cities.json), f.eks. T-bane og trikk. Hvert nett
+har et transportmiddel (`mode`: metro, tram, lightrail eller bus), rutetypene som hører
+til (`routeTypes`), og eventuelt `linePattern` (regulært uttrykk for linjenumrene, f.eks.
+bare bybussene) og `lineColors`. Linjer uten farge får en fra PALETTE. Hver linje i
+lines.geojson får `mode`, så appen kan la spillerne velge transportmidler.
 Filene skrives til public/data/<by>/.
 
 Bruk:
@@ -13,6 +17,7 @@ import io
 import json
 import math
 import os
+import re
 import sys
 import zipfile
 from collections import defaultdict
@@ -21,6 +26,16 @@ from datetime import date, datetime, timedelta
 CITIES = os.path.join(os.path.dirname(__file__), "cities.json")
 DAY_KEYS = {"wk": 2, "sa": 5, "su": 6}  # onsdag, lørdag, søndag
 SIMPLIFY_M = 4.0
+# Godt skillbare farger til linjer uten egen farge. Fordeles i linjenummerrekkefølge.
+PALETTE = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#9a6324",
+           "#469990", "#800000", "#808000", "#000075", "#e6a800", "#2f9ad6", "#bf3eff", "#1d7a3a",
+           "#d2691e", "#c71585", "#556b2f", "#4b0082", "#b22222", "#008080", "#8b4513", "#6a5acd"]
+
+
+def line_key(name):
+    """Sorterer linjenumre som tall: 2 før 10, X31 etter 31."""
+    m = re.match(r"(\D*)(\d+)(.*)", name)
+    return (int(m.group(2)), m.group(1), m.group(3)) if m else (10**9, name, "")
 
 
 def rows(zf, name):
@@ -62,30 +77,64 @@ def simplify(points, tol_m):
 def main(city, src):
     with open(CITIES, encoding="utf-8") as f:
         gtfs = json.load(f)[city]["gtfs"]
+    networks = gtfs["networks"]
     out_dir = os.path.join(os.path.dirname(__file__), "..", "public", "data", city)
     os.makedirs(out_dir, exist_ok=True)
-    # Noen feeder (som Ruters) har samme farge på alle linjene, så fargene kan settes i cities.json.
-    line_colors = gtfs.get("lineColors", {})
     zf = zipfile.ZipFile(src)
 
-    routes = {r["route_id"]: r for r in rows(zf, "routes.txt") if r["route_type"] in gtfs["routeTypes"]}
+    def network_of(r):
+        for n in networks:
+            if r["route_type"] in n["routeTypes"] and ("linePattern" not in n or re.fullmatch(n["linePattern"], r["route_short_name"])):
+                return n
+        return None
+
+    routes, mode_of = {}, {}
+    # Noen feeder (som Ruters) har samme farge på alle linjene, så fargene kan settes i cities.json.
+    line_colors = {}
+    for r in rows(zf, "routes.txt"):
+        n = network_of(r)
+        if not n:
+            continue
+        line = r["route_short_name"]
+        if mode_of.get(line, n["mode"]) != n["mode"]:
+            raise SystemExit(f"Linje {line} finnes både som {mode_of[line]} og {n['mode']}. Gi den ene et prefiks.")
+        routes[r["route_id"]] = r
+        mode_of[line] = n["mode"]
+        if line in n.get("lineColors", {}):
+            line_colors[line] = n["lineColors"][line]
     trips = {t["trip_id"]: t for t in rows(zf, "trips.txt") if t["route_id"] in routes}
 
+    # Dagene hver rute kjører: ukemønstre i calendar.txt (Kolumbus, AtB) og enkeltdatoer
+    # i calendar_dates.txt (Ruter, Skyss), der unntakene legger til eller fjerner dager.
     service_dates = defaultdict(set)
-    all_dates = set()
+    if "calendar.txt" in zf.namelist():
+        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        for c in rows(zf, "calendar.txt"):
+            d = datetime.strptime(c["start_date"], "%Y%m%d").date()
+            end = datetime.strptime(c["end_date"], "%Y%m%d").date()
+            while d <= end:
+                if c[weekdays[d.weekday()]] == "1":
+                    service_dates[c["service_id"]].add(d.strftime("%Y%m%d"))
+                d += timedelta(days=1)
     for r in rows(zf, "calendar_dates.txt"):
         if r["exception_type"] == "1":
             service_dates[r["service_id"]].add(r["date"])
-            all_dates.add(r["date"])
+        elif r["exception_type"] == "2":
+            service_dates[r["service_id"]].discard(r["date"])
+    used = {t["service_id"] for t in trips.values()}
+    per_date = defaultdict(int)
+    for sid in used:
+        for d in service_dates[sid]:
+            per_date[d] += 1
+    all_dates = set(per_date)
 
-    # Én representativ dato per dagtype: første hele uke i feeden.
-    start = datetime.strptime(min(all_dates), "%Y%m%d").date() + timedelta(days=1)
+    # Én representativ dato per dagtype: blant de fire første ukene, dagen med flest ruter i drift.
+    # Slik unngås helligdager og dager med innstilt trafikk.
+    first = datetime.strptime(min(all_dates), "%Y%m%d").date()
     rep = {}
     for key, weekday in DAY_KEYS.items():
-        d = start
-        while d.weekday() != weekday:
-            d += timedelta(days=1)
-        rep[key] = d.strftime("%Y%m%d")
+        days = [first + timedelta(days=i) for i in range(28) if (first + timedelta(days=i)).weekday() == weekday]
+        rep[key] = max((d.strftime("%Y%m%d") for d in days), key=lambda d: per_date.get(d, 0))
 
     stops = {s["stop_id"]: s for s in rows(zf, "stops.txt")}
 
@@ -127,6 +176,9 @@ def main(city, src):
 
     stations = []
     for sid, quays in st_quays.items():
+        # Holdeplasser bare andre kjøremønstre stopper ved (f.eks. vognhallturer), er ikke med i spillet.
+        if not st_lines[sid]:
+            continue
         lat = sum(float(stops[q]["stop_lat"]) for q in quays) / len(quays)
         lon = sum(float(stops[q]["stop_lon"]) for q in quays) / len(quays)
         name = stops[sid]["stop_name"] if sid in stops else stops[next(iter(quays))]["stop_name"]
@@ -146,6 +198,13 @@ def main(city, src):
         if p["shape_id"] in shape_ids:
             shapes[p["shape_id"]].append((int(p["shape_pt_sequence"]), float(p["shape_pt_lon"]), float(p["shape_pt_lat"])))
 
+    by_id = {s["id"]: s["name"] for s in stations}
+    # Kolumbus har ikke navn på linjene. Da brukes endeholdeplassene.
+    long_name = lambda order: f"{by_id.get(order[0], '?')} - {by_id.get(order[-1], '?')}"
+
+    names = sorted({routes[rid]["route_short_name"] for rid in best_trip}, key=line_key)
+    auto = {n: PALETTE[i % len(PALETTE)] for i, n in enumerate(names)}
+
     features = []
     for shape_id, pts in shapes.items():
         route = routes[shape_ids[shape_id]]
@@ -153,20 +212,22 @@ def main(city, src):
         coords = simplify([[round(lon, 5), round(lat, 5)] for _, lon, lat in pts], SIMPLIFY_M)
         line = route["route_short_name"]
         order = [station_of(s).split(":")[-1] for _, s, _ in trip_stops[best_trip[route["route_id"]][1]]]
-        color = line_colors.get(line) or (f"#{route['route_color']}" if route.get("route_color") else "#888888")
+        color = line_colors.get(line) or (f"#{route['route_color']}" if route.get("route_color") else auto[line])
         features.append({
             "type": "Feature",
-            "properties": {"line": line, "name": route["route_long_name"], "color": color, "stations": order},
+            "properties": {"line": line, "mode": mode_of[line], "name": route["route_long_name"] or long_name(order), "color": color, "stations": order},
             "geometry": {"type": "LineString", "coordinates": coords},
         })
-    features.sort(key=lambda f: f["properties"]["line"])
+    order_of = {n["mode"]: i for i, n in enumerate(networks)}
+    features.sort(key=lambda f: (order_of[f["properties"]["mode"]], line_key(f["properties"]["line"])))
 
     meta = {"source": gtfs.get("source", "GTFS"), "feedStart": min(all_dates), "feedEnd": max(all_dates), "days": rep}
     with open(f"{out_dir}/stations.json", "w", encoding="utf-8") as f:
         json.dump({"meta": meta, "stations": stations}, f, ensure_ascii=False, separators=(",", ":"))
     with open(f"{out_dir}/lines.geojson", "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": features}, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"{len(stations)} stasjoner, {len(features)} linjer, dager {rep}")
+    modes = {m: sum(1 for f in features if f["properties"]["mode"] == m) for m in order_of}
+    print(f"{len(stations)} stasjoner, {len(features)} linjer {modes}, dager {rep}")
 
 
 if __name__ == "__main__":

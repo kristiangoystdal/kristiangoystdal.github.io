@@ -6,7 +6,9 @@ import { ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, HIGH_SPEED, WORLD, applyQuesti
 import type { AdminLevel, GeoData, LngLat, Question, QuestionBody, Settings, Station } from './types'
 
 const raw = JSON.parse(readFileSync('public/data/oslo/stations.json', 'utf8'))
-const stations: Station[] = raw.stations
+// Testene gjelder T-banen. Trikkeholdeplassene i dataene er ikke med.
+const METRO = ['1', '2', '3', '4', '5']
+const stations: Station[] = raw.stations.filter((s: Station) => s.lines.some((l) => METRO.includes(l)))
 const byName = (name: string) => stations.find((s) => s.name === name)!
 const pos = (name: string) => stationPos(byName(name))
 
@@ -275,6 +277,8 @@ describe('hiders autosvar stemmer med geometrien', () => {
     { kind: 'measure', ref: 'kino', pos: seeker },
     { kind: 'tentacles', poiType: 'kino', pos: seeker, radiusM: 2500 },
   ]
+  // Et utsnitt rundt sentrum, så rutenettet for Measuring blir fint nok til å sjekke.
+  const LOCAL = disc(seeker, 6000)
   // Hider-posisjoner spredt rundt i byen, litt unna stasjonene.
   const hiders = stations.filter((_, i) => i % 3 === 0).map((s, i) => destination(stationPos(s), 0.2, i * 47, { units: 'kilometers' }).geometry.coordinates as LngLat)
 
@@ -285,11 +289,18 @@ describe('hiders autosvar stemmer med geometrien', () => {
         const auto = autoAnswer(q(body), { pos: h, station: nearestStation(stations, h) }, data)!
         if ((auto.marginM ?? 100) < 25) continue // for nær grensen til at polygon og avstand må være enige
         const answered = q(body, auto.answer)
-        const region = regionOf(answered, data)!
-        expect(booleanPointInPolygon(h, region)).toBe(isPositive(answered))
-        checked++
+        const region = regionOf(answered, data)
+        if (region) {
+          expect(booleanPointInPolygon(h, region)).toBe(isPositive(answered))
+          checked++
+        } else if (booleanPointInPolygon(h, LOCAL) && (auto.marginM ?? Infinity) > 150) {
+          // Measuring tegnes i et rutenett over området det gjelder. Nær kanten avgjør rutene.
+          const area = applyQuestion(LOCAL, answered, data)
+          expect(area !== null && booleanPointInPolygon(h, area)).toBe(true)
+          checked++
+        }
       }
-      expect(checked).toBeGreaterThan(20)
+      expect(checked).toBeGreaterThan(10)
     })
   }
 

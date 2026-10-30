@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { city } from './cities'
+import { city, transit } from './cities'
 import { deadline, movedAt } from './clock'
 import {
   CATEGORIES,
@@ -274,7 +274,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       {form.kind === 'transit' && (
         <>
           {seeker}
-          <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">Kan bare stilles mens dere er om bord og i bevegelse. Svaret er ja hvis T-banen dere sitter på stopper ved hiders stasjon på resten av turen.</p>
+          <p className="mb-3 rounded-lg bg-panel-2 p-2 text-xs text-muted">Kan bare stilles mens dere er om bord og i bevegelse. Svaret er ja hvis {transit().vehicle} dere sitter på stopper ved hiders stasjon på resten av turen.</p>
           <div className="mb-3">
             <span className="label">Linje</span>
             <div className="flex gap-1.5">

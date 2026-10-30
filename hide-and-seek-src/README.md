@@ -1,13 +1,17 @@
 # Hide and Seek Oslo
 
-Spørsmålstracker for Jetlag Hide and Seek, laget for Oslo T-bane og bygget for å
-kunne ta inn flere byer. Kilden ligger her,
+Spørsmålstracker for Jetlag Hide and Seek. Spilles i Oslo (T-bane og trikk),
+Bergen (Bybanen og bybuss), Stavanger (bybuss på Nord-Jæren) og Trondheim
+(Gråkallbanen og bybuss). Under Oppsett velges hvilke transportmidler og linjer
+som er med. Kilden ligger her,
 bygget ligger i `../hide-and-seek/` og er det GitHub Pages serverer.
 
 ```
 npm install
 npm run dev      # utvikling
-npm test         # geometritester
+npm test         # raske tester (geometri, video, byer), et par sekunder
+npm run test:sim # simulerte runder i hver by, ca. 1,5 min (8 blokker i parallell)
+npm run test:all # alt
 npm run build    # skriver til ../hide-and-seek (må committes)
 ```
 
@@ -16,42 +20,57 @@ Pages bygger ikke noe selv (repoet serveres rett fra `main`), så husk
 
 ## Data
 
-Hver by har sine data ferdig bygget i `public/data/<by>/` (i dag bare `oslo/`).
+Hver by har sine data ferdig bygget i `public/data/<by>/` (`oslo/`, `bergen/`, `stavanger/`, `trondheim/`).
+Alle transportmidlene i en by ligger i de samme filene. Hver linje i `lines.geojson`
+har `mode` (`metro`, `tram`, `lightrail` eller `bus`).
 Det eneste appen henter under spill er høyde og nærmeste adresse fra Kartverkets
 åpne API-er (`src/online.ts`), for spørsmålene om havnivå og gate. De finnes bare
 i norske byer. Uten nett svarer hider selv.
 
 | Fil | Kilde (Oslo) | Script |
 |---|---|---|
-| `stations.json`, `lines.geojson` | Ruter GTFS (`rb_rut-aggregated-gtfs.zip`, route_type 401) | `scripts/gtfs_to_json.py <by> gtfs.zip` |
+| `stations.json`, `lines.geojson` | Entur GTFS: Ruter (`rb_rut`), Skyss (`rb_sky`), Kolumbus (`rb_kol`), AtB (`rb_atb`). Rutetypene står under `networks` i `scripts/cities.json` | `scripts/gtfs_to_json.py <by> gtfs.zip` |
 | `admin.geojson` | Kartverket (fylke, kommune, postnummer), OSM (bydel) | `scripts/fetch_geodata.py <by> cache admin` |
 | `poi/*.geojson` | OpenStreetMap via Overpass | `scripts/fetch_geodata.py <by> cache poi` |
 | `coast.geojson`, `water.geojson`, `riks.geojson` | OpenStreetMap via Overpass (kystlinje og øyer, navngitte vann og elver, riksgrensen) | `scripts/fetch_geodata.py <by> cache shapes` |
+
+Er Overpass opptatt (502/504), kan et speil brukes: `OVERPASS_URL=https://lz4.overpass-api.de/api/interpreter`.
+Svarer det ikke i det hele tatt, bygges grensene fra Kartverket likevel, bare uten bydeler.
 
 `admin.geojson`, `poi/` og linjefilene er valgfrie: mangler de, vises spørsmålstypene som
 trenger dem som «data mangler», og resten virker som før.
 
 ### Legge til en by
 
-1. Legg byen til i `scripts/cities.json`: GTFS-feeden (`url`, `routeTypes` for
-   nettet som skal spilles på, f.eks. `"1"` for metro eller `"0"` for trikk, og
-   eventuelt `lineColors`), og områdene `bbox` (alle stasjonene med margin),
-   `wide`, `coastBbox` og `borderBbox` som «sør,vest,nord,øst».
+1. Legg byen til i `scripts/cities.json`: GTFS-feeden (`url`) med ett nett per
+   transportmiddel under `networks`: `mode`, `routeTypes` (f.eks. `"401"` for T-bane,
+   `"900"`/`"902"` for trikk, `"901"` for bybane, `"704"` for lokalbuss), eventuelt
+   `linePattern` for å velge linjenumre og `lineColors` (linjer uten farge får en
+   automatisk). Så områdene `bbox` (alle stasjonene med margin),
+   `wide`, `coastBbox` og `borderBbox` som «sør,vest,nord,øst». Uten `borderBbox`
+   slås spørsmålet om riksgrensen av. I Norge holder det å sette `admin` til fylkene
+   og kommunene (`{"fylker": {...}, "kommuner": {...}}`).
 2. Bygg stasjoner og linjer: `python3 scripts/gtfs_to_json.py <by> gtfs.zip`.
 3. Bygg steder og linjer det måles til: `python3 scripts/fetch_geodata.py <by> cache poi`
    og `... shapes`. Grenser (`admin`) må bygges med en egen funksjon per by i
-   `ADMIN_BUILDERS`, siden kildene er ulike fra land til land. Uten den er
+   `ADMIN_BUILDERS` utenfor Norge, siden kildene er ulike fra land til land. Uten den er
    Matching og Measuring på grenser slått av for byen.
-4. Legg byen til i `CITIES` i `src/cities.ts`: navn, hva nettet heter
-   (`network`), ramme (`bounds`, [vest, sør, øst, nord]), områdenivåene som
+4. Legg byen til i `CITIES` i `src/cities.ts`: navn, transportmidlene (`modes`) og
+   de som er med fra start (`defaultModes`). Ordene i tekstene står i `MODES`, og bare
+   T-banestasjoner teller som jernbanestasjoner. Så ramme (`bounds`, [vest, sør, øst, nord]), områdenivåene som
    finnes i `admin.geojson`, om den er i Norge, og om den har høyhastighetsbane.
-5. `npm test` og `npm run build`. Byen dukker opp under Oppsett → By.
+5. `npm run test:all` (de simulerte rundene tar med den nye byen av seg selv når den har en fil i `src/sim/`) og `npm run build`. Byen dukker opp under Oppsett → By.
 
-Alle byenes data forhåndslastes av service workeren (`globPatterns` i
-`vite.config.ts`). Med mange byer bør det begrenses til byen som er valgt.
+Service workeren laster ned Oslos data på forhånd (`globPatterns` i `vite.config.ts`).
+De andre byene lagres første gang de åpnes (`runtimeCaching`, «city-data»), og virker
+deretter uten nett.
 
 ## Kode
 
+- `src/sim/`: simulerte runder. For hver by stiller seekerne alle spørsmålene byen har
+  data til, hider svarer ut fra der hen står, og testen sjekker at hiders stasjon aldri
+  utelukkes og at endgame ender riktig. Kjør dem etter endringer i spillogikk eller data.
+  Én by alene: `npx vitest run src/sim/bergen`.
 - `src/geo.ts`: all geometri. `regionOf` gir området et spørsmål peker ut,
   `solve` krymper det mulige området spørsmål for spørsmål, `autoAnswer` regner
   ut hiders svar direkte fra avstander.

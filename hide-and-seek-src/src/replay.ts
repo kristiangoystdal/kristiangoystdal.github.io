@@ -43,7 +43,7 @@ const BASE_S: Record<BeatKind, number> = { start: 1.2, seek: 0.8, ask: 0.8, answ
 const UNANSWERED_MS = 10 * 60000
 const READ_CPS = 15
 const MAX_HOLD_S = 10
-/** Seekerne går til fots når neste sted er så nærme, ellers tar de T-banen. */
+/** Seekerne går til fots når neste sted er så nærme, ellers tar de kollektivt. */
 const WALK_M = 900
 /** Hendelser på samme tidspunkt vises i denne rekkefølgen. */
 const ORDER: BeatKind[] = ['start', 'seek', 'move', 'answer', 'ask', 'endgame', 'end']
@@ -240,7 +240,7 @@ export function questionPos(q: Question): LngLat | null {
 
 type Pt = [number, number, number]
 
-/** T-banenettet som graf: fra stasjon til stasjon langs sporet. */
+/** Kollektivnettet som graf: fra stasjon til stasjon langs linjene. */
 export interface Net {
   stations: Station[]
   edges: Map<string, { to: string; path: LngLat[]; len: number }[]>
@@ -281,7 +281,7 @@ export function buildNet(data: GeoData, lines: string[]): Net {
   return { stations: data.stations.filter((s) => used.has(s.id)), edges }
 }
 
-/** Veien fra ett sted til et annet: gå til nærmeste stasjon, ta T-banen, og gå det siste stykket. */
+/** Veien fra ett sted til et annet: gå til nærmeste stasjon, ta kollektivt, og gå det siste stykket. */
 export function route(net: Net, from: LngLat, to: LngLat): LngLat[] {
   if (dist(from, to) < WALK_M || !net.stations.length) return [from, to]
   const a = nearestStation(net.stations, from)
@@ -340,7 +340,7 @@ function tour(stops: { pos: LngLat; arrive: number; depart: number }[], way: (a:
 
 /**
  * Hvor spillerne var. Appen sporer ingen posisjon. Seekerne er der spørsmålene ble stilt
- * fra, og reiser med T-banen mellom stedene etter at svaret kom. Hider går mellom stedene
+ * fra, og reiser kollektivt mellom stedene etter at svaret kom. Hider går mellom stedene
  * hider sto ved hvert svar (`hiderPath`, fra hiders telefon), og står stille i endgame.
  * Uten dem står hider på stasjonen sin: den hider forlot ved Move, og til slutt
  * endgame-stasjonen eller den siste som var igjen.
@@ -459,7 +459,7 @@ export interface Replay {
   tl: Timeline
   cps: Checkpoint[]
   tracks: [string, Track, string][]
-  lines: { color: string; pts: [number, number][] }[]
+  lines: { color: string; width: number; pts: [number, number][] }[]
   stations: (Station & { xy: [number, number] })[]
   /** Kartet før noe var besvart, til kameraet ved start. */
   home: [number, number, number, number]
@@ -476,7 +476,7 @@ export function prepare(a: ArchivedRound, data: GeoData, settings: Settings): Re
     .map(([k, t]) => [k, t, t.role === 'hider' ? `Hider (${a.hider})` : k === 'seekers' ? 'Seekerne' : `Seeker ${++n}`] as [string, Track, string])
   const lines = data.lines.features
     .filter((f) => rules.lines.includes(f.properties.line))
-    .map((f) => ({ color: f.properties.color, pts: (f.geometry.coordinates as LngLat[]).map(project) }))
+    .map((f) => ({ color: f.properties.color, width: f.properties.mode === 'bus' ? 4 : f.properties.mode === 'tram' ? 5 : 6, pts: (f.geometry.coordinates as LngLat[]).map(project) }))
   const stations = data.stations.filter((s) => s.lines.some((l) => rules.lines.includes(l))).map((s) => ({ ...s, xy: project(stationPos(s)) }))
   const pad = (rules.zoneRadius / 111000) * (TILE / 360) * 1.6
   const b = boxOf(stations.map((s) => s.xy))!
@@ -694,7 +694,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, r: Replay, cam: Camera,
     l.pts.forEach(([x, y], j) => (j ? ctx.lineTo(sx(x), sy(y)) : ctx.moveTo(sx(x), sy(y))))
     ctx.strokeStyle = l.color
     ctx.globalAlpha = 0.85
-    ctx.lineWidth = 6
+    ctx.lineWidth = l.width
     ctx.stroke()
     ctx.globalAlpha = 1
   }
@@ -718,10 +718,12 @@ export function drawFrame(ctx: CanvasRenderingContext2D, r: Replay, cam: Camera,
 
   // Stasjonene. Er det få igjen, får de navn.
   const few = possible.size <= 10
+  // Bussnett har hundrevis av holdeplasser, og de tegnes mindre.
+  const dense = r.stations.length > 200
   for (const s of r.stations) {
     const on = possible.has(s.id)
     ctx.beginPath()
-    ctx.arc(sx(s.xy[0]), sy(s.xy[1]), on ? 9 : 5.5, 0, Math.PI * 2)
+    ctx.arc(sx(s.xy[0]), sy(s.xy[1]), dense ? (on ? 6 : 3.5) : on ? 9 : 5.5, 0, Math.PI * 2)
     ctx.fillStyle = on ? COLORS.accent : '#ffffff'
     ctx.fill()
     ctx.lineWidth = 2.5

@@ -1,4 +1,4 @@
-import { city } from './cities'
+import { transit } from './cities'
 import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, POI_TYPES, areaAt, dist, nearestPoi, nearestStation, stationPos } from './geo'
 import type { AdminLevel, GameSize, GeoData, Kind, LngLat, Question, QuestionBody, Settings, ShapeKey, Station } from './types'
 
@@ -67,7 +67,7 @@ const tentacle = (key: string, m: number, sizes: string): Item => ({
   group: `Innen ${fmtDist(m)}`,
   // Hentes når den vises, så den følger byen som er lastet inn.
   get label() {
-    return key === METRO_LINES ? `${city().network}linjer` : cap(poi(key).plural)
+    return key === METRO_LINES ? cap(`${transit().line}r`) : cap(poi(key).plural)
   },
   sizes,
   fields: { kind: 'tentacles', poiType: key, radiusM: m },
@@ -246,8 +246,8 @@ export const formToQuestion = (f: Form): Question | null => {
 export function fmtDist(d: number) {
   return d >= 1000 ? `${+(d / 1000).toFixed(d % 1000 ? 1 : 0)} km` : `${Math.round(d)} m`
 }
-const poiName = (key: string) => (key === METRO_LINES ? `${city().network}linje` : (POI_TYPES.find((t) => t.key === key)?.label ?? key))
-const poiPlural = (key: string) => (key === METRO_LINES ? `${city().network}linjer` : (POI_TYPES.find((t) => t.key === key)?.plural ?? key))
+const poiName = (key: string) => (key === METRO_LINES ? transit().line : (POI_TYPES.find((t) => t.key === key)?.label ?? key))
+const poiPlural = (key: string) => (key === METRO_LINES ? `${transit().line}r` : (POI_TYPES.find((t) => t.key === key)?.plural ?? key))
 const SHAPE_NAMES: Record<ShapeKey, string> = { coast: 'kystlinjen', water: 'nærmeste vann eller innsjø', riks: 'riksgrensen' }
 const LEVEL_NAMES: Record<AdminLevel, string> = { fylke: 'fylke', kommune: 'kommune', bydel: 'bydel', postsone: 'postsone', postnummer: 'postnummer' }
 /** Nivået i løpende tekst: «samme postsone». */
@@ -271,7 +271,7 @@ export function describe(q: Question, data: GeoData): string {
     case 'transit': {
       const order = data.lines.features.find((f) => f.properties.line === q.line)?.properties.stations ?? []
       const name = (id?: string) => data.stations.find((s) => s.id === id)?.name ?? 'ukjent'
-      return `Stopper ${city().network === 'T-bane' ? 'T-banen' : 'det'} vi sitter på ved stasjonen din? (linje ${q.line} mot ${name(q.dir === 1 ? order.at(-1) : order[0])}, neste stopp ${name(order[q.next])}${q.pos ? `, seeker ved ${place(q.pos, data.stations)}` : ''})`
+      return `Stopper ${transit().vehicle} vi sitter på ved stasjonen din? (linje ${q.line} mot ${name(q.dir === 1 ? order.at(-1) : order[0])}, neste stopp ${name(order[q.next])}${q.pos ? `, seeker ved ${place(q.pos, data.stations)}` : ''})`
     }
     case 'geodist':
       return `Er du nærmere ${SHAPE_NAMES[q.ref]} enn meg? (${place(q.pos, data.stations)})`

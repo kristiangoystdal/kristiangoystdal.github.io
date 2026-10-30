@@ -1,18 +1,24 @@
 import type { Feature, Geometry } from 'geojson'
-import { cityOf, networkSuffix, setCity } from './cities'
+import { cityOf, modeOf, networkSuffix, railMode, setCity } from './cities'
 import { POI_TYPES, setBounds, stationPos } from './geo'
 import type { Area, GeoData, LngLat, Poi, ShapeKey } from './types'
 
 const SHAPES: ShapeKey[] = ['coast', 'water', 'riks']
 
-async function optional<T>(url: (path: string) => string, path: string): Promise<T | null> {
-  try {
-    const res = await fetch(url(path))
-    return res.ok ? ((await res.json()) as T) : null
-  } catch {
-    return null
+/** Leser en datafil for byen. null = filen finnes ikke. */
+export type Reader = (path: string) => Promise<unknown | null>
+
+/** Henter filene fra nettsiden. Testene leser dem fra disk i stedet. */
+const fromWeb =
+  (cityId: string): Reader =>
+  async (path) => {
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}data/${cityId}/${path}`)
+      return res.ok ? await res.json() : null
+    } catch {
+      return null
+    }
   }
-}
 
 /** Alle linjene i en geometri. Flater blir til omrisset sitt. */
 function outlines(g: Geometry): LngLat[][] {
@@ -34,15 +40,20 @@ function outlines(g: Geometry): LngLat[][] {
  * Grenser, steder og linjedata er valgfrie: mangler filen, slås spørsmålstypen av.
  * Byen blir den som gjelder for tekster og geometri (`city()` og `BOUNDS`).
  */
-export async function loadData(cityId: string): Promise<GeoData> {
+export async function loadData(cityId: string, read: Reader = fromWeb(cityOf(cityId).id)): Promise<GeoData> {
   const c = cityOf(cityId)
-  const url = (path: string) => `${import.meta.env.BASE_URL}data/${c.id}/${path}`
+  const need = async <T>(path: string) => {
+    const v = await read(path)
+    if (!v) throw new Error(`Mangler ${path} for ${c.name}`)
+    return v as T
+  }
+  const optional = async <T>(path: string) => (await read(path)) as T | null
   const [stations, lines, admin, shapes, pois] = await Promise.all([
-    fetch(url('stations.json')).then((r) => r.json()),
-    fetch(url('lines.geojson')).then((r) => r.json()),
-    optional<{ features: GeoData['admin'] }>(url, 'admin.geojson'),
-    Promise.all(SHAPES.map((k) => optional<{ features: Feature[] }>(url, `${k}.geojson`))),
-    Promise.all(POI_TYPES.map((t) => optional<{ features: { properties: { name: string }; geometry: { coordinates: [number, number] } }[] }>(url, `poi/${t.key}.geojson`))),
+    need<{ stations: GeoData['stations'] }>('stations.json'),
+    need<GeoData['lines']>('lines.geojson'),
+    optional<{ features: GeoData['admin'] }>('admin.geojson'),
+    Promise.all(SHAPES.map((k) => optional<{ features: Feature[] }>(`${k}.geojson`))),
+    Promise.all(POI_TYPES.map((t) => optional<{ features: { properties: { name: string }; geometry: { coordinates: [number, number] } }[] }>(`poi/${t.key}.geojson`))),
   ])
   setCity(c)
   setBounds(c.bounds)
@@ -52,8 +63,11 @@ export async function loadData(cityId: string): Promise<GeoData> {
     const fc = pois[i]
     if (fc) poi[t.key] = fc.features.map((f) => ({ name: f.properties.name, pos: f.geometry.coordinates }))
   })
-  // Reglene regner stasjonene i nettet (T-bane i Oslo) som jernbanestasjoner i Measuring.
-  ;(poi.jernbanestasjon ??= []).push(...(stations.stations as GeoData['stations']).map((s) => ({ name: `${s.name}${networkSuffix()}`, pos: stationPos(s) })))
+  // Reglene regner T-banestasjonene som jernbanestasjoner i Measuring. Trikk, Bybanen og buss gjør det ikke.
+  const rail = railMode()
+  const railLines = new Set(lines.features.filter((f) => rail && modeOf(f) === rail).map((f) => f.properties.line))
+  const railStations = stations.stations.filter((s) => s.lines.some((l) => railLines.has(l)))
+  if (railStations.length) (poi.jernbanestasjon ??= []).push(...railStations.map((s) => ({ name: `${s.name}${networkSuffix()}`, pos: stationPos(s) })))
 
   const loaded = [coast, water, riks].map((fc, i) => [SHAPES[i], fc?.features.flatMap((f) => outlines(f.geometry))] as const).filter(([, lines]) => lines)
   return {

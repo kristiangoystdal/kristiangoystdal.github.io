@@ -28,8 +28,15 @@ export default defineConfig({
       workbox: {
         // Åpner appen når man trykker på et varsel.
         importScripts: ['sw-notify.js'],
-        globPatterns: ['**/*.{js,css,html,svg,json,geojson}'],
+        // Bare Oslo (standardbyen) lastes ned på forhånd. De andre byene lagres første gang de
+        // åpnes, så telefonen slipper å laste ned alle byene (7,5 MB) ved første besøk.
+        globPatterns: ['**/*.{js,css,html,svg}', 'data/oslo/**/*.{json,geojson}'],
         runtimeCaching: [
+          {
+            urlPattern: /\/data\/[a-z]+\/.+\.(json|geojson)$/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'city-data', cacheableResponse: { statuses: [200] } },
+          },
           {
             urlPattern: /^https:\/\/(cache\.kartverket\.no|tile\.openstreetmap\.org|server\.arcgisonline\.com)\//,
             handler: 'CacheFirst',

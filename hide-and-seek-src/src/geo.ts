@@ -16,7 +16,7 @@ import {
   polygon,
   union,
 } from '@turf/turf'
-import { DEFAULT_CITY, city, cityOf } from './cities'
+import { DEFAULT_CITY, MODES, city, cityOf, railMode } from './cities'
 import type { Lookup, LookupKind } from './online'
 import type { AdminArea, AdminLevel, Area, GeoData, LngLat, Poi, Question, Settings, ShapeKey, Station } from './types'
 
@@ -33,6 +33,7 @@ let SHADE: Area = shadeOf(BOUNDS)
 export function setBounds(bounds: Box4) {
   if (bounds.every((v, i) => v === BOUNDS[i])) return
   BOUNDS = bounds
+  setPlane(bounds)
   WORLD = bboxPolygon(bounds)
   SHADE = shadeOf(bounds)
 }
@@ -44,10 +45,12 @@ export const POI_TYPES: { key: string; icon: string; label: string; plural: stri
     key: 'jernbanestasjon',
     icon: '🚆',
     get label() {
-      return `jernbane- eller ${city().network}stasjon`
+      const rail = railMode()
+      return rail ? `jernbane- eller ${MODES[rail].stop}` : 'jernbanestasjon'
     },
     get plural() {
-      return `jernbane- og ${city().network}stasjoner`
+      const rail = railMode()
+      return rail ? `jernbane- og ${MODES[rail].stop}er` : 'jernbanestasjoner'
     },
   },
   { key: 'fjell', icon: '⛰️', label: 'fjell', plural: 'fjell' },
@@ -93,9 +96,16 @@ export const disc = (c: LngLat, radiusM: number, steps = 64): Area => circle(c, 
 
 // Voronoi og midtnormaler regnes i et lokalt plan der én enhet er like lang
 // i begge retninger. Rå lengde/breddegrader ville strukket alt med 2x øst-vest på 60°N.
-const LON0 = 10.75
-const LAT0 = 59.93
-const K = Math.cos((LAT0 * Math.PI) / 180)
+// Planet legges midt i byens ramme, så det stemmer i hver by (Oslo 59,9° N, Trondheim 63,4° N).
+let LON0 = 0
+let LAT0 = 0
+let K = 1
+function setPlane([w, s, e, n]: Box4) {
+  LON0 = (w + e) / 2
+  LAT0 = (s + n) / 2
+  K = Math.cos((LAT0 * Math.PI) / 180)
+}
+setPlane(BOUNDS)
 type P = [number, number]
 const proj = (p: LngLat): P => [(p[0] - LON0) * K, p[1] - LAT0]
 const unproj = (p: P): LngLat => [p[0] / K + LON0, p[1] + LAT0]
@@ -203,20 +213,27 @@ export function areaAt(data: GeoData, level: AdminLevel, pos: LngLat) {
   return near.d <= GAP_M ? near.f : null
 }
 
-const borderCache = new Map<string, number>()
+const borderCache = new WeakMap<LngLat[][], Map<string, number>>()
 
 /** Avstand i meter til nærmeste grense på et nivå, uansett hvilken side man står på. */
 export function borderDist(data: GeoData, level: 'fylke' | 'kommune', pos: LngLat): number {
-  const key = `${level}:${pos[0]},${pos[1]}`
-  let d = borderCache.get(key)
-  if (d === undefined) {
-    d = Math.min(...levelAreas(data, level).map((f) => Math.abs(pointToPolygonDistance(pos, f, { units: 'meters' }))))
-    borderCache.set(key, d)
-  }
+  // Avstanden til nærmeste kant av alle delene (også øyer), de samme kantene området tegnes fra.
+  // pointToPolygonDistance ga avstanden til kanten av delen punktet står i, og overså øyer like ved.
+  const rings = borderRings(data, level)
+  let cache = borderCache.get(rings)
+  if (!cache) borderCache.set(rings, (cache = new Map()))
+  const key = `${pos[0]},${pos[1]}`
+  let d = cache.get(key)
+  if (d === undefined) cache.set(key, (d = polylineDist(pos, rings)))
   return d
 }
 
-/** T-banelinjen som går nærmest et punkt. */
+/** Går linjen innen `d` meter fra punktet? */
+function lineWithin(data: GeoData, line: string, pos: LngLat, d: number) {
+  return data.lines.features.some((f) => f.properties.line === line && pointToLineDistance(pos, f, { units: 'meters' }) <= d)
+}
+
+/** Linjen som går nærmest et punkt. */
 export function nearestLine(data: GeoData, pos: LngLat): string | null {
   let best: string | null = null
   let bestD = Infinity
@@ -313,15 +330,8 @@ export function regionOf(q: Question, data: GeoData): Area | null {
       const mine = nearestPoi(pois, q.pos)
       return mine && voronoiCell(mine.pos, pois.map((p) => p.pos))
     }
-    case 'measure': {
-      const pois = data.poi[q.ref] ?? []
-      const mine = nearestPoi(pois, q.pos)
-      if (!mine) return null
-      // «Nærmere enn meg» = innenfor min avstand fra et hvilket som helst sted av typen.
-      const d = dist(mine.pos, q.pos)
-      const discs = pois.map((p) => disc(p.pos, d, 32))
-      return discs.length === 1 ? discs[0] : union(featureCollection(discs))
-    }
+    // Measuring på steder tegnes i et rutenett (lineRegion), som avstand til kysten. Å slå
+    // sammen en sirkel per park eller fjell tok over et halvt minutt.
     case 'tentacles': {
       const reach = disc(q.pos, q.radiusM)
       // Linjer er ikke punkter: da avgrenser bare rekkevidden området, resten skjer per stasjon.
@@ -394,11 +404,19 @@ export function nearLines(lines: LngLat[][], d: number, box: Box): Area | null {
   let region: Area | null = null
   if (near.length) {
     const side = Math.max((b[2] - b[0]) * DEG_M * cos, (b[3] - b[1]) * DEG_M) / GRID_CELLS
-    const grid = pointGrid(b, side, { units: 'meters' })
+    // En ramme av «langt unna»-punkter rundt boksen. Uten den mister isobands den ytre kanten
+    // når området går helt ut i boksens kanter, og gir bare hullet i midten (det motsatte området).
+    const padX = (side * 1.5) / (DEG_M * cos)
+    const padY = (side * 1.5) / DEG_M
+    const grid = pointGrid([b[0] - padX, b[1] - padY, b[2] + padX, b[3] + padY], side, { units: 'meters' })
     // Alt lenger unna enn cap er «langt unna». Stykker som ikke kan komme nærmere, hoppes over.
     const cap = d * 2 + 1
     for (const pt of grid.features) {
       const [x, y] = pt.geometry.coordinates
+      if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) {
+        pt.properties = { z: cap }
+        continue
+      }
       let best = cap
       for (const piece of near) {
         const dx = Math.max(piece.box[0] - x, 0, x - piece.box[2]) * DEG_M * cos
@@ -423,11 +441,30 @@ function waterLines(data: GeoData) {
   return lines
 }
 
-/** Området «nærmere enn seeker» for spørsmål om avstand til en linje: kyst, vann, riksgrense og grenser. */
+// Stedene av en type som «linjer» med ett punkt, så rutenettet kan måle avstand til dem.
+const pointLines = new WeakMap<Poi[], LngLat[][]>()
+function poiLines(pois: Poi[]) {
+  let lines = pointLines.get(pois)
+  if (!lines) pointLines.set(pois, (lines = pois.map((p) => [p.pos, p.pos])))
+  return lines
+}
+
+/** Avstanden fra et punkt til nærmeste sted av typen. Infinity når det ikke finnes noen. */
+function poiDist(pois: Poi[], pos: LngLat) {
+  const p = nearestPoi(pois, pos)
+  return p ? dist(p.pos, pos) : Infinity
+}
+
+/** Området «nærmere enn seeker» for spørsmål om avstand: kyst, vann, riksgrense, grenser og steder. */
 function lineRegion(q: Question, data: GeoData, within: Area): Area | null {
   let lines: LngLat[][]
   let d: number
-  if (q.kind === 'geodist') {
+  if (q.kind === 'measure') {
+    const pois = data.poi[q.ref] ?? []
+    if (!pois.length) return null
+    lines = poiLines(pois)
+    d = poiDist(pois, q.pos)
+  } else if (q.kind === 'geodist') {
     if (!hasData(q, data)) return null
     lines = q.ref === 'water' ? waterLines(data) : (data.shapes[q.ref] ?? [])
     d = shapeDist(data, q.ref, q.pos)
@@ -470,6 +507,24 @@ export function clipData(data: GeoData, playArea: LngLat[] | null): GeoData {
     ...data,
     poi: Object.fromEntries(Object.entries(data.poi).map(([k, v]) => [k, v.filter((p) => inside(p.pos))])),
     shapes: Object.fromEntries(Object.entries(data.shapes).map(([k, v]) => [k, v.flatMap(clip)])),
+  }
+}
+
+/**
+ * Linjene som ikke er med i spillet (f.eks. trikken når bare T-banen spilles), regnes
+ * som om de ikke finnes: seekers nærmeste stasjon, nærmeste linje og stasjonens linjer
+ * gjelder bare det som er med. Stasjoner uten noen valgt linje forsvinner.
+ * T-banestasjonene teller fortsatt som jernbanestasjoner, de står der uansett.
+ */
+export function onlyLines(data: GeoData, lines: string[]): GeoData {
+  const on = new Set(lines)
+  const features = data.lines.features.filter((f) => on.has(f.properties.line))
+  // Uten valgte linjer (rett etter bytte av by) vises alt, så kartet har noe å vise.
+  if (features.length === data.lines.features.length || features.length === 0) return data
+  return {
+    ...data,
+    lines: { ...data.lines, features },
+    stations: data.stations.filter((s) => s.lines.some((l) => on.has(l))).map((s) => ({ ...s, lines: s.lines.filter((l) => on.has(l)) })),
   }
 }
 
@@ -516,6 +571,14 @@ function stationFits(s: Station, q: Question, data: GeoData, zoneRadius: number)
     }
     case 'namelen':
       return (s.name.length === nearestStation(data.stations, q.pos).name.length) === (q.answer === 'yes')
+    case 'measure': {
+      // Hider kan stå hvor som helst i sonen, altså inntil soneradius nærmere eller lenger unna.
+      const pois = data.poi[q.ref] ?? []
+      if (!pois.length) return true
+      const mine = poiDist(pois, stationPos(s))
+      const theirs = poiDist(pois, q.pos)
+      return q.answer === 'closer' ? mine - zoneRadius <= theirs : mine + zoneRadius > theirs
+    }
     case 'border': {
       if (!hasData(q, data)) return true
       const mine = borderDist(data, q.level, stationPos(s))
@@ -523,7 +586,11 @@ function stationFits(s: Station, q: Question, data: GeoData, zoneRadius: number)
       return q.answer === 'closer' ? mine - zoneRadius <= theirs : mine + zoneRadius > theirs
     }
     case 'tentacles':
-      return q.poiType !== METRO_LINES || q.answer === 'outside' || s.lines.includes(q.answer ?? '')
+      if (q.poiType !== METRO_LINES || q.answer === 'outside') return true
+      // Svaret er linjen nærmest der hider står, ikke en av stasjonens linjer. Hider står innen
+      // soneradius fra stasjonen, og stasjonens egne linjer er da innen soneradius fra hider.
+      // Den nærmeste linjen er altså innen to soneradier fra stasjonen.
+      return s.lines.includes(q.answer ?? '') || lineWithin(data, q.answer ?? '', stationPos(s), 2 * zoneRadius)
     default:
       return true
   }
@@ -675,7 +742,12 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
       const theirs = nearestPoi(pois, q.pos)
       if (!hasData(q, data)) return null
       if (!mine || !theirs) return NOTHING
-      return { answer: mine.name === theirs.name ? 'yes' : 'no', detail: `du: ${mine.name}, seeker: ${theirs.name}` }
+      // Hvor langt hider må gå før svaret snur: halve forskjellen mellom avstanden til seekers
+      // sted og til nærmeste andre sted.
+      const toTheirs = dist(hider.pos, theirs.pos)
+      const other = Math.min(...pois.filter((p) => p !== theirs).map((p) => dist(hider.pos, p.pos)))
+      const marginM = Number.isFinite(other) ? Math.abs(other - toTheirs) / 2 : undefined
+      return { answer: mine.name === theirs.name ? 'yes' : 'no', marginM, detail: `du: ${mine.name}, seeker: ${theirs.name}` }
     }
     case 'measure': {
       const pois = data.poi[q.ref] ?? []

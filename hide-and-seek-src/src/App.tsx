@@ -3,10 +3,10 @@ import { useArchivedView } from './Archive'
 import MapView from './MapView'
 import { BonusPrompt, GamePanel, MapPanel, SettingsPanel } from './Panels'
 import QuestionsView from './QuestionsView'
-import { cityOf } from './cities'
+import { city, cityOf, linesOf, modesOf, setActiveModes } from './cities'
 import { loadData } from './data'
 import { movedAt } from './clock'
-import { clipData, dist, hiderStation, solve } from './geo'
+import { clipData, dist, hiderStation, onlyLines, solve } from './geo'
 import { useHiderPath } from './hiderPath'
 import { Rules } from './Rules'
 import { useThermoGps } from './Tools'
@@ -162,7 +162,6 @@ export default function App() {
   useShareLocation()
   useAutoResume()
   useThermoGps()
-  useHiderLocation(loaded)
   useHiderPath()
   // Kartdataene hører til byen. Bytter noen by (her eller i rommet), lastes den nye byen inn.
   const cityId = useGame((s) => s.settings.city)
@@ -173,10 +172,10 @@ export default function App() {
     loadData(cityId).then(
       (d) => {
         if (!live) return
-        // Ny by: alle linjene i nettet er med til noen velger annet.
+        // Ny by: linjene til byens vanlige transportmidler er med til noen velger annet.
         const all = d.lines.features.map((f) => f.properties.line)
         const { settings } = useGame.getState()
-        if (!settings.lines.some((l) => all.includes(l))) useGame.setState({ settings: { ...settings, lines: all } })
+        if (!settings.lines.some((l) => all.includes(l))) useGame.setState({ settings: { ...settings, lines: linesOf(d, city().defaultModes) } })
         setData(d)
       },
       () => live && setError(true),
@@ -187,8 +186,13 @@ export default function App() {
   }, [cityId])
   useEffect(() => void (document.title = `Hide and Seek ${cityOf(cityId).name}`), [cityId])
 
+  // Tekstene følger transportmidlene som er med: «T-banestasjon», «bussholdeplass» eller «holdeplass».
+  useMemo(() => loaded && setActiveModes(modesOf(loaded, settings.lines)), [loaded, settings.lines])
   // Steder utenfor spillområdet regnes som om de ikke finnes.
-  const data = useMemo(() => loaded && clipData(loaded, settings.playArea), [loaded, settings.playArea])
+  // Linjer som ikke er med, finnes heller ikke.
+  const data = useMemo(() => loaded && onlyLines(clipData(loaded, settings.playArea), settings.lines), [loaded, settings.playArea, settings.lines])
+  // Hiders stasjon velges bare blant stasjonene som er med.
+  useHiderLocation(data)
   const past = useArchivedView(loaded)
   const result = useMemo(
     // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
@@ -236,7 +240,7 @@ export default function App() {
           {tab === 'map' && <MapPanel data={past?.data ?? data} result={past?.result ?? result} past={!!past} />}
           {tab === 'questions' && <QuestionsView data={data} result={result} />}
           {tab === 'game' && <GamePanel raw={loaded!} />}
-          {tab === 'settings' && <SettingsPanel data={data} result={result} />}
+          {tab === 'settings' && <SettingsPanel data={data} all={loaded!} result={result} />}
         </div>
         <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Skjermer">
           {TABS.map((t) => (

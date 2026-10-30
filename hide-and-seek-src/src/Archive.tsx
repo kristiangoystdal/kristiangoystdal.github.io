@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_CITY, city, cityOf } from './cities'
 import { movedAt } from './clock'
 import { CATEGORIES, answerLabel, categoryOf, describe, itemOf } from './form'
-import { clipData, shrinks, solve } from './geo'
+import { clipData, onlyLines, shrinks, solve } from './geo'
 import { useGame, useUi, type ArchivedRound } from './store'
 import { loadArchive, useSync } from './sync'
 import type { GeoData, RoundStats } from './types'
@@ -48,7 +48,7 @@ export function useArchivedView(raw: GeoData | null) {
     // Kartet kan bare vises for byen som er lastet inn.
     if (!raw || !round || (round.setup.city ?? DEFAULT_CITY) !== city().id) return null
     const rules = { ...settings, ...round.setup }
-    const data = clipData(raw, rules.playArea)
+    const data = onlyLines(clipData(raw, rules.playArea), rules.lines)
     return { round, data, result: solve(round.questions, data, rules, round.round.endgame ?? null, movedAt(round.round)) }
     // Bare runden og kartdataene avgjør hva som vises.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,7 +84,8 @@ function ReplayVideo({ a, raw }: { a: ArchivedRound; raw: GeoData }) {
     setVideo(null)
     try {
       const { renderReplay } = await import('./replay')
-      const data = clipData(raw, { ...settings, ...a.setup }.playArea)
+      const rules = { ...settings, ...a.setup }
+      const data = onlyLines(clipData(raw, rules.playArea), rules.lines)
       const blob = await renderReplay(a, data, settings, setProgress)
       const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
       const name = `hide-and-seek-${a.hider}-runde-${a.nth}.${ext}`.toLowerCase().replace(/[^a-z0-9æøå.-]+/g, '-')
@@ -141,7 +142,7 @@ function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close:
   const { setViewing, setTab } = useUi()
   const { data, result } = useMemo(() => {
     const rules = { ...settings, ...a.setup }
-    const data = clipData(raw, rules.playArea)
+    const data = onlyLines(clipData(raw, rules.playArea), rules.lines)
     return { data, result: solve(a.questions, data, rules, a.round.endgame ?? null, movedAt(a.round)) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [a, raw])
