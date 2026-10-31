@@ -1,11 +1,12 @@
 import { launch, device, URL_BASE, TARGET } from './env.mjs'
+import { ignorable } from './env.mjs'
 let failed = 0
 const check = (ok, name) => { console.log(`${ok ? 'OK  ' : 'FEIL'} ${name}`); if (!ok) failed++ }
 const browser = await launch()
 const ctx = await browser.newContext(device({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' }))
 const page = await ctx.newPage()
 const errors = []
-page.on('pageerror', (e) => errors.push(e.message))
+page.on('pageerror', (e) => ignorable(e) || errors.push(e.message))
 // Kartdataene (utenom stasjoner og linjer) kommer sent, så arket åpnes mens de lastes.
 await page.route('**/data/oslo/{admin,coast,water,riks}.geojson', async (r) => { await new Promise((ok) => setTimeout(ok, 3000)); await r.continue() })
 await page.goto(URL_BASE)

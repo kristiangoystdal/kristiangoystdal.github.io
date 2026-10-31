@@ -1,5 +1,6 @@
 import { tmpdir } from 'node:os'
 import { launch, device, URL_BASE, TARGET } from './env.mjs'
+import { ignorable } from './env.mjs'
 
 const URL_ = URL_BASE
 const SHOTS = `${tmpdir()}/hide-and-seek-e2e-`
@@ -14,7 +15,7 @@ async function open({ seed } = {}) {
   const ctx = await browser.newContext(device({ viewport: { width: 400, height: 860 }, serviceWorkers: 'block', permissions: ['geolocation'], geolocation: { latitude: 63.43, longitude: 10.39, accuracy: 20 } }))
   const page = await ctx.newPage()
   const errors = []
-  page.on('pageerror', (e) => errors.push(e.message + ' @ ' + (e.stack ?? '').split('\n').slice(1, 7).join(' <- ')))
+  page.on('pageerror', (e) => ignorable(e) || errors.push(e.message + ' @ ' + (e.stack ?? '').split('\n').slice(1, 7).join(' <- ')))
   page.on('dialog', (d) => d.accept())
   if (seed) await page.addInitScript((s) => { if (!sessionStorage.getItem('seeded')) { localStorage.clear(); for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v); sessionStorage.setItem('seeded', '1') } }, seed)
   await page.goto(URL_)

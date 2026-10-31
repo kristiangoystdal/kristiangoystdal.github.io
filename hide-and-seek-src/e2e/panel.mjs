@@ -1,11 +1,12 @@
 import { launch, device, URL_BASE, TARGET } from './env.mjs'
+import { ignorable } from './env.mjs'
 let failed = 0
 const check = (ok, name) => { console.log(`${ok ? 'OK  ' : 'FEIL'} ${name}`); if (!ok) failed++ }
 const browser = await launch()
 const ctx = await browser.newContext(device({ viewport: { width: 400, height: 800 }, serviceWorkers: 'block', hasTouch: true }))
 const page = await ctx.newPage()
 const errors = []
-page.on('pageerror', (e) => errors.push(e.message))
+page.on('pageerror', (e) => ignorable(e) || errors.push(e.message))
 await page.goto(URL_BASE)
 await page.waitForSelector('aside')
 const handle = page.locator('[data-guide="panel-handle"]')

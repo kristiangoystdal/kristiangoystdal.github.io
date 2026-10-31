@@ -1,11 +1,12 @@
 import { launch, device, URL_BASE, TARGET } from './env.mjs'
+import { ignorable } from './env.mjs'
 let failed = 0
 const check = (ok, name) => { console.log(`${ok ? 'OK  ' : 'FEIL'} ${name}`); if (!ok) failed++ }
 const browser = await launch()
 const ctx = await browser.newContext(device({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' }))
 const page = await ctx.newPage()
 const errors = []
-page.on('pageerror', (e) => errors.push(e.message))
+page.on('pageerror', (e) => ignorable(e) || errors.push(e.message))
 await page.addInitScript(() => localStorage.setItem('hideandseek.guide', JSON.stringify({ state: { seen: true }, version: 0 })))
 // Treg forbindelse: stasjoner og linjer kommer etter 2,5 s, resten etter 5 s.
 await page.route('**/data/oslo/{stations.json,lines.geojson}', async (r) => { await new Promise((ok) => setTimeout(ok, 2500)); await r.continue() })

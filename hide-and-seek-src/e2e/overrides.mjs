@@ -1,4 +1,5 @@
 import { launch, device, URL_BASE, TARGET } from './env.mjs'
+import { ignorable } from './env.mjs'
 
 const URL = URL_BASE
 const MAJ = { latitude: 59.929609, longitude: 10.717431 }
@@ -38,7 +39,7 @@ async function open(mode, questions, geo, { allowGeo = true } = {}) {
   const ctx = await browser.newContext(device({ permissions: allowGeo ? ['geolocation'] : [], geolocation: geo ? { ...geo, accuracy: geo.accuracy ?? 10 } : undefined, serviceWorkers: 'block', viewport: { width: 420, height: 900 } }))
   const page = await ctx.newPage()
   const errors = []
-  page.on('pageerror', (e) => errors.push(e.message))
+  page.on('pageerror', (e) => ignorable(e) || errors.push(e.message))
   await page.addInitScript((s) => {
     if (!sessionStorage.getItem('seeded')) {
       localStorage.clear()

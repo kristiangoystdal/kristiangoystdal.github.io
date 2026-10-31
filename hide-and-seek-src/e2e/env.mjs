@@ -22,3 +22,9 @@ export function device(opts = {}) {
   const { viewport: _v, deviceScaleFactor: _s, hasTouch: _t, ...rest } = opts
   return { ...rest, ...d }
 }
+
+/**
+ * Feil som ikke kommer fra appen: Firebase sin tilkobling (lang-polling) rapporterer en feil i WebKit
+ * når siden lastes på nytt mens databasen er åpen. Brukeren ser ingenting av det.
+ */
+export const ignorable = (e) => /firebasedatabase\.app\/\.lp\?/.test(`${e.message} ${e.stack ?? ''}`)
