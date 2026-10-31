@@ -395,7 +395,7 @@ export const useHiderPos = create<{ pos: LngLat | null; t: number; accuracy: num
 
 /** Fanene på spillskjermen. Før og etter runden vises lobbyen, uten faner. */
 export type Tab = 'questions' | 'endgame' | 'tools'
-export type Sheet = 'app' | 'learn' | 'rules' | null
+export type Sheet = 'app' | 'learn' | 'rules' | 'presets' | null
 
 interface UiState {
   tab: Tab

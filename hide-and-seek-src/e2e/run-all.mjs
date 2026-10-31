@@ -11,11 +11,14 @@ import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const TESTS = ['startup', 'area', 'settings', 'panel', 'overrides', 'replay', 'guide']
-const only = process.argv.slice(2)
+// Testene som trenger Firebase, kjøres mot emulatoren med npm run e2e:firebase.
+const EMULATOR = process.argv.includes('--emulator')
+const TESTS = EMULATOR ? ['presets'] : ['startup', 'area', 'settings', 'panel', 'overrides', 'replay', 'guide']
+const only = process.argv.slice(2).filter((a) => !a.startsWith('--'))
 const tests = only.length ? TESTS.filter((t) => only.includes(t)) : TESTS
 const targets = (process.env.TARGETS ?? 'iphone,android').split(',')
-const URL_BASE = process.env.APP_URL ?? 'http://localhost:4173/'
+const PORT = EMULATOR ? 4174 : 4173
+const URL_BASE = process.env.APP_URL ?? `http://localhost:${PORT}/`
 
 async function up() {
   try {
@@ -27,7 +30,7 @@ async function up() {
 
 let server = null
 if (!(await up())) {
-  server = spawn('npx', ['vite', 'preview', '--port', '4173', '--strictPort'], { cwd: `${here}/..`, stdio: 'ignore' })
+  server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', ...(EMULATOR ? ['--outDir', 'dist-e2e'] : [])], { cwd: `${here}/..`, stdio: 'ignore' })
   for (let i = 0; i < 60 && !(await up()); i++) await new Promise((r) => setTimeout(r, 500))
   if (!(await up())) {
     console.error('Fikk ikke startet vite preview. Er appen bygget (npm run build)?')

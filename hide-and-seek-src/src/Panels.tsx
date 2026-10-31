@@ -8,7 +8,7 @@ import { PLANNING_MINUTES, hiderSeconds, movedAt, roundStats } from './clock'
 import { CATEGORIES, ITEMS, SIZE_RULES, answerLabel, describe, enabledIds, place } from './form'
 import { POI_TYPES, adminLevels, autoPlayArea, canCutZone, cutsZone, dist, hiderStation, levelCount, stationPos, stationsInReach, type Result } from './geo'
 import { NotifyToggle } from './notify'
-import { allPresets, applyPreset, deletePreset, loadPresets, presetId, savePreset, usePresets } from './presets'
+import { PresetEntry, SavePreset } from './PresetSheets'
 import { useGame, useHiderPos, useUi, type Layer } from './store'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoomClean, recentRooms, roomLink, saveArchive, useSync } from './sync'
 import type { DayKey, GeoData, RoundResult, Settings } from './types'
@@ -802,71 +802,6 @@ function CityPicker({ locked }: { locked: boolean }) {
   )
 }
 
-/** Lagrede spilloppsett: spørsmål, størrelse, sone, linjer, spillområde og gjemmetid. */
-function PresetPanel({ locked }: { locked: boolean }) {
-  const presets = usePresets()
-  const [name, setName] = useState('')
-  const list = allPresets(presets)
-  useEffect(() => void loadPresets(), [])
-
-  return (
-    <Section title="Lagrede oppsett">
-      {presets.fetching && (
-        <p className="mb-2 flex items-center gap-2 text-sm text-muted" role="status">
-          <Spinner className="size-3.5!" /> Henter delte oppsett…
-        </p>
-      )}
-      {list.length === 0 && !presets.fetching && <p className="mb-2 text-sm text-muted">Ingen lagrede oppsett ennå. Sett opp spillet over, og lagre det her.</p>}
-      <ul className="mb-2 flex flex-col gap-1.5">
-        {list.map((p) => (
-          <li key={p.id} className="card flex items-center justify-between gap-2 py-2!">
-            <span className="min-w-0 text-sm">
-              <b className="block truncate">{p.name}</b>
-              <span className="text-xs text-muted">
-                {SIZE_NAMES[p.setup.size]}, {p.setup.questions ? `${p.setup.questions.length} spørsmål` : 'standard spørsmål'}, {p.hidingMinutes} min, {p.shared ? 'delt med alle' : 'bare denne telefonen'}
-              </span>
-            </span>
-            <span className="flex shrink-0 gap-1.5">
-              <button className="btn min-h-9!" disabled={locked} onClick={() => applyPreset(p)}>
-                Bruk
-              </button>
-              <button
-                className="link text-bad! min-h-9"
-                aria-label={`Slett ${p.name}`}
-                onClick={() => {
-                  if (confirm(`Slette «${p.name}»? ${p.shared ? 'Det fjernes for alle.' : ''}`)) void deletePreset(p.id)
-                }}
-              >
-                Slett
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
-      <form
-        className="flex gap-1.5"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (list.some((p) => p.id === presetId(name)) && !confirm(`Det finnes alt et oppsett med navnet «${name.trim()}». Erstatte det?`)) return
-          void savePreset(name)
-          setName('')
-        }}
-      >
-        <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Navn på oppsettet" aria-label="Navn på oppsettet" maxLength={40} />
-        <button className="btn" disabled={!presetId(name)}>
-          Lagre
-        </button>
-      </form>
-      {presets.note && (
-        <p className="mt-1 text-xs text-muted" role="status">
-          {presets.note}
-        </p>
-      )}
-      <p className="mt-1 text-xs text-muted">Lagrer spørsmålsutvalg, størrelse, sone, linjer, spillområde og gjemmetid. Oppsettet deles med alle som bruker appen, og hvem som helst kan endre eller slette det.</p>
-    </Section>
-  )
-}
-
 const SIZE_NAMES = { S: 'Small', M: 'Medium', L: 'Large' }
 /** Tentacles-spørsmålene reglene har fra Medium og opp. */
 const TENTACLES_2KM = ITEMS.filter((i) => i.category === 'Tentacles' && i.sizes.includes('M')).map((i) => i.id)
@@ -897,6 +832,7 @@ export function RulesPanel({ all, result }: { data: GeoData; all: GeoData; resul
 
   return (
     <div>
+      <PresetEntry />
       <CityPicker locked={locked} />
       <Section title="Spillområde">
         <p className="mb-2 text-sm">
@@ -1067,7 +1003,7 @@ export function RulesPanel({ all, result }: { data: GeoData; all: GeoData; resul
         {s.lines.length === 0 && <p className="text-xs text-bad">Ingen linjer er med. Velg minst én.</p>}
       </Section>
 
-      <PresetPanel locked={locked} />
+      <SavePreset />
     </div>
   )
 }

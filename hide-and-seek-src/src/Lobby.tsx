@@ -10,6 +10,7 @@ import type { Result } from './geo'
 import { useGuide } from './guide'
 import { LastResult, RulesPanel, Scoreboard } from './Panels'
 import { ShareGame } from './QuestionsView'
+import { countUse } from './presets'
 import { useGame, useUi } from './store'
 import { CODE_LENGTH, cleanCode, createRoom, joinRoom, leaveRoomClean, recentRooms, roomLink, useSync } from './sync'
 import type { GeoData } from './types'
@@ -399,7 +400,16 @@ export function StartBar({ ready }: { ready: boolean }) {
           </>
         )}
       </p>
-      <button className="btn btn-primary min-h-13! w-full text-lg!" data-guide="start-round" disabled={!!problem} onClick={g.startRound}>
+      <button
+        className="btn btn-primary min-h-13! w-full text-lg!"
+        data-guide="start-round"
+        disabled={!!problem}
+        onClick={() => {
+          g.startRound()
+          // Startes runden med et delt oppsett som ikke er endret, telles det som brukt.
+          void countUse()
+        }}
+      >
         Start runden <span className="font-normal opacity-85">({g.round.hidingMinutes} min)</span>
       </button>
     </div>

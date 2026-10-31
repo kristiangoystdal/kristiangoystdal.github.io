@@ -35,6 +35,12 @@ jobs:
           cache: npm
           cache-dependency-path: hide-and-seek-src/package-lock.json
 
+      # Firebase-emulatoren (for databasereglene og delte oppsett) trenger Java.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Installer
         run: npm ci
 
@@ -53,6 +59,14 @@ jobs:
 
       - name: Klikk-tester som iPhone og Android
         run: npm run e2e
+        env:
+          CI: true
+
+      - name: Databasereglene, mot Firebase-emulatoren
+        run: npm run test:rules
+
+      - name: Delte oppsett som iPhone og Android, mot Firebase-emulatoren
+        run: npm run e2e:firebase
         env:
           CI: true
 

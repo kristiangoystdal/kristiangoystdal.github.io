@@ -14,6 +14,8 @@ npm run test:sim # simulerte runder i hver by, ca. 1,5 min (8 blokker i parallel
 npm run test:all # alt
 npm run sim:games # lager de simulerte spillene i public/data/<by>/game.json på nytt
 npm run e2e      # klikk-tester som iPhone (WebKit) og Android, mot den bygde appen (bygg først)
+npm run test:rules   # databasereglene mot Firebase-emulatoren (trenger Java)
+npm run e2e:firebase # delte oppsett som iPhone og Android mot emulatoren
 npm run build    # bygger til ../hide-and-seek (ikke i git), for npm run e2e og vite preview
 ```
 
@@ -88,7 +90,9 @@ deretter uten nett.
 
 - `src/cities.ts`: byene appen kan spilles i, og alt som er ulikt fra by til by. `city()` er byen som er lastet inn.
 - `src/Archive.tsx`: tidligere runder. Lagres i `archive` i `useGame` og under `archive/<rom>/` i databasen, utenfor rommet.
-- `src/presets.ts`: lagrede spilloppsett. De ligger på telefonen og deles under `presets/` i databasen.
+- `src/presets.ts` og `src/PresetSheets.tsx`: spilloppsett. Lagres på telefonen, eller deles med alle under
+  `presets/<id>` med eier, bruk og rapporter. Bare eieren kan endre og slette (reglene), bruk telles når en runde
+  startes med et uendret oppsett, og oppsett med tre rapporter skjules for andre.
 - `src/notify.tsx`: varsler om nye spørsmål og svar.
 - `src/store.ts`: Zustand. `useGame` lagres i localStorage, `useUi` gjør ikke det.
 - `src/Screens.tsx`: skjermene. Før og mellom rundene `Lobby` (fire steg: rom, spillere og rolle, by og regler, start).

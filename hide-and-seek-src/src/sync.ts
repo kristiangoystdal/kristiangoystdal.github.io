@@ -17,7 +17,12 @@ const CONFIG = {
   apiKey: (import.meta.env.VITE_FIREBASE_API_KEY as string | undefined) ?? '',
   appId: (import.meta.env.VITE_FIREBASE_APP_ID as string | undefined) ?? '',
 }
+/**
+ * Firebase-emulatoren (`VITE_FIREBASE_EMULATOR=127.0.0.1:9000`), for testene. Da brukes et demo-prosjekt
+ * og emulatorens innlogging (port 9099), og ingenting når den ekte databasen.
+ */
 const EMULATOR = import.meta.env.VITE_FIREBASE_EMULATOR as string | undefined
+if (EMULATOR) Object.assign(CONFIG, { projectId: 'demo-hide-and-seek', apiKey: 'demo-key', appId: '', databaseURL: `http://${EMULATOR}?ns=demo-hide-and-seek-default-rtdb` })
 
 const ROOM_KEY = 'hideandseek.room'
 export const CODE_LENGTH = 6
@@ -159,17 +164,17 @@ export const withTimeout = <T>(p: Promise<T>) =>
   ])
 
 /** Åpner databasen. Firebase lastes først når noen faktisk bruker et rom eller delte presets. */
-export async function openDb() {
+export async function openDb(): Promise<{ db: typeof import('firebase/database'); database: import('firebase/database').Database; uid: string | null }> {
   const [{ initializeApp, getApps }, db] = await Promise.all([import('firebase/app'), import('firebase/database')])
   const app = getApps()[0] ?? initializeApp(CONFIG)
-  await signIn(app)
+  const uid = await signIn(app)
   const database = db.getDatabase(app)
   if (EMULATOR && !emulated) {
     const [host, port] = EMULATOR.split(':')
     db.connectDatabaseEmulator(database, host, +port)
     emulated = true
   }
-  return { db, database }
+  return { db, database, uid }
 }
 
 let signedIn: Promise<string | null> | null = null
@@ -181,8 +186,9 @@ let signedIn: Promise<string | null> | null = null
 function signIn(app: import('firebase/app').FirebaseApp): Promise<string | null> {
   if (!CONFIG.apiKey) return Promise.resolve(null)
   signedIn ??= import('firebase/auth')
-    .then(async ({ getAuth, signInAnonymously }) => {
+    .then(async ({ getAuth, signInAnonymously, connectAuthEmulator }) => {
       const auth = getAuth(app)
+      if (EMULATOR && !auth.emulatorConfig) connectAuthEmulator(auth, `http://${EMULATOR.split(':')[0]}:9099`, { disableWarnings: true })
       if (auth.currentUser) return auth.currentUser.uid
       return (await withTimeout(signInAnonymously(auth))).user.uid
     })

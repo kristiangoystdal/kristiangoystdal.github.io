@@ -4,6 +4,8 @@ import MapView from './MapView'
 import { BonusPrompt, PossibleStations, RoundBar } from './Panels'
 import { AppSheet, GameScreen, GameTabs, LearnSheet } from './Screens'
 import { Lobby, StartBar } from './Lobby'
+import { PresetsSheet } from './PresetSheets'
+import { presetFromHash, usePresets } from './presets'
 import { useDemo, useDemoHider } from './demo'
 import { useGuide } from './guide'
 import { GuideOverlay, HelpButtons, ShowcaseCard } from './GuideCard'
@@ -43,6 +45,18 @@ function useTheme() {
 
 /** Åpnes siden med en romkode eller et delt spill i lenken, tilbys det én gang. Ellers gjenopptas forrige rom. */
 function useSharedLink() {
+  // En lenke til et delt oppsett kan også åpnes mens appen alt er åpen (limt inn i samme fane).
+  useEffect(() => {
+    const onHash = () => {
+      const preset = presetFromHash(location.hash)
+      if (!preset) return
+      history.replaceState(null, '', location.pathname)
+      usePresets.setState({ open: preset })
+      useUi.getState().setSheet('presets')
+    }
+    addEventListener('hashchange', onHash)
+    return () => removeEventListener('hashchange', onHash)
+  }, [])
   useEffect(() => {
     const room = roomFromHash(location.hash)
     if (room) {
@@ -52,6 +66,14 @@ function useSharedLink() {
       return
     }
     resumeRoom()
+    // Lenke til et delt oppsett: åpne det i oversikten.
+    const preset = presetFromHash(location.hash)
+    if (preset) {
+      history.replaceState(null, '', location.pathname)
+      usePresets.setState({ open: preset })
+      useUi.getState().setSheet('presets')
+      return
+    }
     const game = gameFromHash(location.hash)
     if (!game) return
     history.replaceState(null, '', location.pathname)
@@ -215,6 +237,7 @@ export default function App() {
         <Rules />
         <AppSheet data={loaded || null} help={<HelpButtons />} />
         <LearnSheet />
+        <PresetsSheet data={ready?.loaded ?? null} />
         <GuideOverlay stations={ready?.data.stations ?? []} />
         {ready && <ShowcaseCard data={ready.data} />}
       </main>
