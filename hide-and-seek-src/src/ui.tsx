@@ -265,8 +265,7 @@ const DRAG_PX = 5
 export function PanelHandle({ hidden }: { hidden: boolean }) {
   const collapsed = useUi((s) => s.collapsed)
   const pct = usePanel((s) => s.pct)
-  // `from`: høyden da dragingen startet. Dras panelet helt ned, åpner det seg igjen i den høyden.
-  const [drag, setDrag] = useState<{ y: number; moved: boolean; from: number } | null>(null)
+  const [dragging, setDragging] = useState(false)
   const pctAt = (clientY: number) => Math.max(0, Math.min(PANEL_MAX, ((window.innerHeight - clientY) / window.innerHeight) * 100))
   const set = (p: number) => {
     if (p < PANEL_HIDE) useUi.setState({ collapsed: true })
@@ -274,6 +273,36 @@ export function PanelHandle({ hidden }: { hidden: boolean }) {
       usePanel.setState({ pct: Math.round(p) })
       useUi.setState({ collapsed: false })
     }
+  }
+  /**
+   * Følger fingeren over hele vinduet til den slippes, ikke bare over streken. Noen nettlesere
+   * slipper taket i streken når fingeren beveger seg fort, og da ville panelet stoppet halvveis.
+   */
+  const start = (e: React.PointerEvent) => {
+    const y0 = e.clientY
+    // Høyden da dragingen startet. Dras panelet helt ned, åpner det seg igjen i den høyden.
+    const from = usePanel.getState().pct
+    const wasCollapsed = useUi.getState().collapsed
+    let moved = false
+    const move = (ev: PointerEvent) => {
+      if (!moved && Math.abs(ev.clientY - y0) < DRAG_PX) return
+      if (!moved) setDragging((moved = true))
+      ev.preventDefault()
+      set(pctAt(ev.clientY))
+    }
+    const end = (ev: PointerEvent) => {
+      removeEventListener('pointermove', move)
+      removeEventListener('pointerup', end)
+      removeEventListener('pointercancel', end)
+      setDragging(false)
+      if (ev.type === 'pointercancel') return
+      // Et kort trykk uten å dra skjuler eller viser panelet.
+      if (!moved) useUi.setState({ collapsed: !wasCollapsed })
+      else if (useUi.getState().collapsed) usePanel.setState({ pct: from })
+    }
+    addEventListener('pointermove', move, { passive: false })
+    addEventListener('pointerup', end)
+    addEventListener('pointercancel', end)
   }
   return (
     <div
@@ -286,23 +315,7 @@ export function PanelHandle({ hidden }: { hidden: boolean }) {
       tabIndex={0}
       data-guide="panel-handle"
       className={`grid h-7 w-full shrink-0 cursor-row-resize touch-none place-items-center select-none md:hidden ${hidden ? 'hidden' : ''}`}
-      onPointerDown={(e) => {
-        e.currentTarget.setPointerCapture(e.pointerId)
-        setDrag({ y: e.clientY, moved: false, from: pct })
-      }}
-      onPointerMove={(e) => {
-        if (!drag) return
-        if (!drag.moved && Math.abs(e.clientY - drag.y) < DRAG_PX) return
-        if (!drag.moved) setDrag({ ...drag, moved: true })
-        set(pctAt(e.clientY))
-      }}
-      onPointerUp={() => {
-        // Et kort trykk uten å dra skjuler eller viser panelet.
-        if (drag && !drag.moved) useUi.setState({ collapsed: !collapsed })
-        else if (drag && useUi.getState().collapsed) usePanel.setState({ pct: drag.from })
-        setDrag(null)
-      }}
-      onPointerCancel={() => setDrag(null)}
+      onPointerDown={start}
       onKeyDown={(e) => {
         const step = e.key === 'ArrowUp' ? 5 : e.key === 'ArrowDown' ? -5 : 0
         if (!step) return
@@ -310,7 +323,7 @@ export function PanelHandle({ hidden }: { hidden: boolean }) {
         set((collapsed ? 0 : pct) + step)
       }}
     >
-      <span className={`h-1.5 w-12 rounded-full ${drag?.moved ? 'bg-accent' : 'bg-border'}`} />
+      <span className={`h-1.5 w-12 rounded-full ${dragging ? 'bg-accent' : 'bg-border'}`} />
     </div>
   )
 }
