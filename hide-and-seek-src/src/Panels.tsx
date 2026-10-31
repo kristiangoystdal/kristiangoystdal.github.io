@@ -760,7 +760,10 @@ export function RulesPanel({ all, result }: { data: GeoData; all: GeoData; resul
 
       {locked && (
         <p className="mb-5 rounded-lg border border-border bg-panel-2 p-3 text-sm">
-          {tr('🔒 Spilloppsettet er låst mens runden pågår. Det er likt for alle i rommet.', '🔒 The setup is locked while the round is running. It is the same for everyone in the room.')}
+          {tr(
+            '🔒 Spilloppsettet er låst mens runden pågår. Det er likt for alle i rommet. Sone, gjemmetid og spørsmål kan endres under Verktøy hvis begge sider er enige.',
+            '🔒 The setup is locked while the round is running. It is the same for everyone in the room. Zone, hiding time and questions can be changed under Tools if both sides agree.',
+          )}
         </p>
       )}
       <Section title={tr('Spillstørrelse', 'Game size')}>
@@ -799,64 +802,7 @@ export function RulesPanel({ all, result }: { data: GeoData; all: GeoData; resul
       )}
 
       <Section title={tr('Tilpass spørsmål', 'Customize questions')}>
-        <details className="card">
-          <summary className="cursor-pointer text-sm font-medium">
-            {s.questions
-              ? tr(`Egendefinert utvalg: ${enabled.length} av ${ITEMS.length}`, `Custom selection: ${enabled.length} of ${ITEMS.length}`)
-              : tr(`Standard for ${SIZE_NAMES[s.size]}: ${enabled.length} av ${ITEMS.length}`, `Standard for ${SIZE_NAMES[s.size]}: ${enabled.length} of ${ITEMS.length}`)}
-          </summary>
-          <p className="my-2 text-xs text-muted">
-            {tr(
-              'Kryss av for spørsmålene som skal være med. Utvalget gjelder for alle i rommet. Bytter du spillstørrelse, går utvalget tilbake til standard.',
-              'Tick the questions that should be in play. The selection applies to everyone in the room. Changing the game size resets it to the standard.',
-            )}
-          </p>
-          {s.questions && (
-            <button className="btn mb-2" disabled={locked} onClick={() => set({ questions: null })}>
-              {tr(`Tilbake til standard for ${SIZE_NAMES[s.size]}`, `Back to the standard for ${SIZE_NAMES[s.size]}`)}
-            </button>
-          )}
-          {CATEGORIES.map((c) => {
-            const all = ITEMS.filter((i) => i.category === c)
-            const on = all.filter((i) => enabled.includes(i.id)).length
-            const ids = all.map((i) => i.id)
-            return (
-              <fieldset key={c} className="mt-3 border-t border-border pt-2" disabled={locked}>
-                <legend className="sr-only">{c}</legend>
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <b className="text-sm">
-                    {c} <span className="font-normal text-muted">{tr(`${on} av ${all.length}`, `${on} of ${all.length}`)}</span>
-                  </b>
-                  <span className="flex gap-1.5">
-                    <button type="button" className="btn min-h-9!" onClick={() => set({ questions: [...new Set([...enabled, ...ids])] })}>
-                      {tr('Alle', 'All')}
-                    </button>
-                    <button type="button" className="btn min-h-9!" onClick={() => set({ questions: enabled.filter((id) => !ids.includes(id)) })}>
-                      {tr('Ingen', 'None')}
-                    </button>
-                  </span>
-                </div>
-                <ul>
-                  {all.map((i) => (
-                    <li key={i.id}>
-                      <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="size-4 accent-accent"
-                          checked={enabled.includes(i.id)}
-                          onChange={(e) => set({ questions: e.target.checked ? [...enabled, i.id] : enabled.filter((id) => id !== i.id) })}
-                        />
-                        <span>
-                          {i.label} <span className="text-xs text-muted">{i.group}</span>
-                        </span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </fieldset>
-            )
-          })}
-        </details>
+        <QuestionPicker size={s.size} value={s.questions ?? null} disabled={locked} onChange={(questions) => set({ questions })} />
       </Section>
 
       <Section title={`${tr('Sonestørrelse', 'Zone size')}: ${s.zoneRadius} m`}>
@@ -930,6 +876,71 @@ export function RulesPanel({ all, result }: { data: GeoData; all: GeoData; resul
 
       <SavePreset />
     </div>
+  )
+}
+
+/** Spørsmålene som er med: kryss av, eller alle og ingen per kategori. Brukes i oppsettet og når reglene endres under runden. */
+export function QuestionPicker({ size, value, disabled = false, onChange }: { size: Settings['size']; value: string[] | null; disabled?: boolean; onChange: (questions: string[] | null) => void }) {
+  const enabled = enabledIds({ size, questions: value })
+  return (
+    <details className="card">
+      <summary className="cursor-pointer text-sm font-medium">
+        {value
+          ? tr(`Egendefinert utvalg: ${enabled.length} av ${ITEMS.length}`, `Custom selection: ${enabled.length} of ${ITEMS.length}`)
+          : tr(`Standard for ${SIZE_NAMES[size]}: ${enabled.length} av ${ITEMS.length}`, `Standard for ${SIZE_NAMES[size]}: ${enabled.length} of ${ITEMS.length}`)}
+      </summary>
+      <p className="my-2 text-xs text-muted">
+        {tr(
+          'Kryss av for spørsmålene som skal være med. Utvalget gjelder for alle i rommet. Bytter du spillstørrelse, går utvalget tilbake til standard.',
+          'Tick the questions that should be in play. The selection applies to everyone in the room. Changing the game size resets it to the standard.',
+        )}
+      </p>
+      {value && (
+        <button className="btn mb-2" disabled={disabled} onClick={() => onChange(null)}>
+          {tr(`Tilbake til standard for ${SIZE_NAMES[size]}`, `Back to the standard for ${SIZE_NAMES[size]}`)}
+        </button>
+      )}
+      {CATEGORIES.map((c) => {
+        const all = ITEMS.filter((i) => i.category === c)
+        const on = all.filter((i) => enabled.includes(i.id)).length
+        const ids = all.map((i) => i.id)
+        return (
+          <fieldset key={c} className="mt-3 border-t border-border pt-2" disabled={disabled}>
+            <legend className="sr-only">{c}</legend>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <b className="text-sm">
+                {c} <span className="font-normal text-muted">{tr(`${on} av ${all.length}`, `${on} of ${all.length}`)}</span>
+              </b>
+              <span className="flex gap-1.5">
+                <button type="button" className="btn min-h-9!" onClick={() => onChange([...new Set([...enabled, ...ids])])}>
+                  {tr('Alle', 'All')}
+                </button>
+                <button type="button" className="btn min-h-9!" onClick={() => onChange(enabled.filter((id) => !ids.includes(id)))}>
+                  {tr('Ingen', 'None')}
+                </button>
+              </span>
+            </div>
+            <ul>
+              {all.map((i) => (
+                <li key={i.id}>
+                  <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-accent"
+                      checked={enabled.includes(i.id)}
+                      onChange={(e) => onChange(e.target.checked ? [...enabled, i.id] : enabled.filter((id) => id !== i.id))}
+                    />
+                    <span>
+                      {i.label} <span className="text-xs text-muted">{i.group}</span>
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+        )
+      })}
+    </details>
   )
 }
 

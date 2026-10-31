@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS, useGame } from './store'
 import { clashLosers, cleanCode, diff, fromShared, roomFromHash, splitPatch, toShared, type Shared } from './sync'
+import type { Proposal } from './proposal'
 import type { Question } from './types'
 
 const q = (id: string, time: number, answer: string | null = null): Question => ({ id, time, answer, kind: 'radar', center: [10.7, 59.9], radiusM: 1000 })
@@ -11,6 +12,7 @@ const state = (questions: Question[]) => ({
   round: { hidingMinutes: 30, hider: 'Ada', seekFrom: null },
   settings: { ...DEFAULT_SETTINGS, playArea: null },
   players: ['Ada', 'Bo'],
+  proposal: null as Proposal | null,
 })
 
 describe('romsynk', () => {
@@ -150,5 +152,22 @@ describe('samme spørsmål endret på to telefoner samtidig', () => {
     for (const key of Object.keys(toShared(state([answered('a', 'in', { ignored: true, note: 'x' })])))) expect(rules).toHaveProperty(key)
     expect(rules.ignored.$id['.validate']).toContain('isString')
     expect(rules.notes.$id['.validate']).toContain('isString')
+  })
+})
+
+describe('romsynk av forslag om å endre reglene', () => {
+  const proposal: Proposal = { id: 'p1', at: 5, change: { zoneRadius: 600, questions: ['r-500'] }, by: 'tlf-a', ok: { seeker: 'tlf-a' } }
+  it('forslaget kommer fram, og uten forslag er det ingenting', () => {
+    const back = fromShared(JSON.parse(JSON.stringify(toShared({ ...state([]), proposal }))), state([]))
+    expect(back.proposal).toEqual(proposal)
+    expect(fromShared(toShared(state([])), { ...state([]), proposal }).proposal).toBeNull()
+  })
+  it('et besvart forslag slettes fra rommet, og sendes for seg', () => {
+    const before = toShared({ ...state([]), proposal })
+    const after = toShared(state([]))
+    expect(diff(before, after)).toEqual({ proposal: null })
+    expect(diff(after, after)).toEqual({})
+    const parts = splitPatch({ round: '{}', proposal: 'x', 'notes/q1': 'n' })
+    expect(parts).toEqual({ main: { round: '{}' }, marks: { 'notes/q1': 'n' }, proposal: { proposal: 'x' } })
   })
 })

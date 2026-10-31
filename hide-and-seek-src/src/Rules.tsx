@@ -80,6 +80,7 @@ const SECTIONS_NB: Section[] = [
           <li>Spiller man flere runder, teller bare spillerens beste runde.</li>
           <li>Anbefalt maks fire spillere. Er dere flere, kan noen gå sammen i lag som gjemmer seg sammen.</li>
           <li>Steder utenfor spillområdet regnes som om de ikke finnes.</li>
+          <li>Sone, gjemmetid og spørsmålsutvalg kan endres midt i runden hvis hider og seekerne er enige. Sone og spørsmål gjelder da hele runden, også svarene som alt er gitt.</li>
           <li>Pause: alle klokker står, og alle blir stående der de er til spillet fortsetter.</li>
           <li>Hvileperiode (spill over flere dager): minst 10 timer anbefales. Alle må tilbake til nøyaktig samme sted før spillet fortsetter.</li>
         </List>
@@ -347,6 +348,7 @@ const SECTIONS_EN: Section[] = [
           <li>If you play several rounds, only each player's best round counts.</li>
           <li>At most four players is recommended. If there are more of you, some can team up and hide together.</li>
           <li>Places outside the play area count as if they do not exist.</li>
+          <li>Zone, hiding time and question selection can be changed mid-round if the hider and the seekers agree. Zone and questions then apply to the whole round, including answers already given.</li>
           <li>Pause: all clocks stop, and everyone stays where they are until the game resumes.</li>
           <li>Rest period (games over several days): at least 10 hours is recommended. Everyone must return to exactly the same place before the game resumes.</li>
         </List>

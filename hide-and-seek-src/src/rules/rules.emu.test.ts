@@ -32,6 +32,12 @@ describe('rom', () => {
     await assertFails(set(ref(ada(), 'rooms/ABC123/seekers/x'), '{}'))
     await assertFails(set(ref(ada(), 'rooms/ABC123/tull'), 'x'))
   })
+  it('forslag om å endre reglene kan lagres og slettes, men ikke være for store', async () => {
+    await assertSucceeds(set(ref(ada(), 'rooms/ABC123/proposal'), JSON.stringify({ id: 'p1', change: { zoneRadius: 600 } })))
+    await assertSucceeds(remove(ref(bo(), 'rooms/ABC123/proposal')))
+    await assertFails(set(ref(ada(), 'rooms/ABC123/proposal'), 'x'.repeat(5000)))
+    await assertFails(set(ref(nobody(), 'rooms/ABC123/proposal'), '{}'))
+  })
   it('ugyldige romkoder avvises', async () => {
     await assertFails(set(ref(ada(), 'rooms/abc/created'), 1))
   })

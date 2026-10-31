@@ -19,6 +19,9 @@
         "players": {
           ".validate": "newData.isString() && newData.val().length < 2000"
         },
+        "proposal": {
+          ".validate": "newData.isString() && newData.val().length < 5000"
+        },
         "questions": {
           "$id": {
             ".validate": "newData.isString() && newData.val().length < 2000"

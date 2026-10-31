@@ -33,6 +33,7 @@ import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEAL
 import { fetchLookup, lookup, useLookups } from './online'
 import { exportGame, gameLink, parseGame, useGame, useHiderPos, useUi } from './store'
 import { useDemo } from './demo'
+import { ChangesNotice } from './RuleChanges'
 import type { GeoData, LngLat, Question } from './types'
 import { MoveInfo, PAUSE_TEXT, PointInput, Section, Spinner, fixAccuracy, locate, useGameNow, useNow } from './ui'
 
@@ -988,6 +989,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
       </div>}
       {!isHider && blocked && <p className="-mt-2 mb-4 text-xs text-muted">{blocked}</p>}
       <LocksNotice />
+      <ChangesNotice />
       {isHider ? (
         <HiderQuestions data={data} />
       ) : (

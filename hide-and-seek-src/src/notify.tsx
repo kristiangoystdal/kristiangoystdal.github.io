@@ -3,6 +3,8 @@ import { tr } from './lang'
 import { create } from 'zustand'
 import { answerLabel, categoryOf, itemOf } from './form'
 import type { Round } from './clock'
+import { deviceId } from './device'
+import { changeText, proposalText, type Proposal, type Side } from './proposal'
 import { useUi, type Tab } from './store'
 import type { Question } from './types'
 
@@ -61,6 +63,10 @@ export function announceRound(before: Round, after: Round, mode: 'seeker' | 'hid
   } else if (!after.endgame && before.endgame && after.seekFrom !== null) {
     notify({ title: tr('Endgame er avsluttet', 'The endgame has ended'), body: mode === 'hider' ? tr('Seekerne har avsluttet endgame.', 'The seekers have ended the endgame.') : tr('Kartet viser igjen alle stasjonene svarene peker ut.', 'The map shows all the stations the answers point to again.'), tab: mode === 'hider' ? 'questions' : 'endgame' })
   }
+  const changed = after.changes?.at(-1)
+  if (changed && (after.changes?.length ?? 0) > (before.changes?.length ?? 0)) {
+    notify({ title: tr('Reglene er endret', 'The rules have changed'), body: `${changeText(changed)}. ${tr('Kartet er regnet ut på nytt.', 'The map has been worked out again.')}`, tab: 'questions' })
+  }
   if (mode !== 'seeker') return
   if ((after.moves?.length ?? 0) > (before.moves?.length ?? 0)) {
     notify({ title: tr('Hider har spilt Move', 'The hider played Move'), body: tr('Bli stående. Ingen spørsmål før hider er i ny sone.', 'Stay where you are. No questions until the hider is in a new zone.'), tab: 'questions' })
@@ -72,6 +78,16 @@ export function announceRound(before: Round, after: Round, mode: 'seeker' | 'hid
   }
   if (after.spotty && after.spotty !== before.spotty) {
     notify({ title: 'Spotty Memory', body: `${after.spotty} ${tr('er slått ut.', 'is knocked out.')}`, tab: 'questions' })
+  }
+}
+
+/** Den andre siden har foreslått å endre reglene, eller avslått forslaget denne telefonen kom med. */
+export function announceProposal(before: Proposal | null, after: Proposal | null, mode: Side, applied: boolean) {
+  if (after && after.id !== before?.id && !after.ok[mode]) {
+    notify({ title: tr('Forslag om å endre reglene', 'Proposal to change the rules'), body: `${proposalText(after.change)}. ${tr('Godta eller avslå øverst under Spørsmål.', 'Accept or decline at the top of Questions.')}`, tab: 'questions' })
+  } else if (before && !after && !applied && before.by === deviceId()) {
+    // Forslaget ble borte uten at reglene ble endret: den andre siden sa nei.
+    notify({ title: tr('Forslaget ble avslått', 'The proposal was declined'), body: tr('Reglene er som før.', 'The rules stay as they were.'), tab: 'questions' })
   }
 }
 

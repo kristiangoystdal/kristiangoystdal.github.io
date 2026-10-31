@@ -87,6 +87,9 @@ deretter uten nett.
 - `src/sync.ts`: sanntidsrom i Firebase Realtime Database. Reglene ligger i `database.rules.json`
   og må publiseres i Firebase-konsollen når de endres.
   Rommet merkes med `active` når noen kobler til og jevnlig mens det spilles.
+- `src/proposal.ts` og `src/RuleChanges.tsx`: endre sone, gjemmetid og spørsmålsutvalg midt i runden. Én side foreslår
+  under Verktøy, den andre godtar eller avslår (`proposal` i rommet). Hider og minst én seeker må si ja. På én telefon
+  gjøres endringen etter en bekreftelse. Endringene huskes i `round.changes` og vises over loggen og i arkivet.
 - `src/lang.ts`: språket. Appen er på norsk eller engelsk, følger telefonen og kan byttes under Innstillinger.
   Tekstene står side om side der de brukes: `tr('norsk', 'english')`. Bytte laster appen på nytt.
   Det som lagres i rommet (svar, emner), er alltid på norsk, så telefoner med ulikt språk kan spille sammen.

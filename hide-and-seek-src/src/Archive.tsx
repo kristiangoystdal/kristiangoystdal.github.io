@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { changeText } from './proposal'
 import { LOCALE, tr } from './lang'
 import { DEFAULT_CITY, city, cityOf } from './cities'
 import { movedAt } from './clock'
@@ -222,6 +223,9 @@ function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close:
           <li key={i}>
             {tr(`Move kl. ${time(m.at)}${m.from ? ` fra ${station(m.from)}` : ''}.`, `Move at ${time(m.at)}${m.from ? ` from ${station(m.from)}` : ''}.`)}
           </li>
+        ))}
+        {r.changes?.map((c) => (
+          <li key={c.at}>{tr(`Reglene ble endret kl. ${time(c.at)}: ${changeText(c)}.`, `Rules changed at ${time(c.at)}: ${changeText(c)}.`)}</li>
         ))}
         {!!r.drained?.length && <li>Drained Brain: {r.drained.map((id) => itemOf(id)?.label).join(', ')}.</li>}
         {r.spotty && <li>Spotty Memory: {r.spotty}.</li>}

@@ -197,7 +197,7 @@ describe('lagring: answerQuestion og toggleIgnored', () => {
 })
 
 describe('romsynk av merkene', () => {
-  const state = (questions: Question[]) => ({ questions, results: [], round: { hidingMinutes: 30, hider: 'Ada', seekFrom: null }, settings, players: [] })
+  const state = (questions: Question[]) => ({ questions, results: [], round: { hidingMinutes: 30, hider: 'Ada', seekFrom: null }, settings, players: [], proposal: null })
 
   it('manual og ignored kommer fram til de andre telefonene', () => {
     const local = state([radar('q1', 'in', { manual: true, ignored: true })])

@@ -4,7 +4,8 @@ import { persist } from 'zustand/middleware'
 import { PLANNING_MINUTES, resume, roundStats, type PauseKind, type Round } from './clock'
 import { DEFAULT_CITY } from './cities'
 import { deviceId } from './device'
-import type { Form } from './form'
+import { enabledIds, type Form } from './form'
+import { agreed, applyChange, type Change, type Proposal, type Side } from './proposal'
 import type { LngLat, Question, QuestionBody, RoundResult, RoundStats, Settings } from './types'
 
 const UNDO_LIMIT = 30
@@ -53,8 +54,16 @@ export interface State {
    * Deles aldri i rommet mens runden pågår. Legges til runden i arkivet når den er over.
    */
   hiderPts: HiderPoint[]
+  /** Et forslag om å endre reglene under runden, som venter på at den andre siden sier ja. Deles i rommet. */
+  proposal: Proposal | null
 
   setSettings: (patch: Partial<Settings>) => void
+  /** Foreslår en endring. Siden som foreslår, har sagt ja. */
+  propose: (change: Change, side: Side) => void
+  /** Svarer på forslaget. Har begge sider sagt ja, gjøres endringen. Nei fjerner forslaget, også for den som foreslo. */
+  answerProposal: (yes: boolean, side: Side) => void
+  /** Gjør endringen med en gang. Bare på én telefon, der begge sider er til stede. */
+  changeNow: (change: Change) => void
   /** Bytter by. Spillområde, linjer og spørsmålsutvalg hører til byen og nullstilles. */
   setCity: (city: string) => void
   saveQuestion: (body: QuestionBody, answer: string | null, id?: string) => void
@@ -189,7 +198,14 @@ const historyOf = (q: Question, answer: string | null) =>
   q.answer !== null && q.answer !== answer ? [...(q.history ?? []), { answer: q.answer, at: Date.now() }].slice(-HISTORY_LIMIT) : q.history
 
 /** Rundens tilstand når ingen runde er i gang. */
-const IDLE: Partial<Round> = { seekFrom: null, endgame: null, pause: null, stoppedMs: 0, planUntil: null, moves: [], drained: [], spotty: null }
+const IDLE: Partial<Round> = { seekFrom: null, endgame: null, pause: null, stoppedMs: 0, planUntil: null, moves: [], drained: [], spotty: null, changes: [] }
+
+/** Endringen gjort på spillet, med antall spørsmål som er med før og etter til loggen. */
+function applied(s: Pick<State, 'settings' | 'round'>, change: Change) {
+  const before = enabledIds(s.settings).length
+  const after = change.questions !== undefined ? enabledIds({ ...s.settings, questions: change.questions }).length : before
+  return applyChange(change, s.settings, s.round, Date.now(), { before, after })
+}
 
 export const useGame = create<State>()(
   persist(
@@ -212,6 +228,18 @@ export const useGame = create<State>()(
         tools: NO_TOOLS,
         archive: [],
         hiderPts: [],
+        proposal: null,
+
+        propose: (change, side) =>
+          set((s) => (s.round.seekFrom === null ? s : { proposal: { id: uid(), at: Date.now(), change, by: deviceId(), ok: { [side]: deviceId() } } })),
+        answerProposal: (yes, side) =>
+          set((s) => {
+            if (!s.proposal) return s
+            if (!yes) return { proposal: null }
+            const p = { ...s.proposal, ok: { ...s.proposal.ok, [side]: deviceId() } }
+            return agreed(p) ? { ...applied(s, p.change), proposal: null } : { proposal: p }
+          }),
+        changeNow: (change) => set((s) => (s.round.seekFrom === null ? s : { ...applied(s, change), proposal: null })),
 
         // Spilloppsettet er låst mens en runde pågår. Telefonens egne valg (tema, kart) kan alltid endres.
         setSettings: (patch) =>
@@ -265,11 +293,13 @@ export const useGame = create<State>()(
             past: s.questions.length ? [...s.past, s.questions].slice(-UNDO_LIMIT) : s.past,
             hider: { stationId: null },
             round: { ...s.round, ...IDLE, seekFrom: Date.now() + s.round.hidingMinutes * 60000 },
+            proposal: null,
           })),
         // En avbrutt runde arkiveres også, så loggen ikke går tapt. Uten spørsmål er det ingenting å ta vare på.
         cancelRound: (room = null) =>
           set((s) => ({
             round: { ...s.round, ...IDLE },
+            proposal: null,
             archive: s.questions.length && s.round.seekFrom !== null ? addArchive(s.archive, archived(s, uid(), 'cancelled', null, room, Date.now())) : s.archive,
           })),
         pauseGame: (kind) => set((s) => (s.round.seekFrom === null || s.round.pause ? s : { round: { ...s.round, pause: { at: Date.now(), kind } } })),
@@ -309,6 +339,7 @@ export const useGame = create<State>()(
               archive: addArchive(s.archive, archived(s, id, 'found', seconds, room, now)),
               results: [...s.results, { id, hider: s.round.hider || 'Ukjent', at: now, seconds, bonusMinutes: 0, stats: roundStats(s.round, s.questions, s.settings.size, now) }],
               round: { ...s.round, ...IDLE, hider: s.players.includes(s.round.hider) ? next : s.round.hider, planUntil: Date.now() + PLANNING_MINUTES * 60000 },
+              proposal: null,
             }
           }),
         mergeArchive: (rounds) => set((s) => ({ archive: rounds.reduce(addArchive, s.archive) })),
@@ -323,6 +354,7 @@ export const useGame = create<State>()(
             past: [],
             hider: { stationId: null },
             round: { ...s.round, ...IDLE, hider: '' },
+            proposal: null,
             players: [],
             results: [],
             bonusAsked: null,
@@ -335,6 +367,7 @@ export const useGame = create<State>()(
             past: [...s.past, s.questions].slice(-UNDO_LIMIT),
             hider: { stationId: null },
             round: { ...s.round, ...IDLE },
+            proposal: null,
           })),
         importGame: (game) =>
           set((s) => ({

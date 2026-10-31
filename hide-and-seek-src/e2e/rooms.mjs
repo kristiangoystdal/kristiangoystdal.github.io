@@ -74,6 +74,45 @@ await form.getByRole('button', { name: 'Still spørsmål' }).click()
 await en.getByText(/Are you closer to high-speed rail than me\? \(Jernbanetorget\)/).waitFor({ timeout: 20000 })
 check(true, 'engelsk telefon: emnet står på engelsk, stasjonsnavnet på norsk')
 
+// Endre reglene midt i runden: seekeren foreslår, hider må si ja.
+const slide = (loc, value) =>
+  loc.evaluate((el, v) => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, String(v))
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  }, value)
+const openForm = async (page, tools) => {
+  await page.getByRole('button', { name: tools, exact: true }).click()
+  const box = page.locator('[data-guide="change-rules"]')
+  if (!(await box.evaluate((d) => d.open))) await box.locator(':scope > summary').click()
+  return box
+}
+let box = await openForm(nb, 'Verktøy')
+await slide(box.getByLabel('Ny sone i meter'), 600)
+await box.getByRole('button', { name: 'Foreslå endringen' }).click()
+await nb.getByText('Venter på at hider sier ja.').waitFor()
+check(true, 'norsk seeker: forslaget venter på hider')
+const banner = en.locator('[data-guide="proposal"]')
+await banner.getByText('zone 600 m').waitFor({ timeout: 20000 })
+check(true, 'engelsk hider: forslaget vises på engelsk')
+await banner.getByRole('button', { name: 'Accept' }).click()
+await en.getByText(/Rules changed at .*: zone 400 → 600 m/).waitFor({ timeout: 20000 })
+check(true, 'engelsk hider: endringen gjelder og står i loggen')
+await nb.getByRole('button', { name: /^Spørsmål/ }).click()
+await nb.getByText(/Reglene ble endret kl\. .*: sone 400 → 600 m/).waitFor({ timeout: 20000 })
+check((await nb.locator('[data-guide="proposal"]').count()) === 0, 'norsk seeker: sonen er endret, og forslaget er borte')
+
+// Hider foreslår kortere gjemmetid, og seekeren sier nei.
+box = await openForm(en, 'Tools')
+await box.getByLabel('New hiding time in minutes').fill('45')
+await box.getByRole('button', { name: 'Propose the change' }).click()
+const nbBanner = nb.locator('[data-guide="proposal"]')
+await nbBanner.getByText('gjemmetid 45 min').waitFor({ timeout: 20000 })
+await nbBanner.getByRole('button', { name: 'Avslå' }).click()
+await en.getByText('The proposal was declined').waitFor({ timeout: 20000 })
+check(true, 'engelsk hider: får beskjed om at forslaget ble avslått')
+check((await en.locator('[data-guide="proposal"]').count()) === 0, 'engelsk hider: forslaget er borte')
+check((await en.getByText(/hiding time 60 → 45/).count()) === 0, 'gjemmetiden er ikke endret')
+
 check(errors.length === 0, `ingen JS-feil ${errors.join(' | ')}`)
 await browser.close()
 console.log(failed ? `\n${failed} feilet` : '\nAlt OK')

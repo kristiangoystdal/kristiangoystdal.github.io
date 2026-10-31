@@ -1,5 +1,6 @@
 import { categoryOf, responseMinutes } from './form'
 import { ANSWER_RANDOM, ANSWER_VETO, type Endgame } from './geo'
+import type { Changed } from './proposal'
 import type { GameSize, Question, RoundStats } from './types'
 
 /** Hvorfor klokkene står: vanlig pause, avtalt hvileperiode, eller hider som har spilt Move. */
@@ -37,6 +38,8 @@ export interface Round {
   drained?: string[]
   /** Spotty Memory: kategorien som er slått ut. */
   spotty?: string | null
+  /** Regler begge sider ble enige om å endre under runden. */
+  changes?: Changed[]
 }
 
 export const PLANNING_MINUTES = 10

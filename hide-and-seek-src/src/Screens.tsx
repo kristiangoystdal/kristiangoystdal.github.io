@@ -3,6 +3,7 @@ import { tr } from './lang'
 import { Crosshair, MessageCircleQuestionMark, Ruler } from 'lucide-react'
 import QuestionsView from './QuestionsView'
 import { ToolsPanel } from './Tools'
+import { ChangeRules, ProposalBanner } from './RuleChanges'
 import type { Result } from './geo'
 import { useGame, useUi, type Tab } from './store'
 import { useSync } from './sync'
@@ -50,6 +51,7 @@ export function GameScreen({ data, result }: { data: GeoData; result: Result }) 
   return (
     <div>
       <RoundBar />
+      <ProposalBanner />
       {tab === 'questions' && <HidingStatus />}
       {tab === 'questions' && <QuestionsView data={data} result={result} />}
       {tab === 'endgame' &&
@@ -64,6 +66,7 @@ export function GameScreen({ data, result }: { data: GeoData; result: Result }) 
       {tab === 'tools' && (
         <>
           <ToolsPanel stations={data.stations} />
+          <ChangeRules />
           <RoomSection />
           <MapOptions data={data} />
           <AppButtons />

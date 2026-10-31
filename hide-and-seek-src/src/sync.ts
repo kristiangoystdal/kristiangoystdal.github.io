@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { tr } from './lang'
 import { deviceId } from './device'
-import { announce, announceRound, notify } from './notify'
+import { announce, announceProposal, announceRound, notify } from './notify'
+import type { Proposal } from './proposal'
 import { GAME_SETTINGS, useGame, type ArchivedRound, type HiderPoint, type Round, type State } from './store'
 import type { Question, RoundResult, Settings } from './types'
 
@@ -54,6 +55,8 @@ export interface Shared {
   round: string
   setup: string
   players: string
+  /** Forslag om å endre reglene under runden. Tom tekst = ingen forslag. */
+  proposal: string
 }
 
 /**
@@ -66,7 +69,7 @@ export function clashLosers(questions: Question[], me: string): Question[] {
   return open.slice(1).filter((q) => q.by === me)
 }
 
-type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'players'>
+type Synced = Pick<State, 'questions' | 'results' | 'round' | 'settings' | 'players' | 'proposal'>
 type Setup = Pick<Settings, (typeof GAME_SETTINGS)[number]>
 
 const byId = <T extends { id: string }>(items: T[]) => Object.fromEntries(items.map((x) => [x.id, JSON.stringify(x)]))
@@ -76,8 +79,9 @@ const isMark = (path: string) => MARK_KEYS.some((k) => path.startsWith(`${k}/`))
 export const splitPatch = (patch: Record<string, string | null>) => {
   const main: Record<string, string | null> = {}
   const marks: Record<string, string | null> = {}
-  for (const [k, v] of Object.entries(patch)) (isMark(k) ? marks : main)[k] = v
-  return { main, marks }
+  const proposal: Record<string, string | null> = {}
+  for (const [k, v] of Object.entries(patch)) (k === 'proposal' ? proposal : isMark(k) ? marks : main)[k] = v
+  return { main, marks, proposal }
 }
 const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(map ?? {}).map((v) => JSON.parse(v) as T)
 
@@ -103,6 +107,7 @@ export function toShared(s: Synced): Shared {
     round: JSON.stringify(s.round),
     setup: JSON.stringify(setup),
     players: JSON.stringify(s.players),
+    proposal: s.proposal ? JSON.stringify(s.proposal) : '',
   }
 }
 
@@ -122,6 +127,7 @@ export function fromShared(remote: Partial<Shared>, local: Synced): Synced {
     round: remote.round ? (JSON.parse(remote.round) as Round) : local.round,
     settings: { ...local.settings, ...(remote.setup ? (JSON.parse(remote.setup) as Setup) : {}) },
     players: remote.players ? (JSON.parse(remote.players) as string[]) : local.players,
+    proposal: remote.proposal ? (JSON.parse(remote.proposal) as Proposal) : null,
   }
 }
 
@@ -133,6 +139,8 @@ export function diff(prev: Shared, next: Shared): Record<string, string | null> 
     for (const id of Object.keys(prev[key])) if (!(id in next[key])) patch[`${key}/${id}`] = null
   }
   for (const key of ['round', 'setup', 'players'] as const) if (prev[key] !== next[key]) patch[key] = next[key]
+  // Ingen forslag slettes fra rommet i stedet for å lagres som tom tekst.
+  if (prev.proposal !== next.proposal) patch.proposal = next.proposal || null
   return patch
 }
 
@@ -144,6 +152,7 @@ const normalize = (v: Partial<Shared>): Shared => ({
   round: v.round ?? '',
   setup: v.setup ?? '',
   players: v.players ?? '',
+  proposal: v.proposal ?? '',
 })
 
 interface SyncState {
@@ -248,11 +257,14 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       const patch = diff(synced, next)
       if (Object.keys(patch).length === 0) return
       synced = next
-      const { main, marks } = splitPatch(patch)
+      const { main, marks, proposal } = splitPatch(patch)
       if (Object.keys(main).length) db.update(room, main).catch(() => useSync.setState({ error: tr('Kunne ikke lagre til rommet.', 'Could not save to the room.') }))
       // Merkene sendes for seg. Er databasereglene ikke oppdatert for dem, virker resten av spillet likevel.
       if (Object.keys(marks).length)
         db.update(room, marks).catch(() => useSync.setState({ error: tr('Notater og svar tatt ut av kartet kunne ikke deles i rommet. Databasereglene må oppdateres.', 'Notes and answers taken off the map could not be shared in the room. The database rules need updating.') }))
+      // Forslaget sendes også for seg, av samme grunn.
+      if (Object.keys(proposal).length)
+        db.update(room, proposal).catch(() => useSync.setState({ error: tr('Forslaget kunne ikke deles i rommet. Databasereglene må oppdateres.', 'The proposal could not be shared in the room. The database rules need updating.') }))
     }
     const offRemote = db.onValue(room, (snap) => {
       const value = snap.val() as Partial<Shared> | null
@@ -274,6 +286,7 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       // Ikke varsle om alt som lå i rommet fra før da vi koblet til.
       if (!first && othersChanged) announce(local.questions, next.questions, local.mode)
       if (!first) announceRound(local.round, next.round, local.mode)
+      if (!first) announceProposal(local.proposal, next.proposal, local.mode, (next.round.changes?.length ?? 0) > (local.round.changes?.length ?? 0))
       // En annen telefon avsluttet en runde. Den lagrer runden i arkivet like etter.
       if (!first && next.results.length > local.results.length) setTimeout(() => void loadArchive(code), ARCHIVE_DELAY_MS)
       const losers = clashLosers(next.questions, deviceId())
