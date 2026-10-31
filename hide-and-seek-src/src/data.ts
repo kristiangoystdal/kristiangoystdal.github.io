@@ -1,4 +1,5 @@
 import type { Feature, Geometry } from 'geojson'
+import { tr } from './lang'
 import { cityOf, modeOf, networkSuffix, railMode, setCity } from './cities'
 import { POI_TYPES, setBounds, stationPos } from './geo'
 import type { Area, GeoData, LngLat, Poi, ShapeKey } from './types'
@@ -42,7 +43,7 @@ function outlines(g: Geometry): LngLat[][] {
 export async function loadCore(cityId: string, read: Reader = fromWeb(cityOf(cityId).id)): Promise<GeoData> {
   const c = cityOf(cityId)
   const [stations, lines] = (await Promise.all([read('stations.json'), read('lines.geojson')])) as [{ stations: GeoData['stations'] } | null, GeoData['lines'] | null]
-  if (!stations || !lines) throw new Error(`Mangler stasjoner eller linjer for ${c.name}`)
+  if (!stations || !lines) throw new Error(tr(`Mangler stasjoner eller linjer for ${c.name}`, `Missing stations or lines for ${c.name}`))
   setCity(c)
   setBounds(c.bounds)
   return { loading: true, stations: stations.stations, lines, admin: [], poi: railPoi(stations.stations, lines), shapes: {}, islands: [] }
@@ -65,7 +66,7 @@ export async function loadData(cityId: string, read: Reader = fromWeb(cityOf(cit
   const c = cityOf(cityId)
   const need = async <T>(path: string) => {
     const v = await read(path)
-    if (!v) throw new Error(`Mangler ${path} for ${c.name}`)
+    if (!v) throw new Error(tr(`Mangler ${path} for ${c.name}`, `Missing ${path} for ${c.name}`))
     return v as T
   }
   const optional = async <T>(path: string) => (await read(path)) as T | null

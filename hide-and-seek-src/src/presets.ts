@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { tr } from './lang'
 import { persist } from 'zustand/middleware'
 import { GAME_SETTINGS, useGame } from './store'
 import { openDb, withTimeout } from './sync'
@@ -146,7 +147,8 @@ export function fromStored(id: string, v: Stored, uid: string | null): SharedPre
   }
 }
 
-const offline = 'Fikk ikke kontakt med databasen. Sjekk nettet og prøv igjen.'
+const offline = tr('Fikk ikke kontakt med databasen. Sjekk nettet og prøv igjen.', 'Could not reach the database. Check your connection and try again.')
+const noLogin = tr('Kunne ikke logge inn. Sjekk nettet og prøv igjen.', 'Could not sign in. Check your connection and try again.')
 
 /** Henter de delte oppsettene for en by. Det som alt er hentet, vises imens. */
 export async function loadShared(city: string) {
@@ -179,9 +181,9 @@ export async function loadOne(id: string): Promise<SharedPreset | null> {
 /** Deler oppsettet slik det står nå med alle. Gir id-en, eller kaster med en feilmelding brukeren kan lese. */
 export async function sharePreset(name: string, description: string): Promise<string> {
   const { db, database, uid } = await openDb()
-  if (!uid) throw new Error('Kunne ikke logge inn. Sjekk nettet og prøv igjen.')
+  if (!uid) throw new Error(noLogin)
   const mine = await withTimeout(db.get(db.query(db.ref(database, 'presets'), db.orderByChild('owner'), db.equalTo(uid), db.limitToFirst(MAX_SHARED + 1))))
-  if (Object.keys(mine.val() ?? {}).length >= MAX_SHARED) throw new Error(`Du har delt ${MAX_SHARED} oppsett. Slett et av dem for å dele et nytt.`)
+  if (Object.keys(mine.val() ?? {}).length >= MAX_SHARED) throw new Error(tr(`Du har delt ${MAX_SHARED} oppsett. Slett et av dem for å dele et nytt.`, `You have shared ${MAX_SHARED} setups. Delete one of them to share a new one.`))
   const { setup, hidingMinutes } = currentSetup()
   const id = newId()
   const value: Stored = { owner: uid, name: name.trim().slice(0, 40), city: setup.city, setup: JSON.stringify(setup), hidingMinutes, created: Date.now() }
@@ -189,7 +191,7 @@ export async function sharePreset(name: string, description: string): Promise<st
   await withTimeout(db.set(db.ref(database, `presets/${id}`), value))
   const shown = fromStored(id, value, uid)!
   usePresets.setState((s) => ({
-    note: `«${value.name}» er delt med alle.`,
+    note: tr(`«${value.name}» er delt med alle.`, `"${value.name}" is shared with everyone.`),
     applied: { id, key: setupKey(setup, hidingMinutes) },
     shared: s.sharedCity === setup.city ? [...s.shared, shown] : s.shared,
   }))
@@ -206,20 +208,20 @@ export async function updatePreset(id: string, change: { name: string; descripti
   }
   await withTimeout(db.update(db.ref(database, `presets/${id}`), fields))
   const fresh = await loadOne(id)
-  if (fresh) usePresets.setState((s) => ({ shared: s.shared.map((p) => (p.id === id ? fresh : p)), note: 'Endringen er lagret.' }))
+  if (fresh) usePresets.setState((s) => ({ shared: s.shared.map((p) => (p.id === id ? fresh : p)), note: tr('Endringen er lagret.', 'The change is saved.') }))
 }
 
 export async function deleteShared(id: string) {
   const { db, database } = await openDb()
   await withTimeout(db.remove(db.ref(database, `presets/${id}`)))
-  usePresets.setState((s) => ({ shared: s.shared.filter((p) => p.id !== id), note: 'Oppsettet er slettet.' }))
+  usePresets.setState((s) => ({ shared: s.shared.filter((p) => p.id !== id), note: tr('Oppsettet er slettet.', 'The setup is deleted.') }))
 }
 
 export async function reportPreset(id: string) {
   const { db, database, uid } = await openDb()
-  if (!uid) throw new Error('Kunne ikke logge inn. Sjekk nettet og prøv igjen.')
+  if (!uid) throw new Error(noLogin)
   await withTimeout(db.set(db.ref(database, `presets/${id}/reports/${uid}`), true))
-  usePresets.setState((s) => ({ shared: s.shared.map((p) => (p.id === id ? { ...p, reported: true, reports: p.reports + 1 } : p)), note: 'Takk. Oppsettet er rapportert.' }))
+  usePresets.setState((s) => ({ shared: s.shared.map((p) => (p.id === id ? { ...p, reported: true, reports: p.reports + 1 } : p)), note: tr('Takk. Oppsettet er rapportert.', 'Thanks. The setup is reported.') }))
 }
 
 /** Bruker et delt oppsett: setter spilloppsettet og gjemmetiden. Gjør ingenting mens en runde pågår. */
@@ -228,7 +230,7 @@ export function applyShared(p: SharedPreset) {
   if (game.round.seekFrom !== null) return
   game.setSettings(p.setup)
   game.setRound({ hidingMinutes: p.hidingMinutes })
-  usePresets.setState({ applied: { id: p.id, key: setupKey(p.setup, p.hidingMinutes) }, note: `Bruker «${p.name}».` })
+  usePresets.setState({ applied: { id: p.id, key: setupKey(p.setup, p.hidingMinutes) }, note: tr(`Bruker «${p.name}».`, `Using "${p.name}".`) })
 }
 
 /** Teller bruk når en runde startes med et delt oppsett som ikke er endret etterpå. Én gang per telefon per dag. */
@@ -254,7 +256,7 @@ export const presetFromHash = (hash: string) => hash.match(/oppsett=([a-z0-9]{8,
 export function saveLocal(name: string) {
   const { setup, hidingMinutes } = currentSetup()
   const p: LocalPreset = { id: newId(), name: name.trim().slice(0, 40), setup, hidingMinutes, savedAt: Date.now() }
-  usePresets.setState((s) => ({ local: [...s.local.filter((x) => x.name !== p.name), p], note: `«${p.name}» er lagret på telefonen.` }))
+  usePresets.setState((s) => ({ local: [...s.local.filter((x) => x.name !== p.name), p], note: tr(`«${p.name}» er lagret på telefonen.`, `"${p.name}" is saved on this phone.`) }))
 }
 
 export function deleteLocal(id: string) {
@@ -266,5 +268,5 @@ export function applyLocal(p: LocalPreset) {
   if (game.round.seekFrom !== null) return
   game.setSettings(p.setup)
   game.setRound({ hidingMinutes: p.hidingMinutes })
-  usePresets.setState({ applied: null, note: `Bruker «${p.name}».` })
+  usePresets.setState({ applied: null, note: tr(`Bruker «${p.name}».`, `Using "${p.name}".`) })
 }

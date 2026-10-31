@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { tr } from './lang'
 import { persist } from 'zustand/middleware'
 import { PLANNING_MINUTES, resume, roundStats, type PauseKind, type Round } from './clock'
 import { DEFAULT_CITY } from './cities'
@@ -368,7 +369,7 @@ export const exportGame = (s: Pick<State, 'questions' | 'settings'>): SharedGame
 
 export function parseGame(text: string): SharedGame {
   const game = JSON.parse(text)
-  if (game?.v !== 1 || !Array.isArray(game.questions) || !game.settings) throw new Error('Ukjent format')
+  if (game?.v !== 1 || !Array.isArray(game.questions) || !game.settings) throw new Error(tr('Ukjent format', 'Unknown format'))
   return game
 }
 

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { tr } from './lang'
 import { create } from 'zustand'
 import { city, cityOf, linesOf } from './cities'
 import { blankGame, endDemo, enterSandbox, useDemo, type DemoHider } from './demo'
@@ -35,7 +36,7 @@ const STEP_MS = 12 * 60000
 export const SEEDS: Record<string, number> = { oslo: 11, bergen: 23, stavanger: 37, trondheim: 41 }
 /** Filen med det ferdige spillet i hver bys datamappe. */
 export const GAME_FILE = 'game.json'
-export const SIM_HIDER = 'Datastyrt hider'
+export const SIM_HIDER = tr('Datastyrt hider', 'Computer hider')
 
 /** Tilfeldige tall som blir de samme hver gang for samme frø. */
 export function seeded(seed: number) {
@@ -157,7 +158,7 @@ export const stepsOf = (sim: SimGame) => sim.questions.length + 2
 
 /** Starter et simulert spill i en by. Det ekte spillet legges til side til det er ferdig. */
 export function startShowcase(cityId: string) {
-  enterSandbox('showcase', { ...blankGame({ city: cityId, lines: [], size: 'M', zoneRadius: 500 }), players: ['Seekerne', SIM_HIDER] })
+  enterSandbox('showcase', { ...blankGame({ city: cityId, lines: [], size: 'M', zoneRadius: 500 }), players: [tr('Seekerne', 'Seekers'), SIM_HIDER] })
   setTestMode({ on: true, pos: null, accuracy: 5 })
   useShowcase.setState({ city: cityId, sim: null, step: 0, error: '', ready: 0, busy: false })
   // Poenget er å se kartet krympe, så panelet skjules. Det kan dras opp igjen for å se loggen.
@@ -225,7 +226,7 @@ export function useShowcaseRunner(loaded: GeoData | null, data: GeoData | null) 
         useShowcase.setState({ sim: rebase(game), error: '' })
         showStep(0)
       })
-      .catch(() => live && useShowcase.setState({ error: 'Fant ikke det simulerte spillet for byen. Sjekk nettet og prøv igjen.' }))
+      .catch(() => live && useShowcase.setState({ error: tr('Fant ikke det simulerte spillet for byen. Sjekk nettet og prøv igjen.', 'Could not find the simulated game for the city. Check your connection and try again.') }))
     return () => {
       live = false
     }

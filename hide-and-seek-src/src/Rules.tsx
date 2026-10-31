@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { MODES, city, railMode, transit } from './cities'
+import { city, modeWordsNb, railMode, transitNb } from './cities'
+import { isEn, tr } from './lang'
 import { ITEMS, SIZE_RULES, type Category } from './form'
 import { useGame, useUi } from './store'
 import type { GameSize } from './types'
@@ -51,7 +52,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     title: 'Spillet i korte trekk',
     body: () => (
       <List>
-        <li>Én spiller (hider) reiser kollektivt til et gjemmested ved en {transit().stop}.</li>
+        <li>Én spiller (hider) reiser kollektivt til et gjemmested ved en {transitNb().stop}.</li>
         <li>De andre (seekerne) samarbeider om å finne hider ved å stille spørsmål fra seks kategorier.</li>
         <li>Hver gang hider svarer, trekker hider kort fra hider-kortstokken.</li>
         <li>Når hider er funnet, er det nestemann sin tur. Den som holdt seg skjult lengst, vinner.</li>
@@ -138,7 +139,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     body: () => (
       <List>
         <li>
-          <b>Kollektivlinje:</b> seekerne må være om bord og i bevegelse. Svaret er ja hvis {transit().vehicle} de sitter på stopper ved hiders stasjon. Passerer den uten å stoppe, er svaret nei.
+          <b>Kollektivlinje:</b> seekerne må være om bord og i bevegelse. Svaret er ja hvis {transitNb().vehicle} de sitter på stopper ved hiders stasjon. Passerer den uten å stoppe, er svaret nei.
         </li>
         <li>
           <b>Lengde på stasjonsnavn:</b> antall tegn slik kartappen skriver navnet. Mellomrom og bindestrek teller.
@@ -165,7 +166,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     body: () => (
       <List>
         <li>
-          <b>Jernbanestasjon:</b> {railMode() ? `${MODES[railMode()!].stop}er teller med. Andre holdeplasser gjør det ikke.` : 'Bare jernbanestasjoner teller. Holdeplasser for buss, trikk og bybane gjør det ikke.'}
+          <b>Jernbanestasjon:</b> {railMode() ? `${modeWordsNb(railMode()!).stops} teller med. Andre holdeplasser gjør det ikke.` : 'Bare jernbanestasjoner teller. Holdeplasser for buss, trikk og bybane gjør det ikke.'}
         </li>
         <li>
           <b>Vann:</b> navngitt i kartappen, ikke basseng. <b>Kystlinje:</b> der land møter sjøen.
@@ -218,7 +219,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
           <li>Hider må selv være innenfor avstanden. Ellers svarer hider bare «utenfor rekkevidde».</li>
           <li>Ikke med i Small.</li>
         </List>
-        <Table head={['Steder', 'Avstand', 'Med i']} rows={bySize('Tentacles').flatMap((g) => g.items.map((i) => [i.label, i.group.replace('Innen ', ''), from(g.size)]))} />
+        <Table head={['Steder', 'Avstand', 'Med i']} rows={bySize('Tentacles').flatMap((g) => g.items.map((i) => [i.label, i.group.replace(/^(Innen|Within) /, ''), from(g.size)]))} />
       </>
     ),
   },
@@ -336,15 +337,20 @@ export function Rules() {
       <div className="flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-2xl border border-border bg-panel shadow-xl md:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 id="rules-title" className="text-lg font-bold">
-            📖 Regler
+            {tr('📖 Regler', '📖 Rules')}
           </h2>
           <button className="btn min-h-9!" onClick={() => setRules(null)}>
-            Lukk
+            {tr('Lukk', 'Close')}
           </button>
         </div>
         <div ref={box} className="overflow-y-auto overscroll-contain px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))] text-sm">
+          {isEn && (
+            <p className="mt-2 mb-3 rounded-lg border border-accent p-2.5 text-sm" lang="en">
+              The rulebook is only in Norwegian for now. The questions and buttons in the app are in English, and they follow the official Jet Lag rulebook.
+            </p>
+          )}
           <p className="mb-2 text-xs text-muted">
-            Jetlag Hide and Seek, tilpasset {transit().whole} i {city().name}. Spillet er satt til {SIZE_NAMES[size]}. Avstandene er appens avrundede verdier.
+            Jetlag Hide and Seek, tilpasset {transitNb().whole} i {city().name}. Spillet er satt til {SIZE_NAMES[size]}. Avstandene er appens avrundede verdier.
           </p>
           {SECTIONS.map((s) => (
             <details key={s.id} id={`regel-${s.id}`} className="border-b border-border py-1 last:border-0" open={section === s.id}>

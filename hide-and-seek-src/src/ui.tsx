@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { tr } from './lang'
 import { gameNow, waitingForAnswer, type PauseKind } from './clock'
 import { place } from './form'
 import { stationPos } from './geo'
@@ -22,9 +23,18 @@ export function useGameNow() {
 }
 
 export const PAUSE_TEXT: Record<PauseKind, { title: string; body: string }> = {
-  pause: { title: '⏸ Spillet er på pause', body: 'Alle klokker står. Alle blir stående der de er til spillet fortsetter.' },
-  rest: { title: '🌙 Hvileperiode', body: 'Alle klokker står. Før spillet fortsetter må alle tilbake til nøyaktig samme sted.' },
-  move: { title: '🧳 Hider har spilt Move', body: 'Hiders klokke står mens hider finner en ny sone. Seekerne blir stående og kan ikke stille spørsmål.' },
+  pause: tr(
+    { title: '⏸ Spillet er på pause', body: 'Alle klokker står. Alle blir stående der de er til spillet fortsetter.' },
+    { title: '⏸ The game is paused', body: 'All clocks are stopped. Everyone stays where they are until the game resumes.' },
+  ),
+  rest: tr(
+    { title: '🌙 Hvileperiode', body: 'Alle klokker står. Før spillet fortsetter må alle tilbake til nøyaktig samme sted.' },
+    { title: '🌙 Rest period', body: 'All clocks are stopped. Before the game resumes, everyone must return to exactly the same place.' },
+  ),
+  move: tr(
+    { title: '🧳 Hider har spilt Move', body: 'Hiders klokke står mens hider finner en ny sone. Seekerne blir stående og kan ikke stille spørsmål.' },
+    { title: '🧳 The hider played Move', body: "The hider's clock is stopped while the hider finds a new zone. The seekers stay where they are and cannot ask questions." },
+  ),
 }
 
 /** Tid igjen som m:ss, eller h:mm:ss. */
@@ -44,13 +54,13 @@ export function MoveInfo({ stations }: { stations: Station[] }) {
   const name = stations.find((x) => x.id === from)?.name
   return (
     <span className="block text-xs">
-      {pause.until && <>Ny sone innen {left(pause.until - now)}. </>}
+      {pause.until && <>{tr(`Ny sone innen ${left(pause.until - now)}. `, `New zone within ${left(pause.until - now)}. `)}</>}
       {name ? (
         <>
-          Hider forlot <b>{name}</b>.
+          {tr('Hider forlot', 'The hider left')} <b>{name}</b>.
         </>
       ) : (
-        'Hider sier fra hvilken stasjon som ble forlatt.'
+        tr('Hider sier fra hvilken stasjon som ble forlatt.', 'The hider says which station they left.')
       )}
     </span>
   )
@@ -63,7 +73,10 @@ export function GameStatus({ stations }: { stations: Station[] }) {
   const running = useGame((s) => s.round.seekFrom !== null)
   const waiting = useGame((s) => running && waitingForAnswer(s.questions, s.settings.size, now))
   if (!running || (!pause && !waiting)) return null
-  const text = pause ? PAUSE_TEXT[pause.kind] : { title: 'Hiders klokke står stille', body: 'Svartiden er ute. Klokken starter igjen når svaret kommer.' }
+  const text = pause ? PAUSE_TEXT[pause.kind] : tr(
+        { title: 'Hiders klokke står stille', body: 'Svartiden er ute. Klokken starter igjen når svaret kommer.' },
+        { title: "The hider's clock is stopped", body: 'The answer time is up. The clock starts again when the answer comes.' },
+      )
   return (
     <div className="card pointer-events-auto border-accent! px-3! py-2! text-sm shadow-lg" role="status">
       <b className="block">{text.title}</b>
@@ -98,7 +111,7 @@ const NOW_MS = 3000
 export function locate({ fresh = false } = {}): Promise<LngLat> {
   return new Promise((resolve, reject) => {
     if (lastFix && Date.now() - lastFix.t < (fresh ? NOW_MS : FRESH_MS)) return resolve(lastFix.pos)
-    if (!navigator.geolocation) return reject(new Error('Nettleseren støtter ikke posisjon'))
+    if (!navigator.geolocation) return reject(new Error(tr('Nettleseren støtter ikke posisjon', 'The browser does not support location')))
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const pos: LngLat = [p.coords.longitude, p.coords.latitude]
@@ -108,7 +121,7 @@ export function locate({ fresh = false } = {}): Promise<LngLat> {
       () =>
         !fresh && lastFix && Date.now() - lastFix.t < USABLE_MS
           ? resolve(lastFix.pos)
-          : reject(new Error('Fikk ikke hentet posisjonen. Sjekk at nettsiden har lov til å bruke den.')),
+          : reject(new Error(tr('Fikk ikke hentet posisjonen. Sjekk at nettsiden har lov til å bruke den.', 'Could not get your position. Check that the site is allowed to use it.'))),
       { enableHighAccuracy: true, timeout: fresh ? 10000 : 15000, maximumAge: fresh ? 0 : 5000 },
     )
   })
@@ -144,24 +157,24 @@ export function PointInput(props: { label: string; value: LngLat | null; onChang
   return (
     <div className="mb-3">
       <span className="label">{label}</span>
-      <div className="mb-1.5 text-sm">{value ? place(value, stations) : <span className="text-muted">Ikke valgt</span>}</div>
+      <div className="mb-1.5 text-sm">{value ? place(value, stations) : <span className="text-muted">{tr('Ikke valgt', 'Not chosen')}</span>}</div>
       <div className="flex flex-wrap gap-1.5">
         <button type="button" className="btn" onClick={() => setPick({ label, done: onChange })}>
-          Velg på kart
+          {tr('Velg på kart', 'Pick on map')}
         </button>
         <button type="button" className="btn" onClick={gps} disabled={busy}>
-          {busy ? 'Henter…' : 'Min posisjon'}
+          {busy ? tr('Henter…', 'Loading…') : tr('Min posisjon', 'My position')}
         </button>
         <select
           className="field w-auto! flex-1"
           value=""
-          aria-label={`${label}: velg stasjon`}
+          aria-label={`${label}: ${tr('velg stasjon', 'choose station')}`}
           onChange={(e) => {
             const s = stations.find((x) => x.id === e.target.value)
             if (s) onChange(stationPos(s))
           }}
         >
-          <option value="">Stasjon…</option>
+          <option value="">{tr('Stasjon…', 'Station…')}</option>
           {stations.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -308,7 +321,7 @@ export function PanelHandle({ hidden }: { hidden: boolean }) {
     <div
       role="separator"
       aria-orientation="horizontal"
-      aria-label="Dra for å endre hvor stor del av skjermen som er kart"
+      aria-label={tr('Dra for å endre hvor stor del av skjermen som er kart', 'Drag to change how much of the screen is map')}
       aria-valuemin={0}
       aria-valuemax={PANEL_MAX}
       aria-valuenow={collapsed ? 0 : pct}

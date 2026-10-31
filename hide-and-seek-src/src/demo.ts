@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { create } from 'zustand'
 import { city } from './cities'
-import { answerOptions } from './form'
+import { PHOTO_SENT, answerOptions } from './form'
 import { ANSWER_NULL, autoAnswer, dist, stationPos } from './geo'
 import { lookup } from './online'
 import { useGame, useUi, type State } from './store'
@@ -159,7 +159,7 @@ export function pickHider(stations: Station[], random = Math.random): DemoHider 
 export function demoAnswer(q: Parameters<typeof autoAnswer>[0], hider: { pos: LngLat; station: Station }, data: GeoData): string {
   const a = autoAnswer(q, hider, data, lookup)
   if (a) return a.answer
-  if (q.kind === 'photo') return 'Bilde sendt'
+  if (q.kind === 'photo') return PHOTO_SENT
   return answerOptions(q, data)[0] ?? ANSWER_NULL
 }
 

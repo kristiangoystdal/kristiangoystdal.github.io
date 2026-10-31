@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { tr } from './lang'
 import { persist } from 'zustand/middleware'
 import type { LngLat } from './types'
 
@@ -30,8 +31,8 @@ const NO_POS = 2
 function fakeError(message: string): GeolocationPositionError {
   return { code: NO_POS, message, PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError
 }
-const NOT_PICKED = 'Testmodus: velg hvor du står på kartet.'
-const NO_GPS = 'Nettleseren støtter ikke posisjon.'
+const NOT_PICKED = tr('Testmodus: velg hvor du står på kartet.', 'Test mode: pick where you stand on the map.')
+const NO_GPS = tr('Nettleseren støtter ikke posisjon.', 'The browser does not support location.')
 
 interface Watch {
   ok: PositionCallback

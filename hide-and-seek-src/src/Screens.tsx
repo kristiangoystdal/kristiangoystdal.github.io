@@ -1,4 +1,5 @@
 import { AppInfo, EndgameControl, HiderPosition, MapOptions, PossibleStations, RoomInfo, RoundBar } from './Panels'
+import { tr } from './lang'
 import { Crosshair, MessageCircleQuestionMark, Ruler } from 'lucide-react'
 import QuestionsView from './QuestionsView'
 import { ToolsPanel } from './Tools'
@@ -12,9 +13,9 @@ import { Section, left, useGameNow } from './ui'
 import { useDemo } from './demo'
 
 const TABS: { key: Tab; label: (hider: boolean) => string; icon: typeof Crosshair }[] = [
-  { key: 'questions', label: () => 'Spørsmål', icon: MessageCircleQuestionMark },
-  { key: 'endgame', label: (hider) => (hider ? 'Din sone' : 'Endgame'), icon: Crosshair },
-  { key: 'tools', label: () => 'Verktøy', icon: Ruler },
+  { key: 'questions', label: () => tr('Spørsmål', 'Questions'), icon: MessageCircleQuestionMark },
+  { key: 'endgame', label: (hider) => (hider ? tr('Din sone', 'Your zone') : 'Endgame'), icon: Crosshair },
+  { key: 'tools', label: () => tr('Verktøy', 'Tools'), icon: Ruler },
 ]
 
 /** Fanene nederst på spillskjermen. */
@@ -24,7 +25,7 @@ export function GameTabs() {
   const hider = useGame((s) => s.mode === 'hider')
   const pending = useGame((s) => s.questions.filter((q) => q.answer === null).length)
   return (
-    <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Spillskjerm">
+    <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label={tr('Spillskjerm', 'Game screen')}>
       {TABS.map((t) => (
         <button
           key={t.key}
@@ -82,24 +83,23 @@ function HidingStatus() {
   if (replay || seekFrom === null || now >= seekFrom || Date.now() >= seekFrom) return null
   return (
     <section className="mb-5">
-      <h2 className="text-xl leading-tight font-bold">{isHider ? 'Gjem deg' : `${hider || 'Hider'} gjemmer seg`}</h2>
+      <h2 className="text-xl leading-tight font-bold">{isHider ? tr('Gjem deg', 'Go hide') : tr(`${hider || 'Hider'} gjemmer seg`, `${hider || 'The hider'} is hiding`)}</h2>
       <p className="mt-1 text-[15px]">
-        Letingen starter om <b className="board">{left(seekFrom - now)}</b>.
+        {tr('Letingen starter om', 'The seeking starts in')} <b className="board">{left(seekFrom - now)}</b>.
       </p>
       <ul className="mt-3 space-y-1.5 text-[15px]">
-        {isHider ? (
-          <>
-            <li>Reis til en stasjon og gjem deg innenfor sonen rundt den.</li>
-            <li>Appen følger posisjonen din, men den sendes aldri til seekerne.</li>
-            <li>Spørsmålene dukker opp her når letingen starter.</li>
-          </>
-        ) : (
-          <>
-            <li>Vent på startstedet til klokken er ute.</li>
-            <li>Les gjerne spørsmålene og reglene imens.</li>
-            <li>Er dere enige om å starte før, trykker dere «Start letingen».</li>
-          </>
-        )}
+        {(isHider
+          ? tr(
+              ['Reis til en stasjon og gjem deg innenfor sonen rundt den.', 'Appen følger posisjonen din, men den sendes aldri til seekerne.', 'Spørsmålene dukker opp her når letingen starter.'],
+              ['Travel to a station and hide inside the zone around it.', 'The app follows your position, but it is never sent to the seekers.', 'The questions show up here when the seeking starts.'],
+            )
+          : tr(
+              ['Vent på startstedet til klokken er ute.', 'Les gjerne spørsmålene og reglene imens.', 'Er dere enige om å starte før, trykker dere «Start letingen».'],
+              ['Wait at the starting point until the clock runs out.', 'Feel free to read the questions and rules in the meantime.', 'If you all agree to start early, tap "Start seeking".'],
+            )
+        ).map((t) => (
+          <li key={t}>{t}</li>
+        ))}
       </ul>
     </section>
   )
@@ -109,7 +109,7 @@ function RoomSection() {
   const room = useSync((s) => s.room)
   if (!room) return null
   return (
-    <Section title="Rom">
+    <Section title={tr('Rom', 'Room')}>
       <RoomInfo />
     </Section>
   )
@@ -122,10 +122,10 @@ export function AppButtons({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`flex gap-1.5 ${compact ? '' : 'mt-2'}`}>
       <button className="btn flex-1" onClick={() => setRules('')}>
-        📖 Regler
+        {tr('📖 Regler', '📖 Rules (Norwegian)')}
       </button>
       <button className="btn flex-1" data-guide="app" onClick={() => setSheet('app')}>
-        ⚙ Hjelp og innstillinger
+        {tr('⚙ Hjelp og innstillinger', '⚙ Help and settings')}
       </button>
     </div>
   )
@@ -136,11 +136,11 @@ export function AppSheet({ data, help }: { data: GeoData | null; help?: React.Re
   const open = useUi((s) => s.sheet === 'app')
   const close = () => useUi.getState().setSheet(null)
   return (
-    <Sheet open={open} title="Innstillinger og hjelp" onClose={close}>
+    <Sheet open={open} title={tr('Innstillinger og hjelp', 'Settings and help')} onClose={close}>
       {help}
       <AppInfo data={data} />
       <a className="link" href="../">
-        Til forsiden
+        {tr('Til forsiden', 'To the front page')}
       </a>
     </Sheet>
   )
@@ -150,8 +150,8 @@ export function AppSheet({ data, help }: { data: GeoData | null; help?: React.Re
 export function LearnSheet() {
   const open = useUi((s) => s.sheet === 'learn')
   return (
-    <Sheet open={open} title="Lær appen" onClose={() => useUi.getState().setSheet(null)}>
-      <p className="mb-4 text-sm text-muted">Spillet ditt blir ikke rørt. Alt her skjer ved siden av, og du kommer tilbake der du var.</p>
+    <Sheet open={open} title={tr('Lær appen', 'Learn the app')} onClose={() => useUi.getState().setSheet(null)}>
+      <p className="mb-4 text-sm text-muted">{tr('Spillet ditt blir ikke rørt. Alt her skjer ved siden av, og du kommer tilbake der du var.', 'Your game is not touched. Everything here happens on the side, and you come back where you were.')}</p>
       <LearnButtons />
     </Sheet>
   )

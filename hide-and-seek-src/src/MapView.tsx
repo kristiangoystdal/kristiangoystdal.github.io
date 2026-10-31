@@ -1,4 +1,5 @@
 import { Layers, LocateFixed, Navigation } from 'lucide-react'
+import { LOCALE, tr } from './lang'
 import L from 'leaflet'
 import 'leaflet-rotate'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -32,19 +33,19 @@ type Basemap = Settings['basemap']
 /** Bakgrunnskartene. Ingen av dem krever nøkkel. */
 export const BASEMAPS: Record<Basemap, { label: string; url: string; maxZoom: number; attribution: string }> = {
   clean: {
-    label: 'Enkelt',
+    label: tr('Enkelt', 'Simple'),
     url: 'https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png',
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
   },
   standard: {
-    label: 'Vanlig',
+    label: tr('Vanlig', 'Standard'),
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   },
   satellite: {
-    label: 'Satellitt',
+    label: tr('Satellitt', 'Satellite'),
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     maxZoom: 19,
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
@@ -237,7 +238,8 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       m.bindPopup(() => {
         const rate = depRate(s, settings.day, settings.hourFrom, settings.hourTo)
         const dots = s.lines.map((l) => `<span style="color:${lineColor[l]}">●</span> ${l}`).join(' &nbsp;')
-        return `<b>${s.name}</b><br>Linje ${dots}<br>${hiderView ? '' : `${possibleNow.current.has(s.id) ? 'Mulig' : 'Utelukket'} · `}${rate.toFixed(1)} avganger/t`
+        const status = hiderView ? '' : `${possibleNow.current.has(s.id) ? tr('Mulig', 'Possible') : tr('Utelukket', 'Ruled out')} · `
+        return `<b>${s.name}</b><br>${tr('Linje', 'Line')} ${dots}<br>${status}${rate.toFixed(1)} ${tr('avganger/t', 'departures/h')}`
       })
       m.addTo(st)
       markers.current.set(s.id, { m, on, s })
@@ -332,7 +334,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       }
     }
     if (mode === 'hider' && hiderPos) {
-      L.circleMarker(ll(hiderPos), { radius: 8, color: '#fff', weight: 2, fillColor: css('--ok'), fillOpacity: 1 }).bindTooltip('Hider (deg)').addTo(g)
+      L.circleMarker(ll(hiderPos), { radius: 8, color: '#fff', weight: 2, fillColor: css('--ok'), fillOpacity: 1 }).bindTooltip(tr('Hider (deg)', 'Hider (you)')).addTo(g)
     }
     if (draw) {
       const style = { color: '#3b6ceb', weight: 2.5, dashArray: '6 5', fillOpacity: 0.1, interactive: false }
@@ -348,7 +350,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     const pin = (p: LngLat | null, text: string) =>
       p && L.circleMarker(ll(p), { radius: 7, color: '#fff', weight: 2, fillColor: '#3b6ceb', fillOpacity: 1 }).bindTooltip(text, { permanent: true, direction: 'top' }).addTo(g)
     pin(draft.pos, draft.kind === 'thermometer' ? 'Start' : 'Seeker')
-    if (draft.kind === 'thermometer') pin(draft.pos2, 'Slutt')
+    if (draft.kind === 'thermometer') pin(draft.pos2, tr('Slutt', 'End'))
   }, [ready, data, draft, draw, layers.poi, mode, hiderPos, settings.theme])
 
   useEffect(() => {
@@ -357,7 +359,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     if (!me) return
     const dot = L.circleMarker(ll(me), { radius: 8, color: '#fff', weight: 3, fillColor: '#1a73e8', fillOpacity: 1, interactive: false })
     // I reprisen er prikken seekerne, ikke telefonen.
-    if (replay) dot.bindTooltip('Seekerne', { permanent: true, direction: 'top', offset: [0, -8], className: 'station-label' })
+    if (replay) dot.bindTooltip(tr('Seekerne', 'Seekers'), { permanent: true, direction: 'top', offset: [0, -8], className: 'station-label' })
     dot.addTo(g)
   }, [ready, me, replay])
 
@@ -370,12 +372,12 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     const { radar, thermo } = tools
     if (radar?.center) {
       L.circle(ll(radar.center), { ...style, radius: radar.radiusM }).addTo(g)
-      pin(radar.center, `Egen radar · ${(radar.radiusM / 1000).toLocaleString('nb-NO')} km`)
+      pin(radar.center, `${tr('Egen radar', 'Own radar')} · ${(radar.radiusM / 1000).toLocaleString(LOCALE)} km`)
     }
     if (thermo?.start) {
       // Sirkelen viser hvor langt man må komme. Streken er reist så langt.
       L.circle(ll(thermo.start), { ...style, fillOpacity: 0, radius: thermo.minM }).addTo(g)
-      pin(thermo.start, 'Termometer: start')
+      pin(thermo.start, tr('Termometer: start', 'Thermometer: start'))
       if (thermo.at) L.polyline([ll(thermo.start), ll(thermo.at)], { color: TOOL_COLOR, weight: 3, interactive: false }).addTo(g)
     }
   }, [ready, tools])
@@ -400,10 +402,10 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
   const followCompass = async () => {
     // iPhone krever at brukeren gir lov til kompasset, og det må skje fra et trykk.
     const ask = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission
-    if (ask && (await ask().catch(() => 'denied')) !== 'granted') return setLocError('Fikk ikke bruke kompasset. Gi nettsiden lov under innstillingene.')
+    if (ask && (await ask().catch(() => 'denied')) !== 'granted') return setLocError(tr('Fikk ikke bruke kompasset. Gi nettsiden lov under innstillingene.', 'Could not use the compass. Allow the site in the settings.'))
     map.current?.compassBearing.enable()
     setFollow(!!map.current?.compassBearing.enabled())
-    if (!map.current?.compassBearing.enabled()) setLocError('Telefonen har ikke kompass, eller nettleseren gir ikke tilgang til det.')
+    if (!map.current?.compassBearing.enabled()) setLocError(tr('Telefonen har ikke kompass, eller nettleseren gir ikke tilgang til det.', 'The phone has no compass, or the browser does not give access to it.'))
   }
 
   return (
@@ -414,13 +416,13 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
         <div className="card pointer-events-auto px-3! py-1.5! text-sm shadow-lg">
           {hiderView ? (
             <>
-              {endgame && <span className="block text-xs font-semibold text-accent">Endgame: står seekerne i din sone, står du stille</span>}
+              {endgame && <span className="block text-xs font-semibold text-accent">{tr('Endgame: står seekerne i din sone, står du stille', 'Endgame: if the seekers are in your zone, stay put')}</span>}
               {hider.stationId ? (
                 <>
-                  Sonen din: <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
+                  {tr('Sonen din:', 'Your zone:')} <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
                 </>
               ) : (
-                'Venter på GPS…'
+                tr('Venter på GPS…', 'Waiting for GPS…')
               )}
             </>
           ) : (
@@ -428,13 +430,14 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
               {endgame ? (
                 <>
                   <span className="block text-xs font-semibold text-accent">Endgame</span>
-                  Sonen ved <b className="text-accent">{data.stations.find((s) => s.id === endgameAt)?.name}</b>
-                  {!result.area && <span className="block text-xs text-bad">Svarene utelukker hele sonen</span>}
+                  {tr('Sonen ved', 'The zone at')} <b className="text-accent">{data.stations.find((s) => s.id === endgameAt)?.name}</b>
+                  {!result.area && <span className="block text-xs text-bad">{tr('Svarene utelukker hele sonen', 'The answers rule out the whole zone')}</span>}
                 </>
               ) : (
                 <>
-                  <b className="text-accent tabular-nums">{result.stations.length}</b> {result.stations.length === 1 ? `stasjon igjen: ${result.stations[0].name}` : 'stasjoner igjen'}
-                  {!result.area && <span className="block text-xs text-bad">Svarene motsier hverandre</span>}
+                  <b className="text-accent tabular-nums">{result.stations.length}</b>{' '}
+                  {result.stations.length === 1 ? tr(`stasjon igjen: ${result.stations[0].name}`, `station left: ${result.stations[0].name}`) : tr('stasjoner igjen', 'stations left')}
+                  {!result.area && <span className="block text-xs text-bad">{tr('Svarene motsier hverandre', 'The answers contradict each other')}</span>}
                 </>
               )}
             </>
@@ -442,21 +445,23 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
         </div>
         {data.loading && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-1.5! text-sm text-muted shadow-lg" role="status">
-            <Spinner className="size-3.5!" /> Laster kartdata…
+            <Spinner className="size-3.5!" /> {tr('Laster kartdata…', 'Loading map data…')}
           </div>
         )}
         {!past && <GameStatus stations={data.stations} />}
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">
-            <span>Trykk på kartet: {pick.label.toLowerCase()}</span>
+            <span>
+              {tr('Trykk på kartet:', 'Tap the map:')} {pick.label.toLowerCase()}
+            </span>
             <button className="btn min-h-9!" onClick={() => setPick(null)}>
-              Avbryt
+              {tr('Avbryt', 'Cancel')}
             </button>
           </div>
         )}
         {draw && (
           <div className="card pointer-events-auto px-3! py-2! text-sm shadow-lg">
-            <p className="mb-2">Trykk rundt spillområdet, hjørne for hjørne. {draw.length} satt.</p>
+            <p className="mb-2">{tr(`Trykk rundt spillområdet, hjørne for hjørne. ${draw.length} satt.`, `Tap around the play area, corner by corner. ${draw.length} set.`)}</p>
             <div className="flex flex-wrap gap-1.5">
               <button
                 className="btn btn-primary min-h-9!"
@@ -466,13 +471,13 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
                   setDraw(null)
                 }}
               >
-                Ferdig
+                {tr('Ferdig', 'Done')}
               </button>
               <button className="btn min-h-9!" disabled={draw.length === 0} onClick={() => setDraw(draw.slice(0, -1))}>
-                Angre punkt
+                {tr('Angre punkt', 'Undo point')}
               </button>
               <button className="btn min-h-9!" onClick={() => setDraw(null)}>
-                Avbryt
+                {tr('Avbryt', 'Cancel')}
               </button>
             </div>
           </div>
@@ -483,7 +488,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       <div className="absolute right-2.5 bottom-7 z-[1000] flex flex-col gap-1.5">
         <button
           className="btn size-11 px-0! shadow-lg"
-          aria-label={`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}. Trykk for å bytte.`}
+          aria-label={tr(`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}. Trykk for å bytte.`, `Background map: ${BASEMAPS[settings.basemap].label}. Tap to switch.`)}
           title={`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}`}
           onClick={() => setSettings({ basemap: BASEMAP_ORDER[(BASEMAP_ORDER.indexOf(settings.basemap) + 1) % BASEMAP_ORDER.length] })}
         >
@@ -492,12 +497,12 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
         <button
           className={`btn size-11 px-0! shadow-lg ${follow ? 'btn-on' : ''}`}
           onClick={() => (follow || Math.round(bearing) % 360 !== 0 ? north() : followCompass())}
-          aria-label={follow ? 'Kartet følger kompasset. Trykk for nord opp.' : bearing ? 'Sett nord opp' : 'La kartet følge kompasset'}
-          title={follow ? 'Følger kompasset' : bearing ? 'Nord opp' : 'Følg kompasset. Roter med to fingre.'}
+          aria-label={follow ? tr('Kartet følger kompasset. Trykk for nord opp.', 'The map follows the compass. Tap for north up.') : bearing ? tr('Sett nord opp', 'Set north up') : tr('La kartet følge kompasset', 'Let the map follow the compass')}
+          title={follow ? tr('Følger kompasset', 'Following the compass') : bearing ? tr('Nord opp', 'North up') : tr('Følg kompasset. Roter med to fingre.', 'Follow the compass. Rotate with two fingers.')}
         >
           <Navigation size={20} style={{ transform: `rotate(${bearing}deg)` }} aria-hidden />
         </button>
-        <button className="btn size-11 px-0! shadow-lg" onClick={findMe} aria-label="Vis min posisjon" title="Vis min posisjon">
+        <button className="btn size-11 px-0! shadow-lg" onClick={findMe} aria-label={tr('Vis min posisjon', 'Show my position')} title={tr('Vis min posisjon', 'Show my position')}>
           <LocateFixed size={20} aria-hidden />
         </button>
       </div>

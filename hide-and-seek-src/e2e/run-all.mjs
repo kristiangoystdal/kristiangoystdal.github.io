@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 // Testene som trenger Firebase, kjøres mot emulatoren med npm run e2e:firebase.
 const EMULATOR = process.argv.includes('--emulator')
-const TESTS = EMULATOR ? ['presets'] : ['startup', 'area', 'settings', 'panel', 'overrides', 'replay', 'guide']
+const TESTS = EMULATOR ? ['presets', 'rooms'] : ['startup', 'area', 'settings', 'panel', 'overrides', 'replay', 'guide', 'english']
 const only = process.argv.slice(2).filter((a) => !a.startsWith('--'))
 const tests = only.length ? TESTS.filter((t) => only.includes(t)) : TESTS
 const targets = (process.env.TARGETS ?? 'iphone,android').split(',')

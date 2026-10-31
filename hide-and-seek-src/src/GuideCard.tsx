@@ -4,6 +4,7 @@ import { CITIES } from './cities'
 import { useDemo } from './demo'
 import { answerLabel, categoryOf, describe, place } from './form'
 import { SCRIPTS, nextStep, prevStep, startGuide, stopGuide, useGuide } from './guide'
+import { tr } from './lang'
 import { goToStep, startShowcase, stepsOf, stopShowcase, useShowcase, type SimGame } from './showcase'
 import { Spinner } from './ui'
 import { useUi } from './store'
@@ -148,39 +149,39 @@ export function GuideOverlay({ stations }: { stations: Station[] }) {
       <DockedSheet label="Guide" progress={{ n: steps.length, at: step }}>
         <div className="flex items-start gap-2">
           <h2 className="flex-1 text-[17px] leading-tight font-bold">{s.title}</h2>
-          <span className="board pt-0.5 text-sm text-muted" aria-label={`Steg ${step + 1} av ${steps.length}`}>
+          <span className="board pt-0.5 text-sm text-muted" aria-label={tr(`Steg ${step + 1} av ${steps.length}`, `Step ${step + 1} of ${steps.length}`)}>
             {step + 1}/{steps.length}
           </span>
-          {!last && <CloseButton onClick={stopGuide} label={script === 'demo' ? 'Avslutt demoen' : 'Avslutt omvisningen'} />}
+          {!last && <CloseButton onClick={stopGuide} label={script === 'demo' ? tr('Avslutt demoen', 'End the demo') : tr('Avslutt omvisningen', 'End the tour')} />}
         </div>
         <p className="mt-1 text-[15px] leading-snug">{s.body()}</p>
         {demo && s.position && <DemoPosition stations={stations} />}
         <div className="mt-2.5 flex gap-1.5">
           {step > 0 && (
-            <button className="btn px-3!" aria-label="Forrige steg" onClick={prevStep}>
+            <button className="btn px-3!" aria-label={tr('Forrige steg', 'Previous step')} onClick={prevStep}>
               <ChevronLeft size={20} aria-hidden />
             </button>
           )}
           {last && script === 'tour' ? (
             <>
               <button className="btn flex-1" onClick={stopGuide}>
-                Ferdig
+                {tr('Ferdig', 'Done')}
               </button>
               <button className="btn btn-primary flex-1" onClick={() => startGuide('demo')}>
-                Spill demorunde
+                {tr('Spill demorunde', 'Play demo round')}
               </button>
             </>
           ) : last ? (
             <button className="btn btn-primary flex-1" onClick={stopGuide}>
-              Avslutt demoen
+              {tr('Avslutt demoen', 'End the demo')}
             </button>
           ) : waiting ? (
             <button className="btn flex-1" onClick={nextStep}>
-              Hopp over
+              {tr('Hopp over', 'Skip')}
             </button>
           ) : (
             <button className="btn btn-primary flex-1" onClick={nextStep}>
-              {step === 0 ? 'Start' : 'Neste'} <ChevronRight size={18} aria-hidden />
+              {step === 0 ? 'Start' : tr('Neste', 'Next')} <ChevronRight size={18} aria-hidden />
             </button>
           )}
         </div>
@@ -195,9 +196,11 @@ function DemoPosition({ stations }: { stations: Station[] }) {
   const setPick = useUi((s) => s.setPick)
   return (
     <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-panel-2 p-2 text-xs">
-      <span>📍 Du står {pos ? place(pos, stations) : 'ingen steder ennå'}</span>
-      <button className="btn min-h-9!" data-guide="move-me" onClick={() => setPick({ label: 'Hvor står du', done: (p) => setTestMode({ pos: p }) })}>
-        Flytt meg
+      <span>
+        📍 {tr('Du står', 'You are at')} {pos ? place(pos, stations) : tr('ingen steder ennå', 'no place yet')}
+      </span>
+      <button className="btn min-h-9!" data-guide="move-me" onClick={() => setPick({ label: tr('Hvor står du', 'Where you are'), done: (p) => setTestMode({ pos: p }) })}>
+        {tr('Flytt meg', 'Move me')}
       </button>
     </div>
   )
@@ -237,12 +240,28 @@ export function LearnButtons() {
   return (
     <div>
       <div className="divide-y divide-border rounded-[14px] border border-border bg-panel">
-        <LearnRow icon={<Gamepad2 size={20} />} title="Spill en demorunde" detail="Du leter etter en datastyrt hider i Oslo. Ca. 5 minutter." onClick={() => learn('demo')} />
-        <LearnRow icon={<Compass size={20} />} title="Ta en omvisning" detail="Hva knappene i lobbyen gjør. Under ett minutt." guide="learn-tour" onClick={() => learn('tour')} />
-        <LearnRow icon={<BookOpen size={20} />} title="Les reglene" detail="Hele regelboken, med spørsmål og kort." onClick={() => useUi.getState().setRules('')} />
+        <LearnRow
+          icon={<Gamepad2 size={20} />}
+          title={tr('Spill en demorunde', 'Play a demo round')}
+          detail={tr('Du leter etter en datastyrt hider i Oslo. Ca. 5 minutter.', 'You look for a computer hider in Oslo. About 5 minutes.')}
+          onClick={() => learn('demo')}
+        />
+        <LearnRow
+          icon={<Compass size={20} />}
+          title={tr('Ta en omvisning', 'Take a tour')}
+          detail={tr('Hva knappene i lobbyen gjør. Under ett minutt.', 'What the buttons in the lobby do. Under a minute.')}
+          guide="learn-tour"
+          onClick={() => learn('tour')}
+        />
+        <LearnRow
+          icon={<BookOpen size={20} />}
+          title={tr('Les reglene', 'Read the rules')}
+          detail={tr('Hele regelboken, med spørsmål og kort.', 'The whole rulebook, with questions and cards. In Norwegian for now.')}
+          onClick={() => useUi.getState().setRules('')}
+        />
       </div>
-      <h3 className="label mt-5">Se et ferdig spill</h3>
-      <p className="mb-2 text-sm text-muted">Bla gjennom en runde spørsmål for spørsmål, og se hvordan kartet krymper.</p>
+      <h3 className="label mt-5">{tr('Se et ferdig spill', 'Watch a finished game')}</h3>
+      <p className="mb-2 text-sm text-muted">{tr('Bla gjennom en runde spørsmål for spørsmål, og se hvordan kartet krymper.', 'Step through a round question by question, and see how the map shrinks.')}</p>
       <div className="grid grid-cols-2 gap-1.5">
         {CITIES.map((c) => (
           <button key={c.id} className="btn justify-start! gap-2!" onClick={() => learn({ city: c.id })}>
@@ -252,7 +271,7 @@ export function LearnButtons() {
       </div>
       {sandbox && (
         <button className="btn btn-danger mt-4 w-full" onClick={() => (useShowcase.getState().city ? stopShowcase() : stopGuide())}>
-          Avslutt og gå tilbake til spillet mitt
+          {tr('Avslutt og gå tilbake til spillet mitt', 'Stop and go back to my game')}
         </button>
       )}
     </div>
@@ -263,25 +282,36 @@ export function LearnButtons() {
 export function HelpButtons() {
   return (
     <section className="mb-5">
-      <h3 className="label">Lær appen</h3>
+      <h3 className="label">{tr('Lær appen', 'Learn the app')}</h3>
       <LearnButtons />
     </section>
   )
 }
 
 /** Kort forklaring av hver spørsmålstype, til de simulerte spillene. */
-const KIND_TIPS: Partial<Record<Question['kind'], string>> = {
-  radar: 'Radar: er hider innenfor en sirkel rundt seekerne? Begge svar fjerner en stor del av kartet.',
-  thermometer: 'Termometer: seekerne reiser et stykke. Kom de nærmere hider (varmere) eller lenger unna (kaldere)? Kartet deles på midten mellom de to stedene.',
-  admin: 'Matching: er hider i samme område som seekerne? Ja gir bare det området, nei fjerner det.',
-  nearest: 'Matching: har hider samme nærmeste sted av denne typen som seekerne?',
-  geodist: 'Measuring: er hider nærmere eller lenger fra kysten enn seekerne er?',
-  measure: 'Measuring: er hider nærmere eller lenger fra nærmeste sted av denne typen enn seekerne er?',
-  transit: 'Matching: stopper transportmiddelet seekerne sitter på ved hiders stasjon?',
-}
+const KIND_TIPS: Partial<Record<Question['kind'], string>> = tr(
+  {
+    radar: 'Radar: er hider innenfor en sirkel rundt seekerne? Begge svar fjerner en stor del av kartet.',
+    thermometer: 'Termometer: seekerne reiser et stykke. Kom de nærmere hider (varmere) eller lenger unna (kaldere)? Kartet deles på midten mellom de to stedene.',
+    admin: 'Matching: er hider i samme område som seekerne? Ja gir bare det området, nei fjerner det.',
+    nearest: 'Matching: har hider samme nærmeste sted av denne typen som seekerne?',
+    geodist: 'Measuring: er hider nærmere eller lenger fra kysten enn seekerne er?',
+    measure: 'Measuring: er hider nærmere eller lenger fra nærmeste sted av denne typen enn seekerne er?',
+    transit: 'Matching: stopper transportmiddelet seekerne sitter på ved hiders stasjon?',
+  },
+  {
+    radar: 'Radar: is the hider inside a circle around the seekers? Either answer removes a big part of the map.',
+    thermometer: 'Thermometer: the seekers travel a stretch. Did they get closer to the hider (hotter) or further away (colder)? The map is split halfway between the two places.',
+    admin: 'Matching: is the hider in the same area as the seekers? Yes leaves only that area, no removes it.',
+    nearest: 'Matching: is the hider’s nearest place of this kind the same as the seekers’?',
+    geodist: 'Measuring: is the hider closer to or further from the coast than the seekers are?',
+    measure: 'Measuring: is the hider closer to or further from the nearest place of this kind than the seekers are?',
+    transit: 'Matching: does the vehicle the seekers are on stop at the hider’s station?',
+  },
+)
 
 /** Kort navn på kategorien, til tidslinjen i de simulerte spillene. */
-const SHORT: Record<string, string> = { Radar: 'R', Thermometer: 'T', Matching: 'Ma', Measuring: 'Me', Photos: 'F', Tentacles: 'Te' }
+const SHORT: Record<string, string> = { Radar: 'R', Thermometer: 'T', Matching: 'Ma', Measuring: 'Me', Photos: tr('F', 'P'), Tentacles: 'Te' }
 
 /**
  * Det simulerte spillet: et ark nederst i kartet med en tidslinje over spørsmålene. Trykk på et
@@ -304,17 +334,17 @@ export function ShowcaseCard({ data }: { data: GeoData }) {
   const after = sim && step >= 1 ? sim.left[Math.min(step, n) - 1] : 0
 
   return (
-    <DockedSheet label="Simulert spill">
+    <DockedSheet label={tr('Simulert spill', 'Simulated game')}>
       <div className="mb-2 flex items-center gap-2">
-        <span className="sign px-2 py-0.5 text-sm">Reprise</span>
-        <span className="flex-1 font-sign text-sm text-muted">Simulert spill i {cityName}</span>
-        <CloseButton onClick={stopShowcase} label="Avslutt det simulerte spillet" />
+        <span className="sign px-2 py-0.5 text-sm">{tr('Reprise', 'Replay')}</span>
+        <span className="flex-1 font-sign text-sm text-muted">{tr(`Simulert spill i ${cityName}`, `Simulated game in ${cityName}`)}</span>
+        <CloseButton onClick={stopShowcase} label={tr('Avslutt det simulerte spillet', 'End the simulated game')} />
       </div>
       {!sim ? (
         <p className="flex items-center gap-2 py-2 text-sm text-muted">
           {error || (
             <>
-              <Spinner /> Henter spillet…
+              <Spinner /> {tr('Henter spillet…', 'Loading the game…')}
             </>
           )}
         </p>
@@ -323,9 +353,12 @@ export function ShowcaseCard({ data }: { data: GeoData }) {
           <Timeline sim={sim} step={step} busy={busy} />
           {step === 0 && (
             <>
-              <h2 className="mt-2 text-lg leading-tight font-bold">En datastyrt hider har gjemt seg</h2>
+              <h2 className="mt-2 text-lg leading-tight font-bold">{tr('En datastyrt hider har gjemt seg', 'A computer hider is hiding')}</h2>
               <p className="mt-1 text-[15px] leading-snug">
-                Hen er ved én av {sim.total} stasjoner. Seekerne starter ved {sim.start}. Bla med pilene og se hvordan hvert svar krymper kartet.
+                {tr(
+                  `Hen er ved én av ${sim.total} stasjoner. Seekerne starter ved ${sim.start}. Bla med pilene og se hvordan hvert svar krymper kartet.`,
+                  `They are at one of ${sim.total} stations. The seekers start at ${sim.start}. Step with the arrows and see how each answer shrinks the map.`,
+                )}
               </p>
             </>
           )}
@@ -334,44 +367,47 @@ export function ShowcaseCard({ data }: { data: GeoData }) {
               <div className="mt-2 flex items-end justify-between gap-3">
                 <h2 className="text-lg leading-tight font-bold">
                   {categoryOf(q)}
-                  <span className="block text-sm font-normal text-muted">Spørsmål {step} av {n}</span>
+                  <span className="block text-sm font-normal text-muted">{tr(`Spørsmål ${step} av ${n}`, `Question ${step} of ${n}`)}</span>
                 </h2>
-                <span className="board shrink-0 text-right text-lg leading-none" aria-label={`${before} til ${after} stasjoner igjen`}>
+                <span className="board shrink-0 text-right text-lg leading-none" aria-label={tr(`${before} til ${after} stasjoner igjen`, `${before} to ${after} stations left`)}>
                   <span className="text-muted">{before}</span> → <b className="text-accent">{after}</b>
                 </span>
               </div>
               <p className="mt-1 text-[15px] leading-snug">{describe(q, data)}</p>
               <p className="mt-1.5 flex items-center gap-2 text-sm">
-                Hider svarte <span className="sign px-2 py-0.5 text-[15px]">{answerLabel(q, q.answer!)}</span>
+                {tr('Hider svarte', 'The hider answered')} <span className="sign px-2 py-0.5 text-[15px]">{answerLabel(q, q.answer!)}</span>
               </p>
               {KIND_TIPS[q.kind] && <p className="mt-1 text-sm text-muted">{KIND_TIPS[q.kind]}</p>}
             </>
           )}
           {step > n && (
             <>
-              <h2 className="mt-2 text-lg leading-tight font-bold">Endgame ved {sim.hider.name}</h2>
+              <h2 className="mt-2 text-lg leading-tight font-bold">{tr(`Endgame ved ${sim.hider.name}`, `Endgame at ${sim.hider.name}`)}</h2>
               <p className="mt-1 text-[15px] leading-snug">
-                {after === 1 ? 'Med én stasjon igjen reiser seekerne dit' : `Med ${after} stasjoner igjen velger seekerne den mest sannsynlige, reiser dit`} og starter endgame. Hider var ved {sim.hider.name}. I et ekte spill leter seekerne nå i sonen til de ser hider.
+                {tr(
+                  `${after === 1 ? 'Med én stasjon igjen reiser seekerne dit' : `Med ${after} stasjoner igjen velger seekerne den mest sannsynlige, reiser dit`} og starter endgame. Hider var ved ${sim.hider.name}. I et ekte spill leter seekerne nå i sonen til de ser hider.`,
+                  `${after === 1 ? 'With one station left the seekers travel there' : `With ${after} stations left the seekers pick the most likely one, travel there`} and start the endgame. The hider was at ${sim.hider.name}. In a real game the seekers now search the zone until they see the hider.`,
+                )}
               </p>
             </>
           )}
           {ready < n && (
             <p className="mt-2 flex items-center gap-2 text-xs text-muted" role="status">
-              <Spinner className="size-3!" /> Forbereder stegene ({ready}/{n})
+              <Spinner className="size-3!" /> {tr('Forbereder stegene', 'Preparing the steps')} ({ready}/{n})
             </p>
           )}
           <div className="mt-3 flex gap-1.5">
-            <button className="btn px-3!" aria-label="Forrige" disabled={step === 0 || busy} onClick={() => goToStep(step - 1)}>
+            <button className="btn px-3!" aria-label={tr('Forrige', 'Previous')} disabled={step === 0 || busy} onClick={() => goToStep(step - 1)}>
               <ChevronLeft size={20} aria-hidden />
             </button>
             {step < total - 1 ? (
               <button className="btn btn-primary flex-1" disabled={busy} onClick={() => goToStep(step + 1)}>
                 {busy ? <Spinner /> : null}
-                Neste <ChevronRight size={18} aria-hidden />
+                {tr('Neste', 'Next')} <ChevronRight size={18} aria-hidden />
               </button>
             ) : (
               <button className="btn btn-primary flex-1" onClick={stopShowcase}>
-                Ferdig
+                {tr('Ferdig', 'Done')}
               </button>
             )}
           </div>
@@ -389,9 +425,9 @@ function Timeline({ sim, step, busy }: { sim: SimGame; step: number; busy: boole
   // Nyere nettlesere returnerer et løfte fra scrollIntoView. React tåler bare en funksjon tilbake, derav void.
   useEffect(() => void row.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }), [step])
   // Steget du er på har hele navnet. De andre er forkortet, så hele runden får plass.
-  const items = [{ key: 's', label: 'Start', full: 'Start' }, ...sim.questions.map((q, i) => ({ key: q.id, label: SHORT[categoryOf(q)] ?? String(i + 1), full: categoryOf(q) })), { key: 'e', label: 'Slutt', full: 'Endgame' }]
+  const items = [{ key: 's', label: 'Start', full: 'Start' }, ...sim.questions.map((q, i) => ({ key: q.id, label: SHORT[categoryOf(q)] ?? String(i + 1), full: categoryOf(q) })), { key: 'e', label: tr('Slutt', 'End'), full: 'Endgame' }]
   return (
-    <div ref={row} className="-mx-1 flex items-center overflow-x-auto px-1 py-1 [scrollbar-width:none]" role="tablist" aria-label="Steg i runden">
+    <div ref={row} className="-mx-1 flex items-center overflow-x-auto px-1 py-1 [scrollbar-width:none]" role="tablist" aria-label={tr('Steg i runden', 'Steps in the round')}>
       {items.map((it, i) => {
         const at = i === step
         const done = i < step
@@ -401,7 +437,7 @@ function Timeline({ sim, step, busy }: { sim: SimGame; step: number; busy: boole
             <button
               role="tab"
               aria-selected={at}
-              aria-label={i === 0 ? 'Start' : i > n ? 'Endgame' : `Spørsmål ${i}: ${categoryOf(sim.questions[i - 1])}`}
+              aria-label={i === 0 ? 'Start' : i > n ? 'Endgame' : `${tr('Spørsmål', 'Question')} ${i}: ${categoryOf(sim.questions[i - 1])}`}
               disabled={busy}
               className={`grid h-7 min-w-7 cursor-pointer place-items-center rounded-full px-1.5 font-sign text-xs font-bold ${at ? 'bg-accent text-accent-text' : done ? 'bg-accent/20 text-accent' : 'border border-border bg-panel text-muted'}`}
               onClick={() => goToStep(i)}

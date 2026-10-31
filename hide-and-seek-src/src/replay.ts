@@ -1,5 +1,6 @@
 import type { Feature, Polygon, MultiPolygon } from 'geojson'
 import { cityOf } from './cities'
+import { LOCALE, tr } from './lang'
 import { answerLabel, categoryOf, describe } from './form'
 import { dist, excluded, nearestStation, regionOf, solve, stationPos, type Result } from './geo'
 import type { ArchivedRound } from './store'
@@ -99,7 +100,7 @@ export function roundStart(a: ArchivedRound) {
 /** Hvor lenge videoen står stille på en hendelse, så teksten rekker å bli lest. */
 export function holdFor(a: ArchivedRound, data: GeoData, b: Beat): number {
   const c = card(a, data, null, b)
-  const text = b.kind === 'answer' ? `${c.answer ?? ''} ${c.count ?? '00 → 00 stasjoner'}` : `${c.title} ${c.body}`
+  const text = b.kind === 'answer' ? `${c.answer ?? ''} ${c.count ?? tr('00 → 00 stasjoner', '00 → 00 stations')}` : `${c.title} ${c.body}`
   return Math.min(MAX_HOLD_S, BASE_S[b.kind] + text.length / READ_CPS)
 }
 
@@ -473,7 +474,7 @@ export function prepare(a: ArchivedRound, data: GeoData, settings: Settings): Re
   let n = 0
   const tracks = Object.entries(all)
     .sort(([, x], [, y]) => (x.role === y.role ? (x.pts[0]?.[0] ?? 0) - (y.pts[0]?.[0] ?? 0) : x.role === 'hider' ? 1 : -1))
-    .map(([k, t]) => [k, t, t.role === 'hider' ? `Hider (${a.hider})` : k === 'seekers' ? 'Seekerne' : `Seeker ${++n}`] as [string, Track, string])
+    .map(([k, t]) => [k, t, t.role === 'hider' ? `Hider (${a.hider})` : k === 'seekers' ? tr('Seekerne', 'Seekers') : `Seeker ${++n}`] as [string, Track, string])
   const lines = data.lines.features
     .filter((f) => rules.lines.includes(f.properties.line))
     .map((f) => ({ color: f.properties.color, width: f.properties.mode === 'bus' ? 4 : f.properties.mode === 'tram' ? 5 : 6, pts: (f.geometry.coordinates as LngLat[]).map(project) }))
@@ -497,8 +498,8 @@ function targetCamera(r: Replay, t: number): Camera {
   } else {
     pts.push([r.home[0], r.home[1]], [r.home[2], r.home[3]])
   }
-  for (const [, tr] of r.tracks) {
-    const p = posAt(tr, t)
+  for (const [, track] of r.tracks) {
+    const p = posAt(track, t)
     if (p) pts.push(project(p))
   }
   return fit(boxOf(pts)!)
@@ -599,40 +600,62 @@ const clockText = (ms: number) => {
   const h = Math.floor(t / 3600)
   return `${h ? `${h}:` : ''}${String(Math.floor((t % 3600) / 60)).padStart(h ? 2 : 1, '0')}:${String(t % 60).padStart(2, '0')}`
 }
-const timeOfDay = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
+const timeOfDay = (t: number) => new Date(t).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })
 
 /** Teksten på kortet nederst for en hendelse. */
 function card(a: ArchivedRound, data: GeoData, cps: Checkpoint[] | null, b: Beat): { tag: string; title: string; body: string; answer?: string; count?: string; color: string } {
   const station = (id?: string | null) => data.stations.find((s) => s.id === id)?.name
   switch (b.kind) {
     case 'start':
-      return { tag: 'Gjemmetid', title: `${a.hider} gjemmer seg`, body: `${a.round.hidingMinutes} minutter på å finne et gjemmested. Soner på ${a.setup.zoneRadius} m rundt stasjonene.`, color: COLORS.hider }
+      return tr(
+        { tag: 'Gjemmetid', title: `${a.hider} gjemmer seg`, body: `${a.round.hidingMinutes} minutter på å finne et gjemmested. Soner på ${a.setup.zoneRadius} m rundt stasjonene.`, color: COLORS.hider },
+        { tag: 'Hiding time', title: `${a.hider} is hiding`, body: `${a.round.hidingMinutes} minutes to find a hiding spot. Zones of ${a.setup.zoneRadius} m around the stations.`, color: COLORS.hider },
+      )
     case 'seek':
-      return { tag: 'Leting', title: 'Letingen starter', body: 'Seekerne kan stille spørsmål.', color: COLORS.seeker }
+      return { tag: tr('Leting', 'Seeking'), title: tr('Letingen starter', 'The seeking starts'), body: tr('Seekerne kan stille spørsmål.', 'The seekers can ask questions.'), color: COLORS.seeker }
     case 'ask':
-      return { tag: `${categoryOf(b.q!)} · kl. ${timeOfDay(b.q!.time)}`, title: `Spørsmål ${b.i! + 1}`, body: describe(b.q!, data), color: COLORS.question }
+      return { tag: `${categoryOf(b.q!)} · ${tr('kl.', 'at')} ${timeOfDay(b.q!.time)}`, title: `${tr('Spørsmål', 'Question')} ${b.i! + 1}`, body: describe(b.q!, data), color: COLORS.question }
     case 'answer': {
       const before = cps ? checkpointAt(cps, b.t, true).result.stations.length : 0
       const after = cps ? checkpointAt(cps, b.t).result.stations.length : 0
       return {
-        tag: `${categoryOf(b.q!)} · svar kl. ${timeOfDay(b.t)}`,
-        title: `Spørsmål ${b.i! + 1}`,
+        tag: `${categoryOf(b.q!)} · ${tr('svar kl.', 'answered at')} ${timeOfDay(b.t)}`,
+        title: `${tr('Spørsmål', 'Question')} ${b.i! + 1}`,
         body: describe(b.q!, data),
         answer: answerLabel(b.q!, b.q!.answer!),
-        count: after !== before ? `${before} → ${after} stasjoner` : undefined,
+        count: after !== before ? `${before} → ${after} ${tr('stasjoner', 'stations')}` : undefined,
         color: COLORS.question,
       }
     }
     case 'move': {
       const m = a.round.moves?.find((x) => x.at === b.t)
-      return { tag: 'Kort', title: 'Move', body: `Hider bytter sone${m?.from ? ` og forlater ${station(m.from)}` : ''}. Svarene fra før teller ikke lenger.`, color: COLORS.hider }
+      return {
+        tag: tr('Kort', 'Card'),
+        title: 'Move',
+        body: tr(
+          `Hider bytter sone${m?.from ? ` og forlater ${station(m.from)}` : ''}. Svarene fra før teller ikke lenger.`,
+          `The hider changes zone${m?.from ? ` and leaves ${station(m.from)}` : ''}. Earlier answers no longer count.`,
+        ),
+        color: COLORS.hider,
+      }
     }
     case 'endgame':
-      return { tag: 'Endgame', title: `Endgame ved ${station(a.round.endgame?.stationId) ?? 'ukjent stasjon'}`, body: 'Seekerne er i hiders sone, og hider står stille.', color: COLORS.accent }
+      return {
+        tag: 'Endgame',
+        title: tr(`Endgame ved ${station(a.round.endgame?.stationId) ?? 'ukjent stasjon'}`, `Endgame at ${station(a.round.endgame?.stationId) ?? 'unknown station'}`),
+        body: tr('Seekerne er i hiders sone, og hider står stille.', "The seekers are in the hider's zone, and the hider stays put."),
+        color: COLORS.accent,
+      }
     case 'end':
       return a.outcome === 'found'
-        ? { tag: 'Ferdig', title: `${a.hider} er funnet!`, body: `Skjult i ${clockText((a.seconds ?? 0) * 1000)} · ${a.stats.asked} spørsmål.`, color: COLORS.accent }
-        : { tag: 'Ferdig', title: 'Runden ble avbrutt', body: `${a.stats.asked} spørsmål stilt.`, color: COLORS.muted }
+        ? tr(
+            { tag: 'Ferdig', title: `${a.hider} er funnet!`, body: `Skjult i ${clockText((a.seconds ?? 0) * 1000)} · ${a.stats.asked} spørsmål.`, color: COLORS.accent },
+            { tag: 'Done', title: `${a.hider} was found!`, body: `Hidden for ${clockText((a.seconds ?? 0) * 1000)} · ${a.stats.asked} questions.`, color: COLORS.accent },
+          )
+        : tr(
+            { tag: 'Ferdig', title: 'Runden ble avbrutt', body: `${a.stats.asked} spørsmål stilt.`, color: COLORS.muted },
+            { tag: 'Done', title: 'The round was stopped', body: `${a.stats.asked} questions asked.`, color: COLORS.muted },
+          )
   }
 }
 
@@ -792,13 +815,13 @@ export function drawFrame(ctx: CanvasRenderingContext2D, r: Replay, cam: Camera,
   })
 
   // Spillerne og veien de har gått.
-  for (const [, tr, label] of r.tracks) {
-    const now = posAt(tr, t)
+  for (const [, track, label] of r.tracks) {
+    const now = posAt(track, t)
     if (!now) continue
-    const color = tr.role === 'hider' ? COLORS.hider : COLORS.seeker
+    const color = track.role === 'hider' ? COLORS.hider : COLORS.seeker
     ctx.beginPath()
     let started = false
-    for (const pt of tr.pts) {
+    for (const pt of track.pts) {
       if (pt[0] > t) break
       const [x, y] = xy([pt[1], pt[2]])
       if (started) ctx.lineTo(x, y)
@@ -809,7 +832,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, r: Replay, cam: Camera,
     ctx.strokeStyle = color
     ctx.globalAlpha = 0.7
     ctx.lineWidth = 6
-    ctx.setLineDash(tr.role === 'hider' ? [] : [2, 11])
+    ctx.setLineDash(track.role === 'hider' ? [] : [2, 11])
     ctx.stroke()
     ctx.setLineDash([])
     ctx.globalAlpha = 1
@@ -825,7 +848,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, r: Replay, cam: Camera,
     ctx.textBaseline = 'middle'
     // Hider har merkelappen til venstre, så den ikke dekker seekerne når de er nær.
     const w = ctx.measureText(label).width
-    const lx = tr.role === 'hider' ? x - 24 - w - 20 : x + 24
+    const lx = track.role === 'hider' ? x - 24 - w - 20 : x + 24
     roundRect(ctx, lx, y - 20, w + 20, 40, 10)
     ctx.fillStyle = color
     ctx.fill()
@@ -838,9 +861,9 @@ export function drawFrame(ctx: CanvasRenderingContext2D, r: Replay, cam: Camera,
 
 /** Hvor fort klokka går, som tekst: «1 s = 1 min». */
 export function paceText(speed: number) {
-  if (speed === 0) return '⏸ Klokka står'
+  if (speed === 0) return tr('⏸ Klokka står', '⏸ Clock paused')
   const min = speed / 60
-  const amount = min < 1 ? `${Math.max(1, Math.round(speed))} s` : `${min < 10 ? min.toFixed(1).replace('.0', '').replace('.', ',') : Math.round(min)} min`
+  const amount = min < 1 ? `${Math.max(1, Math.round(speed))} s` : `${min < 10 ? min.toFixed(1).replace('.0', '').replace('.', tr(',', '.')) : Math.round(min)} min`
   return `${min > 1.5 ? '⏩' : '▶'} 1 s = ${amount}`
 }
 
@@ -855,17 +878,17 @@ function drawHud(ctx: CanvasRenderingContext2D, r: Replay, t: number, beat: Beat
   ctx.fillText(`HIDE AND SEEK ${cityOf(a.setup.city).name.toUpperCase()}`, 40, 46)
   ctx.fillStyle = '#ffffff'
   ctx.font = '800 44px system-ui, sans-serif'
-  ctx.fillText(`${a.hider} · runde ${a.nth}`, 40, 96)
+  ctx.fillText(`${a.hider} · ${tr('runde', 'round')} ${a.nth}`, 40, 96)
 
   const seekFrom = a.round.seekFrom
   const hiding = seekFrom !== null && t < seekFrom
   const egOn = a.round.endgame && t >= a.round.endgame.time
-  const phase = hiding ? 'Gjemmetid igjen' : egOn ? 'Endgame' : 'Leting'
+  const phase = hiding ? tr('Gjemmetid igjen', 'Hiding time left') : egOn ? 'Endgame' : tr('Leting', 'Seeking')
   const clock = hiding ? seekFrom! - t : seekFrom !== null ? t - seekFrom : t - r.tl.start
   ctx.textAlign = 'right'
   ctx.fillStyle = 'rgba(255,255,255,0.7)'
   ctx.font = '600 24px system-ui, sans-serif'
-  ctx.fillText(`${phase} · kl. ${timeOfDay(t)}`, WIDTH - 40, 46)
+  ctx.fillText(`${phase} · ${timeOfDay(t)}`, WIDTH - 40, 46)
   ctx.fillStyle = '#ffffff'
   ctx.font = '800 54px ui-monospace, Menlo, monospace'
   ctx.fillText(clockText(clock), WIDTH - 40, 100)
@@ -891,7 +914,7 @@ function drawHud(ctx: CanvasRenderingContext2D, r: Replay, t: number, beat: Beat
   // Hvor mange stasjoner som er igjen.
   const showOld = beat?.kind === 'answer' && p < 0.4
   const left = checkpointAt(r.cps, t, showOld).result.stations.length
-  const chip = left === 1 ? '1 mulig stasjon' : `${left} mulige stasjoner`
+  const chip = left === 1 ? tr('1 mulig stasjon', '1 possible station') : tr(`${left} mulige stasjoner`, `${left} possible stations`)
   const cw = ctx.measureText(chip).width + 36
   roundRect(ctx, 40, HUD_TOP + 24, cw, 46, 23)
   ctx.fillStyle = COLORS.accent
@@ -924,7 +947,7 @@ function drawHud(ctx: CanvasRenderingContext2D, r: Replay, t: number, beat: Beat
     const lines = wrap(ctx, c.body, tw)
     const body = lines.length > 6 ? [...lines.slice(0, 5), fitText(ctx, lines.slice(5).join(' '), tw)] : lines
     ctx.font = '800 34px system-ui, sans-serif'
-    const answer = c.answer ? wrap(ctx, `Svar: ${c.answer}`, tw).slice(0, 2) : []
+    const answer = c.answer ? wrap(ctx, `${tr('Svar', 'Answer')}: ${c.answer}`, tw).slice(0, 2) : []
     const h = 124 + body.length * 40 + (answer.length ? 24 + answer.length * 42 : 0) + (c.count ? 44 : 0)
     const y0 = HEIGHT - 70 - h
     roundRect(ctx, x0, y0, w, h, 24)
@@ -961,8 +984,8 @@ function drawHud(ctx: CanvasRenderingContext2D, r: Replay, t: number, beat: Beat
   const legend: [string, string][] = [
     [COLORS.hider, 'Hider'],
     [COLORS.seeker, 'Seeker'],
-    [COLORS.question, 'Spørsmål'],
-    [COLORS.accent, 'Mulig område'],
+    [COLORS.question, tr('Spørsmål', 'Question')],
+    [COLORS.accent, tr('Mulig område', 'Possible area')],
   ]
   roundRect(ctx, 26, HEIGHT - 60, 640, 40, 20)
   ctx.fillStyle = 'rgba(255,255,255,0.85)'
@@ -1035,7 +1058,7 @@ export async function renderReplay(a: ArchivedRound, data: GeoData, settings: Se
 /** Reserve uten WebCodecs: spiller av bildene i sanntid og tar opp lerretet. */
 async function recordRealtime(canvas: HTMLCanvasElement, draw: (i: number) => void, frames: number, onProgress?: (p: Progress) => void): Promise<Blob> {
   const type = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find((t) => MediaRecorder.isTypeSupported(t))
-  if (!type) throw new Error('Nettleseren kan ikke lage video.')
+  if (!type) throw new Error(tr('Nettleseren kan ikke lage video.', 'This browser cannot make videos.'))
   draw(0)
   const stream = canvas.captureStream(FPS)
   const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: BITRATE })
@@ -1055,6 +1078,6 @@ async function recordRealtime(canvas: HTMLCanvasElement, draw: (i: number) => vo
   }
   rec.stop()
   await stopped
-  stream.getTracks().forEach((tr) => tr.stop())
+  stream.getTracks().forEach((track) => track.stop())
   return new Blob(chunks, { type: type.split(';')[0] })
 }

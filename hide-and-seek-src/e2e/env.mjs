@@ -15,12 +15,15 @@ const chromeOpts = !process.env.CI && existsSync(CHROME) ? { executablePath: CHR
 
 export const launch = () => (TARGET === 'iphone' ? webkit.launch() : chromium.launch({ ...chromeOpts, headless: true }))
 
-/** Konteksten for telefonen: skjerm, berøring og nettleserinfo går foran testens egne mål. */
+/**
+ * Konteksten for telefonen: skjerm, berøring og nettleserinfo går foran testens egne mål.
+ * Telefonen er norsk, så appen er på norsk, med mindre testen ber om et annet språk (`locale`).
+ */
 export function device(opts = {}) {
   const d = TARGET === 'iphone' ? devices['iPhone 14'] : TARGET === 'android' ? devices['Pixel 7'] : null
-  if (!d) return opts
+  if (!d) return { locale: 'nb-NO', ...opts }
   const { viewport: _v, deviceScaleFactor: _s, hasTouch: _t, ...rest } = opts
-  return { ...rest, ...d }
+  return { locale: 'nb-NO', ...rest, ...d }
 }
 
 /**

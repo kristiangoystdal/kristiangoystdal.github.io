@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { tr } from './lang'
 import { useArchivedView } from './Archive'
 import MapView from './MapView'
 import { BonusPrompt, PossibleStations, RoundBar } from './Panels'
@@ -62,7 +63,7 @@ function useSharedLink() {
     if (room) {
       history.replaceState(null, '', location.pathname)
       const mine = useGame.getState().questions.length
-      if (!mine || confirm(`Bli med i rom ${room}? Dine ${mine} spørsmål erstattes av rommets.`)) void joinRoom(room)
+      if (!mine || confirm(tr(`Bli med i rom ${room}? Dine ${mine} spørsmål erstattes av rommets.`, `Join room ${room}? Your ${mine} questions will be replaced by the room's.`))) void joinRoom(room)
       return
     }
     resumeRoom()
@@ -78,7 +79,10 @@ function useSharedLink() {
     if (!game) return
     history.replaceState(null, '', location.pathname)
     const mine = useGame.getState().questions.length
-    const ask = `Importere delt spill med ${game.questions.length} spørsmål?${mine ? ` Dine ${mine} spørsmål erstattes (kan angres).` : ''}`
+    const ask = tr(
+      `Importere delt spill med ${game.questions.length} spørsmål?${mine ? ` Dine ${mine} spørsmål erstattes (kan angres).` : ''}`,
+      `Import a shared game with ${game.questions.length} questions?${mine ? ` Your ${mine} questions will be replaced (can be undone).` : ''}`,
+    )
     if (confirm(ask)) useGame.getState().importGame(game)
   }, [])
 }
@@ -95,7 +99,7 @@ function useHiderLocation(data: GeoData | null) {
   const on = useGame((s) => s.mode === 'hider')
   useEffect(() => {
     if (!on || !data) return
-    if (!navigator.geolocation) return void useHiderPos.setState({ error: 'Nettleseren støtter ikke posisjon.' })
+    if (!navigator.geolocation) return void useHiderPos.setState({ error: tr('Nettleseren støtter ikke posisjon.', 'The browser does not support location.') })
     const watch = navigator.geolocation.watchPosition(
       (p) => {
         const pos: LngLat = [p.coords.longitude, p.coords.latitude]
@@ -108,7 +112,7 @@ function useHiderLocation(data: GeoData | null) {
         const id = hiderStation(data.stations, here, settings.zoneRadius, hider.stationId).id
         if (id !== hider.stationId) setHider({ stationId: id })
       },
-      (e) => useHiderPos.setState({ error: e.code === e.PERMISSION_DENIED ? 'Nettsiden har ikke lov til å bruke posisjonen. Slå det på i innstillingene.' : 'Finner ikke posisjonen din akkurat nå.' }),
+      (e) => useHiderPos.setState({ error: e.code === e.PERMISSION_DENIED ? tr('Nettsiden har ikke lov til å bruke posisjonen. Slå det på i innstillingene.', 'The site is not allowed to use your location. Turn it on in the settings.') : tr('Finner ikke posisjonen din akkurat nå.', 'Cannot find your position right now.') }),
       { enableHighAccuracy: true, maximumAge: 5000 },
     )
     return () => navigator.geolocation.clearWatch(watch)
@@ -215,10 +219,10 @@ export default function App() {
   // Demoen trenger å vite hvor mange stasjoner seekeren har igjen.
   useEffect(() => void (result && useGuide.setState({ left: result.stations.length })), [result])
 
-  if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
+  if (error) return <p className="p-6 text-bad">{tr('Kunne ikke laste stasjonsdata. Last siden på nytt.', 'Could not load the station data. Reload the page.')}</p>
   // Appen vises med en gang. Det som trenger kartdataene, viser at det laster til de er der.
   const ready = data && result && loaded ? { data, result, loaded } : null
-  const loadingText = `Laster kartet for ${cityOf(cityId).name}…`
+  const loadingText = tr(`Laster kartet for ${cityOf(cityId).name}…`, `Loading the map for ${cityOf(cityId).name}…`)
 
   // Før og mellom rundene vises lobbyen. Mens runden pågår, spillskjermen med klokke og faner.
   const playing = seekFrom !== null
@@ -251,13 +255,13 @@ export default function App() {
             </h1>
             <span className="flex gap-1.5">
               <button className="btn min-h-9! px-2.5!" data-guide="app" onClick={() => useUi.getState().setSheet('app')}>
-                ⚙ Hjelp
+                {tr('⚙ Hjelp', '⚙ Help')}
               </button>
             </span>
           </header>
           {past ? (
             <>
-              <p className="mb-4 rounded-lg border border-accent p-3 text-sm">Kartet viser en tidligere runde. Trykk «Tilbake til spillet» på kartet for å gå tilbake.</p>
+              <p className="mb-4 rounded-lg border border-accent p-3 text-sm">{tr('Kartet viser en tidligere runde. Trykk «Tilbake til spillet» på kartet for å gå tilbake.', 'The map shows an earlier round. Tap "Back to the game" on the map to go back.')}</p>
               <PossibleStations data={past.data} result={past.result} />
             </>
           ) : playing ? (

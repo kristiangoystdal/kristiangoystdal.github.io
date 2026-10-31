@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { tr } from './lang'
 import { deviceId } from './device'
 import { announce, announceRound, notify } from './notify'
 import { GAME_SETTINGS, useGame, type ArchivedRound, type HiderPoint, type Round, type State } from './store'
@@ -159,7 +160,18 @@ export const withTimeout = <T>(p: Promise<T>) =>
   Promise.race([
     p,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Fikk ikke kontakt med rommet. Sjekk nettet og prøv igjen. Spiller veldig mange akkurat nå, kan gratisgrensen på 100 samtidige være nådd. Da kan dere spille videre på én telefon.')), TIMEOUT_MS),
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              tr(
+                'Fikk ikke kontakt med rommet. Sjekk nettet og prøv igjen. Spiller veldig mange akkurat nå, kan gratisgrensen på 100 samtidige være nådd. Da kan dere spille videre på én telefon.',
+                'Could not reach the room. Check your connection and try again. If very many people are playing right now, the free limit of 100 at once may be reached. Then you can keep playing on one phone.',
+              ),
+            ),
+          ),
+        TIMEOUT_MS,
+      ),
     ),
   ])
 
@@ -213,7 +225,7 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       await withTimeout(db.set(room, { ...toShared(useGame.getState()), created: db.serverTimestamp() }))
     } else if (how === 'join') {
       const created = await withTimeout(db.get(db.child(room, 'created')))
-      if (!created.exists()) throw new Error(`Fant ikke rommet ${code}. Sjekk koden.`)
+      if (!created.exists()) throw new Error(tr(`Fant ikke rommet ${code}. Sjekk koden.`, `Could not find room ${code}. Check the code.`))
     }
 
     // Sist kjente tilstand i rommet. Lokale endringer sendes som forskjellen fra denne.
@@ -237,10 +249,10 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       if (Object.keys(patch).length === 0) return
       synced = next
       const { main, marks } = splitPatch(patch)
-      if (Object.keys(main).length) db.update(room, main).catch(() => useSync.setState({ error: 'Kunne ikke lagre til rommet.' }))
+      if (Object.keys(main).length) db.update(room, main).catch(() => useSync.setState({ error: tr('Kunne ikke lagre til rommet.', 'Could not save to the room.') }))
       // Merkene sendes for seg. Er databasereglene ikke oppdatert for dem, virker resten av spillet likevel.
       if (Object.keys(marks).length)
-        db.update(room, marks).catch(() => useSync.setState({ error: 'Notater og svar tatt ut av kartet kunne ikke deles i rommet. Databasereglene må oppdateres.' }))
+        db.update(room, marks).catch(() => useSync.setState({ error: tr('Notater og svar tatt ut av kartet kunne ikke deles i rommet. Databasereglene må oppdateres.', 'Notes and answers taken off the map could not be shared in the room. The database rules need updating.') }))
     }
     const offRemote = db.onValue(room, (snap) => {
       const value = snap.val() as Partial<Shared> | null
@@ -267,7 +279,11 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
       const losers = clashLosers(next.questions, deviceId())
       if (losers.length) {
         for (const q of losers) useGame.getState().removeQuestion(q.id)
-        notify({ title: 'Spørsmålet ditt ble trukket tilbake', body: 'En annen seeker stilte et spørsmål samtidig. Vent på svaret på det, og still ditt etterpå.', tab: 'questions' })
+        notify({
+          title: tr('Spørsmålet ditt ble trukket tilbake', 'Your question was withdrawn'),
+          body: tr('En annen seeker stilte et spørsmål samtidig. Vent på svaret på det, og still ditt etterpå.', 'Another seeker asked a question at the same time. Wait for its answer, and ask yours afterwards.'),
+          tab: 'questions',
+        })
       }
       // Sender det som eventuelt ble endret lokalt mens rommets tilstand ble lagt inn.
       push()
@@ -287,7 +303,7 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
     void loadArchive()
   } catch (e) {
     const denied = /permission/i.test((e as Error).message)
-    useSync.setState({ room: null, status: 'off', error: denied ? 'Databasen slipper ikke inn. Sikkerhetsreglene er ikke satt opp.' : (e as Error).message })
+    useSync.setState({ room: null, status: 'off', error: denied ? tr('Databasen slipper ikke inn. Sikkerhetsreglene er ikke satt opp.', 'The database refuses access. The security rules are not set up.') : (e as Error).message })
     if (how !== 'resume') localStorage.removeItem(ROOM_KEY)
   }
 }
@@ -363,7 +379,7 @@ export async function saveArchive(round: ArchivedRound) {
     const { db, database } = await openDb()
     await withTimeout(db.set(db.ref(database, `archive/${round.room}/${round.id}`), JSON.stringify(round)))
   } catch {
-    useSync.setState({ error: 'Runden er lagret på telefonen, men kunne ikke lagres i rommet.' })
+    useSync.setState({ error: tr('Runden er lagret på telefonen, men kunne ikke lagres i rommet.', 'The round is saved on the phone, but could not be saved in the room.') })
   }
 }
 

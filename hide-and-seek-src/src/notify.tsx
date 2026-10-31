@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tr } from './lang'
 import { create } from 'zustand'
 import { answerLabel, categoryOf, itemOf } from './form'
 import type { Round } from './clock'
@@ -37,13 +38,13 @@ export function announce(before: Question[], after: Question[], mode: 'seeker' |
     const prev = old.get(q.id)
     if (!prev && q.answer === null) {
       notify({
-        title: mode === 'hider' ? 'Nytt spørsmål til deg' : 'Nytt spørsmål stilt',
-        body: `${category(q)}${mode === 'hider' ? '. Åpne Spørsmål for å svare.' : ''}`,
+        title: mode === 'hider' ? tr('Nytt spørsmål til deg', 'New question for you') : tr('Nytt spørsmål stilt', 'New question asked'),
+        body: `${category(q)}${mode === 'hider' ? tr('. Åpne Spørsmål for å svare.', '. Open Questions to answer.') : ''}`,
         tab: 'questions',
       })
     } else if (q.answer !== null && prev?.answer !== q.answer && mode === 'seeker') {
       const swap = q.swap && itemOf(q.swap)
-      notify({ title: 'Hider har svart', body: `${category(q)} → ${answerLabel(q, q.answer)}${swap ? `. Still «${swap.label}» i stedet.` : ''}`, tab: 'questions' })
+      notify({ title: tr('Hider har svart', 'The hider answered'), body: `${category(q)} → ${answerLabel(q, q.answer)}${swap ? tr(`. Still «${swap.label}» i stedet.`, `. Ask "${swap.label}" instead.`) : ''}`, tab: 'questions' })
     }
   }
 }
@@ -54,23 +55,23 @@ export function announceRound(before: Round, after: Round, mode: 'seeker' | 'hid
   if (after.endgame && !before.endgame) {
     notify(
       mode === 'hider'
-        ? { title: 'Endgame er startet', body: 'Seekerne er i en sone. Er det din, står du stille der du er nå.', tab: 'questions' }
-        : { title: 'Endgame er startet', body: 'En annen seeker startet endgame. Bare den ene sonen er gyldig nå.', tab: 'endgame' },
+        ? { title: tr('Endgame er startet', 'The endgame has started'), body: tr('Seekerne er i en sone. Er det din, står du stille der du er nå.', 'The seekers are in a zone. If it is yours, stay put where you are now.'), tab: 'questions' }
+        : { title: tr('Endgame er startet', 'The endgame has started'), body: tr('En annen seeker startet endgame. Bare den ene sonen er gyldig nå.', 'Another seeker started the endgame. Only that one zone counts now.'), tab: 'endgame' },
     )
   } else if (!after.endgame && before.endgame && after.seekFrom !== null) {
-    notify({ title: 'Endgame er avsluttet', body: mode === 'hider' ? 'Seekerne har avsluttet endgame.' : 'Kartet viser igjen alle stasjonene svarene peker ut.', tab: mode === 'hider' ? 'questions' : 'endgame' })
+    notify({ title: tr('Endgame er avsluttet', 'The endgame has ended'), body: mode === 'hider' ? tr('Seekerne har avsluttet endgame.', 'The seekers have ended the endgame.') : tr('Kartet viser igjen alle stasjonene svarene peker ut.', 'The map shows all the stations the answers point to again.'), tab: mode === 'hider' ? 'questions' : 'endgame' })
   }
   if (mode !== 'seeker') return
   if ((after.moves?.length ?? 0) > (before.moves?.length ?? 0)) {
-    notify({ title: 'Hider har spilt Move', body: 'Bli stående. Ingen spørsmål før hider er i ny sone.', tab: 'questions' })
+    notify({ title: tr('Hider har spilt Move', 'The hider played Move'), body: tr('Bli stående. Ingen spørsmål før hider er i ny sone.', 'Stay where you are. No questions until the hider is in a new zone.'), tab: 'questions' })
   } else if (before.pause?.kind === 'move' && !after.pause) {
-    notify({ title: 'Hider er i ny sone', body: 'Spillet fortsetter. Kartet starter på nytt.', tab: 'questions' })
+    notify({ title: tr('Hider er i ny sone', 'The hider is in a new zone'), body: tr('Spillet fortsetter. Kartet starter på nytt.', 'The game resumes. The map starts over.'), tab: 'questions' })
   }
   if ((after.drained?.length ?? 0) > (before.drained?.length ?? 0)) {
-    notify({ title: 'Hider har spilt Drained Brain', body: `${after.drained!.map((id) => itemOf(id)?.label).join(', ')} kan ikke stilles.`, tab: 'questions' })
+    notify({ title: tr('Hider har spilt Drained Brain', 'The hider played Drained Brain'), body: `${after.drained!.map((id) => itemOf(id)?.label).join(', ')} ${tr('kan ikke stilles.', 'cannot be asked.')}`, tab: 'questions' })
   }
   if (after.spotty && after.spotty !== before.spotty) {
-    notify({ title: 'Spotty Memory', body: `${after.spotty} er slått ut.`, tab: 'questions' })
+    notify({ title: 'Spotty Memory', body: `${after.spotty} ${tr('er slått ut.', 'is knocked out.')}`, tab: 'questions' })
   }
 }
 
@@ -101,14 +102,21 @@ export function Toast() {
 /** Slår på systemvarsler, som trengs når appen ligger i bakgrunnen. */
 export function NotifyToggle() {
   const [permission, setPermission] = useState(supported() ? Notification.permission : 'unsupported')
-  if (permission === 'granted') return <p className="mb-2 text-xs text-ok">Varsler er på.</p>
+  if (permission === 'granted') return <p className="mb-2 text-xs text-ok">{tr('Varsler er på.', 'Notifications are on.')}</p>
   if (permission === 'unsupported') {
-    return <p className="mb-2 text-xs text-muted">Varsler støttes ikke her. På iPhone må siden først legges til på Hjem-skjermen (Del → Legg til på Hjem-skjerm).</p>
+    return (
+      <p className="mb-2 text-xs text-muted">
+        {tr(
+          'Varsler støttes ikke her. På iPhone må siden først legges til på Hjem-skjermen (Del → Legg til på Hjem-skjerm).',
+          'Notifications are not supported here. On iPhone the page must first be added to the Home Screen (Share → Add to Home Screen).',
+        )}
+      </p>
+    )
   }
-  if (permission === 'denied') return <p className="mb-2 text-xs text-bad">Varsler er blokkert for denne siden. Slå dem på i nettleserens innstillinger.</p>
+  if (permission === 'denied') return <p className="mb-2 text-xs text-bad">{tr('Varsler er blokkert for denne siden. Slå dem på i nettleserens innstillinger.', 'Notifications are blocked for this page. Turn them on in the browser settings.')}</p>
   return (
     <button className="btn mb-2 w-full" onClick={async () => setPermission(await Notification.requestPermission())}>
-      🔔 Slå på varsler
+      {tr('🔔 Slå på varsler', '🔔 Turn on notifications')}
     </button>
   )
 }

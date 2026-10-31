@@ -1,6 +1,7 @@
 import { Check, ChevronLeft, ChevronRight, Copy, Flag, Search, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { cityOf } from './cities'
+import { tr } from './lang'
 import { Sheet } from './Lobby'
 import {
   HIDE_AT_REPORTS,
@@ -28,7 +29,12 @@ const SIZE_NAMES: Record<GameSize, string> = { S: 'Small', M: 'Medium', L: 'Larg
 
 /** Kort beskrivelse av et oppsett: størrelse, sone, linjer og gjemmetid. */
 const summary = (p: Pick<SharedPreset, 'setup' | 'hidingMinutes'>) =>
-  `${SIZE_NAMES[p.setup.size] ?? p.setup.size}, sone ${p.setup.zoneRadius} m, ${p.setup.lines.length} ${p.setup.lines.length === 1 ? 'linje' : 'linjer'}, ${p.hidingMinutes} min`
+  tr(
+    `${SIZE_NAMES[p.setup.size] ?? p.setup.size}, sone ${p.setup.zoneRadius} m, ${p.setup.lines.length} ${p.setup.lines.length === 1 ? 'linje' : 'linjer'}, ${p.hidingMinutes} min`,
+    `${SIZE_NAMES[p.setup.size] ?? p.setup.size}, ${p.setup.zoneRadius} m zone, ${p.setup.lines.length} ${p.setup.lines.length === 1 ? 'line' : 'lines'}, ${p.hidingMinutes} min`,
+  )
+/** «brukt 3 ganger». */
+const timesUsed = (n: number) => tr(`${n} ${n === 1 ? 'gang' : 'ganger'}`, `${n} ${n === 1 ? 'time' : 'times'}`)
 
 /** Øverst i Oppsett-arket: åpner oversikten over oppsett andre har delt for byen. */
 export function PresetEntry() {
@@ -39,8 +45,8 @@ export function PresetEntry() {
         <Users size={20} />
       </span>
       <span className="min-w-0 flex-1">
-        <b className="block font-sign">Bruk et ferdig oppsett</b>
-        <span className="block text-sm text-muted">Se oppsett andre har delt for {city}</span>
+        <b className="block font-sign">{tr('Bruk et ferdig oppsett', 'Use a ready-made setup')}</b>
+        <span className="block text-sm text-muted">{tr(`Se oppsett andre har delt for ${city}`, `See setups others have shared for ${city}`)}</span>
       </span>
       <ChevronRight size={20} className="shrink-0 text-muted" aria-hidden />
     </button>
@@ -76,39 +82,42 @@ export function PresetsSheet({ data }: { data: GeoData | null }) {
   const current = selected && (shared.find((p) => p.id === selected.id) ?? selected)
 
   return (
-    <Sheet open={open} title={current ? current.name : `Ferdige oppsett for ${cityOf(city).name}`} onClose={close}>
+    <Sheet open={open} title={current ? current.name : tr(`Ferdige oppsett for ${cityOf(city).name}`, `Ready-made setups for ${cityOf(city).name}`)} onClose={close}>
       {current ? (
         <PresetDetail p={current} data={data} back={() => setSelected(null)} done={close} />
       ) : (
         <div>
           <Segmented
-            label="Sortering"
+            label={tr('Sortering', 'Sort')}
             value={sort}
             options={[
-              { value: 'popular', label: 'Mest brukt' },
-              { value: 'newest', label: 'Nyeste' },
+              { value: 'popular', label: tr('Mest brukt', 'Most used') },
+              { value: 'newest', label: tr('Nyeste', 'Newest') },
             ]}
             onChange={setSort}
           />
-          <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Spillstørrelse">
+          <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label={tr('Spillstørrelse', 'Game size')}>
             {(['all', 'S', 'M', 'L'] as const).map((k) => (
               <button key={k} role="radio" aria-checked={size === k} className={`chip min-h-9! ${size === k ? 'chip-on' : ''}`} onClick={() => setSize(k)}>
-                {k === 'all' ? 'Alle' : SIZE_NAMES[k]}
+                {k === 'all' ? tr('Alle', 'All') : SIZE_NAMES[k]}
               </button>
             ))}
           </div>
           <label className="relative mt-2 block">
             <Search size={18} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted" aria-hidden />
-            <input className="field pl-9!" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Søk på navn eller beskrivelse" aria-label="Søk" />
+            <input className="field pl-9!" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr('Søk på navn eller beskrivelse', 'Search name or description')} aria-label={tr('Søk', 'Search')} />
           </label>
           {fetching && (
             <p className="mt-3 flex items-center gap-2 text-sm text-muted" role="status">
-              <Spinner className="size-3.5!" /> Henter oppsett…
+              <Spinner className="size-3.5!" /> {tr('Henter oppsett…', 'Loading setups…')}
             </p>
           )}
           {error && <p className="mt-3 text-sm text-bad">{error}</p>}
           {!fetching && !error && sharedCity === city && list.length === 0 && (
-            <p className="mt-4 text-sm text-muted">{shared.length ? 'Ingen oppsett passer med søket.' : `Ingen har delt oppsett for ${cityOf(city).name} ennå. Del ditt eget nederst i Oppsett.`}</p>
+            <p className="mt-4 text-sm text-muted">{shared.length
+                ? tr('Ingen oppsett passer med søket.', 'No setups match the search.')
+                : tr(`Ingen har delt oppsett for ${cityOf(city).name} ennå. Del ditt eget nederst i Oppsett.`, `Nobody has shared a setup for ${cityOf(city).name} yet. Share your own at the bottom of Setup.`)}
+            </p>
           )}
           <ul className="mt-3 divide-y divide-border rounded-[14px] border border-border bg-panel empty:hidden">
             {list.map((p) => (
@@ -117,12 +126,12 @@ export function PresetsSheet({ data }: { data: GeoData | null }) {
                   <span className="min-w-0 flex-1">
                     <b className="block truncate font-sign">
                       {p.name}
-                      {p.mine && <span className="ml-1.5 rounded-full bg-panel-2 px-1.5 py-0.5 text-xs font-normal text-muted">ditt</span>}
+                      {p.mine && <span className="ml-1.5 rounded-full bg-panel-2 px-1.5 py-0.5 text-xs font-normal text-muted">{tr('ditt', 'yours')}</span>}
                     </b>
                     {p.description && <span className="line-clamp-2 block text-sm">{p.description}</span>}
                     <span className="block text-xs text-muted">
                       {summary(p)}
-                      {p.uses ? `, brukt ${p.uses} ${p.uses === 1 ? 'gang' : 'ganger'}` : ''}
+                      {p.uses ? `, ${tr('brukt', 'used')} ${timesUsed(p.uses)}` : ''}
                     </span>
                   </span>
                   <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden />
@@ -152,7 +161,7 @@ function PresetDetail({ p, data, back, done }: { p: SharedPreset; data: GeoData 
     try {
       await f()
     } catch (e) {
-      setMsg((e as Error).message || 'Noe gikk galt. Prøv igjen.')
+      setMsg((e as Error).message || tr('Noe gikk galt. Prøv igjen.', 'Something went wrong. Try again.'))
     }
     setBusy('')
   }
@@ -161,27 +170,31 @@ function PresetDetail({ p, data, back, done }: { p: SharedPreset; data: GeoData 
   return (
     <div>
       <button className="link mb-3 inline-flex items-center gap-1 text-sm!" onClick={back}>
-        <ChevronLeft size={16} aria-hidden /> Alle oppsett
+        <ChevronLeft size={16} aria-hidden /> {tr('Alle oppsett', 'All setups')}
       </button>
       {p.description && <p className="mb-3 text-[15px]">{p.description}</p>}
-      {sameCity ? <PresetMap p={p} data={data} /> : <p className="mb-3 rounded-[12px] bg-panel-2 p-3 text-sm text-muted">Dette oppsettet er for {cityOf(p.city).name}. Bruker du det, bytter appen by.</p>}
+      {sameCity ? <PresetMap p={p} data={data} /> : <p className="mb-3 rounded-[12px] bg-panel-2 p-3 text-sm text-muted">{tr(`Dette oppsettet er for ${cityOf(p.city).name}. Bruker du det, bytter appen by.`, `This setup is for ${cityOf(p.city).name}. Using it switches the city.`)}</p>}
       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-        <dt className="text-muted">By</dt>
-        <dd>{cityOf(p.city).name}</dd>
-        <dt className="text-muted">Størrelse</dt>
-        <dd>{SIZE_NAMES[p.setup.size] ?? p.setup.size}</dd>
-        <dt className="text-muted">Sone</dt>
-        <dd>{p.setup.zoneRadius} m</dd>
-        <dt className="text-muted">Linjer</dt>
-        <dd>{p.setup.lines.join(', ') || 'ingen'}</dd>
-        <dt className="text-muted">Område</dt>
-        <dd>{!p.setup.playArea ? 'hele nettet' : p.setup.areaAuto === false ? 'eget område' : 'automatisk'}</dd>
-        <dt className="text-muted">Spørsmål</dt>
-        <dd>{p.setup.questions ? `${p.setup.questions.length} valgt` : `standard for ${SIZE_NAMES[p.setup.size] ?? p.setup.size}`}</dd>
-        <dt className="text-muted">Gjemmetid</dt>
-        <dd>{p.hidingMinutes} min</dd>
-        <dt className="text-muted">Brukt</dt>
-        <dd>{p.uses ? `${p.uses} ${p.uses === 1 ? 'gang' : 'ganger'}` : 'ikke ennå'}</dd>
+        {(
+          [
+            [tr('By', 'City'), cityOf(p.city).name],
+            [tr('Størrelse', 'Size'), SIZE_NAMES[p.setup.size] ?? p.setup.size],
+            [tr('Sone', 'Zone'), `${p.setup.zoneRadius} m`],
+            [tr('Linjer', 'Lines'), p.setup.lines.join(', ') || tr('ingen', 'none')],
+            [tr('Område', 'Area'), !p.setup.playArea ? tr('hele nettet', 'whole network') : p.setup.areaAuto === false ? tr('eget område', 'custom area') : tr('automatisk', 'automatic')],
+            [
+              tr('Spørsmål', 'Questions'),
+              p.setup.questions ? tr(`${p.setup.questions.length} valgt`, `${p.setup.questions.length} chosen`) : tr(`standard for ${SIZE_NAMES[p.setup.size] ?? p.setup.size}`, `standard for ${SIZE_NAMES[p.setup.size] ?? p.setup.size}`),
+            ],
+            [tr('Gjemmetid', 'Hiding time'), `${p.hidingMinutes} min`],
+            [tr('Brukt', 'Used'), p.uses ? timesUsed(p.uses) : tr('ikke ennå', 'not yet')],
+          ] as const
+        ).map(([k, v]) => (
+          <div key={k} className="contents">
+            <dt className="text-muted">{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
       </dl>
       <button
         className="btn btn-primary mt-4 w-full"
@@ -191,9 +204,9 @@ function PresetDetail({ p, data, back, done }: { p: SharedPreset; data: GeoData 
           done()
         }}
       >
-        Bruk dette oppsettet
+        {tr('Bruk dette oppsettet', 'Use this setup')}
       </button>
-      {locked && <p className="mt-1 text-sm text-muted">Oppsettet er låst mens runden pågår.</p>}
+      {locked && <p className="mt-1 text-sm text-muted">{tr('Oppsettet er låst mens runden pågår.', 'The setup is locked while the round is running.')}</p>}
       <div className="mt-2 flex gap-1.5">
         <button
           className="btn flex-1"
@@ -202,13 +215,13 @@ function PresetDetail({ p, data, back, done }: { p: SharedPreset; data: GeoData 
             setCopied(true)
           }}
         >
-          {copied ? <Check size={18} aria-hidden /> : <Copy size={18} aria-hidden />} {copied ? 'Lenke kopiert' : 'Kopier lenke'}
+          {copied ? <Check size={18} aria-hidden /> : <Copy size={18} aria-hidden />} {copied ? tr('Lenke kopiert', 'Link copied') : tr('Kopier lenke', 'Copy link')}
         </button>
       </div>
 
       {p.mine ? (
         <div className="mt-5 border-t border-border pt-4">
-          <h3 className="label">Ditt oppsett</h3>
+          <h3 className="label">{tr('Ditt oppsett', 'Your setup')}</h3>
           {editing ? (
             <form
               onSubmit={(e) => {
@@ -219,37 +232,44 @@ function PresetDetail({ p, data, back, done }: { p: SharedPreset; data: GeoData 
                 })
               }}
             >
-              <input className="field mb-2" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} aria-label="Navn" required />
-              <textarea className="field mb-2 min-h-20 py-2" value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} aria-label="Beskrivelse" placeholder="Beskrivelse (valgfritt)" />
+              <input className="field mb-2" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} aria-label={tr('Navn', 'Name')} required />
+              <textarea
+                className="field mb-2 min-h-20 py-2"
+                value={description}
+                maxLength={200}
+                onChange={(e) => setDescription(e.target.value)}
+                aria-label={tr('Beskrivelse', 'Description')}
+                placeholder={tr('Beskrivelse (valgfritt)', 'Description (optional)')}
+              />
               <label className="mb-2 flex items-center gap-2 text-sm">
                 <input type="checkbox" className="size-4 accent-accent" checked={useCurrent} onChange={(e) => setUseCurrent(e.target.checked)} />
-                Erstatt innstillingene med oppsettet jeg har valgt nå
+                {tr('Erstatt innstillingene med oppsettet jeg har valgt nå', 'Replace the settings with the setup I have chosen now')}
               </label>
               <div className="flex gap-1.5">
                 <button className="btn btn-primary flex-1" disabled={!name.trim() || !!busy}>
-                  {busy === 'save' && <Spinner />} Lagre endringen
+                  {busy === 'save' && <Spinner />} {tr('Lagre endringen', 'Save the change')}
                 </button>
                 <button type="button" className="btn" onClick={() => setEditing(false)}>
-                  Avbryt
+                  {tr('Avbryt', 'Cancel')}
                 </button>
               </div>
             </form>
           ) : (
             <div className="flex gap-1.5">
               <button className="btn flex-1" onClick={() => setEditing(true)}>
-                Endre
+                {tr('Endre', 'Edit')}
               </button>
               <button
                 className="btn btn-danger flex-1"
                 disabled={!!busy}
                 onClick={() => {
-                  if (confirm(`Slette «${p.name}» for alle?`)) void run('delete', async () => {
+                  if (confirm(tr(`Slette «${p.name}» for alle?`, `Delete "${p.name}" for everyone?`))) void run('delete', async () => {
                     await deleteShared(p.id)
                     back()
                   })
                 }}
               >
-                {busy === 'delete' && <Spinner />} Slett
+                {busy === 'delete' && <Spinner />} {tr('Slett', 'Delete')}
               </button>
             </div>
           )}
@@ -257,16 +277,20 @@ function PresetDetail({ p, data, back, done }: { p: SharedPreset; data: GeoData 
       ) : (
         <div className="mt-4">
           {p.reported ? (
-            <p className="text-sm text-muted">Du har rapportert dette oppsettet.</p>
+            <p className="text-sm text-muted">{tr('Du har rapportert dette oppsettet.', 'You have reported this setup.')}</p>
           ) : (
             <button
               className="link inline-flex items-center gap-1 text-sm!"
               disabled={!!busy}
               onClick={() => {
-                if (confirm(`Rapportere «${p.name}» som upassende eller søppel? Oppsett som rapporteres av ${HIDE_AT_REPORTS} telefoner, skjules til de er sjekket.`)) void run('report', () => reportPreset(p.id))
+                const ask = tr(
+                  `Rapportere «${p.name}» som upassende eller søppel? Oppsett som rapporteres av ${HIDE_AT_REPORTS} telefoner, skjules til de er sjekket.`,
+                  `Report "${p.name}" as inappropriate or spam? Setups reported by ${HIDE_AT_REPORTS} phones are hidden until they have been checked.`,
+                )
+                if (confirm(ask)) void run('report', () => reportPreset(p.id))
               }}
             >
-              <Flag size={14} aria-hidden /> Rapporter
+              <Flag size={14} aria-hidden /> {tr('Rapporter', 'Report')}
             </button>
           )}
         </div>
@@ -298,7 +322,7 @@ function PresetMap({ p, data }: { p: SharedPreset; data: GeoData }) {
   const x = (lon: number) => pad + (lon - w0) * k * scale + (W - 2 * pad - spanX * scale) / 2
   const y = (lat: number) => H - pad - (lat - s0) * scale - (H - 2 * pad - spanY * scale) / 2
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-[12px] bg-panel-2" role="img" aria-label={`Kart over oppsettet: ${stations.length} stasjoner${area ? ' og spillområdet' : ''}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-[12px] bg-panel-2" role="img" aria-label={tr(`Kart over oppsettet: ${stations.length} stasjoner${area ? ' og spillområdet' : ''}`, `Map of the setup: ${stations.length} stations${area ? ' and the play area' : ''}`)}>
       {area && <polygon points={area.map(([a, b]) => `${x(a)},${y(b)}`).join(' ')} fill="none" stroke="currentColor" strokeOpacity={0.6} strokeWidth={1.5} strokeDasharray="4 3" />}
       {stations.map((s) => (
         <circle key={s.id} cx={x(s.lon)} cy={y(s.lat)} r={stations.length > 200 ? 1.6 : 2.6} fill={color[s.lines.find((l) => lines.has(l))!] ?? 'currentColor'} />
@@ -318,9 +342,16 @@ export function SavePreset() {
   const ok = !!name.trim()
   return (
     <section className="mb-5 border-t border-border pt-4">
-      <h2 className="label">Lagre eller del dette oppsettet</h2>
-      <input className="field mb-2" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="Navn, f.eks. Kort runde i sentrum" aria-label="Navn på oppsettet" />
-      <textarea className="field mb-2 min-h-16 py-2" value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} placeholder="Beskrivelse (valgfritt, vises når du deler)" aria-label="Beskrivelse" />
+      <h2 className="label">{tr('Lagre eller del dette oppsettet', 'Save or share this setup')}</h2>
+      <input className="field mb-2" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder={tr('Navn, f.eks. Kort runde i sentrum', 'Name, e.g. Short round downtown')} aria-label={tr('Navn på oppsettet', 'Name of the setup')} />
+      <textarea
+        className="field mb-2 min-h-16 py-2"
+        value={description}
+        maxLength={200}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder={tr('Beskrivelse (valgfritt, vises når du deler)', 'Description (optional, shown when you share)')}
+        aria-label={tr('Beskrivelse', 'Description')}
+      />
       <div className="flex gap-1.5">
         <button
           className="btn flex-1"
@@ -331,7 +362,7 @@ export function SavePreset() {
             setDescription('')
           }}
         >
-          Lagre på telefonen
+          {tr('Lagre på telefonen', 'Save on this phone')}
         </button>
         <button
           className="btn flex-1"
@@ -344,15 +375,15 @@ export function SavePreset() {
               setName('')
               setDescription('')
             } catch (e) {
-              setError((e as Error).message || 'Kunne ikke dele nå. Prøv igjen.')
+              setError((e as Error).message || tr('Kunne ikke dele nå. Prøv igjen.', 'Could not share right now. Try again.'))
             }
             setBusy(false)
           }}
         >
-          {busy && <Spinner />} Del med alle
+          {busy && <Spinner />} {tr('Del med alle', 'Share with everyone')}
         </button>
       </div>
-      <p className="mt-1 text-xs text-muted">Delte oppsett er anonyme. Bare du kan endre eller slette dem.</p>
+      <p className="mt-1 text-xs text-muted">{tr('Delte oppsett er anonyme. Bare du kan endre eller slette dem.', 'Shared setups are anonymous. Only you can edit or delete them.')}</p>
       {error && <p className="mt-1 text-sm text-bad">{error}</p>}
       {note && (
         <p className="mt-1 text-sm text-ok" role="status">
@@ -361,7 +392,7 @@ export function SavePreset() {
       )}
       {local.length > 0 && (
         <>
-          <h3 className="label mt-4">Lagret på denne telefonen</h3>
+          <h3 className="label mt-4">{tr('Lagret på denne telefonen', 'Saved on this phone')}</h3>
           <ul className="divide-y divide-border rounded-[14px] border border-border bg-panel">
             {local.map((p) => (
               <li key={p.id} className="flex items-center gap-2 px-3 py-2">
@@ -372,15 +403,15 @@ export function SavePreset() {
                   </span>
                 </span>
                 <button className="btn min-h-9!" disabled={locked} onClick={() => applyLocal(p)}>
-                  Bruk
+                  {tr('Bruk', 'Use')}
                 </button>
                 <button
                   className="link text-bad!"
                   onClick={() => {
-                    if (confirm(`Slette «${p.name}» fra telefonen?`)) deleteLocal(p.id)
+                    if (confirm(tr(`Slette «${p.name}» fra telefonen?`, `Delete "${p.name}" from this phone?`))) deleteLocal(p.id)
                   }}
                 >
-                  slett
+                  {tr('slett', 'delete')}
                 </button>
               </li>
             ))}

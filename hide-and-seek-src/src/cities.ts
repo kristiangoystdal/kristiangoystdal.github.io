@@ -1,3 +1,4 @@
+import { tr } from './lang'
 import type { AdminLevel, GeoData, Mode } from './types'
 
 export type { Mode }
@@ -8,24 +9,36 @@ export interface ModeWords {
   name: string
   /** Hele nettet, f.eks. «T-banenettet». */
   whole: string
-  /** Ett stopp, f.eks. «T-banestasjon». Flertall får «-er». */
+  /** Ett stopp, f.eks. «T-banestasjon». */
   stop: string
-  /** En linje, f.eks. «T-banelinje». Flertall får «-r». */
+  /** Flere stopp, f.eks. «T-banestasjoner». */
+  stops: string
+  /** En linje, f.eks. «T-banelinje». */
   line: string
+  /** Flere linjer, f.eks. «T-banelinjer». */
+  lines: string
   /** Det seekerne sitter på, f.eks. «T-banen». */
   vehicle: string
   /** Teller stoppene som jernbanestasjoner i Measuring? Bare T-banen gjør det. */
   rail: boolean
 }
 
-export const MODES: Record<Mode, ModeWords> = {
-  metro: { name: 'T-bane', whole: 'T-banenettet', stop: 'T-banestasjon', line: 'T-banelinje', vehicle: 'T-banen', rail: true },
-  tram: { name: 'Trikk', whole: 'trikkenettet', stop: 'trikkeholdeplass', line: 'trikkelinje', vehicle: 'trikken', rail: false },
-  lightrail: { name: 'Bybane', whole: 'Bybanen', stop: 'bybanestopp', line: 'bybanelinje', vehicle: 'Bybanen', rail: false },
-  bus: { name: 'Buss', whole: 'bussnettet', stop: 'bussholdeplass', line: 'busslinje', vehicle: 'bussen', rail: false },
+const MODES_NB: Record<Mode, ModeWords> = {
+  metro: { name: 'T-bane', whole: 'T-banenettet', stop: 'T-banestasjon', stops: 'T-banestasjoner', line: 'T-banelinje', lines: 'T-banelinjer', vehicle: 'T-banen', rail: true },
+  tram: { name: 'Trikk', whole: 'trikkenettet', stop: 'trikkeholdeplass', stops: 'trikkeholdeplasser', line: 'trikkelinje', lines: 'trikkelinjer', vehicle: 'trikken', rail: false },
+  lightrail: { name: 'Bybane', whole: 'Bybanen', stop: 'bybanestopp', stops: 'bybanestopp', line: 'bybanelinje', lines: 'bybanelinjer', vehicle: 'Bybanen', rail: false },
+  bus: { name: 'Buss', whole: 'bussnettet', stop: 'bussholdeplass', stops: 'bussholdeplasser', line: 'busslinje', lines: 'busslinjer', vehicle: 'bussen', rail: false },
 }
+const MODES_EN: Record<Mode, ModeWords> = {
+  metro: { name: 'Metro', whole: 'the metro network', stop: 'metro station', stops: 'metro stations', line: 'metro line', lines: 'metro lines', vehicle: 'the train', rail: true },
+  tram: { name: 'Tram', whole: 'the tram network', stop: 'tram stop', stops: 'tram stops', line: 'tram line', lines: 'tram lines', vehicle: 'the tram', rail: false },
+  lightrail: { name: 'Light rail', whole: 'the light rail', stop: 'light rail stop', stops: 'light rail stops', line: 'light rail line', lines: 'light rail lines', vehicle: 'the light rail', rail: false },
+  bus: { name: 'Bus', whole: 'the bus network', stop: 'bus stop', stops: 'bus stops', line: 'bus line', lines: 'bus lines', vehicle: 'the bus', rail: false },
+}
+export const MODES = tr(MODES_NB, MODES_EN)
 /** Ordene når flere transportmidler er med. */
-const MIXED: ModeWords = { name: 'Kollektiv', whole: 'kollektivnettet', stop: 'holdeplass', line: 'linje', vehicle: 'det', rail: false }
+const MIXED_NB: ModeWords = { name: 'Kollektiv', whole: 'kollektivnettet', stop: 'holdeplass', stops: 'holdeplasser', line: 'linje', lines: 'linjer', vehicle: 'det', rail: false }
+const MIXED: ModeWords = tr(MIXED_NB, { name: 'Transit', whole: 'the transit network', stop: 'stop', stops: 'stops', line: 'line', lines: 'lines', vehicle: 'the vehicle', rail: false })
 
 /**
  * En by appen kan spilles i. Alt som er ulikt fra by til by står her, og
@@ -55,10 +68,10 @@ export interface City {
  * Fylke er ikke med: hele nettet ligger i ett fylke, så svaret ville alltid vært ja.
  */
 const BUS_LEVELS: City['adminLevels'] = [
-  { key: 'kommune', label: 'Kommune' },
-  { key: 'bydel', label: 'Bydel (kommune der det ikke er bydeler)' },
-  { key: 'postsone', label: 'Postsone (3 første siffer)' },
-  { key: 'postnummer', label: 'Postnummer' },
+  { key: 'kommune', label: tr('Kommune', 'Municipality') },
+  { key: 'bydel', label: tr('Bydel (kommune der det ikke er bydeler)', 'Borough (municipality where there are none)') },
+  { key: 'postsone', label: tr('Postsone (3 første siffer)', 'Postal zone (first 3 digits)') },
+  { key: 'postnummer', label: tr('Postnummer', 'Postcode') },
 ]
 /** Bussene i Trondheim går bare i Trondheim kommune. */
 const ONE_KOMMUNE = BUS_LEVELS.filter((l) => l.key !== 'kommune')
@@ -73,11 +86,11 @@ export const CITIES: City[] = [
     defaultModes: ['metro'],
     bounds: [10.2, 59.7, 11.25, 60.2],
     adminLevels: [
-      { key: 'fylke', label: 'Fylke' },
-      { key: 'kommune', label: 'Kommune' },
-      { key: 'bydel', label: 'Bydel' },
-      { key: 'postsone', label: 'Postsone (3 første siffer)' },
-      { key: 'postnummer', label: 'Postnummer' },
+      { key: 'fylke', label: tr('Fylke', 'County') },
+      { key: 'kommune', label: tr('Kommune', 'Municipality') },
+      { key: 'bydel', label: tr('Bydel', 'Borough') },
+      { key: 'postsone', label: tr('Postsone (3 første siffer)', 'Postal zone (first 3 digits)') },
+      { key: 'postnummer', label: tr('Postnummer', 'Postcode') },
     ],
     ...NORWAY,
   },
@@ -106,6 +119,13 @@ export function transit(): ModeWords {
   const modes = active.length ? active : current.defaultModes
   return modes.length === 1 ? MODES[modes[0]] : MIXED
 }
+
+/** De norske ordene, til regelboken, som bare er på norsk foreløpig. */
+export function transitNb(): ModeWords {
+  const modes = active.length ? active : current.defaultModes
+  return modes.length === 1 ? MODES_NB[modes[0]] : MIXED_NB
+}
+export const modeWordsNb = (m: Mode) => MODES_NB[m]
 
 /** Transportmiddelet i byen som teller som jernbane, om noen. Gjelder uansett hva som er med i spillet. */
 export const railMode = () => current.modes.find((m) => MODES[m].rail) ?? null

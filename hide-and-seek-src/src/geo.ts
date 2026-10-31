@@ -17,6 +17,7 @@ import {
   union,
 } from '@turf/turf'
 import { DEFAULT_CITY, MODES, city, cityOf, railMode } from './cities'
+import { tr } from './lang'
 import type { Lookup, LookupKind } from './online'
 import type { AdminArea, AdminLevel, Area, GeoData, LngLat, Poi, Question, Settings, ShapeKey, Station } from './types'
 
@@ -40,38 +41,53 @@ export function setBounds(bounds: Box4) {
 
 /** `icon` er merket stedene får på kartet. */
 export const POI_TYPES: { key: string; icon: string; label: string; plural: string }[] = [
-  { key: 'flyplass', icon: '✈️', label: 'flyplass', plural: 'flyplasser' },
+  { key: 'flyplass', icon: '✈️', ...tr({ label: 'flyplass', plural: 'flyplasser' }, { label: 'airport', plural: 'airports' }) },
   {
     key: 'jernbanestasjon',
     icon: '🚆',
     get label() {
       const rail = railMode()
-      return rail ? `jernbane- eller ${MODES[rail].stop}` : 'jernbanestasjon'
+      return rail ? tr(`jernbane- eller ${MODES[rail].stop}`, `train or ${MODES[rail].stop}`) : tr('jernbanestasjon', 'train station')
     },
     get plural() {
       const rail = railMode()
-      return rail ? `jernbane- og ${MODES[rail].stop}er` : 'jernbanestasjoner'
+      return rail ? tr(`jernbane- og ${MODES[rail].stops}`, `train and ${MODES[rail].stops}`) : tr('jernbanestasjoner', 'train stations')
     },
   },
-  { key: 'fjell', icon: '⛰️', label: 'fjell', plural: 'fjell' },
-  { key: 'park', icon: '🌳', label: 'park', plural: 'parker' },
-  { key: 'fornoyelsespark', icon: '🎢', label: 'fornøyelsespark', plural: 'fornøyelsesparker' },
-  { key: 'dyrepark', icon: '🦁', label: 'dyrepark', plural: 'dyreparker' },
-  { key: 'akvarium', icon: '🐠', label: 'akvarium', plural: 'akvarier' },
-  { key: 'golfbane', icon: '⛳', label: 'golfbane', plural: 'golfbaner' },
-  { key: 'museum', icon: '🏛️', label: 'museum', plural: 'museer' },
-  { key: 'kino', icon: '🎬', label: 'kino', plural: 'kinoer' },
-  { key: 'sykehus', icon: '🏥', label: 'sykehus', plural: 'sykehus' },
-  { key: 'bibliotek', icon: '📚', label: 'bibliotek', plural: 'biblioteker' },
-  { key: 'konsulat', icon: '🚩', label: 'utenlandsk konsulat eller ambassade (ikke honorært)', plural: 'konsulater og ambassader' },
+  { key: 'fjell', icon: '⛰️', ...tr({ label: 'fjell', plural: 'fjell' }, { label: 'mountain', plural: 'mountains' }) },
+  { key: 'park', icon: '🌳', ...tr({ label: 'park', plural: 'parker' }, { label: 'park', plural: 'parks' }) },
+  { key: 'fornoyelsespark', icon: '🎢', ...tr({ label: 'fornøyelsespark', plural: 'fornøyelsesparker' }, { label: 'amusement park', plural: 'amusement parks' }) },
+  { key: 'dyrepark', icon: '🦁', ...tr({ label: 'dyrepark', plural: 'dyreparker' }, { label: 'zoo', plural: 'zoos' }) },
+  { key: 'akvarium', icon: '🐠', ...tr({ label: 'akvarium', plural: 'akvarier' }, { label: 'aquarium', plural: 'aquariums' }) },
+  { key: 'golfbane', icon: '⛳', ...tr({ label: 'golfbane', plural: 'golfbaner' }, { label: 'golf course', plural: 'golf courses' }) },
+  { key: 'museum', icon: '🏛️', ...tr({ label: 'museum', plural: 'museer' }, { label: 'museum', plural: 'museums' }) },
+  { key: 'kino', icon: '🎬', ...tr({ label: 'kino', plural: 'kinoer' }, { label: 'movie theater', plural: 'movie theaters' }) },
+  { key: 'sykehus', icon: '🏥', ...tr({ label: 'sykehus', plural: 'sykehus' }, { label: 'hospital', plural: 'hospitals' }) },
+  { key: 'bibliotek', icon: '📚', ...tr({ label: 'bibliotek', plural: 'biblioteker' }, { label: 'library', plural: 'libraries' }) },
+  {
+    key: 'konsulat',
+    icon: '🚩',
+    ...tr(
+      { label: 'utenlandsk konsulat eller ambassade (ikke honorært)', plural: 'konsulater og ambassader' },
+      { label: 'foreign consulate or embassy (not honorary)', plural: 'consulates and embassies' },
+    ),
+  },
 ]
-/** Emnet i det manuelle spørsmålet om høyhastighetsbane (se ITEMS i form.ts). */
+/** Det manuelle spørsmålet om høyhastighetsbane (se ITEMS i form.ts). Eldre spørsmål kjennes igjen på emnet. */
+export const HIGH_SPEED_ITEM = 'me-highspeed'
 export const HIGH_SPEED = 'høyhastighetsbane'
 /** Tentacles kan også spørre om linjene i nettet, som ikke er punkter. */
 export const METRO_LINES = 'metrolinje'
 
 /** Områdenivåene i byen som er lastet inn, grovest først. */
 export const adminLevels = () => city().adminLevels
+
+const LEVEL_WORDS: Record<AdminLevel, string> = tr(
+  { fylke: 'fylke', kommune: 'kommune', bydel: 'bydel', postsone: 'postsone', postnummer: 'postnummer' },
+  { fylke: 'county', kommune: 'municipality', bydel: 'borough', postsone: 'postal zone', postnummer: 'postcode' },
+)
+/** Nivået i løpende tekst: «samme postsone». */
+export const levelName = (key: AdminLevel) => LEVEL_WORDS[key] ?? key
 
 const POSITIVE_ANSWERS = ['yes', 'in', 'warmer', 'closer']
 
@@ -781,7 +797,8 @@ export function byHand(kind: Question['kind'], value: string, suggested: string 
   return suggested === undefined ? kind !== 'manual' : suggested !== value
 }
 
-const NOTHING: AutoAnswer = { answer: ANSWER_NULL, detail: 'Det spørsmålet handler om finnes ikke innenfor kartet.' }
+const NOTHING: AutoAnswer = { answer: ANSWER_NULL, detail: tr('Det spørsmålet handler om finnes ikke innenfor kartet.', 'What the question asks about does not exist on the map.') }
+const YOU = tr('du', 'you')
 
 const m = (d: number) => (d >= 1000 ? `${(d / 1000).toFixed(2)} km` : `${Math.round(d)} m`)
 
@@ -797,7 +814,7 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
   switch (q.kind) {
     case 'radar': {
       const d = dist(hider.pos, q.center)
-      return { answer: d <= q.radiusM ? 'in' : 'out', marginM: Math.abs(d - q.radiusM), detail: `${m(d)} fra seeker` }
+      return { answer: d <= q.radiusM ? 'in' : 'out', marginM: Math.abs(d - q.radiusM), detail: tr(`${m(d)} fra seeker`, `${m(d)} from the seeker`) }
     }
     case 'thermometer': {
       const a = dist(hider.pos, q.from)
@@ -807,17 +824,17 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
     case 'line':
       return {
         answer: hider.station.lines.includes(q.line) ? 'yes' : 'no',
-        detail: `${hider.station.name}: linje ${hider.station.lines.join(', ')}`,
+        detail: `${hider.station.name}: ${tr('linje', 'line')} ${hider.station.lines.join(', ')}`,
       }
     case 'admin': {
       const mine = areaAt(data, q.level, hider.pos)
       const theirs = areaAt(data, q.level, q.pos)
       if (!hasData(q, data)) return null
       // Står seeker utenfor alle områdene på nivået, finnes ikke det spørsmålet handler om.
-      if (!theirs) return { answer: ANSWER_NULL, detail: `Seeker står ikke i noen ${q.level}.` }
-      if (!mine) return { answer: 'no', detail: `du står ikke i noen ${q.level}, seeker: ${theirs.properties.name}` }
+      if (!theirs) return { answer: ANSWER_NULL, detail: tr(`Seeker står ikke i noen ${levelName(q.level)}.`, `The seeker is not in any ${levelName(q.level)}.`) }
+      if (!mine) return { answer: 'no', detail: tr(`du står ikke i noen ${levelName(q.level)}, seeker: ${theirs.properties.name}`, `you are not in any ${levelName(q.level)}, seeker: ${theirs.properties.name}`) }
       const same = mine.properties.name === theirs.properties.name
-      return { answer: same ? 'yes' : 'no', detail: `du: ${mine.properties.name}, seeker: ${theirs.properties.name}` }
+      return { answer: same ? 'yes' : 'no', detail: `${YOU}: ${mine.properties.name}, seeker: ${theirs.properties.name}` }
     }
     case 'nearest': {
       const pois = data.poi[q.poiType] ?? []
@@ -830,7 +847,7 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
       const toTheirs = dist(hider.pos, theirs.pos)
       const other = Math.min(...pois.filter((p) => p !== theirs).map((p) => dist(hider.pos, p.pos)))
       const marginM = Number.isFinite(other) ? Math.abs(other - toTheirs) / 2 : undefined
-      return { answer: mine.name === theirs.name ? 'yes' : 'no', marginM, detail: `du: ${mine.name}, seeker: ${theirs.name}` }
+      return { answer: mine.name === theirs.name ? 'yes' : 'no', marginM, detail: `${YOU}: ${mine.name}, seeker: ${theirs.name}` }
     }
     case 'measure': {
       const pois = data.poi[q.ref] ?? []
@@ -843,54 +860,55 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
       return {
         answer: a <= b ? 'closer' : 'further',
         marginM: Math.abs(a - b),
-        detail: `du: ${m(a)} (${mine.name}), seeker: ${m(b)} (${theirs.name})`,
+        detail: `${YOU}: ${m(a)} (${mine.name}), seeker: ${m(b)} (${theirs.name})`,
       }
     }
     case 'tentacles': {
       if (!hasData(q, data)) return null
-      if (q.poiType !== METRO_LINES && tentacleCandidates(data, q).length === 0) return { answer: ANSWER_NULL, detail: 'Ingen slike steder innen rekkevidde fra seeker.' }
+      if (q.poiType !== METRO_LINES && tentacleCandidates(data, q).length === 0) return { answer: ANSWER_NULL, detail: tr('Ingen slike steder innen rekkevidde fra seeker.', 'No such places within range of the seeker.') }
       const d = dist(hider.pos, q.pos)
-      if (d > q.radiusM) return { answer: 'outside', marginM: d - q.radiusM, detail: `${m(d)} fra seeker` }
+      if (d > q.radiusM) return { answer: 'outside', marginM: d - q.radiusM, detail: tr(`${m(d)} fra seeker`, `${m(d)} from the seeker`) }
       if (q.poiType === METRO_LINES) {
         const line = nearestLine(data, hider.pos)
-        return line === null ? null : { answer: line, marginM: q.radiusM - d, detail: `nærmeste linje er ${line}` }
+        return line === null ? null : { answer: line, marginM: q.radiusM - d, detail: tr(`nærmeste linje er ${line}`, `nearest line is ${line}`) }
       }
       const mine = nearestPoi(tentacleCandidates(data, q), hider.pos)
-      return mine && { answer: mine.name, marginM: q.radiusM - d, detail: `${m(dist(mine.pos, hider.pos))} unna` }
+      return mine && { answer: mine.name, marginM: q.radiusM - d, detail: tr(`${m(dist(mine.pos, hider.pos))} unna`, `${m(dist(mine.pos, hider.pos))} away`) }
     }
     case 'namelen': {
       const theirs = nearestStation(data.stations, q.pos)
       const same = hider.station.name.length === theirs.name.length
-      return { answer: same ? 'yes' : 'no', detail: `${hider.station.name}: ${hider.station.name.length} tegn, ${theirs.name}: ${theirs.name.length} tegn` }
+      const chars = tr('tegn', 'characters')
+      return { answer: same ? 'yes' : 'no', detail: `${hider.station.name}: ${hider.station.name.length} ${chars}, ${theirs.name}: ${theirs.name.length} ${chars}` }
     }
     case 'border': {
       if (!hasData(q, data)) return null
       const a = borderDist(data, q.level, hider.pos)
       const b = borderDist(data, q.level, q.pos)
-      return { answer: a <= b ? 'closer' : 'further', marginM: Math.abs(a - b), detail: `du: ${m(a)}, seeker: ${m(b)}` }
+      return { answer: a <= b ? 'closer' : 'further', marginM: Math.abs(a - b), detail: `${YOU}: ${m(a)}, seeker: ${m(b)}` }
     }
     case 'transit': {
       if (!hasData(q, data)) return null
       const stops = transitStops(data, q).includes(hider.station.id)
-      return { answer: stops ? 'yes' : 'no', detail: `${hider.station.name} er ${stops ? '' : 'ikke '}blant stoppene som gjenstår` }
+      return { answer: stops ? 'yes' : 'no', detail: tr(`${hider.station.name} er ${stops ? '' : 'ikke '}blant stoppene som gjenstår`, `${hider.station.name} is ${stops ? '' : 'not '}among the remaining stops`) }
     }
     case 'geodist': {
       if (!hasData(q, data)) return null
       const a = shapeDist(data, q.ref, hider.pos)
       const b = shapeDist(data, q.ref, q.pos)
       if (!Number.isFinite(a) || !Number.isFinite(b)) return NOTHING
-      return { answer: a <= b ? 'closer' : 'further', marginM: Math.abs(a - b), detail: `du: ${m(a)}, seeker: ${m(b)}` }
+      return { answer: a <= b ? 'closer' : 'further', marginM: Math.abs(a - b), detail: `${YOU}: ${m(a)}, seeker: ${m(b)}` }
     }
     case 'landmass': {
       if (!hasData(q, data)) return null
-      const name = (i: number) => (i === -1 ? 'fastlandet' : 'en øy')
+      const name = (i: number) => (i === -1 ? tr('fastlandet', 'the mainland') : tr('en øy', 'an island'))
       const mine = landmassOf(data, hider.pos)
       const theirs = landmassOf(data, q.pos)
-      return { answer: mine === theirs ? 'yes' : 'no', detail: `du: ${name(mine)}, seeker: ${name(theirs)}` }
+      return { answer: mine === theirs ? 'yes' : 'no', detail: `${YOU}: ${name(mine)}, seeker: ${name(theirs)}` }
     }
     case 'manual': {
       // Har byen ingen høyhastighetsbane (som Oslo), er svaret alltid null. Ellers svarer hider selv.
-      if (q.subject === HIGH_SPEED) return city().highSpeed ? null : NOTHING
+      if (q.item === HIGH_SPEED_ITEM || q.subject === HIGH_SPEED) return city().highSpeed ? null : NOTHING
       // Høyde og adresser slås opp hos Kartverket, som bare dekker Norge.
       if (!look || !q.pos || !city().norway) return null
       if (q.item === SEALEVEL_ITEM) {
@@ -898,7 +916,7 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
         const b = look('height', q.pos)
         if (a?.status !== 'ok' || b?.status !== 'ok' || !('height' in a) || !('height' in b)) return null
         // Nærmere havnivå = lavere.
-        return { answer: a.height <= b.height ? 'closer' : 'further', marginM: Math.abs(a.height - b.height), detail: `du: ${Math.round(a.height)} moh., seeker: ${Math.round(b.height)} moh. (Kartverket)` }
+        return { answer: a.height <= b.height ? 'closer' : 'further', marginM: Math.abs(a.height - b.height), detail: tr(`du: ${Math.round(a.height)} moh., seeker: ${Math.round(b.height)} moh. (Kartverket)`, `you: ${Math.round(a.height)} m above sea level, seeker: ${Math.round(b.height)} m (Kartverket)`) }
       }
       if (q.item === STREET_ITEM) {
         const a = look('street', hider.pos)
@@ -912,7 +930,10 @@ export function autoAnswer(q: Question, hider: { pos: LngLat; station: Station }
         return {
           answer: mine.name === theirs.name ? 'yes' : 'no',
           marginM: Number.isFinite(margin) ? margin / 2 : undefined,
-          detail: `du: ${mine.name}, seeker: ${theirs.name} (nærmeste adresse hos Kartverket, stier uten navn er ikke med)`,
+          detail: tr(
+            `du: ${mine.name}, seeker: ${theirs.name} (nærmeste adresse hos Kartverket, stier uten navn er ikke med)`,
+            `you: ${mine.name}, seeker: ${theirs.name} (nearest address from Kartverket, unnamed paths are not included)`,
+          ),
         }
       }
       return null

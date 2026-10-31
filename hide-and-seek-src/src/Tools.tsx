@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fmtDist } from './form'
+import { tr } from './lang'
 import { dist } from './geo'
 import { useGame, useHiderPos } from './store'
 import type { LngLat, Station } from './types'
@@ -11,10 +12,10 @@ const THERMO_CHIPS = [500, 1000, 5000, 15000]
 /** Avstand skrevet inn i km, lagret i meter. */
 function Distance({ value, chips, onChange }: { value: number; chips: number[]; onChange: (m: number) => void }) {
   const [text, setText] = useState(String(value / 1000).replace('.', ','))
-  useEffect(() => setText(String(value / 1000).replace('.', ',')), [value])
+  useEffect(() => setText(String(value / 1000).replace('.', tr(',', '.'))), [value])
   return (
     <div className="mb-3">
-      <span className="label">Avstand</span>
+      <span className="label">{tr('Avstand', 'Distance')}</span>
       <div className="flex flex-wrap items-center gap-1.5">
         {chips.map((m) => (
           <button key={m} type="button" className={`btn ${value === m ? 'btn-on' : ''}`} onClick={() => onChange(m)}>
@@ -28,7 +29,7 @@ function Distance({ value, chips, onChange }: { value: number; chips: number[]; 
             type="text"
             inputMode="decimal"
             value={text}
-            aria-label="Avstand i km"
+            aria-label={tr('Avstand i km', 'Distance in km')}
             onChange={(e) => {
               setText(e.target.value)
               const km = parseFloat(e.target.value.replace(',', '.'))
@@ -52,7 +53,7 @@ function Radar({ stations }: { stations: Station[] }) {
   if (!radar) {
     return (
       <button className="btn w-full" onClick={() => setTools({ radar: { center: isHider ? hiderPos : null, radiusM: 1000 } })}>
-        📡 Egen radar
+        {tr('📡 Egen radar', '📡 Own radar')}
       </button>
     )
   }
@@ -61,23 +62,24 @@ function Radar({ stations }: { stations: Station[] }) {
   return (
     <div className="card">
       <div className="mb-2 flex items-baseline justify-between">
-        <b className="text-sm">📡 Egen radar</b>
+        <b className="text-sm">{tr('📡 Egen radar', '📡 Own radar')}</b>
         <button className="link" onClick={() => setTools({ radar: null })}>
-          Fjern
+          {tr('Fjern', 'Remove')}
         </button>
       </div>
-      <PointInput label="Midten" value={radar.center} onChange={(center) => set({ center })} stations={stations} />
+      <PointInput label={tr('Midten', 'Center')} value={radar.center} onChange={(center) => set({ center })} stations={stations} />
       <Distance value={radar.radiusM} chips={RADAR_CHIPS} onChange={(radiusM) => set({ radiusM })} />
       {radar.center && (
         <>
           {mine ? (
             <p className="mt-1 text-sm">
-              Du er {fmtDist(dist(radar.center, mine))} fra midten, <b>{dist(radar.center, mine) <= radar.radiusM ? 'innenfor' : 'utenfor'}</b>.
+              {tr(`Du er ${fmtDist(dist(radar.center, mine))} fra midten,`, `You are ${fmtDist(dist(radar.center, mine))} from the center,`)}{' '}
+              <b>{dist(radar.center, mine) <= radar.radiusM ? tr('innenfor', 'inside') : tr('utenfor', 'outside')}</b>.
             </p>
           ) : (
             !isHider && (
               <button className="btn mt-1" onClick={() => locate().then(setMe, () => {})}>
-                Hvor er jeg i forhold til den?
+                {tr('Hvor er jeg i forhold til den?', 'Where am I relative to it?')}
               </button>
             )
           )}
@@ -95,7 +97,7 @@ function Thermometer({ stations }: { stations: Station[] }) {
   if (!thermo) {
     return (
       <button className="btn w-full" onClick={() => setTools({ thermo: { start: null, at: null, minM: 1000 } })}>
-        🌡️ Eget termometer
+        {tr('🌡️ Eget termometer', '🌡️ Own thermometer')}
       </button>
     )
   }
@@ -114,17 +116,17 @@ function Thermometer({ stations }: { stations: Station[] }) {
   return (
     <div className="card">
       <div className="mb-2 flex items-baseline justify-between">
-        <b className="text-sm">🌡️ Eget termometer</b>
+        <b className="text-sm">{tr('🌡️ Eget termometer', '🌡️ Own thermometer')}</b>
         <button className="link" onClick={() => setTools({ thermo: null })}>
-          Fjern
+          {tr('Fjern', 'Remove')}
         </button>
       </div>
       <Distance value={thermo.minM} chips={THERMO_CHIPS} onChange={(minM) => set({ minM })} />
       <button className="btn btn-primary mb-2 w-full" onClick={start}>
-        {thermo.start ? 'Start på nytt her' : 'Start her'}
+        {thermo.start ? tr('Start på nytt her', 'Restart here') : tr('Start her', 'Start here')}
       </button>
       {error && <p className="mb-2 text-xs text-bad">{error}</p>}
-      <PointInput label="Startpunkt" value={thermo.start} onChange={(p) => set({ start: p })} stations={stations} />
+      <PointInput label={tr('Startpunkt', 'Start point')} value={thermo.start} onChange={(p) => set({ start: p })} stations={stations} />
       {thermo.start && (
         <>
           <div className="mb-1 h-2 overflow-hidden rounded-full bg-panel-2">
@@ -132,14 +134,17 @@ function Thermometer({ stations }: { stations: Station[] }) {
           </div>
           <p className="text-sm">
             {done ? (
-              <b className="text-ok">✓ Nådd: {fmtDist(gone)} i luftlinje.</b>
+              <b className="text-ok">{tr(`✓ Nådd: ${fmtDist(gone)} i luftlinje.`, `✓ Reached: ${fmtDist(gone)} as the crow flies.`)}</b>
             ) : (
               <>
-                {fmtDist(gone)} av {fmtDist(thermo.minM)} i luftlinje. {fmtDist(thermo.minM - gone)} igjen.
+                {tr(
+                  `${fmtDist(gone)} av ${fmtDist(thermo.minM)} i luftlinje. ${fmtDist(thermo.minM - gone)} igjen.`,
+                  `${fmtDist(gone)} of ${fmtDist(thermo.minM)} as the crow flies. ${fmtDist(thermo.minM - gone)} to go.`,
+                )}
               </>
             )}
           </p>
-          <p className="mt-1 text-xs text-muted">Oppdateres fra GPS mens appen er åpen.</p>
+          <p className="mt-1 text-xs text-muted">{tr('Oppdateres fra GPS mens appen er åpen.', 'Updated from GPS while the app is open.')}</p>
         </>
       )}
     </div>
@@ -149,8 +154,13 @@ function Thermometer({ stations }: { stations: Station[] }) {
 /** Radar og termometer med fritt valgt avstand, til kostnaden for forbannelser og lignende. */
 export function ToolsPanel({ stations }: { stations: Station[] }) {
   return (
-    <Section title="Måleverktøy">
-      <p className="mb-2 text-xs text-muted">Til kostnaden for forbannelser og lignende. Teller ikke som spørsmål, krymper ikke kartet og vises bare på denne telefonen.</p>
+    <Section title={tr('Måleverktøy', 'Measuring tools')}>
+      <p className="mb-2 text-xs text-muted">
+        {tr(
+          'Til kostnaden for forbannelser og lignende. Teller ikke som spørsmål, krymper ikke kartet og vises bare på denne telefonen.',
+          'For the cost of curses and the like. Does not count as a question, does not shrink the map and only shows on this phone.',
+        )}
+      </p>
       <div className="flex flex-col gap-2">
         <Radar stations={stations} />
         <Thermometer stations={stations} />
