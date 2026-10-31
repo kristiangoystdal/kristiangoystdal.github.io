@@ -1126,7 +1126,7 @@ function Privacy() {
             <b className="font-sign text-text">I et rom:</b> spørsmål og svar, klokken, spillerne (navnene dere skriver inn), oppsettet og ferdige runder lagres i Firebase (Google) i Belgia, så alle i rommet ser det samme. Deler en seeker posisjonen sin, lagres den siste posisjonen i rommet. Hiders posisjon sendes aldri.
           </p>
           <p>
-            <b className="font-sign text-text">Hvor lenge:</b> rom og runder som ikke er brukt på 90 dager, slettes. Det du har på telefonen, blir liggende.
+            <b className="font-sign text-text">Hvor lenge:</b> rom og tidligere runder blir liggende, så dere kan gå tilbake til dem senere. Vil du ha et rom slettet, si fra.
           </p>
           <p>
             <b className="font-sign text-text">Andre tjenester:</b> kartbildene hentes fra Kartverket og OpenStreetMap. Spørsmålene om høyde og gate sender ett punkt til Kartverket. Appen har ingen reklame, sporing eller informasjonskapsler.

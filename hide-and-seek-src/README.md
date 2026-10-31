@@ -86,25 +86,6 @@ deretter uten nett.
   og må publiseres i Firebase-konsollen når de endres. Seekernes posisjon ligger under `seekers/`.
   Rommet merkes med `active` når noen kobler til og jevnlig mens det spilles.
 
-## Firebase: innlogging, regler og opprydding
-
-Appen kan bruke anonym innlogging (en usynlig konto per telefon), så databasen vet hvem som eier hva.
-Uten nettnøkkel (`VITE_FIREBASE_API_KEY`) er den av, og appen virker som før.
-
-1. Firebase-konsollen → Authentication → Sign-in method: slå på **Anonymous**.
-2. Kopier `.env.example` til `.env.local` (ignoreres av git) og fyll inn Web API Key (Prosjektinnstillinger →
-   General) og eventuelt App ID. Legg de samme verdiene inn som hemmeligheter i GitHub, så byggingen får dem:
-   `gh secret set -f hide-and-seek-src/.env.local` (fra rotmappen). Verdiene havner i den publiserte appen,
-   slik det er ment for Firebase. Det er reglene som beskytter dataene.
-3. Publiser `database.rules.json` i konsollen. Alle `.write`-regler krever innlogging (`auth != null`),
-   så bare appen kan skrive. Publiser reglene først når en versjon med nettnøkkel er ute, ellers kan
-   appen på nettet ikke skrive i rom.
-
-Oppryddingen (`scripts/cleanup-rooms.mjs`, `.github/workflows/cleanup.yml`) sletter rom og arkiv som ikke
-er brukt på 90 dager, første dag i hver måned. Den trenger en tjenestekontonøkkel: Prosjektinnstillinger →
-Service accounts → Generate new private key, og lim hele JSON-filen inn som hemmeligheten
-`FIREBASE_SERVICE_ACCOUNT` i GitHub (Settings → Secrets and variables → Actions). Kjør den gjerne for hånd
-med «Bare vis» først (Actions → Rydd gamle rom → Run workflow).
 - `src/cities.ts`: byene appen kan spilles i, og alt som er ulikt fra by til by. `city()` er byen som er lastet inn.
 - `src/Archive.tsx`: tidligere runder. Lagres i `archive` i `useGame` og under `archive/<rom>/` i databasen, utenfor rommet.
 - `src/presets.ts`: lagrede spilloppsett. De ligger på telefonen og deles under `presets/` i databasen.
@@ -122,3 +103,21 @@ med «Bare vis» først (Actions → Rydd gamle rom → Run workflow).
   (`npm run sim:games`), og `src/sim/showcase.test.ts` feiler hvis de ikke stemmer med kartdataene lenger.
 - `src/testmode.ts`: falsk GPS for demoen. Uten demo går alt til telefonens GPS.
 - `src/MapView.tsx`: Leaflet-kartet og bakgrunnskartene (`BASEMAPS`, ingen krever nøkkel). `QuestionsView.tsx` og `Panels.tsx` er skjermene.
+
+## Firebase: innlogging, regler og lagring
+
+Appen kan bruke anonym innlogging (en usynlig konto per telefon), så databasen vet hvem som eier hva.
+Uten nettnøkkel (`VITE_FIREBASE_API_KEY`) er den av, og appen virker som før.
+
+1. Firebase-konsollen → Authentication → Sign-in method: slå på **Anonymous**.
+2. Kopier `.env.example` til `.env.local` (ignoreres av git) og fyll inn Web API Key (Prosjektinnstillinger →
+   General) og eventuelt App ID. Legg de samme verdiene inn som hemmeligheter i GitHub, så byggingen får dem:
+   `gh secret set -f hide-and-seek-src/.env.local` (fra rotmappen). Verdiene havner i den publiserte appen,
+   slik det er ment for Firebase. Det er reglene som beskytter dataene.
+3. Publiser `database.rules.json` i konsollen. Alle `.write`-regler krever innlogging (`auth != null`),
+   så bare appen kan skrive. Publiser reglene først når en versjon med nettnøkkel er ute, ellers kan
+   appen på nettet ikke skrive i rom.
+
+Rom og arkiv slettes ikke. Et rom er ca. 8 KB og en lagret runde ca. 18 KB, så gratisplanens 1 GB rommer
+omtrent 15 000 rom med fire runder hver. Det som begrenser, er 100 samtidige tilkoblinger og 10 GB nedlasting
+i måneden.

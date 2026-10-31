@@ -208,7 +208,7 @@ function signIn(app: import('firebase/app').FirebaseApp): Promise<string | null>
   return signedIn
 }
 
-/** Hvor ofte rommet merkes som i bruk. Oppryddingen sletter rom som ikke er brukt på 90 dager. */
+/** Hvor ofte rommet merkes som i bruk, så det er kjent når et rom sist ble brukt. */
 const ACTIVE_EVERY_MS = 10 * 60000
 
 async function connect(code: string, how: 'create' | 'join' | 'resume') {
