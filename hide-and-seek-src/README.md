@@ -3,8 +3,8 @@
 Spørsmålstracker for Jetlag Hide and Seek. Spilles i Oslo (T-bane og trikk),
 Bergen (Bybanen og bybuss), Stavanger (bybuss på Nord-Jæren) og Trondheim
 (Gråkallbanen og bybuss). Under Oppsett velges hvilke transportmidler og linjer
-som er med. Kilden ligger her,
-bygget ligger i `../hide-and-seek/` og er det GitHub Pages serverer.
+som er med. Kilden ligger her. GitHub Actions bygger appen til `../hide-and-seek/`
+og publiserer hele nettsiden (se under).
 
 ```
 npm install
@@ -14,11 +14,12 @@ npm run test:sim # simulerte runder i hver by, ca. 1,5 min (8 blokker i parallel
 npm run test:all # alt
 npm run sim:games # lager de simulerte spillene i public/data/<by>/game.json på nytt
 npm run e2e      # klikk-tester som iPhone (WebKit) og Android, mot den bygde appen (bygg først)
-npm run build    # skriver til ../hide-and-seek (må committes)
+npm run build    # bygger til ../hide-and-seek (ikke i git), for npm run e2e og vite preview
 ```
 
-Pages bygger ikke noe selv (repoet serveres rett fra `main`), så husk
-`npm run build` før commit når noe i `src/` eller `public/` er endret.
+Publisering: hver push til `main` kjører `.github/workflows/pages.yml`. Den kjører alle testene
+(også klikk-testene som iPhone og Android), bygger appen og publiserer hele nettsiden til GitHub Pages.
+Feiler en test, publiseres ingenting. Bygget committes ikke.
 
 ## Data
 
@@ -83,6 +84,25 @@ deretter uten nett.
 - `src/clock.ts`: rundens klokke. Pause og svartid som går ut stopper hiders tid.
 - `src/sync.ts`: sanntidsrom i Firebase Realtime Database. Reglene ligger i `database.rules.json`
   og må publiseres i Firebase-konsollen når de endres. Seekernes posisjon ligger under `seekers/`.
+  Rommet merkes med `active` når noen kobler til og jevnlig mens det spilles.
+
+## Firebase: innlogging, regler og opprydding
+
+Appen kan bruke anonym innlogging (en usynlig konto per telefon), så databasen vet hvem som eier hva.
+Uten nettnøkkel i `CONFIG` i `src/sync.ts` er den av, og appen virker som før.
+
+1. Firebase-konsollen → Authentication → Sign-in method: slå på **Anonymous**.
+2. Prosjektinnstillinger → Your apps: lag en nettapp om det ikke finnes en, og kopier `apiKey` og `appId`
+   inn i `CONFIG`. Nøkkelen er offentlig og trygg å ha i koden.
+3. Publiser `database.rules.json` (fase 1: godtar telefoner med og uten innlogging).
+4. Etter to uker, når telefonene har den nye versjonen: legg `auth != null &&` foran alle `.write`-reglene
+   og publiser på nytt (fase 2).
+
+Oppryddingen (`scripts/cleanup-rooms.mjs`, `.github/workflows/cleanup.yml`) sletter rom og arkiv som ikke
+er brukt på 90 dager, første dag i hver måned. Den trenger en tjenestekontonøkkel: Prosjektinnstillinger →
+Service accounts → Generate new private key, og lim hele JSON-filen inn som hemmeligheten
+`FIREBASE_SERVICE_ACCOUNT` i GitHub (Settings → Secrets and variables → Actions). Kjør den gjerne for hånd
+med «Bare vis» først (Actions → Rydd gamle rom → Run workflow).
 - `src/cities.ts`: byene appen kan spilles i, og alt som er ulikt fra by til by. `city()` er byen som er lastet inn.
 - `src/Archive.tsx`: tidligere runder. Lagres i `archive` i `useGame` og under `archive/<rom>/` i databasen, utenfor rommet.
 - `src/presets.ts`: lagrede spilloppsett. De ligger på telefonen og deles under `presets/` i databasen.

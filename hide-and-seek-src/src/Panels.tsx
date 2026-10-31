@@ -1107,7 +1107,40 @@ export function AppInfo({ data }: { data: GeoData | null }) {
         <Segmented label="Tema" value={s.theme} options={Object.entries(THEMES).map(([k, v]) => ({ value: k as Settings['theme'], label: v }))} onChange={(theme) => set({ theme })} />
       </Section>
       <DataInfo data={data} />
+      <Privacy />
     </div>
+  )
+}
+
+/** Hva appen lagrer, hvor og hvor lenge. Kort, og bare det som faktisk skjer. */
+function Privacy() {
+  return (
+    <Section title="Personvern">
+      <details className="card">
+        <summary className="cursor-pointer text-sm">Hva appen lagrer, og hvor lenge</summary>
+        <div className="mt-2 space-y-2 text-sm text-muted">
+          <p>
+            <b className="font-sign text-text">På telefonen:</b> spillet ditt, oppsett og tidligere runder ligger i nettleseren på denne telefonen, og forsvinner hvis du sletter nettstedsdata.
+          </p>
+          <p>
+            <b className="font-sign text-text">I et rom:</b> spørsmål og svar, klokken, spillerne (navnene dere skriver inn), oppsettet og ferdige runder lagres i Firebase (Google) i Belgia, så alle i rommet ser det samme. Deler en seeker posisjonen sin, lagres den siste posisjonen i rommet. Hiders posisjon sendes aldri.
+          </p>
+          <p>
+            <b className="font-sign text-text">Hvor lenge:</b> rom og runder som ikke er brukt på 90 dager, slettes. Det du har på telefonen, blir liggende.
+          </p>
+          <p>
+            <b className="font-sign text-text">Andre tjenester:</b> kartbildene hentes fra Kartverket og OpenStreetMap. Spørsmålene om høyde og gate sender ett punkt til Kartverket. Appen har ingen reklame, sporing eller informasjonskapsler.
+          </p>
+          <p>
+            Spørsmål eller ønske om sletting:{' '}
+            <a className="link text-sm!" href="https://github.com/kristiangoystdal/kristiangoystdal.github.io/issues" target="_blank" rel="noreferrer">
+              meld fra på GitHub
+            </a>
+            .
+          </p>
+        </div>
+      </details>
+    </Section>
   )
 }
 

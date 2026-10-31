@@ -4,10 +4,17 @@ import { announce, announceRound, notify } from './notify'
 import { GAME_SETTINGS, useGame, type ArchivedRound, type HiderPoint, type Round, type State } from './store'
 import type { LngLat, Question, RoundResult, Settings } from './types'
 
-// Realtime Database trenger bare adressen. Appen bruker ingen API-nøkkel, og
-// tilgangen styres av reglene i database.rules.json.
+/**
+ * Firebase-prosjektet. Nettnøkkelen (apiKey) er offentlig og trygg å ha i koden: tilgangen styres av
+ * reglene i database.rules.json. Uten nøkkel brukes ingen innlogging, og appen virker som før.
+ * Med nøkkel får hver telefon en usynlig anonym konto, så databasen vet hvem som eier hva.
+ */
 const CONFIG = {
   databaseURL: 'https://jetlag-hide-and-seek-norway-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'jetlag-hide-and-seek-norway',
+  authDomain: 'jetlag-hide-and-seek-norway.firebaseapp.com',
+  apiKey: '',
+  appId: '',
 }
 const EMULATOR = import.meta.env.VITE_FIREBASE_EMULATOR as string | undefined
 
@@ -158,12 +165,18 @@ export function shareSeekerPos(p: SeekerPos | null) {
 let emulated = false
 
 export const withTimeout = <T>(p: Promise<T>) =>
-  Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Fikk ikke kontakt. Sjekk nettet og prøv igjen.')), TIMEOUT_MS))])
+  Promise.race([
+    p,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Fikk ikke kontakt med rommet. Sjekk nettet og prøv igjen. Spiller veldig mange akkurat nå, kan gratisgrensen på 100 samtidige være nådd. Da kan dere spille videre på én telefon.')), TIMEOUT_MS),
+    ),
+  ])
 
 /** Åpner databasen. Firebase lastes først når noen faktisk bruker et rom eller delte presets. */
 export async function openDb() {
   const [{ initializeApp, getApps }, db] = await Promise.all([import('firebase/app'), import('firebase/database')])
   const app = getApps()[0] ?? initializeApp(CONFIG)
+  await signIn(app)
   const database = db.getDatabase(app)
   if (EMULATOR && !emulated) {
     const [host, port] = EMULATOR.split(':')
@@ -172,6 +185,30 @@ export async function openDb() {
   }
   return { db, database }
 }
+
+let signedIn: Promise<string | null> | null = null
+
+/**
+ * Anonym innlogging: en usynlig konto per telefon, uten navn eller passord. Gjøres én gang.
+ * Feiler den (eller mangler nøkkelen), fortsetter appen uten, så lenge databasereglene tillater det.
+ */
+function signIn(app: import('firebase/app').FirebaseApp): Promise<string | null> {
+  if (!CONFIG.apiKey) return Promise.resolve(null)
+  signedIn ??= import('firebase/auth')
+    .then(async ({ getAuth, signInAnonymously }) => {
+      const auth = getAuth(app)
+      if (auth.currentUser) return auth.currentUser.uid
+      return (await withTimeout(signInAnonymously(auth))).user.uid
+    })
+    .catch(() => {
+      signedIn = null
+      return null
+    })
+  return signedIn
+}
+
+/** Hvor ofte rommet merkes som i bruk. Oppryddingen sletter rom som ikke er brukt på 90 dager. */
+const ACTIVE_EVERY_MS = 10 * 60000
 
 async function connect(code: string, how: 'create' | 'join' | 'resume') {
   leaveRoom()
@@ -195,9 +232,18 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
     const mine = db.child(room, `seekers/${deviceId()}`)
     sendPos = (p) => void (p ? db.set(mine, JSON.stringify(p)) : db.remove(mine)).catch(() => {})
 
+    // Rommet merkes som i bruk når noen kobler til, og jevnlig mens det spilles.
+    let activeAt = 0
+    const markActive = () => {
+      if (Date.now() - activeAt < ACTIVE_EVERY_MS) return
+      activeAt = Date.now()
+      void db.set(db.child(room, 'active'), db.serverTimestamp()).catch(() => {})
+    }
+    markActive()
     const push = () => {
       // Før første svar fra rommet vet vi ikke hva som er nytt, så ingenting sendes.
       if (applying || !synced) return
+      markActive()
       const next = toShared(useGame.getState())
       const patch = diff(synced, next)
       if (Object.keys(patch).length === 0) return

@@ -7,6 +7,9 @@
         "created": {
           ".validate": "newData.isNumber()"
         },
+        "active": {
+          ".validate": "newData.isNumber()"
+        },
         "round": {
           ".validate": "newData.isString() && newData.val().length < 2000"
         },

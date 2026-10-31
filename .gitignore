@@ -1,1 +1,4 @@
 .DS_Store
+
+# Bygges av GitHub Actions (hide-and-seek-src → npm run build)
+/hide-and-seek/
