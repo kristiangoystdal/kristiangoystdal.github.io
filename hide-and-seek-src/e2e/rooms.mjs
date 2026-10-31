@@ -34,7 +34,9 @@ const en = await phone('en-US')
 await en.getByLabel('Room code').fill(code)
 await en.getByRole('button', { name: 'Join', exact: true }).click()
 await en.getByText('● Connected').waitFor({ timeout: 20000 })
-check(await en.getByRole('radio', { name: /Kari/ }).isVisible(), 'engelsk telefon: spillerne fra rommet er kommet')
+// «Tilkoblet» kommer før rommets innhold, så det ventes på spillerne.
+await en.getByRole('radio', { name: /Kari/ }).waitFor({ timeout: 20000 })
+check(true, 'engelsk telefon: spillerne fra rommet er kommet')
 await en.getByRole('radio', { name: /Hiding/ }).click()
 
 // Runden startes på den norske telefonen.

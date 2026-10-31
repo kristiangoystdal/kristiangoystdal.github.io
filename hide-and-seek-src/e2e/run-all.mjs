@@ -39,13 +39,22 @@ if (!(await up())) {
   }
 }
 
+// En test som henger (f.eks. en nettleser som aldri starter), stoppes i stedet for å holde hele kjøringen.
+const TEST_TIMEOUT_MS = 4 * 60000
 const run = (test, target) =>
   new Promise((resolve) => {
     const p = spawn(process.execPath, [`${here}/${test}.mjs`], { env: { ...process.env, TARGET: target, APP_URL: URL_BASE }, stdio: ['ignore', 'pipe', 'pipe'] })
     let out = ''
+    const timer = setTimeout(() => {
+      out += `\nFEIL testen brukte mer enn ${TEST_TIMEOUT_MS / 60000} minutter og ble stoppet`
+      p.kill('SIGKILL')
+    }, TEST_TIMEOUT_MS)
     p.stdout.on('data', (d) => (out += d))
     p.stderr.on('data', (d) => (out += d))
-    p.on('close', (code) => resolve({ code, out }))
+    p.on('close', (code) => {
+      clearTimeout(timer)
+      resolve({ code, out })
+    })
   })
 
 let failed = 0
