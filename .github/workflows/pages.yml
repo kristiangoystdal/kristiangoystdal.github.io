@@ -1,0 +1,77 @@
+# Bygger, tester og publiserer hele nettsiden til GitHub Pages.
+# Hide and Seek bygges fra hide-and-seek-src og testes (enhetstester, simulerte runder og
+# klikk-tester som iPhone og Android) før noe publiseres. Resten av nettsiden publiseres som den ligger.
+name: Bygg, test og publiser
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Én publisering om gangen. En publisering som er i gang, avbrytes ikke.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: hide-and-seek-src
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hide-and-seek-src/package-lock.json
+
+      - name: Installer
+        run: npm ci
+
+      - name: Enhetstester og simulerte runder
+        run: npm run test:all
+
+      - name: Bygg Hide and Seek
+        run: npm run build
+
+      - name: Installer nettlesere for klikk-testene
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Klikk-tester som iPhone og Android
+        run: npm run e2e
+        env:
+          CI: true
+
+      - name: Sett sammen nettsiden
+        working-directory: .
+        run: |
+          mkdir _site
+          rsync -a --exclude '.git' --exclude '.github' --exclude '.claude' --exclude 'hide-and-seek-src' --exclude '_site' --exclude '.DS_Store' ./ _site/
+          # Uten Jekyll: filer som begynner med understrek (f.eks. assets/_gameId_-*.js) publiseres også.
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    # Bare fra main, og bare når alt over har bestått.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

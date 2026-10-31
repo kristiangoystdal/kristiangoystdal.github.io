@@ -1,0 +1,41 @@
+import { launch, device, URL_BASE, TARGET } from './env.mjs'
+let failed = 0
+const check = (ok, name) => { console.log(`${ok ? 'OK  ' : 'FEIL'} ${name}`); if (!ok) failed++ }
+const browser = await launch()
+const ctx = await browser.newContext(device({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' }))
+const page = await ctx.newPage()
+const errors = []
+page.on('pageerror', (e) => errors.push(e.message))
+await page.addInitScript(() => localStorage.setItem('hideandseek.guide', JSON.stringify({ state: { seen: true }, version: 0 })))
+// Treg forbindelse: stasjoner og linjer kommer etter 2,5 s, resten etter 5 s.
+await page.route('**/data/oslo/{stations.json,lines.geojson}', async (r) => { await new Promise((ok) => setTimeout(ok, 2500)); await r.continue() })
+await page.route('**/data/oslo/{admin,coast,water,riks}.geojson', async (r) => { await new Promise((ok) => setTimeout(ok, 5000)); await r.continue() })
+const t0 = Date.now()
+await page.goto(URL_BASE)
+await page.getByRole('heading', { name: /Hide and Seek/ }).waitFor({ timeout: 10000 })
+const shown = Date.now() - t0
+check(shown < 2000, `lobbyen vises før kartdataene er lastet (${shown} ms)`)
+check(await page.getByText(/Laster kartet for Oslo/).first().isVisible(), 'kartet viser at det laster')
+const start = page.locator('[data-guide="start-round"]')
+check(await start.isDisabled(), 'startknappen venter mens kartet lastes')
+check(await page.getByText('Laster kartet…').isVisible(), 'startknappen sier at den laster, ikke at noe er galt')
+await page.getByLabel('Ny spiller').fill('Kari')
+await page.getByRole('button', { name: 'Legg til', exact: true }).click()
+check(await page.getByRole('radio', { name: /Kari/ }).isVisible(), 'spillere kan legges inn mens kartet lastes')
+await page.getByRole('button', { name: 'Innstillinger' }).click()
+check(await page.getByRole('dialog', { name: 'Innstillinger og hjelp' }).getByText(/Laster kartdataene|Teller/).isVisible(), 'innstillinger åpnes og viser at kartdataene lastes')
+await page.getByRole('button', { name: 'Lukk' }).first().click()
+await page.getByRole('button', { name: /Spillstørrelse, linjer/ }).click()
+const rules = page.getByRole('dialog', { name: /Oppsett for/ })
+check(await rules.getByText(/Laster kartet/).isVisible(), 'oppsettet åpnes og viser at det laster')
+await page.getByRole('dialog', { name: /Oppsett for/ }).getByRole('button', { name: 'Lukk' }).click()
+await start.waitFor({ state: 'visible' })
+await page.waitForFunction(() => !document.querySelector('[data-guide="start-round"]')?.hasAttribute('disabled'), null, { timeout: 15000 })
+check(true, 'startknappen blir klar av seg selv når stasjonene er lastet')
+check(await page.getByText('Laster kartdata…').isVisible(), 'kartet viser at resten av kartdataene lastes')
+await page.waitForFunction(() => !document.body.innerText.includes('Laster kartdata…'), null, { timeout: 20000 })
+check(true, 'meldingen forsvinner når alt er lastet')
+check(errors.length === 0, `ingen JS-feil ${errors.join(' | ')}`)
+await browser.close()
+console.log(failed ? `\n${failed} feilet` : '\nAlt OK')
+process.exitCode = failed ? 1 : 0

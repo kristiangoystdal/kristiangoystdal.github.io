@@ -13,6 +13,7 @@ npm test         # raske tester (geometri, video, byer), et par sekunder
 npm run test:sim # simulerte runder i hver by, ca. 1,5 min (8 blokker i parallell)
 npm run test:all # alt
 npm run sim:games # lager de simulerte spillene i public/data/<by>/game.json på nytt
+npm run e2e      # klikk-tester som iPhone (WebKit) og Android, mot den bygde appen (bygg først)
 npm run build    # skriver til ../hide-and-seek (må committes)
 ```
 
