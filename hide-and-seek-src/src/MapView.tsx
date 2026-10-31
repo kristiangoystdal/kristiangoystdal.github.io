@@ -131,11 +131,12 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     // Animerte overganger (zoom til stasjonene som er igjen) lar Leaflet skalere som før, de er korte.
     let frame = 0
     m.on('zoom', () => {
-      const leaflet = m as unknown as { _animatingZoom?: boolean; _renderer?: { _reset?: () => void } }
+      const leaflet = m as unknown as { _animatingZoom?: boolean; _renderer?: { _reset?: () => void; _ctx?: unknown } }
       if (leaflet._animatingZoom || frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
-        leaflet._renderer?._reset?.()
+        // Kartet kan være fjernet i mellomtiden (f.eks. når byen byttes). Da finnes ikke lerretet lenger.
+        if (leaflet._renderer?._ctx) leaflet._renderer._reset?.()
       })
     })
     const showLabels = () => el.current?.classList.toggle('hide-labels', m.getZoom() < LABEL_ZOOM)
@@ -152,6 +153,9 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       // Fjernes kartet midt i en zoom (f.eks. når byen byttes), avslutter Leaflet zoomen etterpå på et kart
       // som ikke finnes. Merket som ferdig hopper Leaflet over det.
       ;(m as unknown as { _animatingZoom: boolean })._animatingZoom = false
+      // En ventende omtegning fra kniping skal ikke kjøre på et kart som er fjernet.
+      cancelAnimationFrame(frame)
+      frame = 0
       m.remove()
       map.current = null
     }
