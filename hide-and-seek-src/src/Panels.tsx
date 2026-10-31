@@ -955,7 +955,7 @@ export function AppInfo({ data }: { data: GeoData | null }) {
           onChange={(v) => setLang(v === 'auto' ? null : v)}
         />
         <p className="mt-1 text-xs text-muted">
-          {tr('Appen lastes på nytt når språket byttes. Regelboken er bare på norsk foreløpig.', 'The app reloads when the language changes. The rulebook is only in Norwegian for now.')}
+          {tr('Appen lastes på nytt når språket byttes.', 'The app reloads when the language changes.')}
         </p>
       </Section>
       <DataInfo data={data} />

@@ -2,7 +2,7 @@
  * Språket i appen: norsk (nb) eller engelsk (en). Følger telefonen til brukeren velger selv.
  * Tekstene står side om side i koden med `tr('norsk', 'english')`. Bytte av språk laster
  * siden på nytt, så alt (også tekster som regnes ut én gang) kommer på det nye språket.
- * Regelboken (Rules.tsx) er bare på norsk foreløpig.
+ * Regelboken (Rules.tsx) har én versjon per språk, med samme avsnitt.
  */
 export type Lang = 'nb' | 'en'
 

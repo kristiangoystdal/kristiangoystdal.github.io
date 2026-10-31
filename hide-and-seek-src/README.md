@@ -90,7 +90,8 @@ deretter uten nett.
 - `src/lang.ts`: språket. Appen er på norsk eller engelsk, følger telefonen og kan byttes under Innstillinger.
   Tekstene står side om side der de brukes: `tr('norsk', 'english')`. Bytte laster appen på nytt.
   Det som lagres i rommet (svar, emner), er alltid på norsk, så telefoner med ulikt språk kan spille sammen.
-  Stedsnavn står alltid på norsk. Regelboken (`Rules.tsx`) er bare på norsk foreløpig.
+  Stedsnavn står alltid på norsk. Regelboken (`Rules.tsx`) har én liste avsnitt per språk (`SECTIONS_NB`, `SECTIONS_EN`).
+  Endres en regel, må begge oppdateres.
 
 - `src/cities.ts`: byene appen kan spilles i, og alt som er ulikt fra by til by. `city()` er byen som er lastet inn.
 - `src/Archive.tsx`: tidligere runder. Lagres i `archive` i `useGame` og under `archive/<rom>/` i databasen, utenfor rommet.

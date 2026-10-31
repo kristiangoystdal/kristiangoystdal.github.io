@@ -110,11 +110,16 @@ await page.getByRole('button', { name: 'Endgame', exact: true }).click()
 await page.getByText(/Possible stations/).waitFor()
 await leaks(page, 'endgame')
 
-// Regelboken er på norsk, og sier fra om det.
+// Regelboken er på engelsk, med alle avsnittene åpnet.
 await page.getByRole('button', { name: 'Tools', exact: true }).click()
-await page.getByRole('button', { name: /Rules \(Norwegian\)/ }).click()
-check(await page.getByText('The rulebook is only in Norwegian for now.', { exact: false }).isVisible(), 'regelboken sier på engelsk at den er på norsk')
-await page.getByRole('dialog', { name: /Rules/ }).getByRole('button', { name: 'Close' }).click()
+await page.getByRole('button', { name: '📖 Rules' }).click()
+const rules = page.getByRole('dialog', { name: /Rules/ })
+check(await rules.getByText('The game in short').isVisible(), 'regelboken er på engelsk')
+for (const d of await rules.locator('details').all()) await d.evaluate((el) => (el.open = true))
+check((await rules.locator('details').count()) === 13, 'alle 13 avsnittene finnes')
+check(await rules.getByText(/adapted to the metro network in Oslo/).isVisible(), 'regelboken bruker de engelske ordene for transportmiddelet')
+await leaks(page, 'regelboken')
+await rules.getByRole('button', { name: 'Close' }).click()
 
 // Bytt til norsk: appen lastes på nytt på norsk, og valget huskes.
 await page.getByRole('button', { name: /Help and settings/ }).click()

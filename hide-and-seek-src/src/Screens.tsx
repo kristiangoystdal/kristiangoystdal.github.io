@@ -122,7 +122,7 @@ export function AppButtons({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`flex gap-1.5 ${compact ? '' : 'mt-2'}`}>
       <button className="btn flex-1" onClick={() => setRules('')}>
-        {tr('📖 Regler', '📖 Rules (Norwegian)')}
+        {tr('📖 Regler', '📖 Rules')}
       </button>
       <button className="btn flex-1" data-guide="app" onClick={() => setSheet('app')}>
         {tr('⚙ Hjelp og innstillinger', '⚙ Help and settings')}

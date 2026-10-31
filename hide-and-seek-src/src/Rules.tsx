@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { city, modeWordsNb, railMode, transitNb } from './cities'
-import { isEn, tr } from './lang'
+import { MODES, city, modeWordsNb, railMode, transit, transitNb } from './cities'
+import { tr } from './lang'
 import { ITEMS, SIZE_RULES, type Category } from './form'
 import { useGame, useUi } from './store'
 import type { GameSize } from './types'
@@ -13,7 +13,7 @@ function bySize(category: Category) {
   const items = ITEMS.filter((i) => i.category === category && i.id !== 'r-choose')
   return SIZES.map((size) => ({ size, items: items.filter((i) => i.sizes[0] === size) })).filter((g) => g.items.length)
 }
-const from = (size: GameSize) => (size === 'S' ? 'Alle spill' : size === 'M' ? 'Medium og Large' : 'Bare Large')
+const from = (size: GameSize) => (size === 'S' ? tr('Alle spill', 'All games') : size === 'M' ? tr('Medium og Large', 'Medium and Large') : tr('Bare Large', 'Large only'))
 
 function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
   return (
@@ -46,7 +46,9 @@ function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
 
 const List = ({ children }: { children: React.ReactNode }) => <ul className="my-1.5 list-disc space-y-1 pl-5">{children}</ul>
 
-const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
+type Section = { id: string; title: string; body: () => React.ReactNode }
+
+const SECTIONS_NB: Section[] = [
   {
     id: 'spillet',
     title: 'Spillet i korte trekk',
@@ -172,7 +174,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
           <b>Vann:</b> navngitt i kartappen, ikke basseng. <b>Kystlinje:</b> der land møter sjøen.
         </li>
         <li>
-          <b>Havnivå:</b> spillerens høyde over havet. Appen har ikke høydedata, så hider svarer selv.
+          <b>Havnivå:</b> spillerens høyde over havet. Appen slår opp høyden hos Kartverket, og hider bekrefter svaret.
         </li>
         <li>Grenser: riksgrensen, fylkesgrense og kommunegrense.</li>
         <li>Severdigheter og offentlige tjenester: samme liste som i Matching.</li>
@@ -290,7 +292,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     body: () => (
       <List>
         <li>
-          Endgame starter når seekerne er <b>inne i hiders sone og ikke lenger på et transportmiddel</b>. I appen starter seekerne det under Kart.
+          Endgame starter når seekerne er <b>inne i hiders sone og ikke lenger på et transportmiddel</b>. I appen starter seekerne det under fanen Endgame.
         </li>
         <li>Fra da står hider stille. Der hider står i det øyeblikket, er gjemmestedet.</li>
         <li>Gjemmestedet må være offentlig tilgjengelig hele spilletiden, og innen ca. 3 m fra en vei eller sti som kartappen bruker til gangruter. Er det ikke lov, går hider straks til nærmeste lovlige sted.</li>
@@ -312,6 +314,274 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     ),
   },
 ]
+
+const SECTIONS_EN: Section[] = [
+  {
+    id: 'spillet',
+    title: 'The game in short',
+    body: () => (
+      <List>
+        <li>One player (the hider) travels by public transit to a hiding spot at a {transit().stop}.</li>
+        <li>The others (the seekers) work together to find the hider by asking questions from six categories.</li>
+        <li>Each time the hider answers, the hider draws cards from the hider deck.</li>
+        <li>When the hider is found, it is the next player's turn. Whoever stayed hidden longest wins.</li>
+      </List>
+    ),
+  },
+  {
+    id: 'oppsett',
+    title: 'Setup, rounds and breaks',
+    body: () => (
+      <>
+        <Table
+          head={['', ...SIZES.map((s) => SIZE_NAMES[s])]}
+          rows={[
+            ['Hiding time', ...SIZES.map((s) => `${SIZE_RULES[s].hidingMinutes} min`)],
+            ['Zone radius', ...SIZES.map((s) => `${SIZE_RULES[s].zoneRadius} m`)],
+            ['Answer time', '5 min', '5 min', '5 min'],
+            ['Answer time, photos', '10 min', '10 min', '20 min'],
+          ]}
+        />
+        <List>
+          <li>The order of who hides is drawn at random before the game starts.</li>
+          <li>If you play several rounds, only each player's best round counts.</li>
+          <li>At most four players is recommended. If there are more of you, some can team up and hide together.</li>
+          <li>Places outside the play area count as if they do not exist.</li>
+          <li>Pause: all clocks stop, and everyone stays where they are until the game resumes.</li>
+          <li>Rest period (games over several days): at least 10 hours is recommended. Everyone must return to exactly the same place before the game resumes.</li>
+        </List>
+      </>
+    ),
+  },
+  {
+    id: 'runde',
+    title: 'Hiding time and the zone',
+    body: () => (
+      <List>
+        <li>Everyone starts at the same place. The hider gets the deck, the seekers get the questions. Both sides have at least two dice.</li>
+        <li>The seekers share their location so the hider can follow along, for example with location sharing in Google Maps or Find My. The hider's location is not shared.</li>
+        <li>The hider travels on foot and by public transit. Wherever the hider is when the hiding time ends is the hider's station, whether that was the plan or not.</li>
+        <li>The zone is a circle around the station. If the hider is in the zone of several stations, the hider picks one as theirs.</li>
+        <li>The hider can move freely within the zone until the endgame.</li>
+      </List>
+    ),
+  },
+  {
+    id: 'sporsmal',
+    title: 'Questions: common rules',
+    body: () => (
+      <>
+        <List>
+          <li>
+            <b>One question at a time.</b> A new one cannot be asked until the last one is answered.
+          </li>
+          <li>
+            <b>The hider answers from where they stand right now,</b> not from the station. The exceptions are the questions about the station: transit line, station name length and photos "visible from the station". The seekers ask from where they stand.
+          </li>
+          <li>The hider must answer truthfully, within the answer time. If it runs out, the hider's clock stops until the answer comes, and the hider draws no cards for the question.</li>
+          <li>
+            <b>Repeats:</b> a question that has been asked can be asked again at double cost. The hider then draws twice, separately. The third time is triple cost, and so on.
+          </li>
+          <li>
+            <b>Null answer:</b> if what the question asks about does not exist within the play area, the answer is null. It counts as answered, and the hider draws cards.
+          </li>
+          <li>The seekers can use the internet freely, but not Google Street View.</li>
+          <li>Distance to a place is measured to its icon in the map app, also for large parks. If you disagree about what counts, the seekers settle it, e.g. with a screenshot.</li>
+        </List>
+        <Table
+          head={['Category', 'Hider draws', 'Answer']}
+          rows={[
+            ['Matching', 'draw 3, keep 1', 'yes / no'],
+            ['Measuring', 'draw 3, keep 1', 'closer / further'],
+            ['Thermometer', 'draw 2, keep 1', 'hotter / colder'],
+            ['Radar', 'draw 2, keep 1', 'yes / no'],
+            ['Tentacles', 'draw 4, keep 2', 'a place, or "out of range"'],
+            ['Photos', 'draw 1, keep 1', 'a photo, or "cannot answer"'],
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: 'matching',
+    title: 'Matching: "Is your nearest X the same as mine?"',
+    body: () => (
+      <List>
+        <li>
+          <b>Transit line:</b> the seekers must be on board and moving. The answer is yes if {transit().vehicle} they are on stops at the hider's station. If it passes without stopping, the answer is no.
+        </li>
+        <li>
+          <b>Station name length:</b> the number of characters as the map app writes the name. Spaces and hyphens count.
+        </li>
+        <li>
+          <b>Street or path:</b> a street ends where it changes name. Streets without a name start and end at intersections.
+        </li>
+        <li>
+          <b>Administrative levels:</b> in the app these are county (fylke), municipality (kommune), borough (bydel) and postal zone.
+        </li>
+        <li>
+          <b>Landmass:</b> continuous land not divided by water. The app tells the mainland apart from the islands in the fjord.
+        </li>
+        <li>
+          <b>Airport:</b> commercial, meaning its flights can be found on Google Flights. <b>Golf course:</b> outdoors, not mini golf or a driving range. <b>Consulate:</b> not honorary consulates.
+        </li>
+        <li>Mountains, parks and the other places are what the map app classifies as such.</li>
+      </List>
+    ),
+  },
+  {
+    id: 'measuring',
+    title: 'Measuring: "Are you closer to or further from X than me?"',
+    body: () => (
+      <List>
+        <li>
+          <b>Train station:</b> {railMode() ? `${MODES[railMode()!].stops[0].toUpperCase()}${MODES[railMode()!].stops.slice(1)} count. Other stops do not.` : 'Only train stations count. Bus, tram and light rail stops do not.'}
+        </li>
+        <li>
+          <b>Body of water:</b> named in the map app, not swimming pools. <b>Coastline:</b> where land meets the sea.
+        </li>
+        <li>
+          <b>Sea level:</b> the player's height above sea level. The app looks up the height from Kartverket, and the hider confirms the answer.
+        </li>
+        <li>Borders: the international border, county borders and municipal borders.</li>
+        <li>Attractions and public services: the same list as in Matching.</li>
+      </List>
+    ),
+  },
+  {
+    id: 'thermometer',
+    title: 'Thermometer: "After traveling X, am I hotter or colder?"',
+    body: () => (
+      <>
+        <List>
+          <li>The seekers say they are starting, travel at least the distance as the crow flies, and then send their new position.</li>
+          <li>Hotter if the new position is closer to where the hider is now.</li>
+        </List>
+        <Table head={['Distance', 'In']} rows={bySize('Thermometer').flatMap((g) => g.items.map((i) => [i.label, from(g.size)]))} />
+      </>
+    ),
+  },
+  {
+    id: 'radar',
+    title: 'Radar: "Are you within X of me?"',
+    body: () => (
+      <List>
+        <li>
+          It is about <b>the hider's position, not the zone</b>. If the radar covers part of the zone but not where the hider stands, the answer is no.
+        </li>
+        <li>
+          Distances:{' '}
+          {ITEMS.filter((i) => i.category === 'Radar' && i.id !== 'r-choose')
+            .map((i) => i.label)
+            .join(', ')}
+          , or your own choice.
+        </li>
+      </List>
+    ),
+  },
+  {
+    id: 'tentacles',
+    title: 'Tentacles: "Of all X within a distance of me, which are you closest to?"',
+    body: () => (
+      <>
+        <List>
+          <li>The hider must be within the distance too. Otherwise the hider only answers "out of range".</li>
+          <li>Not in Small.</li>
+        </List>
+        <Table head={['Places', 'Distance', 'In']} rows={bySize('Tentacles').flatMap((g) => g.items.map((i) => [i.label, i.group.replace(/^(Innen|Within) /, ''), from(g.size)]))} />
+      </>
+    ),
+  },
+  {
+    id: 'photos',
+    title: 'Photos: "Send a photo of X"',
+    body: () => (
+      <>
+        <List>
+          <li>Photos are sent in the phone's normal photo format, outside the app.</li>
+          <li>In the endgame, "cannot answer" is allowed when the photo would have to be taken from a place the hider cannot go. The hider still draws cards.</li>
+        </List>
+        {bySize('Photos').map((g) => (
+          <div key={g.size}>
+            <h4 className="mt-2 text-xs font-semibold">{from(g.size)}</h4>
+            <Table head={['Subject', 'Requirements']} rows={g.items.map((i) => [i.label, i.rules])} />
+          </div>
+        ))}
+      </>
+    ),
+  },
+  {
+    id: 'kort',
+    title: 'The hider deck',
+    body: () => (
+      <>
+        <List>
+          <li>Three kinds of cards: time bonuses (about half), powerups and curses.</li>
+          <li>The hider can hold 6 cards. With more, cards must be played or discarded right away.</li>
+          <li>"Draw 3, keep 1": look at the top three, take one into your hand, discard two.</li>
+          <li>
+            <b>Time bonuses</b> cannot be played. The card only counts if it is in your hand when the round ends.
+          </li>
+        </List>
+        <h4 className="mt-2 text-xs font-semibold">Powerups</h4>
+        <Table
+          head={['Card', 'Effect']}
+          rows={[
+            [<b>Veto</b>, 'Played instead of answering. The seekers get no answer, the question counts as asked, and the hider draws no cards. Button on the question in the app.'],
+            [<b>Randomize</b>, 'Played instead of answering. A random unasked question in the same category is asked instead. The original does not count as asked. Button on the question in the app.'],
+            [<b>Move</b>, "The hider finds a new zone. The hider's clock stops, and the seekers stay where they are and cannot ask questions. The hider discards their whole hand and tells the old station. Not in the endgame. Button under Cards."],
+            [<b>Discard 1, draw 2</b>, 'Swaps cards in your hand. The same goes for Discard 2, draw 3.'],
+            [<b>Draw 1, expand</b>, 'The hider draws one card, and the hand limit goes up by 1 for the rest of the round.'],
+            [<b>Duplicate</b>, 'A copy of another card in your hand. If it is left at the end, it doubles a time bonus.'],
+          ]}
+        />
+        <h4 className="mt-2 text-xs font-semibold">Curses</h4>
+        <List>
+          <li>Played on the seekers to slow them down, and used once. Each has a cost that must be met, e.g. discarding cards or the seekers being far enough away.</li>
+          <li>Several can be active at once, but only one at a time can stop the seekers from asking questions or taking transit. The seekers say when such a curse is cleared.</li>
+          <li>
+            <b>Drained Brain</b> blocks questions for the rest of the round, even at extra cost. <b>Spotty Memory</b> knocks out a category by dice roll. Both have buttons under Cards.
+          </li>
+          <li>
+            <b>Overflowing Chalice</b> raises the cost: Matching and Measuring draw 4 keep 1, Thermometer and Radar draw 3 keep 1, Photos draw 2 keep 1, Tentacles draw 5 keep 2.
+          </li>
+          <li>
+            <b>Urban Explorer</b> stops the seekers from asking questions on transit and at stations. <b>U-Turn</b> depends on the seekers' next station, which the hider sees from the location sharing.
+          </li>
+          <li>The text on the physical card applies.</li>
+        </List>
+      </>
+    ),
+  },
+  {
+    id: 'endgame',
+    title: 'Endgame',
+    body: () => (
+      <List>
+        <li>
+          The endgame starts when the seekers are <b>inside the hider's zone and no longer on a vehicle</b>. In the app the seekers start it under the Endgame tab.
+        </li>
+        <li>From then on the hider stays put. Wherever the hider stands at that moment is the hiding spot.</li>
+        <li>The hiding spot must be publicly accessible the whole game, and within about 3 m of a road or path the map app uses for walking directions. If it is not allowed, the hider goes straight to the nearest allowed place.</li>
+      </List>
+    ),
+  },
+  {
+    id: 'funnet',
+    title: 'Found and the next round',
+    body: () => (
+      <List>
+        <li>
+          The hider is found when the seekers are within about 1.5 m <b>and</b> have seen the hider.
+        </li>
+        <li>The clock stops, and the time bonus cards in the hider's hand are added to the time.</li>
+        <li>The next hider gets up to 10 minutes to plan. The cards are shuffled back in.</li>
+        <li>The next round starts from the last hider's hiding spot.</li>
+      </List>
+    ),
+  },
+]
+const SECTIONS = tr(SECTIONS_NB, SECTIONS_EN)
 
 /** Reglene i en egen visning. Åpnes på avsnittet som er relevant der man er. */
 export function Rules() {
@@ -344,13 +614,11 @@ export function Rules() {
           </button>
         </div>
         <div ref={box} className="overflow-y-auto overscroll-contain px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))] text-sm">
-          {isEn && (
-            <p className="mt-2 mb-3 rounded-lg border border-accent p-2.5 text-sm" lang="en">
-              The rulebook is only in Norwegian for now. The questions and buttons in the app are in English, and they follow the official Jet Lag rulebook.
-            </p>
-          )}
           <p className="mb-2 text-xs text-muted">
-            Jetlag Hide and Seek, tilpasset {transitNb().whole} i {city().name}. Spillet er satt til {SIZE_NAMES[size]}. Avstandene er appens avrundede verdier.
+            {tr(
+              `Jetlag Hide and Seek, tilpasset ${transitNb().whole} i ${city().name}. Spillet er satt til ${SIZE_NAMES[size]}. Avstandene er appens avrundede verdier.`,
+              `Jet Lag Hide and Seek, adapted to ${transit().whole} in ${city().name}. The game is set to ${SIZE_NAMES[size]}. The distances are the app's rounded values.`,
+            )}
           </p>
           {SECTIONS.map((s) => (
             <details key={s.id} id={`regel-${s.id}`} className="border-b border-border py-1 last:border-0" open={section === s.id}>

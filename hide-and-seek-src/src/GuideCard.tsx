@@ -256,7 +256,7 @@ export function LearnButtons() {
         <LearnRow
           icon={<BookOpen size={20} />}
           title={tr('Les reglene', 'Read the rules')}
-          detail={tr('Hele regelboken, med spørsmål og kort.', 'The whole rulebook, with questions and cards. In Norwegian for now.')}
+          detail={tr('Hele regelboken, med spørsmål og kort.', 'The whole rulebook, with questions and cards.')}
           onClick={() => useUi.getState().setRules('')}
         />
       </div>
