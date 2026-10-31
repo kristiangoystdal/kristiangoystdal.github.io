@@ -5,16 +5,17 @@ import { GAME_SETTINGS, useGame, type ArchivedRound, type HiderPoint, type Round
 import type { LngLat, Question, RoundResult, Settings } from './types'
 
 /**
- * Firebase-prosjektet. Nettnøkkelen (apiKey) er offentlig og trygg å ha i koden: tilgangen styres av
- * reglene i database.rules.json. Uten nøkkel brukes ingen innlogging, og appen virker som før.
+ * Firebase-prosjektet. Nettnøkkelen og app-id-en leses fra .env.local lokalt og fra hemmelighetene i
+ * GitHub ved bygging (se .env.example). De havner i den publiserte appen, slik det er ment: tilgangen
+ * styres av reglene i database.rules.json. Uten nøkkel brukes ingen innlogging, og appen virker som før.
  * Med nøkkel får hver telefon en usynlig anonym konto, så databasen vet hvem som eier hva.
  */
 const CONFIG = {
   databaseURL: 'https://jetlag-hide-and-seek-norway-default-rtdb.europe-west1.firebasedatabase.app',
   projectId: 'jetlag-hide-and-seek-norway',
   authDomain: 'jetlag-hide-and-seek-norway.firebaseapp.com',
-  apiKey: '',
-  appId: '',
+  apiKey: (import.meta.env.VITE_FIREBASE_API_KEY as string | undefined) ?? '',
+  appId: (import.meta.env.VITE_FIREBASE_APP_ID as string | undefined) ?? '',
 }
 const EMULATOR = import.meta.env.VITE_FIREBASE_EMULATOR as string | undefined
 

@@ -1,3 +1,8 @@
 node_modules
 *.zip
 .cache
+
+# Firebase-nøkler lokalt. I GitHub Actions ligger de som hemmeligheter.
+.env
+.env.local
+.env.*.local

@@ -89,11 +89,13 @@ deretter uten nett.
 ## Firebase: innlogging, regler og opprydding
 
 Appen kan bruke anonym innlogging (en usynlig konto per telefon), så databasen vet hvem som eier hva.
-Uten nettnøkkel i `CONFIG` i `src/sync.ts` er den av, og appen virker som før.
+Uten nettnøkkel (`VITE_FIREBASE_API_KEY`) er den av, og appen virker som før.
 
 1. Firebase-konsollen → Authentication → Sign-in method: slå på **Anonymous**.
-2. Prosjektinnstillinger → Your apps: lag en nettapp om det ikke finnes en, og kopier `apiKey` og `appId`
-   inn i `CONFIG`. Nøkkelen er offentlig og trygg å ha i koden.
+2. Kopier `.env.example` til `.env.local` (ignoreres av git) og fyll inn Web API Key (Prosjektinnstillinger →
+   General) og eventuelt App ID. Legg de samme verdiene inn som hemmeligheter i GitHub, så byggingen får dem:
+   `gh secret set -f hide-and-seek-src/.env.local` (fra rotmappen). Verdiene havner i den publiserte appen,
+   slik det er ment for Firebase. Det er reglene som beskytter dataene.
 3. Publiser `database.rules.json` (fase 1: godtar telefoner med og uten innlogging).
 4. Etter to uker, når telefonene har den nye versjonen: legg `auth != null &&` foran alle `.write`-reglene
    og publiser på nytt (fase 2).

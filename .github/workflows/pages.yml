@@ -43,6 +43,10 @@ jobs:
 
       - name: Bygg Hide and Seek
         run: npm run build
+        env:
+          # Firebase-nøklene ligger som hemmeligheter i repoet, ikke i koden (se hide-and-seek-src/.env.example).
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - name: Installer nettlesere for klikk-testene
         run: npx playwright install --with-deps chromium webkit
