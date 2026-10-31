@@ -12,6 +12,7 @@ npm run dev      # utvikling
 npm test         # raske tester (geometri, video, byer), et par sekunder
 npm run test:sim # simulerte runder i hver by, ca. 1,5 min (8 blokker i parallell)
 npm run test:all # alt
+npm run sim:games # lager de simulerte spillene i public/data/<by>/game.json på nytt
 npm run build    # skriver til ../hide-and-seek (må committes)
 ```
 
@@ -86,4 +87,15 @@ deretter uten nett.
 - `src/presets.ts`: lagrede spilloppsett. De ligger på telefonen og deles under `presets/` i databasen.
 - `src/notify.tsx`: varsler om nye spørsmål og svar.
 - `src/store.ts`: Zustand. `useGame` lagres i localStorage, `useUi` gjør ikke det.
+- `src/Screens.tsx`: skjermene. Før og mellom rundene `Lobby` (fire steg: rom, spillere og rolle, by og regler, start).
+  Mens runden pågår `GameScreen` med klokken øverst (`RoundBar`) og fanene Spørsmål, Endgame og Verktøy.
+  Delene ligger i `Panels.tsx`. Knappene følger ett system: én `btn-primary` per skjerm, `btn-danger` for det som
+  sletter eller avbryter (spør alltid først), `Switch` for av/på og `Segmented` for å velge ett av flere (`ui.tsx`).
+- `src/guide.ts` og `src/GuideCard.tsx`: «Lær appen»: omvisningen og demorunden steg for steg. Hvert steg peker på
+  et element med `data-guide` og går videre når brukeren har gjort det.
+- `src/demo.ts`: sandkassen. Det ekte spillet legges til side (også i lagringen, så det overlever en omlasting) og
+  telefonen kobles fra rommet mens demoen eller et simulert spill går. Demoen har en datastyrt hider.
+- `src/showcase.ts`: simulerte spill, ett per by, som brukeren blar gjennom. De regnes ut på forhånd
+  (`npm run sim:games`), og `src/sim/showcase.test.ts` feiler hvis de ikke stemmer med kartdataene lenger.
+- `src/testmode.ts`: falsk GPS for demoen. Uten demo går alt til telefonens GPS.
 - `src/MapView.tsx`: Leaflet-kartet og bakgrunnskartene (`BASEMAPS`, ingen krever nøkkel). `QuestionsView.tsx` og `Panels.tsx` er skjermene.

@@ -3,30 +3,48 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/*
+ * Fargene kommer fra kollektivtrafikken: skiltblått til skilt og overskrifter, og én farge
+ * per rolle. Seeker leter i oransje, hider gjemmer seg i fiolett. Hele appen følger rollen
+ * til telefonen (data-role på <html>), så man ser med et blikk hvem som holder den.
+ */
 :root {
-  --bg: #f3f4f6;
+  --bg: #eef1f5;
   --panel: #ffffff;
-  --panel-2: #eceef2;
-  --border: #d5d9e0;
-  --text: #15181d;
-  --muted: #5f6875;
-  --accent: #d9530b;
+  --panel-2: #e6eaf0;
+  --border: #ccd3dd;
+  --text: #0f1726;
+  --muted: #566173;
+  --sign: #16234a;
+  --sign-text: #ffffff;
+  --seek: #d9530b;
+  --hide: #6a3fc1;
+  --accent: var(--seek);
   --accent-text: #ffffff;
   --ok: #1f8a4c;
   --bad: #c0392b;
 }
+:root[data-role='hider'] {
+  --accent: var(--hide);
+}
 [data-theme='dark'] {
-  --bg: #101317;
-  --panel: #171b21;
-  --panel-2: #1d2229;
-  --border: #2a303a;
-  --text: #e9edf2;
-  --muted: #8b95a3;
-  --accent: #f0732a;
-  --accent-text: #14100c;
+  --bg: #0d1220;
+  --panel: #141b2c;
+  --panel-2: #1b2438;
+  --border: #2a3550;
+  --text: #e8edf5;
+  --muted: #8f9bb0;
+  --sign: #22325f;
+  --sign-text: #ffffff;
+  --seek: #f0732a;
+  --hide: #9b7bea;
+  --accent-text: #120d08;
   --ok: #4cc27f;
   --bad: #f0705f;
   color-scheme: dark;
+}
+[data-theme='dark'][data-role='hider'] {
+  --accent-text: #ffffff;
 }
 
 @theme inline {
@@ -37,6 +55,12 @@
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-sign: var(--sign);
+  --color-sign-text: var(--sign-text);
+  --color-seek: var(--seek);
+  --color-hide: var(--hide);
+  --font-sign: 'Overpass Variable', system-ui, sans-serif;
+  --font-board: 'Overpass Mono', ui-monospace, monospace;
   --color-accent-text: var(--accent-text);
   --color-ok: var(--ok);
   --color-bad: var(--bad);
@@ -54,6 +78,11 @@ body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
 }
+h1,
+h2,
+h3 {
+  font-family: var(--font-sign);
+}
 /* Ingen forsinkelse eller dobbelttrykk-zoom på knapper. */
 button,
 select,
@@ -68,7 +97,7 @@ button {
 
 @layer components {
   .btn {
-    @apply inline-flex min-h-11 shrink-0 md:min-h-10 cursor-pointer whitespace-nowrap items-center justify-center gap-1.5 rounded-lg border border-border bg-panel-2 px-3 text-sm font-medium text-text disabled:cursor-not-allowed disabled:opacity-45;
+    @apply inline-flex min-h-11 shrink-0 md:min-h-10 cursor-pointer whitespace-nowrap items-center justify-center gap-1.5 rounded-[10px] border border-border bg-panel-2 px-3 font-sign text-[15px] font-semibold text-text disabled:cursor-not-allowed disabled:opacity-45;
   }
   .btn-primary {
     @apply border-accent bg-accent text-accent-text;
@@ -76,15 +105,42 @@ button {
   .btn-on {
     @apply border-accent text-accent;
   }
+  /* Sletter, avbryter eller forlater noe. Spør alltid først. */
+  .btn-danger {
+    @apply border-bad/40 text-bad;
+  }
+  /* Liten handling inne i en tekst eller liste, f.eks. «fjern» og «angre svaret». */
+  .link {
+    @apply cursor-pointer text-xs text-muted underline disabled:cursor-not-allowed disabled:opacity-45;
+  }
   /* 16 px tekst på mobil: mindre får iOS til å zoome inn når feltet får fokus. */
   .field {
     @apply min-h-11 w-full rounded-lg border border-border bg-panel px-2.5 text-base text-text md:min-h-10 md:text-sm;
   }
+  /* Overskrift over et felt eller en gruppe. Vanlige bokstaver, ikke store. */
   .label {
-    @apply mb-1 block text-xs font-semibold tracking-wide text-muted uppercase;
+    @apply mb-1.5 block font-sign text-sm font-semibold text-muted;
   }
   .card {
-    @apply rounded-xl border border-border bg-panel p-3;
+    @apply rounded-[14px] border border-border bg-panel p-3;
+  }
+  /* Skiltplate, som navneskiltene på en stasjon. */
+  .sign {
+    @apply rounded-[4px] bg-sign font-sign font-bold text-sign-text;
+  }
+  /* Sifre som på en avgangstavle: klokken og romkoden. */
+  .board {
+    @apply font-board font-medium tabular-nums;
+  }
+  .board-tile {
+    @apply inline-grid place-items-center rounded-[4px] bg-sign font-board font-medium text-sign-text;
+  }
+  /* Valgbrikke: spillere, gjemmetid, byer. */
+  .chip {
+    @apply inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-panel px-3.5 font-sign text-[15px] font-semibold text-text disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .chip-on {
+    @apply border-accent bg-accent text-accent-text;
   }
 }
 
@@ -150,4 +206,19 @@ button {
 }
 .leaflet-container {
   cursor: crosshair;
+}
+
+/* Det guiden peker på. */
+.guide-target {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  animation: guide-pulse 1.4s ease-in-out infinite;
+}
+main.guide-target {
+  outline-offset: -4px;
+}
+@keyframes guide-pulse {
+  50% {
+    outline-color: transparent;
+  }
 }

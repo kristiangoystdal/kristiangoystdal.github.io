@@ -30,8 +30,9 @@ import {
 import { ANSWER_CANT, ANSWER_NULL, ANSWER_RANDOM, ANSWER_VETO, METRO_LINES, SEALEVEL_ITEM, STREET_ITEM, autoAnswer, canCutZone, cutsZone, dist, hasData, byHand, hiderStation, informs, nearestStation, shrinks, unsureAnswer, UNSURE_M, type AutoAnswer, type Result } from './geo'
 import { fetchLookup, lookup, useLookups } from './online'
 import { exportGame, gameLink, parseGame, useGame, useHiderPos, useUi } from './store'
+import { useDemo } from './demo'
 import type { GeoData, LngLat, Question } from './types'
-import { MoveInfo, PAUSE_TEXT, PointInput, Section, fixAccuracy, locate, useGameNow, useNow } from './ui'
+import { MoveInfo, PAUSE_TEXT, PointInput, Section, Spinner, fixAccuracy, locate, useGameNow, useNow } from './ui'
 
 /** Kortene som stenger spørsmål. Hver for seg, så Zustand ikke lager et nytt objekt ved hver endring. */
 function useLocks(): Locks {
@@ -48,13 +49,15 @@ const openRules = (section: string) => useUi.getState().setRules(section)
 /** Lenke til regelavsnittet. */
 function RulesLink({ section, label = 'Regler' }: { section: string; label?: string }) {
   return (
-    <button type="button" className="cursor-pointer text-xs text-muted underline" onClick={() => openRules(section)}>
+    <button type="button" className="link" onClick={() => openRules(section)}>
       📖 {label}
     </button>
   )
 }
 
-const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
+// Én formaterer for alle klokkeslett. Å lage en ny for hvert er tregt på telefonen.
+const CLOCK = new Intl.DateTimeFormat('nb-NO', { hour: '2-digit', minute: '2-digit' })
+const time = (t: number) => CLOCK.format(t)
 
 /** Hiders fasitsvar på et spørsmål, eller null når appen ikke er i hider-modus. */
 export function useAutoAnswer(data: GeoData) {
@@ -64,6 +67,8 @@ export function useAutoAnswer(data: GeoData) {
   // Tegnes på nytt når et oppslag hos Kartverket kommer tilbake.
   useLookups()
   return (q: Question): AutoAnswer | null => {
+    // Hider får ikke forslag regnet ut på halve kartdata.
+    if (data.loading) return null
     if (mode !== 'hider' || !pos) return null
     const station = data.stations.find((s) => s.id === stationId) ?? nearestStation(data.stations, pos)
     return autoAnswer(q, { pos, station }, data, lookup)
@@ -199,7 +204,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
   )
 
   return (
-    <div>
+    <div data-guide="question-form">
       <div className="mb-3 flex flex-wrap gap-1.5">
         {CATEGORIES.map((c) => {
           const first = itemsFor(c, rules).find((i) => !lockedBy(i, locks))
@@ -341,7 +346,15 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
         </p>
       )}
 
-      {missing && <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">Dataene for dette spørsmålet er ikke lastet inn.</p>}
+      {missing &&
+        (data.loading ? (
+          // Grenser, kyst, vann og steder kommer like etter stasjonene. Skjemaet blir klart av seg selv.
+          <p className="mb-3 flex items-center gap-2 rounded-lg bg-panel-2 p-2 text-sm text-muted" role="status">
+            <Spinner className="size-3.5!" /> Kartdataene dette spørsmålet trenger, lastes…
+          </p>
+        ) : (
+          <p className="mb-3 rounded-lg bg-panel-2 p-2 text-sm text-bad">Byen har ikke data til dette spørsmålet.</p>
+        ))}
 
       {q && !missing && (
         <div className="mb-3">
@@ -388,6 +401,7 @@ function QuestionForm({ data, form }: { data: GeoData; form: Form }) {
       <div className="flex gap-2">
         <button
           className="btn btn-primary flex-1"
+          data-guide="ask"
           disabled={!q || missing || !!blocked}
           onClick={() => {
             if (repeatText && !form.id && !confirm(`${repeatText}\n\nStille det på nytt?`)) return
@@ -448,6 +462,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
    * GPS sist meldte. Får telefonen ikke posisjon, svarer hider selv.
    */
   const answerFromGps = async (q: Question, shown?: string) => {
+    if (data.loading) return setError('Kartdataene lastes fortsatt. Prøv igjen om et øyeblikk.')
     setBusy(q.id)
     setError('')
     try {
@@ -486,6 +501,11 @@ function HiderQuestions({ data }: { data: GeoData }) {
 
   return (
     <>
+      {data.loading && (
+        <p className="mb-3 flex items-center gap-2 text-sm text-muted" role="status">
+          <Spinner className="size-3.5!" /> Kartdataene lastes. Svarforslagene kommer straks.
+        </p>
+      )}
       {!hasPos && <p className="mb-3 text-xs text-muted">{gpsError || 'Venter på GPS. Appen henter posisjonen din når du svarer.'}</p>}
       {endgame && (
         <p className="mb-5 rounded-lg border border-accent p-3 text-sm">
@@ -516,7 +536,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                     {q.manual && <span className="ml-1 text-xs text-muted">(selv)</span>}
                     {q.swap && <span className="block text-xs text-muted">Seekerne skal stille «{itemOf(q.swap)?.label}» i stedet.</span>}
                     {/* Trykket hider feil, kan svaret trekkes og gis på nytt. Seekerne ser at det er endret. */}
-                    <button className="ml-2 text-xs text-muted underline" onClick={() => answer(q, null)}>
+                    <button className="link ml-2" onClick={() => answer(q, null)}>
                       angre svaret
                     </button>
                   </p>
@@ -571,7 +591,7 @@ function HiderQuestions({ data }: { data: GeoData }) {
                       </>
                     ) : (
                       // Appen kan ta feil: GPS-en bommer, eller et sted mangler i kartdataene. Da gjelder virkeligheten.
-                      <button className="mt-1 text-xs text-muted underline" onClick={() => openManual(q.id)}>
+                      <button className="link mt-1" onClick={() => openManual(q.id)}>
                         Stemmer ikke svaret? Svar selv
                       </button>
                     )}
@@ -768,7 +788,7 @@ function HiderCards({ data }: { data: GeoData }) {
         </details>
         <p className="text-xs text-muted">
           Veto og Randomize spiller du på spørsmålet du skal svare på. Andre kort spilles utenfor appen.{' '}
-          <button type="button" className="cursor-pointer text-xs text-muted underline" onClick={() => useUi.getState().setTab('map')}>
+          <button type="button" className="link" onClick={() => useUi.getState().setTab('tools')}>
             📏 Mål avstand for en forbannelse
           </button>{' '}
           <RulesLink section="kort" label="Alle kort" />
@@ -778,7 +798,8 @@ function HiderCards({ data }: { data: GeoData }) {
   )
 }
 
-function Share() {
+/** Del spillet som lenke eller JSON, importer et, eller start på nytt. Ligger i lobbyen. */
+export function ShareGame() {
   const importGame = useGame((s) => s.importGame)
   const newGame = useGame((s) => s.newGame)
   const [text, setText] = useState('')
@@ -823,7 +844,7 @@ function Share() {
           Importer
         </button>
         <button
-          className="btn text-bad"
+          className="btn btn-danger"
           onClick={() => {
             if (confirm('Slette alle spørsmål og starte en ny runde? Poengtavlen beholdes.')) newGame()
           }}
@@ -852,6 +873,11 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
   const endgame = useGame((s) => s.round.endgame ?? null)
   const toggleCut = useGame((s) => s.toggleEndgameCut)
   const toggleIgnored = useGame((s) => s.toggleIgnored)
+  // Reprise av et simulert spill: loggen vises, men kan ikke endres.
+  const replay = useDemo((s) => s.kind === 'showcase')
+  // I gjemmetiden er «Start letingen» hovedknappen, ikke nytt spørsmål.
+  const now = useGameNow()
+  const hidingNow = useGame((s) => s.round.seekFrom !== null && now < s.round.seekFrom && (!!s.round.pause || Date.now() < s.round.seekFrom))
   const open = (item: Item | undefined) => item && !lockedBy(item, locks)
 
   if (draft) {
@@ -871,14 +897,14 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
 
   return (
     <div>
-      <div className="mb-4 flex gap-2">
-        <button className={`btn flex-1 ${isHider ? '' : 'btn-primary'}`} disabled={!first || (!isHider && !!blocked)} onClick={() => first && setDraft(newForm(first, lastPos ?? null))}>
+      {!replay && !(hidingNow && !isHider) && <div className="mb-4 flex gap-2">
+        <button className={`btn flex-1 ${isHider || hidingNow ? '' : 'btn-primary'}`} data-guide="new-question" disabled={!first || (!isHider && !!blocked)} onClick={() => first && setDraft(newForm(first, lastPos ?? null))}>
           {isHider ? '+ Legg inn spørsmål selv' : '+ Nytt spørsmål'}
         </button>
         <button className="btn" onClick={undo} disabled={!canUndo}>
           Angre
         </button>
-      </div>
+      </div>}
       {!isHider && blocked && <p className="-mt-2 mb-4 text-xs text-muted">{blocked}</p>}
       <LocksNotice />
       {isHider ? (
@@ -921,15 +947,15 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                         </span>
                       )}
                     </span>
-                    <span className="flex gap-1.5">
+                    {!replay && <span className="flex gap-1.5">
                       {/* Trykket seeker feil, kan spørsmålet rettes eller slettes helt til hider har svart. Etter det er det låst. */}
                       <button className="btn min-h-9!" disabled={q.answer !== null} onClick={() => setDraft(questionToForm(q))}>
                         Rediger
                       </button>
-                      <button className="btn min-h-9! text-bad" disabled={q.answer !== null} onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
+                      <button className="btn btn-danger min-h-9!" disabled={q.answer !== null} onClick={() => removeQuestion(q.id)} aria-label={`Slett spørsmål ${i + 1}`}>
                         Slett
                       </button>
-                    </span>
+                    </span>}
                   </div>
                   {q.answer === ANSWER_RANDOM && q.swap && (
                     <div className="mt-2 rounded-lg bg-panel-2 p-2 text-sm">
@@ -942,7 +968,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                     </div>
                   )}
                   {/* I endgame velger seekerne om spørsmål fra før skal gjøre sonen mindre. */}
-                  {!isHider && endgame && q.time < endgame.time && q.time >= since && canCutZone(q) && (
+                  {!isHider && !replay && endgame && q.time < endgame.time && q.time >= since && canCutZone(q) && (
                     <button type="button" role="switch" aria-checked={cutsZone(q, endgame)} className={`btn mt-2 min-h-9! w-full ${cutsZone(q, endgame) ? 'btn-on' : ''}`} onClick={() => toggleCut(q.id)}>
                       {cutsZone(q, endgame) ? '✓ Skjærer endgame-sonen' : 'Bruk i endgame-sonen'}
                     </button>
@@ -951,12 +977,12 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                   {q.manual && <p className="mt-1 text-xs text-muted">Hider svarte selv i stedet for å bruke appens utregning.</p>}
                   <AnswerHistory q={q} />
                   {/* Er et svar feil, kan seekerne ta det ut av kartet. Spørsmålet regnes fortsatt som stilt. */}
-                  {!isHider && informs(q) && q.kind !== 'photo' && q.kind !== 'manual' && q.time >= since && (
+                  {!isHider && !replay && informs(q) && q.kind !== 'photo' && q.kind !== 'manual' && q.time >= since && (
                     <button
                       type="button"
                       role="switch"
                       aria-checked={!q.ignored}
-                      className="mt-1 text-xs text-muted underline"
+                      className="link mt-1"
                       onClick={() => {
                         if (q.ignored || confirm('Ta svaret ut av kartet? Bruk det når dere tror svaret er feil. Spørsmålet regnes fortsatt som stilt, og kan tas inn igjen.')) toggleIgnored(q.id)
                       }}
@@ -964,7 +990,7 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
                       {q.ignored ? 'Bruk svaret på kartet igjen' : 'Ta svaret ut av kartet'}
                     </button>
                   )}
-                  {!isHider && (
+                  {!isHider && !replay && (
                     <input
                       className="field mt-2 min-h-9! text-sm!"
                       value={q.note ?? ''}
@@ -979,7 +1005,6 @@ export default function QuestionsView({ data, result }: { data: GeoData; result:
           </ol>
         </Section>
       )}
-      <Share />
     </div>
   )
 }

@@ -612,3 +612,17 @@ describe('oppslag hos Kartverket', () => {
     expect(autoAnswer(q, hider, data, () => undefined)).toBeNull()
   })
 })
+
+describe('antall områder', () => {
+  it('postsoner telles likt som når flatene slås sammen', async () => {
+    const { loadData } = await import('./data')
+    const { cityOf, setCity } = await import('./cities')
+    const { levelAreas, levelCount, setBounds } = await import('./geo')
+    const c = cityOf('oslo')
+    setCity(c)
+    setBounds(c.bounds)
+    const d = await loadData('oslo', async (p) => (existsSync(`public/data/oslo/${p}`) ? JSON.parse(readFileSync(`public/data/oslo/${p}`, 'utf8')) : null))
+    expect(levelCount(d, 'postsone')).toBe(levelAreas(d, 'postsone').length)
+    expect(levelCount(d, 'bydel')).toBe(levelAreas(d, 'bydel').length)
+  })
+})

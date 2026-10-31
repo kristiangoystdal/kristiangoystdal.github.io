@@ -1,30 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useArchivedView } from './Archive'
 import MapView from './MapView'
-import { BonusPrompt, GamePanel, MapPanel, SettingsPanel } from './Panels'
-import QuestionsView from './QuestionsView'
+import { BonusPrompt, PossibleStations, RoundBar } from './Panels'
+import { AppSheet, GameScreen, GameTabs, LearnSheet } from './Screens'
+import { Lobby, StartBar } from './Lobby'
+import { useDemo, useDemoHider } from './demo'
+import { useGuide } from './guide'
+import { GuideOverlay, HelpButtons, ShowcaseCard } from './GuideCard'
+import { useShowcaseRunner } from './showcase'
 import { city, cityOf, linesOf, modesOf, setActiveModes } from './cities'
-import { loadData } from './data'
+import { loadCore, loadData } from './data'
 import { movedAt } from './clock'
-import { clipData, dist, hiderStation, onlyLines, solve } from './geo'
+import { adminLevels, autoPlayArea, clipData, dist, hasData, hiderStation, levelAreas, onlyLines, solve } from './geo'
 import { useHiderPath } from './hiderPath'
 import { Rules } from './Rules'
 import { useThermoGps } from './Tools'
-import { gameFromHash, useGame, useHiderPos, useUi, type Tab } from './store'
+import { gameFromHash, useGame, useHiderPos, useUi } from './store'
 import { Toast } from './notify'
-import { rememberFix } from './ui'
+import { Loading, PanelHandle, rememberFix, usePanelHeight } from './ui'
 import { joinRoom, resumeRoom, roomFromHash, shareSeekerPos, useSync, type SeekerPos } from './sync'
 import type { GeoData, LngLat } from './types'
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'map', label: 'Kart', icon: '🗺️' },
-  { key: 'questions', label: 'Spørsmål', icon: '❓' },
-  { key: 'game', label: 'Spill', icon: '⏱️' },
-  { key: 'settings', label: 'Oppsett', icon: '⚙️' },
-]
 
 function useTheme() {
   const theme = useGame((s) => s.settings.theme)
+  const role = useGame((s) => s.mode)
+  // Hele appen får fargen til rollen: oransje for seeker, fiolett for hider.
+  useEffect(() => void (document.documentElement.dataset.role = role), [role])
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: dark)')
     const apply = () => {
@@ -142,20 +144,18 @@ function useShareLocation() {
 export default function App() {
   const [loaded, setData] = useState<GeoData | null>(null)
   const [error, setError] = useState(false)
-  const tab = useUi((s) => s.tab)
-  const setTab = useUi((s) => s.setTab)
+  const seekFrom = useGame((s) => s.round.seekFrom)
+  // Reprise av et simulert spill: ingen faner, så man ikke havner i et ekte spill.
+  const replay = useDemo((s) => s.kind === 'showcase')
   const pick = useUi((s) => s.pick)
   const draw = useUi((s) => s.draw)
   const collapsed = useUi((s) => s.collapsed)
-  const setCollapsed = useUi((s) => s.setCollapsed)
+  const panelHeight = usePanelHeight()
   const questions = useGame((s) => s.questions)
   const settings = useGame((s) => s.settings)
   const mode = useGame((s) => s.mode)
   const endgame = useGame((s) => s.round.endgame ?? null)
   const since = useGame((s) => movedAt(s.round))
-  const pending = questions.filter((q) => q.answer === null).length
-  const room = useSync((s) => s.room)
-  const online = useSync((s) => s.status === 'online')
 
   useTheme()
   useSharedLink()
@@ -169,17 +169,22 @@ export default function App() {
     let live = true
     setData(null)
     setError(false)
-    loadData(cityId).then(
-      (d) => {
+    // Først stasjonene og linjene, så appen vises med en gang. Grenser, kyst, vann og steder kommer like etter.
+    loadCore(cityId)
+      .then((core) => {
         if (!live) return
         // Ny by: linjene til byens vanlige transportmidler er med til noen velger annet.
-        const all = d.lines.features.map((f) => f.properties.line)
+        const all = core.lines.features.map((f) => f.properties.line)
         const { settings } = useGame.getState()
-        if (!settings.lines.some((l) => all.includes(l))) useGame.setState({ settings: { ...settings, lines: linesOf(d, city().defaultModes) } })
-        setData(d)
-      },
-      () => live && setError(true),
-    )
+        if (!settings.lines.some((l) => all.includes(l))) useGame.setState({ settings: { ...settings, lines: linesOf(core, city().defaultModes) } })
+        setData(core)
+        return loadData(cityId).then(
+          (full) => live && setData(full),
+          // Uten resten virker appen som før med manglende data: de spørsmålstypene slås av.
+          () => live && setData({ ...core, loading: false }),
+        )
+      })
+      .catch(() => live && setError(true))
     return () => {
       live = false
     }
@@ -193,76 +198,99 @@ export default function App() {
   const data = useMemo(() => loaded && onlyLines(clipData(loaded, settings.playArea), settings.lines), [loaded, settings.playArea, settings.lines])
   // Hiders stasjon velges bare blant stasjonene som er med.
   useHiderLocation(data)
+  useDemoHider(data)
+  useShowcaseRunner(loaded, data || null)
   const past = useArchivedView(loaded)
   const result = useMemo(
     // Hider får aldri se hvordan seekernes kart krymper: for hider regnes det som om ingen spørsmål er besvart.
-    () => data && (mode === 'hider' ? solve([], data, settings) : solve(questions, data, settings, endgame, since)),
+    // Mens resten av kartdataene lastes, regnes kartet bare med svarene som ikke trenger dem. Ellers ville de gitt feil.
+    () => data && (mode === 'hider' ? solve([], data, settings) : solve(data.loading ? questions.filter((q) => hasData(q, data)) : questions, data, settings, endgame, since)),
     // Bare sonestørrelse, linjevalg og spillområde påvirker geometrien.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, questions, mode, endgame, since, settings.zoneRadius, settings.lines, settings.playArea],
   )
 
-  if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
-  if (!data || !result) return <p className="p-6 text-muted">Laster kartet for {cityOf(cityId).name}…</p>
+  // Spillområdet legges automatisk rundt stasjonene på linjene som er med, til noen tegner sitt eget eller velger hele nettet.
+  // Ikke under runden: da er oppsettet låst.
+  useEffect(() => {
+    if (!loaded || seekFrom !== null || settings.areaAuto === false || !settings.lines.length) return
+    const area = autoPlayArea(loaded.stations, settings)
+    if (JSON.stringify(area) !== JSON.stringify(settings.playArea)) useGame.getState().setSettings({ playArea: area })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, seekFrom, settings.areaAuto, settings.lines, settings.zoneRadius])
 
+  // Postsonene lages ved å slå sammen postnumrene. Det er tungt, så det gjøres når telefonen er ledig etter oppstart,
+  // ikke første gang noen stiller et spørsmål om postsone.
+  useEffect(() => {
+    if (!data || data.loading || !adminLevels().some((l) => l.key === 'postsone')) return
+    const idle = window.requestIdleCallback ?? ((f: () => void) => window.setTimeout(f, 1500))
+    const cancel = window.cancelIdleCallback ?? window.clearTimeout
+    const id = idle(() => void levelAreas(data, 'postsone'))
+    return () => cancel(id)
+  }, [data])
+
+  // Demoen trenger å vite hvor mange stasjoner seekeren har igjen.
+  useEffect(() => void (result && useGuide.setState({ left: result.stations.length })), [result])
+
+  if (error) return <p className="p-6 text-bad">Kunne ikke laste stasjonsdata. Last siden på nytt.</p>
+  // Appen vises med en gang. Det som trenger kartdataene, viser at det laster til de er der.
+  const ready = data && result && loaded ? { data, result, loaded } : null
+  const loadingText = `Laster kartet for ${cityOf(cityId).name}…`
+
+  // Før og mellom rundene vises lobbyen. Mens runden pågår, spillskjermen med klokke og faner.
+  const playing = seekFrom !== null
   return (
     <div className="flex h-dvh flex-col md:flex-row-reverse">
-      <main className="relative min-h-0 flex-1">
-        <MapView data={past?.data ?? data} result={past?.result ?? result} past={past?.round} />
+      <main className="relative min-h-0 flex-1" data-guide="map">
+        {ready ? (
+          <MapView data={past?.data ?? ready.data} result={past?.result ?? ready.result} past={past?.round} />
+        ) : (
+          <div className="grid h-full place-items-center bg-panel-2">
+            <Loading text={loadingText} />
+          </div>
+        )}
         <Toast />
         <BonusPrompt />
         <Rules />
+        <AppSheet data={loaded || null} help={<HelpButtons />} />
+        <LearnSheet />
+        <GuideOverlay stations={ready?.data.stations ?? []} />
+        {ready && <ShowcaseCard data={ready.data} />}
       </main>
-      <aside className={`flex ${tab === 'map' ? 'max-h-[38dvh]' : 'max-h-[62dvh]'} flex-col border-t border-border bg-bg md:h-full md:max-h-none md:w-96 md:border-t-0 md:border-r`}>
-        <button
-          className={`grid h-6 w-full shrink-0 cursor-pointer place-items-center md:hidden ${pick || draw ? 'hidden' : ''}`}
-          aria-label={collapsed ? 'Vis panelet' : 'Skjul panelet og vis hele kartet'}
-          aria-expanded={!collapsed}
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          <span className="h-1 w-10 rounded-full bg-border" />
-        </button>
+      <aside style={{ '--panel-h': panelHeight } as React.CSSProperties} className={`flex h-(--panel-h) shrink-0 flex-col border-t border-border bg-bg md:h-full md:w-96 md:border-t-0 md:border-r ${replay ? 'hidden!' : ''}`}>
+        <PanelHandle hidden={!!(pick || draw)} />
         {/* Mens man velger punkt eller tegner på kartet, skjules panelet på mobil så kartet får plassen. */}
         <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 md:pt-4 ${pick || draw || collapsed ? 'hidden md:block' : ''}`}>
-          <div className="mb-3 hidden items-baseline justify-between md:flex">
+          <header className={`mb-3 items-center justify-between gap-2 ${playing && !past ? 'hidden md:flex' : 'hidden'}`}>
             <h1 className="text-lg font-bold">
               Hide and Seek <span className="text-accent">{cityOf(cityId).name}</span>
             </h1>
-            <span className="flex gap-3">
-              <button className="cursor-pointer text-xs text-muted underline" onClick={() => useUi.getState().setRules('')}>
-                Regler
+            <span className="flex gap-1.5">
+              <button className="btn min-h-9! px-2.5!" data-guide="app" onClick={() => useUi.getState().setSheet('app')}>
+                ⚙ Hjelp
               </button>
-              <a className="text-xs text-muted underline" href="../">
-                Til forsiden
-              </a>
             </span>
-          </div>
-          {tab === 'map' && <MapPanel data={past?.data ?? data} result={past?.result ?? result} past={!!past} />}
-          {tab === 'questions' && <QuestionsView data={data} result={result} />}
-          {tab === 'game' && <GamePanel raw={loaded!} />}
-          {tab === 'settings' && <SettingsPanel data={data} all={loaded!} result={result} />}
+          </header>
+          {past ? (
+            <>
+              <p className="mb-4 rounded-lg border border-accent p-3 text-sm">Kartet viser en tidligere runde. Trykk «Tilbake til spillet» på kartet for å gå tilbake.</p>
+              <PossibleStations data={past.data} result={past.result} />
+            </>
+          ) : playing ? (
+            ready ? (
+              <GameScreen data={ready.data} result={ready.result} />
+            ) : (
+              <>
+                <RoundBar />
+                <Loading text={loadingText} />
+              </>
+            )
+          ) : (
+            <Lobby data={ready?.data ?? null} all={ready?.loaded ?? null} result={ready?.result ?? null} />
+          )}
         </div>
-        <nav className="flex shrink-0 border-t border-border bg-panel pb-[env(safe-area-inset-bottom)]" aria-label="Skjermer">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              className={`relative flex min-h-14 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${tab === t.key ? 'text-accent' : 'text-muted'}`}
-              aria-current={tab === t.key ? 'page' : undefined}
-              onClick={() => setTab(t.key)}
-            >
-              <span className="text-lg leading-none" aria-hidden>
-                {t.icon}
-              </span>
-              {t.label}
-              {t.key === 'game' && room && (
-                <span className={`absolute top-2 right-[26%] size-2.5 rounded-full ${online ? 'bg-ok' : 'bg-muted'}`} title={online ? 'Tilkoblet rom' : 'Frakoblet'} />
-              )}
-              {t.key === 'questions' && pending > 0 && (
-                <span className="absolute top-1.5 right-[22%] grid size-4 place-items-center rounded-full bg-accent text-[10px] text-accent-text">{pending}</span>
-              )}
-            </button>
-          ))}
-        </nav>
+        {playing && !past && !replay && <GameTabs />}
+        {!playing && !past && !collapsed && <StartBar ready={!!ready} />}
       </aside>
     </div>
   )

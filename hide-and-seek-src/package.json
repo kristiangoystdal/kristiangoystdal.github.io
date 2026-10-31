@@ -9,14 +9,19 @@
     "preview": "vite preview",
     "test": "vitest run --exclude 'src/sim/**'",
     "test:sim": "vitest run src/sim",
-    "test:all": "vitest run"
+    "test:all": "vitest run",
+    "sim:games": "WRITE_GAMES=1 vitest run src/sim/showcase"
   },
   "dependencies": {
+    "@fontsource-variable/overpass": "^5.3.0",
+    "@fontsource/overpass-mono": "^5.3.0",
     "@turf/turf": "^7.4.0",
     "firebase": "^13.0.0",
     "leaflet": "^1.9.4",
     "leaflet-rotate": "^0.2.8",
+    "lucide-react": "^1.66.0",
     "mediabunny": "^1.63.0",
+    "qrcode-generator": "^1.4.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "zustand": "^5.0.15"

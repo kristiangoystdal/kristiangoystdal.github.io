@@ -55,10 +55,10 @@ export function announceRound(before: Round, after: Round, mode: 'seeker' | 'hid
     notify(
       mode === 'hider'
         ? { title: 'Endgame er startet', body: 'Seekerne er i en sone. Er det din, står du stille der du er nå.', tab: 'questions' }
-        : { title: 'Endgame er startet', body: 'En annen seeker startet endgame. Bare den ene sonen er gyldig nå.', tab: 'map' },
+        : { title: 'Endgame er startet', body: 'En annen seeker startet endgame. Bare den ene sonen er gyldig nå.', tab: 'endgame' },
     )
   } else if (!after.endgame && before.endgame && after.seekFrom !== null) {
-    notify({ title: 'Endgame er avsluttet', body: mode === 'hider' ? 'Seekerne har avsluttet endgame.' : 'Kartet viser igjen alle stasjonene svarene peker ut.', tab: mode === 'hider' ? 'questions' : 'map' })
+    notify({ title: 'Endgame er avsluttet', body: mode === 'hider' ? 'Seekerne har avsluttet endgame.' : 'Kartet viser igjen alle stasjonene svarene peker ut.', tab: mode === 'hider' ? 'questions' : 'endgame' })
   }
   if (mode !== 'seeker') return
   if ((after.moves?.length ?? 0) > (before.moves?.length ?? 0)) {

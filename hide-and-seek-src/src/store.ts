@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
 }
 
 /** Innstillingene som er felles for alle i spillet og deles i rommet. */
-export const GAME_SETTINGS = ['city', 'size', 'questions', 'zoneRadius', 'lines', 'playArea'] as const satisfies readonly (keyof Settings)[]
+export const GAME_SETTINGS = ['city', 'size', 'questions', 'zoneRadius', 'lines', 'playArea', 'areaAuto'] as const satisfies readonly (keyof Settings)[]
 
 export type Layer = 'lines' | 'zones' | 'area' | 'admin' | 'poi'
 
@@ -97,6 +97,8 @@ export interface State {
   setBonus: (id: string, minutes: number) => void
   removeResult: (id: string) => void
   newGame: () => void
+  /** Etter å ha forlatt et rom: runder, poeng, spillere og arkiv fra rommet fjernes. Byen og reglene beholdes. */
+  clearRoomGame: (room: string) => void
   importGame: (game: SharedGame) => void
 }
 
@@ -173,7 +175,7 @@ export interface SharedGame {
   v: 1
   questions: Question[]
   /** `city` mangler i lenker fra før byvalget fantes. Da gjelder Oslo. */
-  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size' | 'questions'> & { city?: string }
+  settings: Pick<Settings, 'zoneRadius' | 'lines' | 'playArea' | 'size' | 'questions' | 'areaAuto'> & { city?: string }
 }
 
 /** Legger til der hider står nå, hvis telefonen vet det. GPS-en er alt på for hider, så det koster ikke strøm. */
@@ -221,7 +223,8 @@ export const useGame = create<State>()(
           set((s) =>
             s.round.seekFrom !== null || s.settings.city === city
               ? s
-              : { settings: { ...s.settings, city, playArea: null, questions: null, lines: [] }, hider: { stationId: null } },
+              : // Ny by: spillområdet legges automatisk rundt stasjonene når de er lastet.
+                { settings: { ...s.settings, city, playArea: null, areaAuto: true, questions: null, lines: [] }, hider: { stationId: null } },
           ),
         saveQuestion: (body, answer, id) =>
           editQuestions((qs) =>
@@ -318,6 +321,18 @@ export const useGame = create<State>()(
         addHiderPath: (id, pts) => set((s) => ({ archive: s.archive.map((a) => (a.id === id ? { ...a, hiderPath: longer(a.hiderPath, pts) } : a)) })),
         setBonus: (id, minutes) => set((s) => ({ results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
         removeResult: (id) => set((s) => ({ results: s.results.filter((r) => r.id !== id) })),
+        clearRoomGame: (room) =>
+          set((s) => ({
+            questions: [],
+            past: [],
+            hider: { stationId: null },
+            round: { ...s.round, ...IDLE, hider: '' },
+            players: [],
+            results: [],
+            bonusAsked: null,
+            hiderPts: [],
+            archive: s.archive.filter((a) => a.room !== room),
+          })),
         newGame: () =>
           set((s) => ({
             questions: [],
@@ -353,7 +368,7 @@ export const useGame = create<State>()(
 export const exportGame = (s: Pick<State, 'questions' | 'settings'>): SharedGame => ({
   v: 1,
   questions: s.questions,
-  settings: { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null },
+  settings: { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, areaAuto: s.settings.areaAuto !== false, size: s.settings.size, questions: s.settings.questions ?? null },
 })
 
 export function parseGame(text: string): SharedGame {
@@ -383,7 +398,9 @@ export function gameFromHash(hash: string): SharedGame | null {
  */
 export const useHiderPos = create<{ pos: LngLat | null; t: number; accuracy: number | null; error: string }>(() => ({ pos: null, t: 0, accuracy: null, error: '' }))
 
-export type Tab = 'map' | 'questions' | 'game' | 'settings'
+/** Fanene på spillskjermen. Før og etter runden vises lobbyen, uten faner. */
+export type Tab = 'questions' | 'endgame' | 'tools'
+export type Sheet = 'app' | 'learn' | 'rules' | null
 
 interface UiState {
   tab: Tab
@@ -401,6 +418,13 @@ interface UiState {
   viewing: string | null
   setViewing: (id: string | null) => void
   setTab: (tab: Tab) => void
+  /** Arket som er åpent: innstillinger, lær appen eller oppsettet. */
+  sheet: Sheet
+  setSheet: (sheet: Sheet) => void
+  /** Stegene i lobbyen som er åpne. Huskes mens appen er åpen, også når kartet lastes på nytt. null = ikke valgt ennå. */
+  steps: Record<number, boolean> | null
+  /** Hvor mange piksler nederst i kartet et ark (guide, simulert spill) dekker. Kartet zoomer slik at stasjonene ligger over. */
+  mapInset: number
   setCollapsed: (collapsed: boolean) => void
   setDraft: (draft: UiState['draft']) => void
   setPick: (pick: UiState['pick']) => void
@@ -408,8 +432,22 @@ interface UiState {
   setRules: (rules: string | null) => void
 }
 
+/**
+ * Hvor stor del av skjermen panelet under kartet tar på mobil, i prosent. Brukeren drar i streken
+ * over panelet. Huskes på telefonen.
+ */
+export const PANEL_MAX = 90
+export const PANEL_DEFAULT = 55
+/** Dras panelet lavere enn dette, skjules det helt og bare streken står igjen. */
+export const PANEL_HIDE = 6
+export const usePanel = create<{ pct: number }>()(persist(() => ({ pct: PANEL_DEFAULT }), { name: 'hideandseek.panel' }))
+
 export const useUi = create<UiState>((set) => ({
-  tab: 'map',
+  tab: 'questions',
+  sheet: null,
+  steps: null,
+  mapInset: 0,
+  setSheet: (sheet) => set({ sheet }),
   collapsed: false,
   draft: null,
   pick: null,

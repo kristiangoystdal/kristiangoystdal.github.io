@@ -36,6 +36,27 @@ function outlines(g: Geometry): LngLat[][] {
 }
 
 /**
+ * Det appen trenger for å vise seg: stasjonene og linjene. Små filer, så lobbyen og kartet
+ * kommer fort. Resten hentes med `loadData` like etterpå.
+ */
+export async function loadCore(cityId: string, read: Reader = fromWeb(cityOf(cityId).id)): Promise<GeoData> {
+  const c = cityOf(cityId)
+  const [stations, lines] = (await Promise.all([read('stations.json'), read('lines.geojson')])) as [{ stations: GeoData['stations'] } | null, GeoData['lines'] | null]
+  if (!stations || !lines) throw new Error(`Mangler stasjoner eller linjer for ${c.name}`)
+  setCity(c)
+  setBounds(c.bounds)
+  return { loading: true, stations: stations.stations, lines, admin: [], poi: railPoi(stations.stations, lines), shapes: {}, islands: [] }
+}
+
+/** Reglene regner T-banestasjonene som jernbanestasjoner i Measuring. Trikk, Bybanen og buss gjør det ikke. */
+function railPoi(stations: GeoData['stations'], lines: GeoData['lines']): Record<string, Poi[]> {
+  const rail = railMode()
+  const railLines = new Set(lines.features.filter((f) => rail && modeOf(f) === rail).map((f) => f.properties.line))
+  const railStations = stations.filter((s) => s.lines.some((l) => railLines.has(l)))
+  return railStations.length ? { jernbanestasjon: railStations.map((s) => ({ name: `${s.name}${networkSuffix()}`, pos: stationPos(s) })) } : {}
+}
+
+/**
  * Kartdataene for en by, fra `public/data/<by>/`. Stasjoner og linjer må finnes.
  * Grenser, steder og linjedata er valgfrie: mangler filen, slås spørsmålstypen av.
  * Byen blir den som gjelder for tekster og geometri (`city()` og `BOUNDS`).
@@ -63,11 +84,7 @@ export async function loadData(cityId: string, read: Reader = fromWeb(cityOf(cit
     const fc = pois[i]
     if (fc) poi[t.key] = fc.features.map((f) => ({ name: f.properties.name, pos: f.geometry.coordinates }))
   })
-  // Reglene regner T-banestasjonene som jernbanestasjoner i Measuring. Trikk, Bybanen og buss gjør det ikke.
-  const rail = railMode()
-  const railLines = new Set(lines.features.filter((f) => rail && modeOf(f) === rail).map((f) => f.properties.line))
-  const railStations = stations.stations.filter((s) => s.lines.some((l) => railLines.has(l)))
-  if (railStations.length) (poi.jernbanestasjon ??= []).push(...railStations.map((s) => ({ name: `${s.name}${networkSuffix()}`, pos: stationPos(s) })))
+  for (const [k, list] of Object.entries(railPoi(stations.stations, lines))) (poi[k] ??= []).push(...list)
 
   const loaded = [coast, water, riks].map((fc, i) => [SHAPES[i], fc?.features.flatMap((f) => outlines(f.geometry))] as const).filter(([, lines]) => lines)
   return {

@@ -19,6 +19,8 @@ interface PresetState {
   /** Delt med alle som bruker appen. Hentes fra databasen. */
   shared: Preset[]
   note: string
+  /** De delte hentes fra databasen akkurat nå. */
+  fetching?: boolean
 }
 
 export const usePresets = create<PresetState>()(
@@ -61,6 +63,7 @@ const presetsRef = async (id?: string) => {
 
 /** Henter de delte presetene. Uten nett beholdes de som alt er hentet. */
 export async function loadPresets() {
+  usePresets.setState({ fetching: true })
   try {
     const { db, at } = await presetsRef()
     const snap = await withTimeout(db.get(at))
@@ -69,6 +72,7 @@ export async function loadPresets() {
   } catch {
     // Listen på telefonen virker uansett.
   }
+  usePresets.setState({ fetching: false })
 }
 
 /** Lagrer oppsettet på telefonen og deler det med alle. Deling som feiler, stopper ikke lagringen. */

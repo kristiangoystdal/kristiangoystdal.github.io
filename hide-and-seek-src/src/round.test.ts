@@ -179,3 +179,30 @@ describe('en hel runde', () => {
     expect(g().round.hider).toBe('Gjest')
   })
 })
+
+describe('forlate et rom', () => {
+  it('fjerner runder, poeng, spillere og arkiv fra rommet, men beholder byen, reglene og andre runder', () => {
+    for (const p of ['Ada', 'Bo']) g().addPlayer(p)
+    g().setRound({ hider: 'Ada', hidingMinutes: 45 })
+    g().startRound()
+    vi.advanceTimersByTime(46 * MIN)
+    g().saveQuestion(radar('Majorstuen', 1000), null)
+    g().finishRound(1200, 'ABC234')
+    // En runde fra et annet rom og en uten rom skal bli liggende.
+    useGame.setState({ archive: [...g().archive, { ...g().archive[0], id: 'annet', room: 'XYZ789' }, { ...g().archive[0], id: 'lokal', room: null }] })
+    g().startRound()
+    g().saveQuestion(radar('Majorstuen', 2000), null)
+    g().setSettings({ zoneRadius: 750 })
+    g().clearRoomGame('ABC234')
+    expect(g().questions).toEqual([])
+    expect(g().results).toEqual([])
+    expect(g().players).toEqual([])
+    expect(g().round).toMatchObject({ seekFrom: null, hider: '', endgame: null, pause: null })
+    expect(g().archive.map((a) => a.id).sort()).toEqual(['annet', 'lokal'])
+    expect(g().settings).toMatchObject({ city: 'oslo', lines: METRO })
+    expect(g().round.hidingMinutes).toBe(45)
+    // Kan ikke angres tilbake til rommets logg.
+    g().undo()
+    expect(g().questions).toEqual([])
+  })
+})

@@ -23,6 +23,11 @@ export interface Poi {
 }
 
 export interface GeoData {
+  /**
+   * Bare stasjoner og linjer er lastet. Grenser, kyst, vann og steder kommer like etter.
+   * Imens venter alt som trenger dem, så ingenting svares eller regnes ut på halve data.
+   */
+  loading?: boolean
   stations: Station[]
   /** `stations` er stasjons-id-ene i kjørerekkefølge fra den ene endestasjonen til den andre. */
   lines: FeatureCollection<LineString, { line: string; name: string; color: string; stations?: string[]; mode?: Mode }>
@@ -110,6 +115,11 @@ export interface Settings {
   questions?: string[] | null
   /** Hjørnene i spillområdet. null = hele T-banenettet. */
   playArea: LngLat[] | null
+  /**
+   * Spillområdet legges automatisk rundt stasjonene, og følger med når by, linjer eller sone endres.
+   * Standard. false = noen har tegnet et eget område eller valgt hele nettet.
+   */
+  areaAuto?: boolean | null
 }
 
 export interface RoundResult {

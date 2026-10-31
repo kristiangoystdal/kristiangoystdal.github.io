@@ -204,6 +204,15 @@ export function levelAreas(data: GeoData, level: AdminLevel): AdminArea[] {
   return areas
 }
 
+/**
+ * Hvor mange områder nivået har. Postsonene telles fra postnumrene, uten å slå flatene sammen,
+ * så oversikten under Innstillinger åpnes med en gang.
+ */
+export function levelCount(data: GeoData, level: AdminLevel): number {
+  if (level !== 'postsone') return levelAreas(data, level).length
+  return new Set(levelAreas(data, 'postnummer').map((f) => f.properties.name.slice(0, 3))).size
+}
+
 export function areaAt(data: GeoData, level: AdminLevel, pos: LngLat) {
   const areas = levelAreas(data, level)
   const hit = areas.find((f) => booleanPointInPolygon(pos, f))
@@ -482,8 +491,13 @@ function lineRegion(q: Question, data: GeoData, within: Area): Area | null {
 /** Området hider kan være i før noen spørsmål er stilt. */
 export function startArea(settings: Pick<Settings, 'playArea'>): Area {
   const ring = settings.playArea
-  return ring && ring.length >= 3 ? polygon([[...ring, ring[0]]]) : WORLD
+  if (!ring || ring.length < 3) return WORLD
+  // Samme område gir samme objekt, så utregningene under kan huskes.
+  let area = startMemo.get(ring)
+  if (!area) startMemo.set(ring, (area = polygon([[...ring, ring[0]]])))
+  return area
 }
+const startMemo = new WeakMap<LngLat[], Area>()
 
 /**
  * Reglene regner steder utenfor kartgrensen som om de ikke finnes. Er det satt
@@ -545,8 +559,24 @@ export function autoPlayArea(stations: Station[], settings: Pick<Settings, 'line
   return hull ? (hull.geometry.coordinates[0].slice(0, -1) as LngLat[]) : null
 }
 
+/**
+ * Området etter ett svar til, husket per område og spørsmål. Kartet krymper svar for svar, så når
+ * et nytt svar kommer, er alle de forrige stegene allerede regnet ut. Geometrien er det tyngste på telefonen.
+ */
+const areaMemo = new WeakMap<GeoData, WeakMap<Area, WeakMap<Question, Area | null>>>()
 export function applyQuestion(area: Area | null, q: Question, data: GeoData): Area | null {
   if (!area || !shrinks(q)) return area
+  let byArea = areaMemo.get(data)
+  if (!byArea) areaMemo.set(data, (byArea = new WeakMap()))
+  let byQuestion = byArea.get(area)
+  if (!byQuestion) byArea.set(area, (byQuestion = new WeakMap()))
+  if (byQuestion.has(q)) return byQuestion.get(q)!
+  const next = applyOnce(area, q, data)
+  byQuestion.set(q, next)
+  return next
+}
+
+function applyOnce(area: Area, q: Question, data: GeoData): Area | null {
   const region = regionOf(q, data) ?? lineRegion(q, data, area)
   if (!region) return area
   const pair = featureCollection([area, region])
@@ -638,6 +668,22 @@ function zoneFits(s: Station, q: Question, region: Area | null, zoneRadius: numb
 }
 
 /** `since`: hider spilte Move da, så eldre svar sier ingenting om den nye sonen. */
+/**
+ * Om hver stasjon passer med et svar, husket per spørsmål. Spørsmål endres aldri på stedet
+ * (en endring gir et nytt objekt), så når et nytt svar kommer, sjekkes bare det mot stasjonene.
+ * Det er det som gjør kartet raskt med mange spørsmål og mange stasjoner.
+ */
+const fitMemo = new WeakMap<GeoData, WeakMap<Question, Map<number, Map<string, boolean>>>>()
+function fitsFor(data: GeoData, q: Question, zoneRadius: number): Map<string, boolean> {
+  let byQuestion = fitMemo.get(data)
+  if (!byQuestion) fitMemo.set(data, (byQuestion = new WeakMap()))
+  let byZone = byQuestion.get(q)
+  if (!byZone) byQuestion.set(q, (byZone = new Map()))
+  let fits = byZone.get(zoneRadius)
+  if (!fits) byZone.set(zoneRadius, (fits = new Map()))
+  return fits
+}
+
 export function solve(questions: Question[], data: GeoData, settings: Settings, endgame: Endgame | null = null, since = 0): Result {
   const base = startArea(settings)
   const target = endgame && data.stations.find((s) => s.id === endgame.stationId)
@@ -653,8 +699,17 @@ export function solve(questions: Question[], data: GeoData, settings: Settings, 
   // Området svarene peker ut til sammen. Det er dette seeker ser frem til endgame.
   let asked: Area | null = base
   for (const q of roaming) {
-    const region = regionOf(q, data)
-    left = left.filter((s) => stationFits(s, q, data, settings.zoneRadius) && zoneFits(s, q, region, settings.zoneRadius))
+    const memo = fitsFor(data, q, settings.zoneRadius)
+    let region: Area | null | undefined
+    left = left.filter((s) => {
+      let ok = memo.get(s.id)
+      if (ok === undefined) {
+        if (region === undefined) region = regionOf(q, data)
+        ok = stationFits(s, q, data, settings.zoneRadius) && zoneFits(s, q, region, settings.zoneRadius)
+        memo.set(s.id, ok)
+      }
+      return ok
+    })
     counts.set(q.id, left.length)
     asked = applyQuestion(asked, q, data)
   }
@@ -690,8 +745,11 @@ function steps(questions: Question[], counts: Map<string, number>, start: number
 /** Alt utenfor det mulige området, til skyggelegging på kartet. */
 export function excluded(area: Area | null): Area | null {
   if (!area) return SHADE
-  return area === WORLD ? null : difference(featureCollection([SHADE, area]))
+  if (area === WORLD) return null
+  if (!shadeMemo.has(area)) shadeMemo.set(area, difference(featureCollection([SHADE, area])))
+  return shadeMemo.get(area)!
 }
+const shadeMemo = new WeakMap<Area, Area | null>()
 
 export interface AutoAnswer {
   answer: string

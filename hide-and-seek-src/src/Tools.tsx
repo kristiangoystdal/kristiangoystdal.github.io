@@ -90,7 +90,7 @@ function Radar({ stations }: { stations: Station[] }) {
     <div className="card">
       <div className="mb-2 flex items-baseline justify-between">
         <b className="text-sm">📡 Egen radar</b>
-        <button className="text-xs text-muted underline" onClick={() => setTools({ radar: null })}>
+        <button className="link" onClick={() => setTools({ radar: null })}>
           Fjern
         </button>
       </div>
@@ -144,7 +144,7 @@ function Thermometer({ stations }: { stations: Station[] }) {
     <div className="card">
       <div className="mb-2 flex items-baseline justify-between">
         <b className="text-sm">🌡️ Eget termometer</b>
-        <button className="text-xs text-muted underline" onClick={() => setTools({ thermo: null })}>
+        <button className="link" onClick={() => setTools({ thermo: null })}>
           Fjern
         </button>
       </div>

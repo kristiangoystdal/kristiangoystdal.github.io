@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { gameNow, waitingForAnswer, type PauseKind } from './clock'
 import { place } from './form'
 import { stationPos } from './geo'
-import { useGame, useUi } from './store'
+import { PANEL_DEFAULT, PANEL_HIDE, PANEL_MAX, useGame, usePanel, useUi } from './store'
+import { useTestMode } from './testmode'
 import type { LngLat, Station } from './types'
 
 export function useNow(intervalMs = 1000) {
@@ -77,6 +78,11 @@ let lastFix: { pos: LngLat; t: number; accuracy: number | null } | null = null
 const FRESH_MS = 10000
 const USABLE_MS = 120000
 export const rememberFix = (pos: LngLat, accuracy: number | null = null) => void (lastFix = { pos, t: Date.now(), accuracy })
+// Slås demoens falske GPS av eller på, eller flyttes den, gjelder ikke den forrige posisjonen lenger.
+useTestMode.subscribe((s, prev) => {
+  if (s.on === prev.on && s.pos === prev.pos && s.accuracy === prev.accuracy) return
+  lastFix = s.on && s.pos ? { pos: s.pos, t: Date.now(), accuracy: s.accuracy } : null
+})
 /** Hvor nøyaktig siste posisjon er, i meter. null = ukjent. */
 export const fixAccuracy = () => lastFix?.accuracy ?? null
 
@@ -166,4 +172,152 @@ export function PointInput(props: { label: string; value: LngLat | null; onChang
       {error && <p className="mt-1 text-xs text-bad">{error}</p>}
     </div>
   )
+}
+
+/**
+ * Av/på for én innstilling. Samme utseende overalt: tittel, en linje om hva valget betyr nå,
+ * og bryteren til høyre.
+ */
+export function Switch(props: { on: boolean; onChange: (on: boolean) => void; title: string; detail?: ReactNode; disabled?: boolean; guide?: string }) {
+  const { on, onChange, title, detail, disabled, guide } = props
+  return (
+    <button type="button" role="switch" aria-checked={on} disabled={disabled} data-guide={guide} className="card flex w-full cursor-pointer items-center justify-between gap-3 text-left disabled:cursor-not-allowed disabled:opacity-60" onClick={() => onChange(!on)}>
+      <span className="text-sm">
+        <b className="block">{title}</b>
+        {detail && <span className="text-xs text-muted">{detail}</span>}
+      </span>
+      <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-accent' : 'bg-border'}`} aria-hidden>
+        <span className={`absolute top-0.5 left-0.5 size-6 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-5' : ''}`} />
+      </span>
+    </button>
+  )
+}
+
+/** Velg ett av noen få alternativer, f.eks. rolle, by, spillstørrelse eller tema. */
+export function Segmented<T extends string>(props: { value: T; options: { value: T; label: ReactNode; detail?: ReactNode }[]; onChange: (v: T) => void; disabled?: boolean; label: string; guide?: string }) {
+  const { value, options, onChange, disabled, label, guide } = props
+  return (
+    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={label} data-guide={guide}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={value === o.value}
+          className={`btn h-auto! flex-1 flex-col! gap-0! py-1.5! ${value === o.value ? 'btn-on' : ''}`}
+          disabled={disabled}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+          {o.detail && <span className="text-xs font-normal text-muted">{o.detail}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Et steg i lobbyen: nummer, tittel og en kort oppsummering når steget er lukket.
+ * `done` viser en hake i stedet for nummeret.
+ */
+export function Step(props: { n: number; title: string; summary?: ReactNode; done?: boolean; open: boolean; onToggle: () => void; children: ReactNode; guide?: string }) {
+  const { n, title, summary, done, open, onToggle, children, guide } = props
+  return (
+    <section className="card mb-3 p-0!" data-guide={guide}>
+      <button type="button" className="flex w-full cursor-pointer items-center gap-3 p-3 text-left" aria-expanded={open} onClick={onToggle}>
+        <span className={`grid size-7 shrink-0 place-items-center rounded-full text-sm font-bold ${done ? 'bg-ok text-white' : 'bg-accent text-accent-text'}`} aria-hidden>
+          {done ? '✓' : n}
+        </span>
+        <span className="min-w-0 flex-1">
+          <b className="block">{title}</b>
+          {!open && summary && <span className="block truncate text-xs text-muted">{summary}</span>}
+        </span>
+        <span className="text-muted" aria-hidden>
+          {open ? '▴' : '▾'}
+        </span>
+      </button>
+      {open && <div className="border-t border-border p-3">{children}</div>}
+    </section>
+  )
+}
+
+/** Snurrende ring som viser at noe lastes. */
+export function Spinner({ className = '' }: { className?: string }) {
+  return <span className={`inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent align-[-2px] ${className}`} aria-hidden />
+}
+
+/** Lastemelding: ring og tekst, f.eks. mens kartet for en by lastes. */
+export function Loading({ text, full = false }: { text: string; full?: boolean }) {
+  return (
+    <div className={`flex items-center gap-2 text-sm text-muted ${full ? 'h-dvh justify-center p-6' : ''}`} role="status">
+      <Spinner />
+      {text}
+    </div>
+  )
+}
+
+const DRAG_PX = 5
+
+/**
+ * Streken over panelet på mobil. Dra opp og ned for å velge hvor mye av skjermen som er
+ * kart og hvor mye som er panel (0–90 %). Et kort trykk skjuler eller viser panelet.
+ */
+export function PanelHandle({ hidden }: { hidden: boolean }) {
+  const collapsed = useUi((s) => s.collapsed)
+  const pct = usePanel((s) => s.pct)
+  // `from`: høyden da dragingen startet. Dras panelet helt ned, åpner det seg igjen i den høyden.
+  const [drag, setDrag] = useState<{ y: number; moved: boolean; from: number } | null>(null)
+  const pctAt = (clientY: number) => Math.max(0, Math.min(PANEL_MAX, ((window.innerHeight - clientY) / window.innerHeight) * 100))
+  const set = (p: number) => {
+    if (p < PANEL_HIDE) useUi.setState({ collapsed: true })
+    else {
+      usePanel.setState({ pct: Math.round(p) })
+      useUi.setState({ collapsed: false })
+    }
+  }
+  return (
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Dra for å endre hvor stor del av skjermen som er kart"
+      aria-valuemin={0}
+      aria-valuemax={PANEL_MAX}
+      aria-valuenow={collapsed ? 0 : pct}
+      tabIndex={0}
+      data-guide="panel-handle"
+      className={`grid h-7 w-full shrink-0 cursor-row-resize touch-none place-items-center select-none md:hidden ${hidden ? 'hidden' : ''}`}
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        setDrag({ y: e.clientY, moved: false, from: pct })
+      }}
+      onPointerMove={(e) => {
+        if (!drag) return
+        if (!drag.moved && Math.abs(e.clientY - drag.y) < DRAG_PX) return
+        if (!drag.moved) setDrag({ ...drag, moved: true })
+        set(pctAt(e.clientY))
+      }}
+      onPointerUp={() => {
+        // Et kort trykk uten å dra skjuler eller viser panelet.
+        if (drag && !drag.moved) useUi.setState({ collapsed: !collapsed })
+        else if (drag && useUi.getState().collapsed) usePanel.setState({ pct: drag.from })
+        setDrag(null)
+      }}
+      onPointerCancel={() => setDrag(null)}
+      onKeyDown={(e) => {
+        const step = e.key === 'ArrowUp' ? 5 : e.key === 'ArrowDown' ? -5 : 0
+        if (!step) return
+        e.preventDefault()
+        set((collapsed ? 0 : pct) + step)
+      }}
+    >
+      <span className={`h-1.5 w-12 rounded-full ${drag?.moved ? 'bg-accent' : 'bg-border'}`} />
+    </div>
+  )
+}
+
+/** Høyden panelet skal ha på mobil. Skjult panel er bare streken (og fanene på spillskjermen). */
+export function usePanelHeight() {
+  const collapsed = useUi((s) => s.collapsed)
+  const pct = usePanel((s) => s.pct) || PANEL_DEFAULT
+  return collapsed ? 'auto' : `${pct}dvh`
 }

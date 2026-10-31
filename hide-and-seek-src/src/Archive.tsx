@@ -6,12 +6,14 @@ import { clipData, onlyLines, shrinks, solve } from './geo'
 import { useGame, useUi, type ArchivedRound } from './store'
 import { loadArchive, useSync } from './sync'
 import type { GeoData, RoundStats } from './types'
-import { Section, left } from './ui'
+import { Section, left, Spinner } from './ui'
 import type { Progress } from './replay'
 
 const clock = (sec: number) => left(sec * 1000)
 const when = (t: number) => new Date(t).toLocaleString('nb-NO', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-const time = (t: number) => new Date(t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
+// Én formaterer for alle klokkeslett. Å lage en ny for hvert er tregt på telefonen.
+const CLOCK = new Intl.DateTimeFormat('nb-NO', { hour: '2-digit', minute: '2-digit' })
+const time = (t: number) => CLOCK.format(t)
 
 /** Tallene for én runde: spørsmål per kategori, kort, svartid og endgame. */
 export function StatsList({ stats }: { stats: RoundStats }) {
@@ -139,7 +141,7 @@ function ReplayVideo({ a, raw }: { a: ArchivedRound; raw: GeoData }) {
 function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close: () => void }) {
   const settings = useGame((s) => s.settings)
   const removeArchived = useGame((s) => s.removeArchived)
-  const { setViewing, setTab } = useUi()
+  const { setViewing, setCollapsed } = useUi()
   const { data, result } = useMemo(() => {
     const rules = { ...settings, ...a.setup }
     const data = onlyLines(clipData(raw, rules.playArea), rules.lines)
@@ -154,7 +156,7 @@ function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close:
       <div className="card">
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <b>{title(a)}</b>
-          <button className="text-xs text-muted underline" onClick={close}>
+          <button className="link" onClick={close}>
             Lukk
           </button>
         </div>
@@ -170,7 +172,7 @@ function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close:
     <div className="card">
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <b>{title(a)}</b>
-        <button className="text-xs text-muted underline" onClick={close}>
+        <button className="link" onClick={close}>
           Lukk
         </button>
       </div>
@@ -202,13 +204,14 @@ function RoundDetail({ a, raw, close }: { a: ArchivedRound; raw: GeoData; close:
           className="btn btn-primary flex-1"
           onClick={() => {
             setViewing(a.id)
-            setTab('map')
+            // På mobil skjules panelet, så kartet med runden får plassen.
+            setCollapsed(true)
           }}
         >
           Vis på kartet
         </button>
         <button
-          className="btn text-bad"
+          className="btn btn-danger"
           onClick={() => {
             if (!confirm('Slette runden fra denne telefonen? Den ligger fortsatt i rommet.')) return
             removeArchived(a.id)
@@ -250,7 +253,12 @@ export function ArchivePanel({ raw }: { raw: GeoData }) {
   const [open, setOpen] = useState<string | null>(null)
   const [onlyRoom, setOnlyRoom] = useState(true)
   const [busy, setBusy] = useState(false)
-  useEffect(() => void loadArchive(), [room])
+  // Rundene fra rommet hentes i bakgrunnen. Det som alt ligger på telefonen, vises med en gang.
+  useEffect(() => {
+    if (!room) return
+    setBusy(true)
+    void loadArchive().finally(() => setBusy(false))
+  }, [room])
 
   const shown = archive.filter((a) => !room || !onlyRoom || a.room === room).toReversed()
   const current = archive.find((a) => a.id === open)
@@ -279,7 +287,12 @@ export function ArchivePanel({ raw }: { raw: GeoData }) {
           </button>
         </div>
       )}
-      {shown.length === 0 && <p className="text-sm text-muted">Ingen runder ennå. Når hider er funnet eller runden avbrytes, lagres hele runden her.</p>}
+      {busy && (
+        <p className="mb-2 flex items-center gap-2 text-sm text-muted" role="status">
+          <Spinner className="size-3.5!" /> Henter runder fra rommet…
+        </p>
+      )}
+      {shown.length === 0 && !busy && <p className="text-sm text-muted">Ingen runder ennå. Når hider er funnet eller runden avbrytes, lagres hele runden her.</p>}
       <ul className="flex flex-col gap-1.5">
         {shown.map((a) => (
           <li key={a.id}>

@@ -78,7 +78,7 @@ const fromIds = <T>(map: Record<string, string> | undefined) => Object.values(ma
  * Rolle, kartvalg og tema hører også til telefonen.
  */
 export function toShared(s: Synced): Shared {
-  const setup: Setup = { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, size: s.settings.size, questions: s.settings.questions ?? null }
+  const setup: Setup = { city: s.settings.city, zoneRadius: s.settings.zoneRadius, lines: s.settings.lines, playArea: s.settings.playArea ?? null, areaAuto: s.settings.areaAuto !== false, size: s.settings.size, questions: s.settings.questions ?? null }
   const ignored: Record<string, string> = {}
   const notes: Record<string, string> = {}
   const questions: Record<string, string> = {}
@@ -271,6 +271,24 @@ export function leaveRoom() {
   stop = null
   sendPos = null
   localStorage.removeItem(ROOM_KEY)
+  useSync.setState({ room: null, status: 'off', error: '', seekers: {} })
+}
+
+/**
+ * Forlater rommet og starter med blanke ark: rundene, poengtavlen, spillerne og arkivet fra
+ * rommet fjernes fra telefonen. Alt ligger fortsatt i rommet, så det kommer tilbake om man blir med igjen.
+ */
+export function leaveRoomClean() {
+  const room = useSync.getState().room
+  leaveRoom()
+  if (room) useGame.getState().clearRoomGame(room)
+}
+
+/** Kobler fra rommet uten å glemme det, f.eks. mens demoen går. `resumeRoom` kobler til igjen. */
+export function suspendRoom() {
+  stop?.()
+  stop = null
+  sendPos = null
   useSync.setState({ room: null, status: 'off', error: '', seekers: {} })
 }
 

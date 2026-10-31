@@ -1,3 +1,4 @@
+import { Layers, LocateFixed, Navigation } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet-rotate'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -7,9 +8,19 @@ import { ArchiveBanner } from './Archive'
 import { city, modeOf, networkSuffix, type Mode } from './cities'
 import { useGame, useHiderPos, useUi, type ArchivedRound } from './store'
 import { useSync } from './sync'
+import { useTestMode } from './testmode'
+import { useDemo } from './demo'
 import type { GeoData, LngLat, Settings, Station } from './types'
-import { GameStatus, locate } from './ui'
+import { GameStatus, Spinner, locate } from './ui'
 
+/**
+ * Luft rundt det kartet zoomer til. Ligger guiden eller et simulert spill over bunnen av kartet,
+ * holdes stasjonene over arket, så det ikke skjuler dem.
+ */
+const insetPadding = () => ({ paddingTopLeft: L.point(20, 70), paddingBottomRight: L.point(64, 20 + useUi.getState().mapInset) })
+
+/** Over så mange mulige stasjoner vises navnene bare når man holder over eller trykker. */
+const MAX_LABELS = 150
 const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'tools', 'seekers', 'me'] as const
 /** Måleverktøyet tegnes i en egen farge, så det ikke forveksles med spørsmål. */
 const TOOL_COLOR = '#8e44ad'
@@ -60,6 +71,12 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
   // Øker hver gang kartet lages på nytt (ny by), så alle lagene tegnes inn i det nye kartet.
   const [ready, setReady] = useState(0)
   const [me, setMe] = useState<LngLat | null>(null)
+  // I demoen står seeker der den falske GPS-en sier, og det vises på kartet med en gang.
+  const testOn = useTestMode((s) => s.on)
+  const testPos = useTestMode((s) => s.pos)
+  // Slås den falske GPS-en av (demoen eller reprisen er ferdig), forsvinner prikken, så ingen gammel posisjon blir stående.
+  useEffect(() => setMe(testOn ? testPos : null), [testOn, testPos])
+  const replay = useDemo((s) => s.kind === 'showcase')
   const [locError, setLocError] = useState('')
   const [bearing, setBearing] = useState(0)
   const [follow, setFollow] = useState(false)
@@ -109,6 +126,18 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       pick.done(p)
       setPick(null)
     })
+    // Mens man kniper for å zoome, tegnes linjer, stasjoner og områder på nytt for hvert bilde. Ellers skalerer
+    // nettleseren det tegnede som et bilde (eller lar det stå stille på iPhone) til man slipper.
+    // Animerte overganger (zoom til stasjonene som er igjen) lar Leaflet skalere som før, de er korte.
+    let frame = 0
+    m.on('zoom', () => {
+      const leaflet = m as unknown as { _animatingZoom?: boolean; _renderer?: { _reset?: () => void } }
+      if (leaflet._animatingZoom || frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        leaflet._renderer?._reset?.()
+      })
+    })
     const showLabels = () => el.current?.classList.toggle('hide-labels', m.getZoom() < LABEL_ZOOM)
     m.on('zoomend', showLabels)
     showLabels()
@@ -120,6 +149,9 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     setReady((n) => n + 1)
     return () => {
       ro.disconnect()
+      // Fjernes kartet midt i en zoom (f.eks. når byen byttes), avslutter Leaflet zoomen etterpå på et kart
+      // som ikke finnes. Merket som ferdig hopper Leaflet over det.
+      ;(m as unknown as { _animatingZoom: boolean })._animatingZoom = false
       m.remove()
       map.current = null
     }
@@ -142,7 +174,8 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     if (mask && layers.area) {
       // Skyggen har ingen kant (den ville også tegnet ytterrammen). Kanten tegnes rundt selve området.
       L.geoJSON(mask, { interactive: false, style: { stroke: false, fillColor: css('--bg'), fillOpacity: 0.6 } }).addTo(g)
-      if (result.area) L.geoJSON(result.area, { interactive: false, style: { color: css('--accent'), weight: 2, fill: false } }).addTo(g)
+      // Rollefargene hører til panelet. På kartet brukes bare linjefargene og en nøytral kant, så lilla og oransje linjer ikke forveksles med roller.
+      if (result.area) L.geoJSON(result.area, { interactive: false, style: { color: css('--text'), weight: 2, opacity: 0.75, fill: false } }).addTo(g)
     }
   }, [ready, mask, result.area, layers.area, settings.theme])
 
@@ -166,42 +199,79 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     }
   }, [ready, data, layers.lines, settings.lines])
 
+  // Stasjonene tegnes én gang per kartdata og oppsett. Når svarene endrer hvilke som er mulige,
+  // endres bare de som skifter. Å tegne alle på nytt for hvert svar er tregt på telefonen.
+  const markers = useRef(new Map<string, { m: L.CircleMarker; on: boolean; s: Station }>())
+  const possibleNow = useRef(possible)
+  possibleNow.current = possible
+  const dense = data.stations.length > 200
+  // Mulige stasjoner fylles med fargen til linjen sin, som på et linjekart. Utelukkede blir små hule ringer.
+  const style = (s: Station, on: boolean) => {
+    const line = s.lines.find((l) => settings.lines.includes(l)) ?? s.lines[0]
+    return {
+      radius: dense ? (on ? 4.5 : 2.5) : on ? 6 : 3.5,
+      color: on ? '#ffffff' : css('--muted'),
+      weight: on ? 2 : 1,
+      fillColor: on ? (lineColor[line] ?? css('--accent')) : css('--panel'),
+      fillOpacity: on ? 1 : 0.6,
+    }
+  }
+  // Faste navnelapper bare når det er få nok mulige stasjoner til at de kan leses.
+  const labelsOn = possible.size <= MAX_LABELS
+  const label = (m: L.CircleMarker, s: Station, permanent: boolean) => {
+    m.unbindTooltip()
+    m.bindTooltip(s.name, { permanent, direction: 'right', offset: [6, 0], className: 'station-label' })
+  }
+
+  useEffect(() => {
+    if (!ready) return
+    const st = groups.current.stations.clearLayers()
+    markers.current.clear()
+    const showLabels = possibleNow.current.size <= MAX_LABELS
+    for (const s of data.stations) {
+      if (!s.lines.some((l) => settings.lines.includes(l))) continue
+      const on = possibleNow.current.has(s.id)
+      const m = L.circleMarker([s.lat, s.lon], style(s, on))
+      label(m, s, on && showLabels)
+      // Innholdet lages når boblen åpnes, så det alltid sier om stasjonen er mulig nå.
+      m.bindPopup(() => {
+        const rate = depRate(s, settings.day, settings.hourFrom, settings.hourTo)
+        const dots = s.lines.map((l) => `<span style="color:${lineColor[l]}">●</span> ${l}`).join(' &nbsp;')
+        return `<b>${s.name}</b><br>Linje ${dots}<br>${hiderView ? '' : `${possibleNow.current.has(s.id) ? 'Mulig' : 'Utelukket'} · `}${rate.toFixed(1)} avganger/t`
+      })
+      m.addTo(st)
+      markers.current.set(s.id, { m, on, s })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, data, hiderView, settings.lines, settings.day, settings.hourFrom, settings.hourTo, settings.theme, lineColor])
+
+  useEffect(() => {
+    if (!ready) return
+    for (const x of markers.current.values()) {
+      const on = possible.has(x.s.id)
+      const labelChange = on && (labelsOn !== x.m.getTooltip()?.options.permanent)
+      if (on === x.on && !labelChange) continue
+      const st = style(x.s, on)
+      x.m.setStyle(st).setRadius(st.radius)
+      // Mulige stasjoner over utelukkede, så de ikke skjules der linjene ligger tett.
+      if (on) x.m.bringToFront()
+      label(x.m, x.s, on && labelsOn)
+      x.on = on
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, possible, labelsOn])
+
+  // Sonene: hider ser alltid sin egen, seeker ser dem først i endgame og kan slå dem av. De er få.
   useEffect(() => {
     if (!ready) return
     const zones = groups.current.zones.clearLayers()
-    const st = groups.current.stations.clearLayers()
-    const accent = css('--accent')
-    const muted = css('--muted')
-    // Bussnett har hundrevis av holdeplasser. Da tegnes de mindre, så kartet ikke drukner.
-    const dense = data.stations.length > 200
+    if (!hiderView && !(endgame && layers.zones)) return
+    const edge = css('--text')
     for (const s of data.stations) {
-      if (!s.lines.some((l) => settings.lines.includes(l))) continue
-      const on = possible.has(s.id)
-      // Hider ser alltid sin egen sone. Seeker ser sonen først i endgame, og kan slå den av.
-      if (on && (hiderView || (endgame && layers.zones))) {
-        L.circle([s.lat, s.lon], {
-          radius: settings.zoneRadius,
-          interactive: false,
-          color: on ? accent : muted,
-          weight: on ? 1.5 : 0.5,
-          opacity: on ? 0.9 : 0.4,
-          fillOpacity: on ? 0.16 : 0.03,
-        }).addTo(zones)
-      }
-      const rate = depRate(s, settings.day, settings.hourFrom, settings.hourTo)
-      const dots = s.lines.map((l) => `<span style="color:${lineColor[l]}">●</span> ${l}`).join(' &nbsp;')
-      L.circleMarker([s.lat, s.lon], {
-        radius: dense ? (on ? 4 : 2.5) : on ? 5.5 : 3.5,
-        color: on ? css('--text') : muted,
-        weight: dense ? 1 : 1.5,
-        fillColor: on ? accent : css('--panel'),
-        fillOpacity: 1,
-      })
-        .bindTooltip(s.name, { permanent: on, direction: 'right', offset: [6, 0], className: 'station-label' })
-        .bindPopup(`<b>${s.name}</b><br>Linje ${dots}<br>${hiderView ? '' : `${on ? 'Mulig' : 'Utelukket'} · `}${rate.toFixed(1)} avganger/t`)
-        .addTo(st)
+      if (!possible.has(s.id) || !s.lines.some((l) => settings.lines.includes(l))) continue
+      L.circle([s.lat, s.lon], { radius: settings.zoneRadius, interactive: false, color: edge, weight: 2, opacity: 0.8, dashArray: '6 5', fillColor: edge, fillOpacity: 0.08 }).addTo(zones)
     }
-  }, [ready, data, possible, hiderView, endgame, layers.zones, settings, lineColor])
+  }, [ready, data, possible, hiderView, endgame, layers.zones, settings.lines, settings.zoneRadius, settings.theme])
 
   // Kartet kan ikke zoomes lenger ut enn at hele spillområdet så vidt får plass. Uten
   // spillområde gjelder sonene rundt stasjonene som er med. Mens spillområdet tegnes, er det fritt.
@@ -232,7 +302,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     const bounds = L.latLngBounds(left.map((s) => [s.lat, s.lon])).pad(0.15)
     // Panelet kan nettopp ha endret høyde. Uten dette regner Leaflet utsnittet for gammel kartstørrelse.
     map.current?.invalidateSize()
-    map.current?.fitBounds([[bounds.getSouth() - pad, bounds.getWest() - 2 * pad], [bounds.getNorth() + pad, bounds.getEast() + 2 * pad]], { maxZoom: 15 })
+    map.current?.fitBounds([[bounds.getSouth() - pad, bounds.getWest() - 2 * pad], [bounds.getNorth() + pad, bounds.getEast() + 2 * pad]], { maxZoom: 15, ...insetPadding() })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, possible])
 
@@ -241,7 +311,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
     const s = data.stations.find((x) => x.id === endgameAt)
     if (!ready || !s || hiderView) return
     map.current?.invalidateSize()
-    map.current?.fitBounds(L.latLng(s.lat, s.lon).toBounds(settings.zoneRadius * 2.4))
+    map.current?.fitBounds(L.latLng(s.lat, s.lon).toBounds(settings.zoneRadius * 2.4), insetPadding())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, endgameAt])
 
@@ -284,8 +354,12 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
   useEffect(() => {
     if (!ready) return
     const g = groups.current.me.clearLayers()
-    if (me) L.circleMarker(ll(me), { radius: 7, color: '#fff', weight: 2.5, fillColor: '#1a73e8', fillOpacity: 1, interactive: false }).addTo(g)
-  }, [ready, me])
+    if (!me) return
+    const dot = L.circleMarker(ll(me), { radius: 8, color: '#fff', weight: 3, fillColor: '#1a73e8', fillOpacity: 1, interactive: false })
+    // I reprisen er prikken seekerne, ikke telefonen.
+    if (replay) dot.bindTooltip('Seekerne', { permanent: true, direction: 'top', offset: [0, -8], className: 'station-label' })
+    dot.addTo(g)
+  }, [ready, me, replay])
 
   useEffect(() => {
     if (!ready) return
@@ -314,7 +388,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       const fresh = Date.now() - s.t < STALE_MS
       const at = new Date(s.t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       const speed = s.v === null ? '' : ` · ${Math.round(s.v * 3.6)} km/t`
-      L.circleMarker(ll(s.pos), { radius: 8, color: '#fff', weight: 2, fillColor: '#e8590c', fillOpacity: fresh ? 1 : 0.4 })
+      L.circleMarker(ll(s.pos), { radius: 8, color: '#fff', weight: 2.5, fillColor: css('--text'), fillOpacity: fresh ? 1 : 0.4 })
         .bindTooltip(`Seeker · kl. ${at}${speed}`)
         .addTo(g)
     }
@@ -354,7 +428,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
         <div className="card pointer-events-auto px-3! py-1.5! text-sm shadow-lg">
           {hiderView ? (
             <>
-              {endgame && <span className="block text-xs font-semibold text-accent uppercase">Endgame: står seekerne i din sone, står du stille</span>}
+              {endgame && <span className="block text-xs font-semibold text-accent">Endgame: står seekerne i din sone, står du stille</span>}
               {hider.stationId ? (
                 <>
                   Sonen din: <b className="text-accent">{data.stations.find((s) => s.id === hider.stationId)?.name}</b>
@@ -367,7 +441,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
             <>
               {endgame ? (
                 <>
-                  <span className="block text-xs font-semibold text-accent uppercase">Endgame</span>
+                  <span className="block text-xs font-semibold text-accent">Endgame</span>
                   Sonen ved <b className="text-accent">{data.stations.find((s) => s.id === endgameAt)?.name}</b>
                   {!result.area && <span className="block text-xs text-bad">Svarene utelukker hele sonen</span>}
                 </>
@@ -380,6 +454,11 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
             </>
           )}
         </div>
+        {data.loading && (
+          <div className="card pointer-events-auto flex items-center gap-2 px-3! py-1.5! text-sm text-muted shadow-lg" role="status">
+            <Spinner className="size-3.5!" /> Laster kartdata…
+          </div>
+        )}
         {!past && <GameStatus stations={data.stations} />}
         {pick && (
           <div className="card pointer-events-auto flex items-center gap-2 px-3! py-2! text-sm shadow-lg">
@@ -397,7 +476,7 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
                 className="btn btn-primary min-h-9!"
                 disabled={draw.length < 3}
                 onClick={() => {
-                  setSettings({ playArea: draw })
+                  setSettings({ playArea: draw, areaAuto: false })
                   setDraw(null)
                 }}
               >
@@ -414,30 +493,26 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
         )}
         {locError && <div className="card pointer-events-auto px-3! py-1.5! text-xs text-bad shadow-lg">{locError}</div>}
       </div>
-      <div className="absolute right-3 bottom-7 z-[1000] flex flex-col items-end gap-2">
-        <button className="btn shadow-lg" onClick={() => useUi.getState().setRules('')}>
-          📖 Regler
-        </button>
+      {/* Kartknappene som en smal kolonne med ikoner, så de dekker minst mulig av stasjonene. */}
+      <div className="absolute right-2.5 bottom-7 z-[1000] flex flex-col gap-1.5">
         <button
-          className="btn shadow-lg"
+          className="btn size-11 px-0! shadow-lg"
           aria-label={`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}. Trykk for å bytte.`}
+          title={`Bakgrunnskart: ${BASEMAPS[settings.basemap].label}`}
           onClick={() => setSettings({ basemap: BASEMAP_ORDER[(BASEMAP_ORDER.indexOf(settings.basemap) + 1) % BASEMAP_ORDER.length] })}
         >
-          ◫ {BASEMAPS[settings.basemap].label}
+          <Layers size={20} aria-hidden />
         </button>
         <button
-          className={`btn shadow-lg ${follow ? 'btn-on' : ''}`}
+          className={`btn size-11 px-0! shadow-lg ${follow ? 'btn-on' : ''}`}
           onClick={() => (follow || Math.round(bearing) % 360 !== 0 ? north() : followCompass())}
           aria-label={follow ? 'Kartet følger kompasset. Trykk for nord opp.' : bearing ? 'Sett nord opp' : 'La kartet følge kompasset'}
           title={follow ? 'Følger kompasset' : bearing ? 'Nord opp' : 'Følg kompasset. Roter med to fingre.'}
         >
-          <span className="inline-block" style={{ transform: `rotate(${bearing}deg)` }} aria-hidden>
-            ⬆
-          </span>
-          {follow ? 'Kompass' : 'N'}
+          <Navigation size={20} style={{ transform: `rotate(${bearing}deg)` }} aria-hidden />
         </button>
-        <button className="btn shadow-lg" onClick={findMe} aria-label="Vis min posisjon">
-          ◎ Meg
+        <button className="btn size-11 px-0! shadow-lg" onClick={findMe} aria-label="Vis min posisjon" title="Vis min posisjon">
+          <LocateFixed size={20} aria-hidden />
         </button>
       </div>
     </div>
