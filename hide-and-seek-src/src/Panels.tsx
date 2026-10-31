@@ -1034,7 +1034,10 @@ function Privacy() {
             <b className="font-sign text-text">På telefonen:</b> spillet ditt, oppsett og tidligere runder ligger i nettleseren på denne telefonen, og forsvinner hvis du sletter nettstedsdata.
           </p>
           <p>
-            <b className="font-sign text-text">I et rom:</b> spørsmål og svar, klokken, spillerne (navnene dere skriver inn), oppsettet og ferdige runder lagres i Firebase (Google) i Belgia, så alle i rommet ser det samme. Ingen posisjoner sendes, verken seekernes eller hiders.
+            <b className="font-sign text-text">I et rom:</b> spørsmål og svar, klokken, spillerne (navnene dere skriver inn), oppsettet og ferdige runder lagres i Firebase (Google) i Belgia, så alle i rommet ser det samme.
+          </p>
+          <p>
+            <b className="font-sign text-text">Posisjoner:</b> et spørsmål inneholder stedet seekeren sto da det ble stilt, fordi svaret regnes ut fra det. Ingen løpende posisjon sendes. Hiders posisjon brukes bare på hiders telefon til å regne ut svarene, og sendes ikke mens runden pågår. Når runden er over, legges stedene hider sto ved hvert svar til i rundens arkiv, så reprisen kan vise ruten.
           </p>
           <p>
             <b className="font-sign text-text">Hvor lenge:</b> rom og tidligere runder blir liggende, så dere kan gå tilbake til dem senere. Vil du ha et rom slettet, si fra.
