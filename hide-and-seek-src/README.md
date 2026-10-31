@@ -96,9 +96,9 @@ Uten nettnøkkel (`VITE_FIREBASE_API_KEY`) er den av, og appen virker som før.
    General) og eventuelt App ID. Legg de samme verdiene inn som hemmeligheter i GitHub, så byggingen får dem:
    `gh secret set -f hide-and-seek-src/.env.local` (fra rotmappen). Verdiene havner i den publiserte appen,
    slik det er ment for Firebase. Det er reglene som beskytter dataene.
-3. Publiser `database.rules.json` (fase 1: godtar telefoner med og uten innlogging).
-4. Etter to uker, når telefonene har den nye versjonen: legg `auth != null &&` foran alle `.write`-reglene
-   og publiser på nytt (fase 2).
+3. Publiser `database.rules.json` i konsollen. Alle `.write`-regler krever innlogging (`auth != null`),
+   så bare appen kan skrive. Publiser reglene først når en versjon med nettnøkkel er ute, ellers kan
+   appen på nettet ikke skrive i rom.
 
 Oppryddingen (`scripts/cleanup-rooms.mjs`, `.github/workflows/cleanup.yml`) sletter rom og arkiv som ikke
 er brukt på 90 dager, første dag i hver måned. Den trenger en tjenestekontonøkkel: Prosjektinnstillinger →

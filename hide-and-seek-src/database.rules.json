@@ -3,7 +3,7 @@
     "rooms": {
       "$code": {
         ".read": "$code.matches(/^[A-Z0-9]{6}$/)",
-        ".write": "$code.matches(/^[A-Z0-9]{6}$/)",
+        ".write": "auth != null && $code.matches(/^[A-Z0-9]{6}$/)",
         "created": {
           ".validate": "newData.isNumber()"
         },
@@ -53,7 +53,7 @@
       "$code": {
         ".read": "$code.matches(/^[A-Z0-9]{6}$/)",
         "$id": {
-          ".write": "$code.matches(/^[A-Z0-9]{6}$/) && $id.matches(/^[a-z0-9]{1,20}$/)",
+          ".write": "auth != null && $code.matches(/^[A-Z0-9]{6}$/) && $id.matches(/^[a-z0-9]{1,20}$/)",
           ".validate": "newData.isString() && newData.val().length < 500000"
         }
       }
@@ -61,7 +61,7 @@
     "presets": {
       ".read": true,
       "$id": {
-        ".write": "$id.matches(/^[a-z0-9-]{1,40}$/)",
+        ".write": "auth != null && $id.matches(/^[a-z0-9-]{1,40}$/)",
         ".validate": "newData.isString() && newData.val().length < 20000"
       }
     }
