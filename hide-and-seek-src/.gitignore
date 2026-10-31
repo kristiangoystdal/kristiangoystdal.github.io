@@ -7,3 +7,5 @@ node_modules
 .env.local
 .env.*.local
 dist-e2e
+# Logger fra Firebase-emulatoren
+*-debug.log
