@@ -1,4 +1,4 @@
-import { AppInfo, EndgameControl, HiderPosition, MapOptions, PossibleStations, RoomInfo, RoundBar, SharePanel } from './Panels'
+import { AppInfo, EndgameControl, HiderPosition, MapOptions, PossibleStations, RoomInfo, RoundBar } from './Panels'
 import { Crosshair, MessageCircleQuestionMark, Ruler } from 'lucide-react'
 import QuestionsView from './QuestionsView'
 import { ToolsPanel } from './Tools'
@@ -63,7 +63,6 @@ export function GameScreen({ data, result }: { data: GeoData; result: Result }) 
       {tab === 'tools' && (
         <>
           <ToolsPanel stations={data.stations} />
-          <SharePanel />
           <RoomSection />
           <MapOptions data={data} />
           <AppButtons />

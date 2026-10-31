@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { fmtDist } from './form'
 import { dist } from './geo'
 import { useGame, useHiderPos } from './store'
-import { useSync } from './sync'
 import type { LngLat, Station } from './types'
 import { PointInput, Section, locate, rememberFix } from './ui'
 
@@ -43,33 +42,6 @@ function Distance({ value, chips, onChange }: { value: number; chips: number[]; 
   )
 }
 
-/**
- * Hvor langt seekerne er fra et punkt, for hider. Seekerne ser hverandre på
- * kartet, men aldri hider, så for seeker vises bare egen avstand.
- */
-function SeekerDistances({ center, radiusM }: { center: LngLat; radiusM: number }) {
-  const seekers = useSync((s) => s.seekers)
-  const list = Object.values(seekers)
-  if (!list.length) return <p className="text-xs text-muted">Ingen seekere deler posisjon akkurat nå.</p>
-  return (
-    <ul className="text-sm">
-      {list
-        .map((s) => ({ d: dist(center, s.pos), t: s.t }))
-        .sort((a, b) => a.d - b.d)
-        .map((s, i) => (
-          <li key={i} className="flex justify-between py-0.5">
-            <span>
-              Seeker {i + 1} <span className="text-xs text-muted">kl. {new Date(s.t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}</span>
-            </span>
-            <span className={s.d <= radiusM ? 'font-semibold text-ok' : 'font-semibold text-bad'}>
-              {fmtDist(s.d)} · {s.d <= radiusM ? 'innenfor' : 'utenfor'}
-            </span>
-          </li>
-        ))}
-    </ul>
-  )
-}
-
 function Radar({ stations }: { stations: Station[] }) {
   const radar = useGame((s) => s.tools.radar)
   const setTools = useGame((s) => s.setTools)
@@ -98,7 +70,6 @@ function Radar({ stations }: { stations: Station[] }) {
       <Distance value={radar.radiusM} chips={RADAR_CHIPS} onChange={(radiusM) => set({ radiusM })} />
       {radar.center && (
         <>
-          {isHider && <SeekerDistances center={radar.center} radiusM={radar.radiusM} />}
           {mine ? (
             <p className="mt-1 text-sm">
               Du er {fmtDist(dist(radar.center, mine))} fra midten, <b>{dist(radar.center, mine) <= radar.radiusM ? 'innenfor' : 'utenfor'}</b>.

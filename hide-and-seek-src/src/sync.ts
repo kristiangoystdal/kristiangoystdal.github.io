@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { deviceId } from './device'
 import { announce, announceRound, notify } from './notify'
 import { GAME_SETTINGS, useGame, type ArchivedRound, type HiderPoint, type Round, type State } from './store'
-import type { LngLat, Question, RoundResult, Settings } from './types'
+import type { Question, RoundResult, Settings } from './types'
 
 /**
  * Firebase-prosjektet. Nettnøkkelen og app-id-en leses fra .env.local lokalt og fra hemmelighetene i
@@ -48,12 +48,6 @@ export interface Shared {
   round: string
   setup: string
   players: string
-}
-/** En seekers siste kjente posisjon. `v` er farten i m/s, null når den er ukjent. */
-export interface SeekerPos {
-  pos: LngLat
-  t: number
-  v: number | null
 }
 
 /**
@@ -150,19 +144,10 @@ interface SyncState {
   room: string | null
   status: 'off' | 'connecting' | 'online' | 'offline'
   error: string
-  /** Seekerne som deler posisjon i rommet, per telefon. */
-  seekers: Record<string, SeekerPos>
 }
-export const useSync = create<SyncState>(() => ({ room: null, status: 'off', error: '', seekers: {} }))
+export const useSync = create<SyncState>(() => ({ room: null, status: 'off', error: '' }))
 
 let stop: (() => void) | null = null
-let sendPos: ((p: SeekerPos | null) => void) | null = null
-
-/** Deler seekers posisjon i rommet, eller fjerner den med null. Hiders posisjon sendes aldri. */
-export function shareSeekerPos(p: SeekerPos | null) {
-  if (p && useGame.getState().mode !== 'seeker') return
-  sendPos?.(p)
-}
 let emulated = false
 
 export const withTimeout = <T>(p: Promise<T>) =>
@@ -228,10 +213,6 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
     // Sist kjente tilstand i rommet. Lokale endringer sendes som forskjellen fra denne.
     let synced: Shared | null = null
     let applying = false
-    let seenSeekers = ''
-    // Posisjonen skrives for seg, så en avvist skriving aldri stopper resten av synken.
-    const mine = db.child(room, `seekers/${deviceId()}`)
-    sendPos = (p) => void (p ? db.set(mine, JSON.stringify(p)) : db.remove(mine)).catch(() => {})
 
     // Rommet merkes som i bruk når noen kobler til, og jevnlig mens det spilles.
     let activeAt = 0
@@ -256,16 +237,11 @@ async function connect(code: string, how: 'create' | 'join' | 'resume') {
         db.update(room, marks).catch(() => useSync.setState({ error: 'Notater og svar tatt ut av kartet kunne ikke deles i rommet. Databasereglene må oppdateres.' }))
     }
     const offRemote = db.onValue(room, (snap) => {
-      const value = snap.val() as (Partial<Shared> & { seekers?: Record<string, string> }) | null
+      const value = snap.val() as Partial<Shared> | null
       if (!value) return
-      const seekers = JSON.stringify(value.seekers ?? {})
-      if (seekers !== seenSeekers) {
-        seenSeekers = seekers
-        useSync.setState({ seekers: Object.fromEntries(Object.entries(value.seekers ?? {}).map(([id, v]) => [id, JSON.parse(v) as SeekerPos])) })
-      }
       const first = !synced
       const incoming = normalize(value)
-      // Posisjonene oppdateres ofte. Er spillet ellers uendret, røres ikke tilstanden.
+      // Endres bare noe som ikke er spillet (f.eks. når rommet sist ble brukt), røres ikke tilstanden.
       const same = synced !== null && Object.keys(diff(synced, incoming)).length === 0
       synced = incoming
       if (same) return
@@ -316,9 +292,8 @@ export const joinRoom = (code: string) => connect(cleanCode(code), 'join')
 export function leaveRoom() {
   stop?.()
   stop = null
-  sendPos = null
   localStorage.removeItem(ROOM_KEY)
-  useSync.setState({ room: null, status: 'off', error: '', seekers: {} })
+  useSync.setState({ room: null, status: 'off', error: '' })
 }
 
 /**
@@ -335,8 +310,7 @@ export function leaveRoomClean() {
 export function suspendRoom() {
   stop?.()
   stop = null
-  sendPos = null
-  useSync.setState({ room: null, status: 'off', error: '', seekers: {} })
+  useSync.setState({ room: null, status: 'off', error: '' })
 }
 
 /** Kobler til rommet telefonen var i sist siden var åpen. */

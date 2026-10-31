@@ -7,7 +7,6 @@ import { POI_TYPES, excluded, levelAreas, regionOf, type Result } from './geo'
 import { ArchiveBanner } from './Archive'
 import { city, modeOf, networkSuffix, type Mode } from './cities'
 import { useGame, useHiderPos, useUi, type ArchivedRound } from './store'
-import { useSync } from './sync'
 import { useTestMode } from './testmode'
 import { useDemo } from './demo'
 import type { GeoData, LngLat, Settings, Station } from './types'
@@ -21,15 +20,13 @@ const insetPadding = () => ({ paddingTopLeft: L.point(20, 70), paddingBottomRigh
 
 /** Over så mange mulige stasjoner vises navnene bare når man holder over eller trykker. */
 const MAX_LABELS = 150
-const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'tools', 'seekers', 'me'] as const
+const GROUPS = ['mask', 'admin', 'lines', 'zones', 'poi', 'stations', 'draft', 'tools', 'me'] as const
 /** Måleverktøyet tegnes i en egen farge, så det ikke forveksles med spørsmål. */
 const TOOL_COLOR = '#8e44ad'
 type Group = (typeof GROUPS)[number]
 const LABEL_ZOOM = 13
 /** T-bane tegnes tykkest, buss tynnest, så nettene er lette å skille. */
 const LINE_WEIGHT: Record<Mode, number> = { metro: 3.5, lightrail: 3.5, tram: 3, bus: 2.5 }
-/** Eldre posisjoner enn dette tegnes svakere. */
-const STALE_MS = 120000
 
 type Basemap = Settings['basemap']
 /** Bakgrunnskartene. Ingen av dem krever nøkkel. */
@@ -95,7 +92,6 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
   const draw = useUi((s) => s.draw)
   const setDraw = useUi((s) => s.setDraw)
   const setSettings = useGame((s) => s.setSettings)
-  const seekers = useSync((s) => s.seekers)
   const tools = useGame((s) => s.tools)
 
   // Hider ser bare sin egen sone, aldri hvilke stasjoner seekerne har igjen.
@@ -383,20 +379,6 @@ export default function MapView({ data, result, past = null }: { data: GeoData; 
       if (thermo.at) L.polyline([ll(thermo.start), ll(thermo.at)], { color: TOOL_COLOR, weight: 3, interactive: false }).addTo(g)
     }
   }, [ready, tools])
-
-  // Seekerne som deler posisjon. Det er disse hider følger med på.
-  useEffect(() => {
-    if (!ready) return
-    const g = groups.current.seekers.clearLayers()
-    for (const s of Object.values(seekers)) {
-      const fresh = Date.now() - s.t < STALE_MS
-      const at = new Date(s.t).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-      const speed = s.v === null ? '' : ` · ${Math.round(s.v * 3.6)} km/t`
-      L.circleMarker(ll(s.pos), { radius: 8, color: '#fff', weight: 2.5, fillColor: css('--text'), fillOpacity: fresh ? 1 : 0.4 })
-        .bindTooltip(`Seeker · kl. ${at}${speed}`)
-        .addTo(g)
-    }
-  }, [ready, seekers])
 
   const findMe = async () => {
     setLocError('')

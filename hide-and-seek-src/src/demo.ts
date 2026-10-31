@@ -90,7 +90,6 @@ export function blankGame(settings: Partial<State['settings']>): Partial<Saved> 
     results: [],
     archive: [],
     hiderPts: [],
-    sharePos: false,
     tools: { radar: null, thermo: null },
     bonusAsked: null,
   }

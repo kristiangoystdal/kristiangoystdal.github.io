@@ -310,7 +310,6 @@ export function RolePicker() {
             <li>Fotospørsmål har ingen fasit i appen. Svaret loggføres som notat.</li>
             <li>Svarer du ikke innen svartiden, står klokken din til svaret kommer.</li>
             <li>I endgame må gjemmestedet være innen ca. 3 m fra en vei eller sti, og offentlig tilgjengelig hele spilletiden.</li>
-            <li>Seekerne som deler posisjon, vises som oransje punkter på kartet ditt.</li>
           </ul>
         </details>
       )}
@@ -416,30 +415,6 @@ export function RoomInfo() {
 }
 
 const total = (r: RoundResult) => r.seconds + r.bonusMinutes * 60
-
-/** Seeker slår på posisjonsdeling ved rundestart. Hider ser bare hvor mange som deler. */
-export function SharePanel() {
-  const room = useSync((s) => s.room)
-  const sharing = useSync((s) => Object.keys(s.seekers).length)
-  const isHider = useGame((s) => s.mode === 'hider')
-  const on = useGame((s) => s.sharePos)
-  const setSharePos = useGame((s) => s.setSharePos)
-  return (
-    <Section title="Posisjonsdeling">
-      {isHider ? (
-        <p className="text-sm">
-          {!room ? 'Dere må være i et rom for at seekerne skal kunne dele posisjon.' : sharing ? `${sharing} ${sharing === 1 ? 'seeker deler' : 'seekere deler'} posisjon. De vises som oransje punkter på kartet.` : 'Ingen seekere deler posisjon ennå.'}
-          <span className="mt-1 block text-xs text-muted">Din posisjon deles aldri.</span>
-        </p>
-      ) : (
-        <>
-          <Switch on={on} onChange={setSharePos} title="Del posisjonen min med hider" detail={<span className={on && room ? 'text-ok' : ''}>{!on ? 'Av. Hider ser ikke hvor du er.' : room ? 'På. Hider ser deg på kartet.' : 'På, men du er ikke i et rom ennå.'}</span>} />
-          <p className="mt-1 text-xs text-muted">Reglene sier at hider skal kunne følge seekerne hele runden. Posisjonen sendes bare i et rom, og bare mens appen er åpen på skjermen.</p>
-        </>
-      )}
-    </Section>
-  )
-}
 
 const ASK_BONUS_MS = 30 * 60000
 
@@ -1123,7 +1098,7 @@ function Privacy() {
             <b className="font-sign text-text">På telefonen:</b> spillet ditt, oppsett og tidligere runder ligger i nettleseren på denne telefonen, og forsvinner hvis du sletter nettstedsdata.
           </p>
           <p>
-            <b className="font-sign text-text">I et rom:</b> spørsmål og svar, klokken, spillerne (navnene dere skriver inn), oppsettet og ferdige runder lagres i Firebase (Google) i Belgia, så alle i rommet ser det samme. Deler en seeker posisjonen sin, lagres den siste posisjonen i rommet. Hiders posisjon sendes aldri.
+            <b className="font-sign text-text">I et rom:</b> spørsmål og svar, klokken, spillerne (navnene dere skriver inn), oppsettet og ferdige runder lagres i Firebase (Google) i Belgia, så alle i rommet ser det samme. Ingen posisjoner sendes, verken seekernes eller hiders.
           </p>
           <p>
             <b className="font-sign text-text">Hvor lenge:</b> rom og tidligere runder blir liggende, så dere kan gå tilbake til dem senere. Vil du ha et rom slettet, si fra.

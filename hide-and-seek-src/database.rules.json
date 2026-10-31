@@ -24,11 +24,6 @@
             ".validate": "newData.isString() && newData.val().length < 2000"
           }
         },
-        "seekers": {
-          "$id": {
-            ".validate": "newData.isString() && newData.val().length < 200"
-          }
-        },
         "ignored": {
           "$id": {
             ".validate": "newData.isString() && newData.val().length < 200"

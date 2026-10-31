@@ -18,7 +18,7 @@ import { useThermoGps } from './Tools'
 import { gameFromHash, useGame, useHiderPos, useUi } from './store'
 import { Toast } from './notify'
 import { Loading, PanelHandle, rememberFix, usePanelHeight } from './ui'
-import { joinRoom, resumeRoom, roomFromHash, shareSeekerPos, useSync, type SeekerPos } from './sync'
+import { joinRoom, resumeRoom, roomFromHash } from './sync'
 import type { GeoData, LngLat } from './types'
 
 
@@ -61,7 +61,6 @@ function useSharedLink() {
   }, [])
 }
 
-const SHARE_EVERY_MS = 10000
 
 const HIDER_MOVE_M = 10
 
@@ -104,43 +103,6 @@ function useAutoResume() {
   }, [until])
 }
 
-/**
- * Deler seekers posisjon i rommet så hider kan følge med. Nettleseren gir bare
- * posisjon mens appen er åpen. Hiders posisjon deles aldri.
- */
-function useShareLocation() {
-  const on = useGame((s) => s.sharePos && s.mode === 'seeker')
-  const room = useSync((s) => s.room)
-  useEffect(() => {
-    if (!on || !room || !navigator.geolocation) return
-    let here: LngLat | null = null
-    let speed: number | null = null
-    let sent: SeekerPos | null = null
-    const watch = navigator.geolocation.watchPosition(
-      (p) => {
-        here = [p.coords.longitude, p.coords.latitude]
-        rememberFix(here)
-        speed = p.coords.speed
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 5000 },
-    )
-    const send = () => {
-      if (!here) return
-      const t = Date.now()
-      // Ikke alle telefoner oppgir fart. Da regnes den fra forrige punkt.
-      const v = speed ?? (sent ? dist(sent.pos, here) / ((t - sent.t) / 1000) : null)
-      shareSeekerPos((sent = { pos: here, t, v: v === null ? null : Math.round(v * 10) / 10 }))
-    }
-    const timer = setInterval(send, SHARE_EVERY_MS)
-    return () => {
-      navigator.geolocation.clearWatch(watch)
-      clearInterval(timer)
-      shareSeekerPos(null)
-    }
-  }, [on, room])
-}
-
 export default function App() {
   const [loaded, setData] = useState<GeoData | null>(null)
   const [error, setError] = useState(false)
@@ -159,7 +121,6 @@ export default function App() {
 
   useTheme()
   useSharedLink()
-  useShareLocation()
   useAutoResume()
   useThermoGps()
   useHiderPath()

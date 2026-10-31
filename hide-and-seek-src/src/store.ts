@@ -43,8 +43,6 @@ export interface State {
   results: RoundResult[]
   /** Siste runde hider har fått spørsmål om tidsbonus for, så det ikke spørres to ganger. */
   bonusAsked: string | null
-  /** Seeker deler posisjonen sin i rommet. */
-  sharePos: boolean
   /** Måleverktøyet, f.eks. til kostnaden for en forbannelse. Bare på denne telefonen, og teller ikke som spørsmål. */
   tools: Tools
   /** Alle rundene som er spilt, med logg og oppsett, så de kan åpnes igjen. Nyeste sist. */
@@ -81,7 +79,6 @@ export interface State {
   resumeGame: () => void
   /** Hider oppgir tidsbonusen for runden som nettopp er ferdig. */
   answerBonus: (id: string, minutes: number) => void
-  setSharePos: (on: boolean) => void
   setTools: (patch: Partial<Tools>) => void
   shufflePlayers: () => void
   addPlayer: (name: string) => void
@@ -211,7 +208,6 @@ export const useGame = create<State>()(
         players: [],
         results: [],
         bonusAsked: null,
-        sharePos: false,
         tools: NO_TOOLS,
         archive: [],
         hiderPts: [],
@@ -289,7 +285,6 @@ export const useGame = create<State>()(
           }),
         resumeGame: () => set((s) => resume(s.round, s.questions, Date.now())),
         answerBonus: (id, minutes) => set((s) => ({ bonusAsked: id, results: s.results.map((r) => (r.id === id ? { ...r, bonusMinutes: minutes } : r)) })),
-        setSharePos: (sharePos) => set({ sharePos }),
         setTools: (patch) => set((s) => ({ tools: { ...s.tools, ...patch } })),
         shufflePlayers: () =>
           set((s) => {

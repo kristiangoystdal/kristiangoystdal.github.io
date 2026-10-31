@@ -89,7 +89,7 @@ const SECTIONS: { id: string; title: string; body: () => React.ReactNode }[] = [
     body: () => (
       <List>
         <li>Alle starter på samme sted. Hider får kortstokken, seekerne får spørsmålene. Begge sider har minst to terninger.</li>
-        <li>Seekerne deler posisjonen sin så hider kan følge med. Hiders posisjon deles ikke.</li>
+        <li>Seekerne deler posisjonen sin så hider kan følge med, for eksempel med posisjonsdeling i Google Maps eller Finn. Hiders posisjon deles ikke.</li>
         <li>Hider reiser til fots og kollektivt. Der hider er når gjemmetiden er over, er hiders stasjon, uansett om det var planen.</li>
         <li>Sonen er en sirkel rundt stasjonen. Ligger hider i sonen til flere stasjoner, velger hider én som sin.</li>
         <li>Hider kan bevege seg fritt i sonen frem til endgame.</li>
