@@ -94,3 +94,63 @@ describe('delte oppsett', () => {
     await assertFails(set(ref(nobody(), 'presets/abcd1234/reports/x'), true))
   })
 })
+
+/**
+ * Rangeringshatten (../rangeringshatten) deler databasen. Rommene ligger i rangeringshatten/<KODE>.
+ * Mac-en som laget rommet (host) styrer spillet, hver telefon skriver bare sitt eget navn og sin egen liste.
+ * Står i samme fil fordi testfilene ellers tømmer databasen for hverandre.
+ */
+const mac = () => env.authenticatedContext('mac').database()
+const R = 'rangeringshatten/K7QM'
+const newRoom = (host = 'mac') => ({ host, created: 1, state: '{"phase":"lobby"}' })
+const seed = () => env.withSecurityRulesDisabled((c) => set(ref(c.database(), R), newRoom()))
+
+describe('rangeringshatten', () => {
+  it('innloggede kan lage et rom med seg selv som vert', async () => {
+    await assertSucceeds(set(ref(mac(), R), newRoom()))
+    await assertFails(set(ref(nobody(), 'rangeringshatten/K7QN'), newRoom()))
+    await assertFails(set(ref(ada(), 'rangeringshatten/K7QP'), newRoom('mac')))
+    await assertFails(set(ref(ada(), 'rangeringshatten/K7QR'), { host: 'ada', created: 1 }))
+  })
+
+  it('koden må ha fire tegn uten de som er lette å forveksle', async () => {
+    await assertFails(set(ref(mac(), 'rangeringshatten/K7Q0'), newRoom()))
+    await assertFails(set(ref(mac(), 'rangeringshatten/k7qm'), newRoom()))
+    await assertFails(set(ref(mac(), 'rangeringshatten/K7QMX'), newRoom()))
+  })
+
+  it('bare verten endrer spillet og kan slette rommet', async () => {
+    await seed()
+    await assertSucceeds(set(ref(mac(), `${R}/state`), '{"phase":"rank"}'))
+    await assertFails(set(ref(ada(), `${R}/state`), '{"phase":"final"}'))
+    await assertFails(set(ref(ada(), R), newRoom('ada')))
+    await assertFails(remove(ref(ada(), R)))
+    await assertSucceeds(remove(ref(mac(), R)))
+  })
+
+  it('en spiller skriver bare sitt eget navn og sin egen liste', async () => {
+    await seed()
+    await assertSucceeds(set(ref(ada(), `${R}/players/ada`), '{"name":"Ada","at":1}'))
+    await assertFails(set(ref(ada(), `${R}/players/bo`), '{"name":"Bo","at":1}'))
+    await assertSucceeds(set(ref(ada(), `${R}/rankings/r0/ada`), '[0,1,2,3,4,5,6,7]'))
+    await assertFails(set(ref(bo(), `${R}/rankings/r0/ada`), '[7,6,5,4,3,2,1,0]'))
+    await assertFails(set(ref(ada(), `${R}/rankings/x0/ada`), '[0,1,2,3,4,5,6,7]'))
+    await assertSucceeds(set(ref(ada(), `${R}/rankings/r142/ada`), '[0,1,2,3,4,5,6,7]'))
+    await assertFails(set(ref(ada(), `${R}/rankings/r1000/ada`), '[0,1,2,3,4,5,6,7]'))
+    await assertSucceeds(remove(ref(ada(), `${R}/rankings/r0/ada`)))
+    await assertSucceeds(remove(ref(mac(), `${R}/players/ada`)))
+  })
+
+  it('ingen kan skrive i et rom som ikke finnes, eller legge til andre felt', async () => {
+    await assertFails(set(ref(ada(), `${R}/players/ada`), '{"name":"Ada"}'))
+    await seed()
+    await assertFails(set(ref(mac(), `${R}/tull`), 'x'))
+    await assertFails(set(ref(ada(), `${R}/players/ada`), 'x'.repeat(400)))
+  })
+
+  it('alle kan lese et rom med koden, men ingen kan liste rommene', async () => {
+    await seed()
+    await assertSucceeds(get(ref(nobody(), R)))
+    await assertFails(get(ref(ada(), 'rangeringshatten')))
+  })
+})

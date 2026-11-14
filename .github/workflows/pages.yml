@@ -78,6 +78,16 @@ jobs:
           # Uten Jekyll: filer som begynner med understrek (f.eks. assets/_gameId_-*.js) publiseres også.
           touch _site/.nojekyll
 
+      - name: Firebase-nøkkelen inn i Rangeringshatten
+        working-directory: .
+        env:
+          # Samme hemmeligheter som Hide and Seek. Rangeringshatten bruker samme database, i mappen rangeringshatten/.
+          KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+        run: |
+          sed -i "s|__FIREBASE_API_KEY__|$KEY|; s|__FIREBASE_APP_ID__|$APP_ID|" _site/rangeringshatten/firebase-config.js
+          grep -q "__FIREBASE_API_KEY__" _site/rangeringshatten/firebase-config.js && { echo "Mangler Firebase-nøkkelen"; exit 1; } || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rangeringshatten</title>
+  <meta name="description" content="Rangér Harry Potter sammen: hver på sin mobil, og så blir dere enige på TV-en.">
+  <meta name="theme-color" content="#0f1626">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/vue@3.4.38/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="categories.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="effects.js"></script>
+  <script src="music.js"></script>
+  <script src="intro.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+<div id="app" v-cloak :class="'is-' + screen">
+
+  <!-- ============ Start ============ -->
+  <main v-if="screen === 'start'" class="start">
+    <div class="candles" aria-hidden="true"><i v-for="n in 9" :key="n"></i></div>
+    <header class="crest">
+      <h1>Rangeringshatten</h1>
+      <p class="lede">Dere får en kategori fra Harry Potter. Alle rangerer i hemmelighet på mobilen, og så blir dere enige om én liste på TV-en.</p>
+    </header>
+
+    <form class="card join" @submit.prevent="join">
+      <h2>Bli med på mobilen</h2>
+      <label>Koden fra TV-en
+        <input class="code-input" :value="joinCode" @input="joinCode = cleanCode($event.target.value)"
+               inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="4" placeholder="ABCD">
+      </label>
+      <label>Navnet ditt
+        <input v-model="name" maxlength="20" autocomplete="nickname" placeholder="Hermione">
+      </label>
+      <button class="btn gold" type="submit">Bli med</button>
+    </form>
+
+    <section class="card host-cta">
+      <h2>Vis spillet på TV-en</h2>
+      <p>Åpne denne siden på Mac-en som er koblet til TV-en, og lag et rom der.</p>
+      <button class="btn ghost" type="button" @click="createRoom">Lag rom på denne skjermen</button>
+    </section>
+
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
+  </main>
+
+  <!-- ============ Venter ============ -->
+  <main v-else-if="screen === 'busy'" class="busy" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>{{ busyText }}</p>
+  </main>
+
+  <!-- ============ Verten (Mac/TV) ============ -->
+  <main v-else-if="screen === 'host'" class="host" :class="['phase-' + st.phase, { themed: theme }]" :style="themeVars">
+    <div class="host-bar">
+      <span class="brand">Rangeringshatten</span>
+      <span v-if="st.phase !== 'lobby'" class="room-chip">Bli med: <b>{{ shortUrl }}</b> med koden <b class="mono">{{ code }}</b></span>
+      <span class="spacer"></span>
+      <button class="btn small ghost" type="button" @click="toggleMute" :aria-pressed="muted">{{ muted ? 'Slå på lyd' : 'Slå av lyd' }}</button>
+      <button class="btn small ghost" type="button" @click="fullscreen">Fullskjerm</button>
+    </div>
+
+    <transition name="page" mode="out-in">
+    <!-- Lobby -->
+    <section v-if="st.phase === 'lobby'" class="lobby" key="lobby">
+      <div class="candles" aria-hidden="true"><i v-for="n in 12" :key="n"></i></div>
+      <div class="lobby-main">
+        <h1>Rangeringshatten</h1>
+        <p class="lede">Skann koden med mobilen, eller gå til <b>{{ shortUrl }}</b> og skriv inn</p>
+        <div class="code-big" :aria-label="'Romkode ' + code.split('').join(' ')">
+          <span v-for="(ch, i) in code" :key="i">{{ ch }}</span>
+        </div>
+      </div>
+      <div class="qr" v-html="qrSvg" aria-label="QR-kode for å bli med"></div>
+
+      <div class="roster">
+        <h2 v-if="players.length">{{ players.length === 1 ? '1 spiller er med' : players.length + ' spillere er med' }}</h2>
+        <h2 v-else>Venter på spillere …</h2>
+        <ul class="chips">
+          <li v-for="p in players" :key="p.id" class="chip" :style="{ '--c': p.color }" :data-player="p.id">
+            <span class="dot"></span>{{ p.name }}
+            <button class="chip-x" type="button" @click="kick(p)" :aria-label="'Fjern ' + p.name">×</button>
+          </li>
+        </ul>
+        <button class="btn gold big" type="button" :disabled="!players.length" @click="startGame">Start spillet</button>
+        <p class="hint">8 ting per runde. Spill så mange runder dere vil. <button class="link" type="button" @click="showOpener">Se introen igjen</button></p>
+      </div>
+    </section>
+
+    <!-- Alle rangerer -->
+    <section v-else-if="st.phase === 'rank' && cat" class="ranking" :key="'rank' + round + cat.id">
+      <div class="cat-icon" v-html="catIcon(cat)"></div>
+      <p class="round">Runde {{ round + 1 }}</p>
+      <h1 class="cat spell" :aria-label="cat.name"><span v-for="(ch, i) in cat.name" :key="i" :style="{ '--i': i }" aria-hidden="true">{{ ch }}</span></h1>
+      <p class="dir">Rangér fra <b>{{ cat.top.toLowerCase() }}</b> til <b>{{ cat.bottom.toLowerCase() }}</b> på mobilen</p>
+      <ul class="items-cloud">
+        <li v-for="(it, i) in cat.items" :key="i" :style="{ '--i': i }">{{ it }}</li>
+      </ul>
+      <ul class="status">
+        <li v-for="p in players" :key="p.id" :class="{ done: submitted[p.id] }" :style="{ '--c': p.color }" :data-player="p.id">
+          <span class="seal" aria-hidden="true"></span>
+          <span class="who">{{ p.name }}</span>
+          <span class="state">{{ submitted[p.id] ? 'Klar' : 'Rangerer …' }}</span>
+        </li>
+      </ul>
+      <div class="actions">
+        <button class="btn ghost" type="button" @click="swapCategory">Bytt kategori</button>
+        <button v-if="agreed.length" class="btn ghost" type="button" @click="finish">Ferdig, se alle listene</button>
+        <button class="btn gold big" type="button" :disabled="!ranked.length" @click="reveal">
+          {{ allDone ? 'Vis listene' : 'Vis listene nå (' + ranked.length + ' av ' + players.length + ' er klare)' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Sammenlign og bli enige -->
+    <section v-else-if="st.phase === 'talk' && cat && shared" class="talk" :class="{ sealing }" :key="'talk' + round">
+      <div class="talk-head">
+        <div class="talk-title">
+          <div class="cat-icon small" v-html="catIcon(cat)"></div>
+          <div>
+            <p class="round">Runde {{ round + 1 }}</p>
+            <h1 class="cat">{{ cat.name }}</h1>
+          </div>
+        </div>
+        <p class="talk-help">Snakk sammen og flytt tingene til alle er enige. Dra i en rad, eller velg den og bruk piltastene.</p>
+      </div>
+
+      <div class="table" :style="{ '--cols': ranked.length }">
+        <div class="t-head">
+          <span class="t-end">{{ cat.top }}</span>
+          <span class="t-title">Felles liste</span>
+          <span v-for="(p, k) in ranked" :key="p.id" class="t-player" :style="{ '--c': p.color, '--k': k }">{{ p.name }}</span>
+          <span class="t-gripcol"></span>
+        </div>
+        <Sorter :order="shared" :items="cat.items" label="Felles liste" @move="moveShared">
+          <template #tag="{ item }">
+            <em v-if="spread(item) !== null && spread(item) >= 4" class="tag split">uenige</em>
+            <em v-else-if="spread(item) === 0" class="tag same">alle enige</em>
+          </template>
+          <template #extra="{ item, pos }">
+            <span v-for="(p, k) in ranked" :key="p.id" class="cell" :style="{ '--k': k }" :class="['h' + placeOf[p.id][item], { off: Math.abs(placeOf[p.id][item] - pos - 1) >= 3 }]">{{ placeOf[p.id][item] }}</span>
+          </template>
+        </Sorter>
+        <div class="t-foot"><span class="t-end">{{ cat.bottom }}</span></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" type="button" @click="backToRank">Tilbake, la alle endre</button>
+        <button class="btn ghost" type="button" @click="lockShared(true)">Vi er enige, ferdig for i kveld</button>
+        <button class="btn gold big" type="button" @click="lockShared()">Vi er enige, neste runde</button>
+      </div>
+    </section>
+
+    <!-- Alle listene -->
+    <section v-else-if="st.phase === 'final'" class="final" key="final">
+      <h1>Kveldens lister</h1>
+      <div class="scrolls">
+        <article v-for="(a, n) in agreed" :key="a.cat.id" class="scroll" :style="{ '--n': n }">
+          <h2><span class="scroll-icon" :style="{ color: RHT[a.cat.theme].accent2 }" v-html="catIcon(a.cat)"></span>{{ a.cat.name }}</h2>
+          <ol>
+            <li v-for="(item, pos) in a.order" :key="item" :class="{ top: pos === 0 }">{{ a.cat.items[item] }}</li>
+          </ol>
+        </article>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" type="button" @click="endRoom">{{ confirmEnd ? 'Trykk igjen for å avslutte' : 'Avslutt rommet' }}</button>
+        <button class="btn ghost" type="button" @click="newGame">Nytt spill med de samme</button>
+        <button class="btn gold big" type="button" @click="keepPlaying">Spill videre</button>
+      </div>
+    </section>
+    </transition>
+
+    <footer class="host-foot" v-if="st.phase !== 'final'">
+      <button class="link" type="button" @click="endRoom">{{ confirmEnd ? 'Trykk igjen for å avslutte rommet' : 'Avslutt rommet' }}</button>
+      <button v-if="st.phase !== 'lobby'" class="link" type="button" @click="newGame">Start på nytt</button>
+    </footer>
+    <p v-if="error" class="error toast" role="alert" @click="error = ''">{{ error }}</p>
+  </main>
+
+  <!-- ============ Spilleren (mobil) ============ -->
+  <main v-else-if="screen === 'player'" class="phone" :class="['phase-' + st.phase, { themed: theme }]" :style="themeVars">
+    <div class="phone-bar">
+      <span class="brand">Rangeringshatten</span>
+      <span v-if="me" class="me" :style="{ '--c': me.color }"><span class="dot"></span>{{ me.name }}</span>
+    </div>
+
+    <transition name="page" mode="out-in">
+    <!-- Fjernet fra rommet -->
+    <form v-if="!me" key="out" class="card join" @submit.prevent="joinCode = code; join()">
+      <h2>Du er ikke med i rommet {{ code }}</h2>
+      <label>Navnet ditt <input v-model="name" maxlength="20" autocomplete="nickname"></label>
+      <button class="btn gold" type="submit">Bli med igjen</button>
+      <button class="btn ghost" type="button" @click="leave">Gå ut</button>
+    </form>
+
+    <section v-else-if="st.phase === 'lobby'" class="wait" key="wait">
+      <div class="hat" aria-hidden="true"></div>
+      <h1>Du er med!</h1>
+      <p>Følg med på TV-en. Spillet starter snart.</p>
+      <ul class="chips">
+        <li v-for="p in players" :key="p.id" class="chip" :style="{ '--c': p.color }"><span class="dot"></span>{{ p.name }}</li>
+      </ul>
+    </section>
+
+    <section v-else-if="st.phase === 'rank' && cat" class="rank" :key="'rank' + round + cat.id">
+      <div class="phone-cat">
+        <div class="cat-icon tiny" v-html="catIcon(cat)"></div>
+        <p class="round">Runde {{ round + 1 }}</p>
+      </div>
+      <h1 class="cat spell" :aria-label="cat.name"><span v-for="(ch, i) in cat.name" :key="i" :style="{ '--i': i }" aria-hidden="true">{{ ch }}</span></h1>
+      <template v-if="!mine">
+        <p class="end top">{{ cat.top }}</p>
+        <Sorter :class="{ sealing: sending }" :order="draft" :items="cat.items" label="Din rangering" @move="moveDraft"></Sorter>
+        <p class="end bottom">{{ cat.bottom }}</p>
+        <button class="btn gold big sticky" type="button" :disabled="sending" @click="submit">Send inn listen</button>
+        <p class="hint">Dra i en rad for å flytte den. Ingen ser listen din før alle er klare.</p>
+      </template>
+      <template v-else>
+        <div class="sealed">
+          <span class="wax" :style="{ '--c': me.color }" aria-hidden="true">{{ me.name.charAt(0).toUpperCase() }}</span>
+          <p class="sealed-title">Listen din er sendt</p>
+          <p>{{ ranked.length }} av {{ players.length }} er klare. Se på TV-en.</p>
+        </div>
+        <Sorter :order="mine" :items="cat.items" disabled label="Din rangering"></Sorter>
+        <button class="btn ghost" type="button" :disabled="sending" @click="unsubmit">Endre listen</button>
+      </template>
+    </section>
+
+    <section v-else-if="st.phase === 'talk' && cat && shared" class="talk-phone" key="talk">
+      <p class="round">Runde {{ round + 1 }}</p>
+      <h1 class="cat">{{ cat.name }}</h1>
+      <p class="hint">Se på TV-en og bli enige. Dette er den felles listen akkurat nå, med din plass til høyre.</p>
+      <Sorter :order="shared" :items="cat.items" disabled label="Felles liste">
+        <template #extra="{ item }">
+          <span v-if="myPlace(item)" class="cell" :class="'h' + myPlace(item)">{{ myPlace(item) }}</span>
+        </template>
+      </Sorter>
+    </section>
+
+    <section v-else-if="st.phase === 'final'" class="final-phone" key="final">
+      <h1>Kveldens lister</h1>
+      <article v-for="(a, n) in agreed" :key="a.cat.id" class="scroll" :style="{ '--n': n }">
+        <h2><span class="scroll-icon" :style="{ color: RHT[a.cat.theme].accent2 }" v-html="catIcon(a.cat)"></span>{{ a.cat.name }}</h2>
+        <ol><li v-for="(item, pos) in a.order" :key="item" :class="{ top: pos === 0 }">{{ a.cat.items[item] }}</li></ol>
+      </article>
+    </section>
+    </transition>
+
+    <p v-if="error" class="error toast" role="alert" @click="error = ''">{{ error }}</p>
+  </main>
+
+  <!-- Svart skjerm som venter på et klikk, og så 3D-introen -->
+  <div v-if="opener !== 'off'" class="opener" :class="'o-' + opener" role="button" tabindex="0"
+       :aria-label="opener === 'play' ? 'Hopp over introen' : 'Trykk for å starte introen'" @click="openerClick">
+    <div class="o-stage" ref="introStage"></div>
+    <p v-if="opener === 'wait'" class="o-wait">Klikk for å starte</p>
+    <div v-if="opener === 'loading'" class="spinner" aria-hidden="true"></div>
+  </div>
+</div>
+</body>
+</html>
