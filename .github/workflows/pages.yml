@@ -1,6 +1,7 @@
 # Bygger, tester og publiserer hele nettsiden til GitHub Pages.
-# Hide and Seek bygges fra hide-and-seek-src og testes (enhetstester, simulerte runder og
-# klikk-tester som iPhone og Android) før noe publiseres. Resten av nettsiden publiseres som den ligger.
+# Hide and Seek bygges alltid fra hide-and-seek-src (bygget ligger ikke i git). Testene (enhetstester,
+# simulerte runder og klikk-tester som iPhone og Android) kjøres bare når noe i hide-and-seek-src er endret.
+# Resten av nettsiden publiseres som den ligger.
 name: Bygg, test og publiser
 
 on:
@@ -21,13 +22,35 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Fast versjon: Playwright 1.48 klarer ikke å installere nettleserne på Ubuntu 26 (ubuntu-latest fra oktober 2026).
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
         working-directory: hide-and-seek-src
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Er noe i Hide and Seek endret? Ved push sammenlignes med forrige commit på main, i en PR med main.
+      # Startet for hånd (workflow_dispatch), eller uten noe å sammenligne med, kjøres alle testene.
+      - name: Hva er endret
+        id: changes
+        working-directory: .
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then FROM="$BASE"; elif [ "$EVENT" = "push" ]; then FROM="$BEFORE"; else FROM=""; fi
+          if [ -z "$FROM" ] || ! git cat-file -e "$FROM^{commit}" 2>/dev/null; then
+            echo "Ingenting å sammenligne med: kjører alle testene."; echo "hs=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$FROM" HEAD | grep -q '^hide-and-seek-src/'; then
+            echo "Hide and Seek er endret: kjører testene."; echo "hs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Hide and Seek er ikke endret: hopper over testene."; echo "hs=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-node@v4
         with:
@@ -37,6 +60,7 @@ jobs:
 
       # Firebase-emulatoren (for databasereglene og delte oppsett) trenger Java.
       - uses: actions/setup-java@v4
+        if: steps.changes.outputs.hs == 'true'
         with:
           distribution: temurin
           java-version: 21
@@ -45,6 +69,7 @@ jobs:
         run: npm ci
 
       - name: Enhetstester og simulerte runder
+        if: steps.changes.outputs.hs == 'true'
         run: npm run test:all
 
       - name: Bygg Hide and Seek
@@ -55,17 +80,21 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - name: Installer nettlesere for klikk-testene
+        if: steps.changes.outputs.hs == 'true'
         run: npx playwright install --with-deps chromium webkit
 
       - name: Klikk-tester som iPhone og Android
+        if: steps.changes.outputs.hs == 'true'
         run: npm run e2e
         env:
           CI: true
 
       - name: Databasereglene, mot Firebase-emulatoren
+        if: steps.changes.outputs.hs == 'true'
         run: npm run test:rules
 
       - name: Delte oppsett som iPhone og Android, mot Firebase-emulatoren
+        if: steps.changes.outputs.hs == 'true'
         run: npm run e2e:firebase
         env:
           CI: true
