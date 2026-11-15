@@ -34,12 +34,15 @@ function nextCat(used = []) {
 }
 const isOrder = (o) => Array.isArray(o) && o.length === SIZE && new Set(o).size === SIZE && o.every((x) => Number.isInteger(x) && x >= 0 && x < SIZE);
 
-/** Felles forslag: lavest sum av plasser først. Likt? Den som er satt høyest av noen, vinner. */
-function average(orders) {
-  const sum = Array(SIZE).fill(0), best = Array(SIZE).fill(SIZE);
-  orders.forEach((o) => o.forEach((item, pos) => { sum[item] += pos; best[item] = Math.min(best[item], pos); }));
-  return [...Array(SIZE).keys()].sort((a, b) => sum[a] - sum[b] || best[a] - best[b] || a - b);
+/** Hvor like to lister er, 0–100 %: 100 er helt like, 0 er helt motsatt. */
+function similarity(a, b) {
+  let d = 0;
+  for (let item = 0; item < SIZE; item++) d += Math.abs(a.indexOf(item) - b.indexOf(item));
+  const max = SIZE * SIZE / 2;
+  return Math.round(100 * (1 - d / max));
 }
+/** Fargen til hver ting i sammenligningen. */
+const ITEM_COLORS = ['#f5b941', '#e8604f', '#4fa6e8', '#5cc483', '#b583ea', '#ea7fb9', '#47d2c6', '#e8924f'];
 
 /* ---------- Listen man drar i ---------- */
 const Sorter = {
@@ -153,13 +156,71 @@ createApp({
       for (const [id, o] of Object.entries(submitted.value)) { out[id] = []; o.forEach((item, pos) => { out[id][item] = pos + 1; }); }
       return out;
     });
-    const spread = (item) => {
-      const ps = ranked.value.map((p) => placeOf.value[p.id][item]);
-      return ps.length < 2 ? null : Math.max(...ps) - Math.min(...ps);
+    /* ---------- Sammenligning ---------- */
+    const roundLists = (r) => {
+      const raw = ((data.value && data.value.rankings) || {})['r' + r] || {};
+      return players.value.map((p) => ({ p, o: parse(raw[p.id]) })).filter((x) => isOrder(x.o));
     };
-    const shared = computed(() => (isOrder(st.value.shared) ? st.value.shared : null));
-    const agreed = computed(() => (st.value.cats || []).map((id, r) => ({ cat: CATS[id], order: (st.value.agreed || [])[r] }))
-      .filter((x) => x.cat && isOrder(x.order)));
+    const pairsOf = (lists) => {
+      const out = [];
+      for (let i = 0; i < lists.length; i++) for (let j = i + 1; j < lists.length; j++) out.push({ a: lists[i].p, b: lists[j].p, sim: similarity(lists[i].o, lists[j].o) });
+      return out.sort((x, y) => y.sim - x.sim);
+    };
+    /** Høydepunktene i én runde. */
+    function roundSummary(r) {
+      const c = CATS[(st.value.cats || [])[r]];
+      const lists = roundLists(r);
+      if (!c || !lists.length) return null;
+      const place = (o, item) => o.indexOf(item) + 1;
+      const items = [...Array(SIZE).keys()].map((item) => {
+        const ps = lists.map((x) => ({ p: x.p, pos: place(x.o, item) }));
+        const hi = ps.reduce((m, x) => (x.pos < m.pos ? x : m)), lo = ps.reduce((m, x) => (x.pos > m.pos ? x : m));
+        return { item, name: c.items[item], spread: lo.pos - hi.pos, hi, lo, top3: ps.every((x) => x.pos <= 3) };
+      });
+      const split = items.slice().sort((x, y) => y.spread - x.spread)[0];
+      return {
+        r, cat: c, lists, pairs: pairsOf(lists),
+        split: lists.length > 1 && split.spread >= 2 ? split : null,
+        same: lists.length > 1 ? items.filter((x) => x.spread <= 1).map((x) => x.name) : [],
+        top3: lists.length > 1 ? items.filter((x) => x.top3).map((x) => x.name) : [],
+        favs: lists.map((x) => ({ p: x.p, name: c.items[x.o[0]] }))
+      };
+    }
+    const now = computed(() => (cat.value ? roundSummary(round.value) : null));
+    const playedRounds = computed(() => {
+      const last = st.value.phase === 'rank' ? round.value - 1 : round.value;
+      const out = [];
+      for (let r = 0; r <= last; r++) { const x = roundSummary(r); if (x) out.push(x); }
+      return out;
+    });
+    /** Hele kvelden: hvor like hvert par har vært i snitt, over rundene begge var med på. */
+    const evening = computed(() => {
+      const acc = {};
+      playedRounds.value.forEach((x) => x.pairs.forEach((pr) => {
+        const k = pr.a.id + '|' + pr.b.id;
+        (acc[k] = acc[k] || { a: pr.a, b: pr.b, sum: 0, n: 0 }).sum += pr.sim; acc[k].n++;
+      }));
+      const pairs = Object.values(acc).map((x) => ({ a: x.a, b: x.b, sim: Math.round(x.sum / x.n), n: x.n })).sort((x, y) => y.sim - x.sim);
+      const avg = players.value.map((p) => {
+        const mine = pairs.filter((x) => x.a.id === p.id || x.b.id === p.id);
+        return { p, sim: mine.length ? Math.round(mine.reduce((s2, x) => s2 + x.sim, 0) / mine.length) : null };
+      }).filter((x) => x.sim !== null).sort((x, y) => x.sim - y.sim);
+      return { pairs, rebel: players.value.length > 2 && avg.length ? avg[0] : null };
+    });
+    /** For telefonen: hvem jeg ligner mest og minst denne runden. */
+    const myPairs = computed(() => (now.value ? now.value.pairs.filter((x) => x.a.id === uid.value || x.b.id === uid.value)
+      .map((x) => ({ other: x.a.id === uid.value ? x.b : x.a, sim: x.sim })) : []));
+    const myEvening = computed(() => evening.value.pairs.filter((x) => x.a.id === uid.value || x.b.id === uid.value)
+      .map((x) => ({ other: x.a.id === uid.value ? x.b : x.a, sim: x.sim })));
+    /** Fokus på én ting i sammenligningen (klikk på den på TV-en). */
+    const focus = ref(null);
+    /** Linjen for én ting mellom kolonne k og k+1 (100 enheter bred kolonne, 100 høy rad). */
+    function bumpPath(k, item) {
+      const L = now.value.lists, y1 = L[k].o.indexOf(item) * 100 + 50, y2 = L[k + 1].o.indexOf(item) * 100 + 50;
+      const x1 = k * 100 + 90, x2 = (k + 1) * 100 + 10, mx = (x1 + x2) / 2;
+      return `M${x1} ${y1}C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`;
+    }
+    watch(() => round.value + st.value.phase, () => { focus.value = null; });
 
     /* ---------- Tilkobling ---------- */
     async function busy(text, fn) {
@@ -191,7 +252,7 @@ createApp({
         });
       });
     }
-    const freshState = (phase = 'lobby') => ({ phase, round: 0, cats: [nextCat()], shared: null, agreed: [] });
+    const freshState = (phase = 'lobby') => ({ phase, round: 0, cats: [nextCat()] });
 
     function createRoom() {
       return busy('Lager rom …', async () => {
@@ -246,48 +307,25 @@ createApp({
       data.value = { ...data.value, state: JSON.stringify(next) };
       return S.writeState(code.value, next).catch((e) => { error.value = e.message; });
     }
-    const startGame = () => setState({ phase: 'rank', round: 0, shared: null, agreed: [] });
+    const startGame = () => setState({ phase: 'rank', round: 0 });
     async function swapCategory() {
       const cats = (st.value.cats || []).slice();
       cats[round.value] = nextCat(cats);
       await S.clearRankings(code.value, [round.value]).catch(() => {});
       setState({ cats });
     }
-    const reveal = () => setState({ phase: 'talk', shared: average(ranked.value.map((p) => submitted.value[p.id])) });
-    const backToRank = () => setState({ phase: 'rank', shared: null });
-    function moveShared(from, to) {
-      const o = shared.value.slice();
-      o.splice(to, 0, o.splice(from, 1)[0]);
-      setState({ shared: o });
-    }
-    const sealing = ref(false);
-    function lockShared(finish) {
-      if (sealing.value) return;
-      sealing.value = true;
-      fx('outline', document.querySelector('.table .sorter'), { n: 140 });
-      sfx('seal');
-      fx('at', document.querySelector('.table .sort-row'), { n: 70, spread: 6 });
-      setTimeout(() => { sealing.value = false; commitShared(finish === true); }, 900);
-    }
-    function commitShared(finish) {
-      const a = (st.value.agreed || []).slice();
-      a[round.value] = shared.value;
-      if (finish) setState({ agreed: a, phase: 'final', shared: null });
-      else nextRound({ agreed: a });
-    }
+    const reveal = () => setState({ phase: 'talk' });
+    const backToRank = () => setState({ phase: 'rank' });
     /** Neste runde med en ny kategori. */
-    function nextRound(patch = {}) {
+    function nextRound() {
       const cats = (st.value.cats || []).slice(0, round.value + 1);
       cats.push(nextCat(cats));
-      setState({ ...patch, cats, round: round.value + 1, phase: 'rank', shared: null });
+      setState({ cats, round: round.value + 1, phase: 'rank' });
     }
-    /** Ferdig for i kveld: vis alle listene dere er blitt enige om. */
-    const finish = () => setState({ phase: 'final', shared: null });
-    /** Fra listene: fortsett der dere slapp. Runden som ikke ble ferdig, spilles videre. */
-    function keepPlaying() {
-      if (isOrder((st.value.agreed || [])[round.value])) nextRound();
-      else setState({ phase: 'rank', shared: null });
-    }
+    /** Ferdig for i kveld: vis sammenligningen for hele kvelden. */
+    const finish = () => setState({ phase: 'final' });
+    const keepPlaying = () => nextRound();
+    function nextRoundBtn() { sfx('seal'); nextRound(); }
     async function newGame() {
       await S.clearAllRankings(code.value).catch(() => {});
       setState(freshState());
@@ -446,9 +484,9 @@ createApp({
 
     return {
       screen, error, busyText, uid, code, name, joinCode, st, round, cat, players, me, submitted, ranked, allDone,
-      placeOf, spread, shared, agreed, confirmEnd, joinUrl, shortUrl, qrSvg, draft, mine, sending,
-      createRoom, join, leave, startGame, swapCategory, reveal, backToRank, moveShared, lockShared, finish, keepPlaying, newGame, kick, endRoom,
-      RHT: RH.THEMES, fullscreen, moveDraft, sealing, theme, themeVars, icon, catIcon, muted, toggleMute, opener, introStage, openerClick, showOpener, submit, unsubmit, myPlace,
+      placeOf, confirmEnd, joinUrl, shortUrl, qrSvg, draft, mine, sending,
+      createRoom, join, leave, startGame, swapCategory, reveal, backToRank, finish, keepPlaying, newGame, kick, endRoom, now, playedRounds, evening, myPairs, myEvening, focus, ITEM_COLORS, bumpPath, nextRoundBtn,
+      RHT: RH.THEMES, fullscreen, moveDraft, theme, themeVars, icon, catIcon, muted, toggleMute, opener, introStage, openerClick, showOpener, submit, unsubmit, myPlace,
       cleanCode: S.cleanCode
     };
   }

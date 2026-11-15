@@ -112,15 +112,15 @@
       </ul>
       <div class="actions">
         <button class="btn ghost" type="button" @click="swapCategory">Bytt kategori</button>
-        <button v-if="agreed.length" class="btn ghost" type="button" @click="finish">Ferdig, se alle listene</button>
+        <button v-if="playedRounds.length" class="btn ghost" type="button" @click="finish">Ferdig for i kveld</button>
         <button class="btn gold big" type="button" :disabled="!ranked.length" @click="reveal">
           {{ allDone ? 'Vis listene' : 'Vis listene nå (' + ranked.length + ' av ' + players.length + ' er klare)' }}
         </button>
       </div>
     </section>
 
-    <!-- Sammenlign og bli enige -->
-    <section v-else-if="st.phase === 'talk' && cat && shared" class="talk" :class="{ sealing }" :key="'talk' + round">
+    <!-- Sammenlign spillerne -->
+    <section v-else-if="st.phase === 'talk' && cat && now" class="compare" :key="'talk' + round">
       <div class="talk-head">
         <div class="talk-title">
           <div class="cat-icon small" v-html="catIcon(cat)"></div>
@@ -129,44 +129,91 @@
             <h1 class="cat">{{ cat.name }}</h1>
           </div>
         </div>
-        <p class="talk-help">Snakk sammen og flytt tingene til alle er enige. Dra i en rad, eller velg den og bruk piltastene.</p>
+        <p class="talk-help">Klikk på en ting for å følge den gjennom listene.</p>
       </div>
 
-      <div class="table" :style="{ '--cols': ranked.length }">
-        <div class="t-head">
-          <span class="t-end">{{ cat.top }}</span>
-          <span class="t-title">Felles liste</span>
-          <span v-for="(p, k) in ranked" :key="p.id" class="t-player" :style="{ '--c': p.color, '--k': k }">{{ p.name }}</span>
-          <span class="t-gripcol"></span>
+      <div class="cmp-body" :class="{ solo: now.lists.length < 2 }">
+        <div class="bump" :style="{ '--cols': now.lists.length }">
+          <div class="bump-names">
+            <span v-for="(x, k) in now.lists" :key="x.p.id" :style="{ '--c': x.p.color, '--k': k }">{{ x.p.name }}</span>
+          </div>
+          <div class="bump-grid">
+            <svg class="bump-lines" :view-box.camel="'0 0 ' + now.lists.length * 100 + ' 800'" preserveAspectRatio="none" aria-hidden="true">
+              <template v-for="k in now.lists.length - 1" :key="k">
+                <path v-for="item in 8" :key="item" pathLength="1" :d="bumpPath(k - 1, item - 1)" :stroke="ITEM_COLORS[item - 1]"
+                      :class="{ dim: focus !== null && focus !== item - 1, hot: focus === item - 1 }" :style="{ '--k': k }"></path>
+              </template>
+            </svg>
+            <div v-for="(x, k) in now.lists" :key="x.p.id" class="bump-col" :style="{ '--k': k }">
+              <button v-for="(item, pos) in x.o" :key="item" type="button" class="bump-chip"
+                      :class="{ dim: focus !== null && focus !== item, hot: focus === item }"
+                      :style="{ '--ic': ITEM_COLORS[item], '--p': pos }" @click="focus = focus === item ? null : item">
+                <span class="bn">{{ pos + 1 }}</span><span class="bt">{{ cat.items[item] }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="bump-ends"><span>{{ cat.top }} øverst</span><span>{{ cat.bottom }} nederst</span></div>
         </div>
-        <Sorter :order="shared" :items="cat.items" label="Felles liste" @move="moveShared">
-          <template #tag="{ item }">
-            <em v-if="spread(item) !== null && spread(item) >= 4" class="tag split">uenige</em>
-            <em v-else-if="spread(item) === 0" class="tag same">alle enige</em>
+
+        <aside class="cmp-side">
+          <div v-if="now.lists.length < 2" class="cmp-card"><p class="cmp-label">Bare én liste denne runden</p><p>Sammenligningen kommer når flere har sendt inn.</p></div>
+          <template v-else>
+            <div class="cmp-card best" style="--n: 0">
+              <p class="cmp-label">Mest like</p>
+              <p class="cmp-pair"><b :style="{ color: now.pairs[0].a.color }">{{ now.pairs[0].a.name }}</b> og <b :style="{ color: now.pairs[0].b.color }">{{ now.pairs[0].b.name }}</b></p>
+              <p class="cmp-pct">{{ now.pairs[0].sim }} %</p>
+            </div>
+            <div v-if="now.pairs.length > 1" class="cmp-card worst" style="--n: 1">
+              <p class="cmp-label">Mest ulike</p>
+              <p class="cmp-pair"><b :style="{ color: now.pairs[now.pairs.length - 1].a.color }">{{ now.pairs[now.pairs.length - 1].a.name }}</b> og <b :style="{ color: now.pairs[now.pairs.length - 1].b.color }">{{ now.pairs[now.pairs.length - 1].b.name }}</b></p>
+              <p class="cmp-pct">{{ now.pairs[now.pairs.length - 1].sim }} %</p>
+            </div>
+            <div v-if="now.split" class="cmp-card split" style="--n: 2">
+              <p class="cmp-label">Størst splid</p>
+              <p class="cmp-item">{{ now.split.name }}</p>
+              <p><b :style="{ color: now.split.hi.p.color }">{{ now.split.hi.p.name }}</b> satte den på {{ now.split.hi.pos }}. plass, <b :style="{ color: now.split.lo.p.color }">{{ now.split.lo.p.name }}</b> på {{ now.split.lo.pos }}.</p>
+            </div>
+            <div class="cmp-card" style="--n: 3">
+              <p class="cmp-label">Alle enige om</p>
+              <p v-if="now.same.length">{{ now.same.join(', ') }}</p>
+              <p v-else>Ingenting! Ingen ting havnet på nesten samme plass hos alle.</p>
+            </div>
           </template>
-          <template #extra="{ item, pos }">
-            <span v-for="(p, k) in ranked" :key="p.id" class="cell" :style="{ '--k': k }" :class="['h' + placeOf[p.id][item], { off: Math.abs(placeOf[p.id][item] - pos - 1) >= 3 }]">{{ placeOf[p.id][item] }}</span>
-          </template>
-        </Sorter>
-        <div class="t-foot"><span class="t-end">{{ cat.bottom }}</span></div>
+        </aside>
       </div>
 
       <div class="actions">
         <button class="btn ghost" type="button" @click="backToRank">Tilbake, la alle endre</button>
-        <button class="btn ghost" type="button" @click="lockShared(true)">Vi er enige, ferdig for i kveld</button>
-        <button class="btn gold big" type="button" @click="lockShared()">Vi er enige, neste runde</button>
+        <button class="btn ghost" type="button" @click="finish">Ferdig for i kveld</button>
+        <button class="btn gold big" type="button" @click="nextRoundBtn">Neste runde</button>
       </div>
     </section>
 
-    <!-- Alle listene -->
+    <!-- Hele kvelden -->
     <section v-else-if="st.phase === 'final'" class="final" key="final">
-      <h1>Kveldens lister</h1>
+      <h1>Kvelden</h1>
+      <div class="eve" v-if="evening.pairs.length">
+        <div class="eve-hero">
+          <p class="cmp-label">Kveldens sjelevenner</p>
+          <p class="eve-names"><b :style="{ color: evening.pairs[0].a.color }">{{ evening.pairs[0].a.name }}</b> og <b :style="{ color: evening.pairs[0].b.color }">{{ evening.pairs[0].b.name }}</b></p>
+          <p class="cmp-pct">{{ evening.pairs[0].sim }} % like</p>
+        </div>
+        <ul class="eve-pairs">
+          <li v-for="(x, i) in evening.pairs" :key="x.a.id + x.b.id" :style="{ '--n': i, '--w': x.sim + '%' }">
+            <span class="ep-names"><b :style="{ color: x.a.color }">{{ x.a.name }}</b> og <b :style="{ color: x.b.color }">{{ x.b.name }}</b></span>
+            <span class="ep-bar"><i></i></span>
+            <span class="ep-pct">{{ x.sim }} %</span>
+          </li>
+        </ul>
+        <p v-if="evening.rebel" class="eve-rebel">Kveldens rebell: <b :style="{ color: evening.rebel.p.color }">{{ evening.rebel.p.name }}</b>, i snitt {{ evening.rebel.sim }} % lik de andre.</p>
+      </div>
+      <p v-else class="hint center">Spill med flere for å se hvem som er mest like.</p>
       <div class="scrolls">
-        <article v-for="(a, n) in agreed" :key="a.cat.id" class="scroll" :style="{ '--n': n }">
-          <h2><span class="scroll-icon" :style="{ color: RHT[a.cat.theme].accent2 }" v-html="catIcon(a.cat)"></span>{{ a.cat.name }}</h2>
-          <ol>
-            <li v-for="(item, pos) in a.order" :key="item" :class="{ top: pos === 0 }">{{ a.cat.items[item] }}</li>
-          </ol>
+        <article v-for="(x, n) in playedRounds" :key="x.r" class="scroll" :style="{ '--n': n }">
+          <h2><span class="scroll-icon" :style="{ color: RHT[x.cat.theme].accent2 }" v-html="catIcon(x.cat)"></span>{{ x.cat.name }}</h2>
+          <p class="sc-label">Hver sin nummer 1</p>
+          <ul class="favs"><li v-for="f in x.favs" :key="f.p.id"><b :style="{ color: f.p.color }">{{ f.p.name }}</b> {{ f.name }}</li></ul>
+          <p v-if="x.split" class="sc-split">Størst splid: {{ x.split.name }} ({{ x.split.hi.pos }}. og {{ x.split.lo.pos }}. plass)</p>
         </article>
       </div>
       <div class="actions">
@@ -175,7 +222,7 @@
         <button class="btn gold big" type="button" @click="keepPlaying">Spill videre</button>
       </div>
     </section>
-    </transition>
+        </transition>
 
     <footer class="host-foot" v-if="st.phase !== 'final'">
       <button class="link" type="button" @click="endRoom">{{ confirmEnd ? 'Trykk igjen for å avslutte rommet' : 'Avslutt rommet' }}</button>
@@ -233,25 +280,46 @@
       </template>
     </section>
 
-    <section v-else-if="st.phase === 'talk' && cat && shared" class="talk-phone" key="talk">
+    <section v-else-if="st.phase === 'talk' && cat && now" class="talk-phone" key="talk">
       <p class="round">Runde {{ round + 1 }}</p>
       <h1 class="cat">{{ cat.name }}</h1>
-      <p class="hint">Se på TV-en og bli enige. Dette er den felles listen akkurat nå, med din plass til høyre.</p>
-      <Sorter :order="shared" :items="cat.items" disabled label="Felles liste">
-        <template #extra="{ item }">
-          <span v-if="myPlace(item)" class="cell" :class="'h' + myPlace(item)">{{ myPlace(item) }}</span>
-        </template>
-      </Sorter>
+      <div v-if="myPairs.length" class="cmp-card best">
+        <p class="cmp-label">Du er mest lik</p>
+        <p class="cmp-pair"><b :style="{ color: myPairs[0].other.color }">{{ myPairs[0].other.name }}</b> <span class="cmp-pct inline">{{ myPairs[0].sim }} %</span></p>
+        <p v-if="myPairs.length > 1" class="hint">Minst lik {{ myPairs[myPairs.length - 1].other.name }} ({{ myPairs[myPairs.length - 1].sim }} %)</p>
+      </div>
+      <template v-if="mine">
+        <p class="hint">Din liste, med de andres plasser til høyre. Se på TV-en.</p>
+        <Sorter :order="mine" :items="cat.items" disabled label="Din liste">
+          <template #extra="{ item }">
+            <span class="others">
+              <span v-for="x in now.lists.filter((y) => y.p.id !== uid)" :key="x.p.id" class="other" :style="{ '--c': x.p.color }">{{ x.o.indexOf(item) + 1 }}</span>
+            </span>
+          </template>
+        </Sorter>
+      </template>
+      <p v-else class="hint">Du sendte ikke inn en liste denne runden. Se på TV-en.</p>
     </section>
 
     <section v-else-if="st.phase === 'final'" class="final-phone" key="final">
-      <h1>Kveldens lister</h1>
-      <article v-for="(a, n) in agreed" :key="a.cat.id" class="scroll" :style="{ '--n': n }">
-        <h2><span class="scroll-icon" :style="{ color: RHT[a.cat.theme].accent2 }" v-html="catIcon(a.cat)"></span>{{ a.cat.name }}</h2>
-        <ol><li v-for="(item, pos) in a.order" :key="item" :class="{ top: pos === 0 }">{{ a.cat.items[item] }}</li></ol>
+      <h1>Kvelden</h1>
+      <div v-if="myEvening.length" class="cmp-card best">
+        <p class="cmp-label">Du er mest lik</p>
+        <p class="cmp-pair"><b :style="{ color: myEvening[0].other.color }">{{ myEvening[0].other.name }}</b> <span class="cmp-pct inline">{{ myEvening[0].sim }} %</span></p>
+      </div>
+      <ul v-if="evening.pairs.length" class="eve-pairs">
+        <li v-for="(x, i) in evening.pairs" :key="x.a.id + x.b.id" :style="{ '--n': i, '--w': x.sim + '%' }">
+          <span class="ep-names"><b :style="{ color: x.a.color }">{{ x.a.name }}</b> og <b :style="{ color: x.b.color }">{{ x.b.name }}</b></span>
+          <span class="ep-bar"><i></i></span>
+          <span class="ep-pct">{{ x.sim }} %</span>
+        </li>
+      </ul>
+      <article v-for="(x, n) in playedRounds" :key="x.r" class="scroll" :style="{ '--n': n }">
+        <h2><span class="scroll-icon" :style="{ color: RHT[x.cat.theme].accent2 }" v-html="catIcon(x.cat)"></span>{{ x.cat.name }}</h2>
+        <ul class="favs"><li v-for="f in x.favs" :key="f.p.id"><b :style="{ color: f.p.color }">{{ f.p.name }}</b> {{ f.name }}</li></ul>
       </article>
     </section>
-    </transition>
+        </transition>
 
     <p v-if="error" class="error toast" role="alert" @click="error = ''">{{ error }}</p>
   </main>

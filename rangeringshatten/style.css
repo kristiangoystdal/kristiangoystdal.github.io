@@ -421,6 +421,82 @@ input:focus { outline: 3px solid var(--candle); outline-offset: 0; }
 .intro-flash { position: absolute; inset: 0; background: #fff8e6; opacity: 1; pointer-events: none; }
 .intro-hint { position: absolute; right: 2.5vw; bottom: 2.5vh; margin: 0; color: rgba(240, 228, 195, 0.6); font-size: clamp(13px, 1.1vw, 18px); opacity: 0; pointer-events: none; }
 
+/* ---------- Sammenligning av spillerne ---------- */
+.compare { min-height: 0; }
+.cmp-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(15em, 24vw, 30em); gap: 2.4vw; }
+.bump { display: flex; flex-direction: column; min-height: 0; }
+.bump-names, .bump-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); }
+.bump-names span { text-align: center; font-weight: 800; color: var(--c); border-bottom: 3px solid var(--c); margin: 0 10% 1vh; padding-bottom: 0.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: drop 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) backwards; animation-delay: calc(var(--k) * 0.35s); }
+.bump-grid { position: relative; flex: 1; min-height: 0; }
+.bump-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.bump-lines path { fill: none; stroke-width: 5; vector-effect: non-scaling-stroke; opacity: 0.6; stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 0.9s ease-out forwards; animation-delay: calc(0.4s + var(--k) * 0.35s);
+  transition: opacity 0.3s, stroke-width 0.3s; }
+.bump-lines path.dim { opacity: 0.08; }
+.bump-lines path.hot { opacity: 1; stroke-width: 9; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.bump-col { display: grid; grid-template-rows: repeat(8, minmax(0, 1fr)); position: relative; z-index: 1; }
+.bump-chip {
+  margin: 0.35vh 10%; min-height: 0; display: flex; align-items: center; gap: 0.5em; text-align: left; border: 0; color: var(--ink);
+  padding: 0 0.6em 0 0.4em; border-radius: 0.5em; font: 400 1.05em/1.05 var(--display);
+  background: linear-gradient(180deg, var(--parch), var(--parch-2));
+  box-shadow: inset 0.35em 0 0 var(--ic), 0 2px 0 rgba(0, 0, 0, 0.3);
+  animation: chipIn 0.45s cubic-bezier(0.2, 1.2, 0.4, 1) backwards; animation-delay: calc(var(--k) * 0.35s + var(--p) * 40ms);
+  transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.bump-chip .bn { font-family: var(--sc); color: var(--ink-2); min-width: 1.6em; text-align: center; padding-left: 0.3em; }
+.bump-chip .bt { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.bump-chip.dim { opacity: 0.3; }
+.bump-chip.hot { transform: scale(1.06); box-shadow: inset 0.35em 0 0 var(--ic), 0 0 0 3px var(--ic), 0 0 24px color-mix(in srgb, var(--ic) 60%, transparent); }
+@keyframes chipIn { from { opacity: 0; transform: translateY(-14px) scale(0.9); } }
+.bump-ends { display: flex; justify-content: space-between; color: var(--mist); font-family: var(--sc); font-size: 0.8em; margin-top: 0.6vh; }
+
+.cmp-side { display: flex; flex-direction: column; gap: 1.4vh; min-height: 0; }
+.cmp-card { background: color-mix(in srgb, var(--night-3) 85%, transparent); border: 1px solid rgba(240, 228, 195, 0.14); border-radius: 14px; padding: 1.3vh 1.1em; animation: pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; animation-delay: calc(1s + var(--cols, 2) * 0.35s + var(--n, 0) * 0.25s); }
+.cmp-card p { margin: 0; }
+.cmp-card.best { border-color: rgba(127, 211, 154, 0.5); box-shadow: 0 0 30px rgba(127, 211, 154, 0.12); }
+.cmp-card.worst { border-color: rgba(232, 96, 79, 0.5); }
+.cmp-card.split { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.cmp-label { color: var(--mist); font-size: 0.85em; font-weight: 700; margin-bottom: 0.3em !important; }
+.cmp-pair { font-family: var(--display); font-size: 1.5em; line-height: 1.15; }
+.cmp-pair b { font-weight: 400; }
+.cmp-pct { font-family: var(--sc); font-size: 2.4em; line-height: 1; color: var(--candle-2); margin-top: 0.15em !important; }
+.cmp-pct.inline { font-size: 1.1em; margin-left: 0.3em; }
+.cmp-item { font-family: var(--display); font-size: 1.4em; color: var(--accent); margin-bottom: 0.2em !important; }
+
+/* Hele kvelden */
+.final h1 { margin-bottom: 2vh; }
+.eve { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 1.5vh 3vw; align-items: center; max-width: 1400px; margin: 0 auto 3vh; width: 100%; }
+.eve-hero { text-align: center; animation: pop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) 0.3s backwards; }
+.eve-names { font-family: var(--display); font-size: 2.6em; line-height: 1.1; margin: 0.2em 0 !important; }
+.eve-names b { font-weight: 400; }
+.eve-hero .cmp-pct { font-size: 2.2em; }
+.eve-pairs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8vh; }
+.eve-pairs li { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 3.4em; align-items: center; gap: 0.8em; animation: rowIn 0.5s backwards; animation-delay: calc(0.5s + var(--n) * 0.12s); }
+.ep-names { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ep-bar { height: 0.7em; background: rgba(240, 228, 195, 0.1); border-radius: 999px; overflow: hidden; }
+.ep-bar i { display: block; height: 100%; width: var(--w); border-radius: inherit; background: linear-gradient(90deg, var(--candle), var(--candle-2)); animation: grow 1s cubic-bezier(0.2, 0.9, 0.3, 1) backwards; animation-delay: calc(0.8s + var(--n) * 0.12s); }
+@keyframes grow { from { width: 0; } }
+.ep-pct { font-family: var(--sc); text-align: right; }
+.eve-rebel { grid-column: 1 / -1; text-align: center; color: var(--mist); margin: 0; }
+.hint.center { text-align: center; }
+.sc-label { margin: 0.2em 0 0.2em; color: var(--ink-2); font-size: 0.85em; font-weight: 700; }
+.favs { list-style: none; padding: 0; margin: 0; font-family: var(--display); line-height: 1.45; }
+.favs b { font-family: var(--body); font-weight: 800; margin-right: 0.3em; filter: brightness(0.7); }
+.sc-split { margin: 0.5em 0 0; color: var(--wax); font-size: 0.9em; }
+
+/* Telefonen */
+.talk-phone .cmp-card, .final-phone .cmp-card { margin-bottom: 14px; }
+.talk-phone .cmp-pair, .final-phone .cmp-pair { font-size: 1.6rem; }
+.others { display: flex; gap: 4px; }
+.other { min-width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 400 0.85rem var(--sc); color: #fff; background: color-mix(in srgb, var(--c) 75%, #000); box-shadow: 0 0 0 2px var(--c); }
+.final-phone .eve-pairs { margin-bottom: 16px; }
+.final-phone .scroll .favs b { filter: brightness(0.7); }
+
+@media (max-width: 760px) {
+  .cmp-body, .eve { grid-template-columns: 1fr; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -431,3 +507,18 @@ input:focus { outline: 3px solid var(--candle); outline-offset: 0; }
 .phase-talk .host-foot .link { padding-block: 0; }
 .final { justify-content: center; }
 .final .scroll { font-size: 1.05em; }
+
+/* Sammenligningen må få plass uten å rulle, også på 720p */
+.compare .cat { font-size: 2.6em; }
+.compare .talk-head { margin: 0.4vh 0 1vh; }
+.compare .actions { margin-top: 1.2vh; }
+.phase-talk .host-foot { margin-top: 0.3vh; }
+@media (max-height: 820px) {
+  .compare .cat { font-size: 2.1em; }
+  .compare .cat-icon.small { width: 3.2em; height: 3.2em; }
+  .cmp-side { gap: 1vh; }
+  .cmp-card { padding: 0.9vh 0.9em; }
+  .cmp-pair { font-size: 1.2em; }
+  .cmp-pct { font-size: 1.8em; }
+  .bump-chip { margin: 0.25vh 8%; font-size: 0.95em; }
+}
