@@ -24,7 +24,12 @@ const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath
 const errors = [];
 const watch = (name, p) => {
   p.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
-  p.on('console', (m) => m.type() === 'error' && errors.push(`${name}: ${m.text()}`));
+  p.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    // without the emulator, the two-player lobby cannot reach the room service and falls back to one screen
+    if (!remoteMode && /ERR_CONNECTION_REFUSED/.test(m.text())) return;
+    errors.push(`${name}: ${m.text()}`);
+  });
 };
 let failed = false;
 const check = (ok, msg) => {
