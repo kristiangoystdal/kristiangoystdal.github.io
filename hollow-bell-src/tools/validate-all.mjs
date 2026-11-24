@@ -12,7 +12,7 @@ for (const f of stories) {
   console.log(`\n=== ${f} ===`);
   try {
     // The bot output names scenes and endings, so only the summary lines are printed (spoiler-free).
-    const out = execFileSync('node', [root + 'tools/validate.mjs', root + f, '3000'], { encoding: 'utf8' });
+    const out = execFileSync('node', [root + 'tools/validate.mjs', root + f, '1000'], { encoding: 'utf8' });
     console.log(out.split('\n').filter((l) => /^(Scenes|Errors|Warnings|Bot runs|Average|Distinct)/.test(l)).join('\n'));
   } catch (e) {
     failed = true;

@@ -27,7 +27,8 @@ into `../hollow-bell/` (not in git) and served at `/hollow-bell/` on github.io. 
 - `npm test`: unit tests + 1000 bot games through the real engine.
 - `npm run validate`: graph check, bot and sound check for the story (prints only summary lines).
 - `npm run check`: spoiler-free validator report (10000 runs).
-- `npm run e2e`: browser playthroughs + save/load (Playwright, `PW_CHROMIUM` can point at a local Chromium).
+- `npm run e2e`: the important browser checks only: one playthrough, save/load, voices, a whole two-player game on one screen
+  (Playwright, `PW_CHROMIUM` can point at a local Chromium). Kept short on purpose so CI stays quick.
 - `npm run e2e:remote`: phone remote against the Firebase emulator (needs Java).
 - `npm run story:build`: rebuild `src/stories/hollow-bell.json` from `story-src/SPOILERS/en/*.mjs` (two-player story: see above).
 - `npm run sfx`: re-render the procedural sounds into `public/audio/`.

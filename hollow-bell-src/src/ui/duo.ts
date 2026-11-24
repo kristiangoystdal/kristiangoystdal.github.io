@@ -42,6 +42,8 @@ export class DuoApp {
   private story = DUO_STORY;
   private game: DuoState | null = null;
   private mode: Mode = 'phones';
+  /** Set when phones were wanted but no room could be opened. */
+  private fellBack = false;
   private room: DuoRoom | null = null;
   private seats: Partial<Record<PlayerId, boolean>> = {};
   private setups: Partial<Record<PlayerId, DuoSetupInput>> = {};
@@ -90,6 +92,7 @@ export class DuoApp {
       } catch (e) {
         console.warn(e);
         this.mode = 'local';
+        this.fellBack = true;
       }
     } else if (!duoRoomAvailable()) this.mode = 'local';
     this.renderLobby();
@@ -199,7 +202,11 @@ export class DuoApp {
       }
     };
     draw();
-    return [h('p.muted', {}, 'Take turns at the keyboard. When it is one player\'s choice, the other looks away.'), box];
+    return [
+      this.fellBack && h('p.warn', {}, 'Could not open a room for phones (no connection), so you play on this screen.'),
+      h('p.muted', {}, 'Take turns at the keyboard. When it is one player\'s choice, the other looks away.'),
+      box,
+    ];
   }
 
   private renderLobbyButtons() {
