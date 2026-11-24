@@ -557,6 +557,114 @@ export const PRESETS: Record<string, Preset> = {
     ],
     lights: [{ x: 900, y: 360, r: 260, color: '#5a5a9a', flicker: 0.08, depth: 0.6 }],
   },
+
+  // ---- The Other Side of the Glass ----
+  'ballroom-night': {
+    area: 'hall',
+    night: true,
+    layers: [
+      {
+        depth: 0.2,
+        paint: (c, r) => {
+          stoneWall(c, r, '#2a2448', '#4a3a5a', '#1c1830');
+          for (let x = 120; x < W; x += 360) window_(c, r, x, 60, 120, 340, '#3a4a80', '#1a1530');
+          for (let i = 0; i < 40; i++) wash(c, ellipse(r() * W, r() * 300, 2, 2, 5), '#f4f2ff', r, { layers: 1, alpha: 0.5, spread: 0.5, edge: false }); // snow in the windows
+          // the great clock above the doors
+          wash(c, ellipse(900, 150, 90, 90, 20), '#d8c48a', r, { layers: 10, alpha: 0.22 });
+          wash(c, ellipse(900, 150, 74, 74, 20), '#f2ead0', r, { layers: 8, alpha: 0.25 });
+          wash(c, [[897, 150], [903, 150], [903, 92], [897, 92]], '#2a2030', r, { layers: 3, alpha: 0.6, spread: 1, edge: false });
+          wash(c, [[900, 147], [900, 153], [948, 168], [948, 162]], '#2a2030', r, { layers: 3, alpha: 0.6, spread: 1, edge: false });
+        },
+      },
+      {
+        depth: 0.6,
+        paint: (c, r) => {
+          floor(c, r, '#4a3448');
+          for (const x of [380, 1420]) {
+            wash(c, rect(x - 140, 200, 280, 380), '#6a2a3a', r, { layers: 10, alpha: 0.18 }); // tapestries
+            for (let i = 0; i < 6; i++) wash(c, ellipse(x - 90 + i * 36, 420 + (i % 2) * 30, 12, 26), '#3a5a3a', r, { layers: 4, alpha: 0.3 }); // dancing trolls
+          }
+          wash(c, rect(780, FLOOR - 90, 240, 30), '#6b4a2c', r, { layers: 8, alpha: 0.22 }); // drinks table
+          for (let i = 0; i < 5; i++) wash(c, ellipse(810 + i * 45, FLOOR - 98, 8, 10), '#9fe0c8', r, { layers: 3, alpha: 0.35 });
+        },
+      },
+      { depth: 1.25, paint: (c, r) => vignetteFront(c, r, '#120c1c') },
+    ],
+    lights: [
+      { x: 900, y: 150, r: 220, color: '#ffe8b0', flicker: 0.05, depth: 0.2 },
+      { x: 900, y: FLOOR - 120, r: 260, color: '#ffb866', flicker: 0.25, depth: 0.6 },
+      ...[180, 540, 1260, 1620].map((x) => ({ x, y: 260, r: 200, color: '#ffcf80', flicker: 0.3, depth: 0.2 })),
+    ],
+  },
+
+  'mirror-hall': {
+    area: 'mirror',
+    night: true,
+    layers: [
+      {
+        depth: 0.2,
+        paint: (c, r) => {
+          ground(c, W, H, '#1a2040', '#2e3458', r);
+          for (let x = 40; x < W; x += 250) {
+            wash(c, arch(x - 8, 70, 196, 520, true), '#c8b47a', r, { layers: 8, alpha: 0.16 }); // gilt frames
+            wash(c, arch(x, 80, 180, 500, true), '#8aa4d8', r, { layers: 10, alpha: 0.2 }); // glass
+            wash(c, [[x + 30, 120], [x + 70, 120], [x + 20, 520], [x - 0, 520]], '#e8f0ff', r, { layers: 4, alpha: 0.08, spread: 6, edge: false }); // glint
+          }
+          // the sleeping portrait
+          wash(c, rect(1530, 160, 120, 150), '#8a6a3a', r, { layers: 8, alpha: 0.25 });
+          wash(c, rect(1542, 172, 96, 126), '#4a3a4a', r, { layers: 8, alpha: 0.3 });
+          wash(c, ellipse(1590, 225, 22, 26), '#d8b898', r, { layers: 5, alpha: 0.35 });
+        },
+      },
+      {
+        depth: 0.65,
+        paint: (c, r) => {
+          // a floor polished like ice, reflecting the mirrors
+          wash(c, rect(-40, FLOOR - 20, W + 80, H - FLOOR + 60), '#3a4670', r, { layers: 12, alpha: 0.16, spread: 6 });
+          for (let x = 40; x < W; x += 250) wash(c, rect(x + 20, FLOOR - 10, 140, 120), '#9ab0e0', r, { layers: 4, alpha: 0.06, spread: 10, edge: false });
+          fogBank(c, r, '#c8d4ff', FLOOR - 60);
+        },
+      },
+      { depth: 1.25, paint: (c, r) => vignetteFront(c, r, '#0a0c1c') },
+    ],
+    lights: [
+      { x: 900, y: 120, r: 520, color: '#9fb8ff', flicker: 0.03, depth: 0.2 },
+      { x: 300, y: 300, r: 200, color: '#c8d8ff', flicker: 0.08, depth: 0.2 },
+      { x: 1500, y: 300, r: 200, color: '#c8d8ff', flicker: 0.08, depth: 0.2 },
+    ],
+  },
+
+  'mirror-world': {
+    area: 'mirror',
+    night: true,
+    layers: [
+      {
+        depth: 0.2,
+        paint: (c, r) => {
+          // the silver castle: everything grey and moonlit, the windows' snow falling upward
+          stoneWall(c, r, '#3a4256', '#5a6278', '#2a3040');
+          for (let x = 1640; x > 0; x -= 300) bookshelf(c, r, x - 260, 90, 260, 480, '#4a5266', ['#8a92a8', '#6a7288', '#aab2c8', '#5a6278']);
+          for (let i = 0; i < 50; i++) wash(c, ellipse(r() * W, r() * 600, 1.5, 1.5, 5), '#ffffff', r, { layers: 1, alpha: 0.5, spread: 0.5, edge: false });
+        },
+      },
+      {
+        depth: 0.65,
+        paint: (c, r) => {
+          floor(c, r, '#4a5266');
+          // the staircase that goes the wrong way
+          for (let i = 0; i < 9; i++) wash(c, rect(1100 + i * 60, FLOOR - (9 - i) * 40 - 40, 64, 40), '#6a7288', r, { layers: 4, alpha: 0.18, spread: 3 });
+          wash(c, rect(500, FLOOR - 110, 360, 30), '#5a6278', r, { layers: 8, alpha: 0.22 }); // the Echo's desk
+          wash(c, rect(640, FLOOR - 140, 80, 22), '#dfe6f4', r, { layers: 4, alpha: 0.35 }); // the mirror-bound book
+          fogBank(c, r, '#dfe6ff', FLOOR - 80);
+        },
+      },
+      { depth: 1.25, paint: (c, r) => vignetteFront(c, r, '#141a28') },
+    ],
+    lights: [
+      { x: 900, y: 200, r: 600, color: '#c8d4ee', flicker: 0.02, depth: 0.2 },
+      { x: 680, y: FLOOR - 150, r: 160, color: '#e8eeff', flicker: 0.1, depth: 0.65 },
+    ],
+  },
 };
 
 export const FALLBACK = 'corridor-torch';

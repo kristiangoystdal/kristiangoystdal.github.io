@@ -1,0 +1,114 @@
+{
+  "_note": "Who speaks each quoted piece in the two-player story, by sceneId#paragraphIndex, where it differs from the scene speaker.",
+  "lines": {
+    "m_ball_k#1": [
+      "Ingerid"
+    ],
+    "m_ball_k#2": [
+      "Madam Pell",
+      "Madam Pell"
+    ],
+    "m_hall_k#0": [
+      "Ingerid",
+      "Gloam",
+      "Gloam"
+    ],
+    "m_hall_k#1": [
+      "Sir Aldous",
+      "Sir Aldous"
+    ],
+    "m_split#2": [
+      "Kristian"
+    ],
+    "m_k_echo_chase#2": [
+      "Narrator"
+    ],
+    "m_k_echo_chase#3": [
+      "Narrator"
+    ],
+    "m_talk1#6": [
+      "Sir Aldous",
+      "Sir Aldous"
+    ],
+    "m_talk3#3": [
+      "Sir Aldous"
+    ],
+    "m_talk3#4": [
+      "Sir Aldous"
+    ],
+    "m_k_prepare#0": [
+      "Gloam"
+    ],
+    "m_k_prepare#1": [
+      "Gloam",
+      "Gloam"
+    ],
+    "m_clock_k#5": [
+      "Ingerid"
+    ],
+    "m_clock_k#7": [
+      "Echo",
+      "Echo"
+    ],
+    "m_clock_k#10": [
+      "Gloam",
+      "Gloam"
+    ],
+    "m_clock_i#3": [
+      "Kristian"
+    ],
+    "m_clock_i#9": [
+      "Kristian"
+    ],
+    "m_door_miss#5": [
+      "Gloam",
+      "Gloam"
+    ],
+    "m_offer_k#3": [
+      "Gloam",
+      "Gloam"
+    ],
+    "m_offer_k#5": [
+      "Gloam"
+    ],
+    "m_offer_i#2": [
+      "Kristian",
+      "Kristian"
+    ],
+    "ending_all_free#4": [
+      "Madam Pell",
+      "Gloam",
+      "Gloam"
+    ],
+    "ending_all_free#6": [
+      "Gloam",
+      "Gloam"
+    ],
+    "ending_all_free#7": [
+      "Gloam",
+      "Gloam"
+    ],
+    "ending_all_free#8": [
+      "Gloam",
+      "Gloam"
+    ],
+    "ending_two_halves#1": [
+      "Gloam",
+      "Gloam"
+    ],
+    "ending_ingerid_stays#0": [
+      "Ingerid"
+    ],
+    "ending_kristian_stays#0": [
+      "Kristian"
+    ],
+    "ending_swapped#2": [
+      "Sister Wren",
+      "Sister Wren"
+    ],
+    "ending_two_sides#1": [
+      "Gloam",
+      "Gloam"
+    ]
+  }
+}

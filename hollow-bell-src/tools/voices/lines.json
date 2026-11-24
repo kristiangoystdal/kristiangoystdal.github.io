@@ -1,6 +1,7 @@
 [
  {
   "key": "5bb713df27f9",
+  "story": "hollow-bell",
   "scene": "intro_title",
   "index": 0,
   "seg": 0,
@@ -10,6 +11,7 @@
  },
  {
   "key": "85a790a2d830",
+  "story": "hollow-bell",
   "scene": "intro_title",
   "index": 1,
   "seg": 0,
@@ -19,6 +21,7 @@
  },
  {
   "key": "daf39c552f52",
+  "story": "hollow-bell",
   "scene": "intro_arrival",
   "index": 0,
   "seg": 0,
@@ -28,6 +31,7 @@
  },
  {
   "key": "fbc22b36f707",
+  "story": "hollow-bell",
   "scene": "intro_arrival",
   "index": 0,
   "seg": 0,
@@ -37,6 +41,7 @@
  },
  {
   "key": "7965711051d6",
+  "story": "hollow-bell",
   "scene": "intro_arrival",
   "index": 0,
   "seg": 0,
@@ -46,6 +51,7 @@
  },
  {
   "key": "74408c94d318",
+  "story": "hollow-bell",
   "scene": "intro_arrival",
   "index": 0,
   "seg": 0,
@@ -55,6 +61,7 @@
  },
  {
   "key": "b46e5ac467b5",
+  "story": "hollow-bell",
   "scene": "intro_arrival",
   "index": 1,
   "seg": 0,
@@ -64,6 +71,7 @@
  },
  {
   "key": "95abf6c67eef",
+  "story": "hollow-bell",
   "scene": "intro_arrival",
   "index": 2,
   "seg": 0,
@@ -73,6 +81,7 @@
  },
  {
   "key": "dc50eba02957",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 0,
   "seg": 0,
@@ -82,6 +91,7 @@
  },
  {
   "key": "ed379db35001",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 0,
   "seg": 0,
@@ -91,6 +101,7 @@
  },
  {
   "key": "dd6fd2ed5d84",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 0,
   "seg": 0,
@@ -100,6 +111,7 @@
  },
  {
   "key": "ca06d0ff9f79",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 0,
   "seg": 0,
@@ -109,6 +121,7 @@
  },
  {
   "key": "cac6720b90f7",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 1,
   "seg": 0,
@@ -118,6 +131,7 @@
  },
  {
   "key": "0f2bc0eee8df",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 2,
   "seg": 0,
@@ -127,6 +141,7 @@
  },
  {
   "key": "a73ef7f50ada",
+  "story": "hollow-bell",
   "scene": "p01_midnight",
   "index": 3,
   "seg": 0,
@@ -136,6 +151,7 @@
  },
  {
   "key": "d6c6e0f7802a",
+  "story": "hollow-bell",
   "scene": "p02_pip",
   "index": 0,
   "seg": 0,
@@ -145,6 +161,7 @@
  },
  {
   "key": "107564a9ab3e",
+  "story": "hollow-bell",
   "scene": "p02_pip",
   "index": 1,
   "seg": 0,
@@ -154,6 +171,7 @@
  },
  {
   "key": "f03d5ed6cc1d",
+  "story": "hollow-bell",
   "scene": "p03_window",
   "index": 0,
   "seg": 0,
@@ -163,6 +181,7 @@
  },
  {
   "key": "b5222537cbdc",
+  "story": "hollow-bell",
   "scene": "p03_window",
   "index": 1,
   "seg": 0,
@@ -172,6 +191,7 @@
  },
  {
   "key": "2069588ae383",
+  "story": "hollow-bell",
   "scene": "p03_window",
   "index": 2,
   "seg": 0,
@@ -181,6 +201,7 @@
  },
  {
   "key": "59614ff1f0ec",
+  "story": "hollow-bell",
   "scene": "p04_choice",
   "index": 0,
   "seg": 0,
@@ -190,6 +211,7 @@
  },
  {
   "key": "ca21d94c7d9b",
+  "story": "hollow-bell",
   "scene": "r1_stairs",
   "index": 0,
   "seg": 0,
@@ -199,6 +221,7 @@
  },
  {
   "key": "538a8500ce13",
+  "story": "hollow-bell",
   "scene": "r1_stairs",
   "index": 1,
   "seg": 0,
@@ -208,6 +231,7 @@
  },
  {
   "key": "ea76e5a36752",
+  "story": "hollow-bell",
   "scene": "r1_stairs",
   "index": 2,
   "seg": 0,
@@ -217,6 +241,7 @@
  },
  {
   "key": "6a4a8eda89fa",
+  "story": "hollow-bell",
   "scene": "r1_split",
   "index": 0,
   "seg": 0,
@@ -226,6 +251,7 @@
  },
  {
   "key": "85947ef230fe",
+  "story": "hollow-bell",
   "scene": "r1_split",
   "index": 1,
   "seg": 0,
@@ -235,6 +261,7 @@
  },
  {
   "key": "e9cadaf60cf1",
+  "story": "hollow-bell",
   "scene": "r1_quill_meet",
   "index": 0,
   "seg": 0,
@@ -244,6 +271,7 @@
  },
  {
   "key": "8d39d82c4074",
+  "story": "hollow-bell",
   "scene": "r1_quill_meet",
   "index": 1,
   "seg": 0,
@@ -253,6 +281,7 @@
  },
  {
   "key": "0c3013b47f38",
+  "story": "hollow-bell",
   "scene": "r1_quill_meet",
   "index": 1,
   "seg": 1,
@@ -262,6 +291,7 @@
  },
  {
   "key": "028f0c172567",
+  "story": "hollow-bell",
   "scene": "r1_quill_meet",
   "index": 1,
   "seg": 2,
@@ -271,6 +301,7 @@
  },
  {
   "key": "6a4313609a2d",
+  "story": "hollow-bell",
   "scene": "r1_quill_meet",
   "index": 2,
   "seg": 0,
@@ -280,6 +311,7 @@
  },
  {
   "key": "8fa8a1877530",
+  "story": "hollow-bell",
   "scene": "r1_quill_meet",
   "index": 2,
   "seg": 1,
@@ -289,6 +321,7 @@
  },
  {
   "key": "dff8223e8f75",
+  "story": "hollow-bell",
   "scene": "r1_figure",
   "index": 0,
   "seg": 0,
@@ -298,6 +331,7 @@
  },
  {
   "key": "6f22b8c63db4",
+  "story": "hollow-bell",
   "scene": "r1_figure",
   "index": 1,
   "seg": 0,
@@ -307,6 +341,7 @@
  },
  {
   "key": "e66788e7ae00",
+  "story": "hollow-bell",
   "scene": "r1_door",
   "index": 0,
   "seg": 0,
@@ -316,6 +351,7 @@
  },
  {
   "key": "35b1ac323540",
+  "story": "hollow-bell",
   "scene": "r1_door",
   "index": 1,
   "seg": 0,
@@ -325,6 +361,7 @@
  },
  {
   "key": "d763f8623e12",
+  "story": "hollow-bell",
   "scene": "r1_caught",
   "index": 0,
   "seg": 0,
@@ -334,6 +371,7 @@
  },
  {
   "key": "6361bd764806",
+  "story": "hollow-bell",
   "scene": "r1_caught",
   "index": 0,
   "seg": 1,
@@ -343,6 +381,7 @@
  },
  {
   "key": "cc11bbfd53cc",
+  "story": "hollow-bell",
   "scene": "r1_caught",
   "index": 0,
   "seg": 2,
@@ -352,6 +391,7 @@
  },
  {
   "key": "c58858339f62",
+  "story": "hollow-bell",
   "scene": "r1_caught",
   "index": 1,
   "seg": 0,
@@ -361,6 +401,7 @@
  },
  {
   "key": "6eba3313841a",
+  "story": "hollow-bell",
   "scene": "r1_truth",
   "index": 0,
   "seg": 0,
@@ -370,6 +411,7 @@
  },
  {
   "key": "c264bda487b9",
+  "story": "hollow-bell",
   "scene": "r1_truth",
   "index": 1,
   "seg": 0,
@@ -379,6 +421,7 @@
  },
  {
   "key": "cdef9e8bccc9",
+  "story": "hollow-bell",
   "scene": "r1_truth",
   "index": 1,
   "seg": 1,
@@ -388,6 +431,7 @@
  },
  {
   "key": "92be5f481c4e",
+  "story": "hollow-bell",
   "scene": "r1_truth",
   "index": 1,
   "seg": 2,
@@ -397,6 +441,7 @@
  },
  {
   "key": "f4906ea6b005",
+  "story": "hollow-bell",
   "scene": "r1_truth",
   "index": 1,
   "seg": 3,
@@ -406,6 +451,7 @@
  },
  {
   "key": "467b36356321",
+  "story": "hollow-bell",
   "scene": "r1_truth",
   "index": 1,
   "seg": 4,
@@ -415,6 +461,7 @@
  },
  {
   "key": "48208dcab276",
+  "story": "hollow-bell",
   "scene": "r1_detention",
   "index": 0,
   "seg": 0,
@@ -424,6 +471,7 @@
  },
  {
   "key": "b69a58fda154",
+  "story": "hollow-bell",
   "scene": "r1_detention",
   "index": 0,
   "seg": 1,
@@ -433,6 +481,7 @@
  },
  {
   "key": "07434129c76e",
+  "story": "hollow-bell",
   "scene": "r1_detention",
   "index": 0,
   "seg": 2,
@@ -442,6 +491,7 @@
  },
  {
   "key": "c4cdd65d1161",
+  "story": "hollow-bell",
   "scene": "r1_detention",
   "index": 1,
   "seg": 0,
@@ -451,6 +501,7 @@
  },
  {
   "key": "b2f0b4b3ba94",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 0,
   "seg": 0,
@@ -460,6 +511,7 @@
  },
  {
   "key": "b94891fc0abb",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 1,
   "seg": 0,
@@ -469,6 +521,7 @@
  },
  {
   "key": "df5605de410d",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 1,
   "seg": 1,
@@ -478,6 +531,7 @@
  },
  {
   "key": "a7dbabfe17d0",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 1,
   "seg": 2,
@@ -487,6 +541,7 @@
  },
  {
   "key": "95509c24b5e1",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 1,
   "seg": 3,
@@ -496,6 +551,7 @@
  },
  {
   "key": "99586e3d8589",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 1,
   "seg": 4,
@@ -505,6 +561,7 @@
  },
  {
   "key": "54c7a59e6beb",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 2,
   "seg": 0,
@@ -514,6 +571,7 @@
  },
  {
   "key": "1e6d2ed0d63a",
+  "story": "hollow-bell",
   "scene": "r2_mirela",
   "index": 2,
   "seg": 1,
@@ -523,6 +581,7 @@
  },
  {
   "key": "556981d7ebf5",
+  "story": "hollow-bell",
   "scene": "r2_walk",
   "index": 0,
   "seg": 0,
@@ -532,6 +591,7 @@
  },
  {
   "key": "64522c25a64c",
+  "story": "hollow-bell",
   "scene": "r2_walk",
   "index": 1,
   "seg": 0,
@@ -541,6 +601,7 @@
  },
  {
   "key": "654fe7476c68",
+  "story": "hollow-bell",
   "scene": "r2_walk",
   "index": 1,
   "seg": 1,
@@ -550,6 +611,7 @@
  },
  {
   "key": "021e12ec430e",
+  "story": "hollow-bell",
   "scene": "r2_walk",
   "index": 1,
   "seg": 2,
@@ -559,6 +621,7 @@
  },
  {
   "key": "383e6cec8bbb",
+  "story": "hollow-bell",
   "scene": "r2_walk",
   "index": 1,
   "seg": 3,
@@ -568,6 +631,7 @@
  },
  {
   "key": "9d6301cd7fde",
+  "story": "hollow-bell",
   "scene": "r2_felt",
   "index": 0,
   "seg": 0,
@@ -577,6 +641,7 @@
  },
  {
   "key": "d606c006da61",
+  "story": "hollow-bell",
   "scene": "r2_felt",
   "index": 1,
   "seg": 0,
@@ -586,6 +651,7 @@
  },
  {
   "key": "b0ec0bf1e9f4",
+  "story": "hollow-bell",
   "scene": "r2_felt",
   "index": 1,
   "seg": 1,
@@ -595,6 +661,7 @@
  },
  {
   "key": "e97e8595d597",
+  "story": "hollow-bell",
   "scene": "r2_felt",
   "index": 1,
   "seg": 2,
@@ -604,6 +671,7 @@
  },
  {
   "key": "b52ee41f2e0b",
+  "story": "hollow-bell",
   "scene": "r2_dragged",
   "index": 0,
   "seg": 0,
@@ -613,6 +681,7 @@
  },
  {
   "key": "8edd96dd91da",
+  "story": "hollow-bell",
   "scene": "r2_dragged",
   "index": 1,
   "seg": 0,
@@ -622,6 +691,7 @@
  },
  {
   "key": "c1d624729e7d",
+  "story": "hollow-bell",
   "scene": "r2_dragged",
   "index": 1,
   "seg": 1,
@@ -631,6 +701,7 @@
  },
  {
   "key": "0e9e7d0a8736",
+  "story": "hollow-bell",
   "scene": "r2_dragged",
   "index": 1,
   "seg": 2,
@@ -640,6 +711,7 @@
  },
  {
   "key": "03114fbb0966",
+  "story": "hollow-bell",
   "scene": "r2_spell",
   "index": 0,
   "seg": 0,
@@ -649,6 +721,7 @@
  },
  {
   "key": "598868630b31",
+  "story": "hollow-bell",
   "scene": "r2_spell",
   "index": 1,
   "seg": 0,
@@ -658,6 +731,7 @@
  },
  {
   "key": "abaf6b76bdef",
+  "story": "hollow-bell",
   "scene": "r2_spell",
   "index": 1,
   "seg": 1,
@@ -667,6 +741,7 @@
  },
  {
   "key": "a1296b0d8d48",
+  "story": "hollow-bell",
   "scene": "r2_spell",
   "index": 1,
   "seg": 2,
@@ -676,6 +751,7 @@
  },
  {
   "key": "898f5e91fc64",
+  "story": "hollow-bell",
   "scene": "r4_wing",
   "index": 0,
   "seg": 0,
@@ -685,6 +761,7 @@
  },
  {
   "key": "c75b76aa1971",
+  "story": "hollow-bell",
   "scene": "r4_wing",
   "index": 1,
   "seg": 0,
@@ -694,6 +771,7 @@
  },
  {
   "key": "f4d3d8491821",
+  "story": "hollow-bell",
   "scene": "r4_wing",
   "index": 1,
   "seg": 1,
@@ -703,6 +781,7 @@
  },
  {
   "key": "0e5258d139ee",
+  "story": "hollow-bell",
   "scene": "r4_wing",
   "index": 1,
   "seg": 2,
@@ -712,6 +791,7 @@
  },
  {
   "key": "0d7ddc04077e",
+  "story": "hollow-bell",
   "scene": "r4_wing",
   "index": 1,
   "seg": 3,
@@ -721,6 +801,7 @@
  },
  {
   "key": "731700fe31de",
+  "story": "hollow-bell",
   "scene": "r4_chart",
   "index": 0,
   "seg": 0,
@@ -730,6 +811,7 @@
  },
  {
   "key": "ee3356e5645c",
+  "story": "hollow-bell",
   "scene": "r4_matron",
   "index": 0,
   "seg": 0,
@@ -739,6 +821,7 @@
  },
  {
   "key": "9c43418763e0",
+  "story": "hollow-bell",
   "scene": "r4_matron",
   "index": 0,
   "seg": 1,
@@ -748,6 +831,7 @@
  },
  {
   "key": "6bc90319b28d",
+  "story": "hollow-bell",
   "scene": "r4_matron",
   "index": 0,
   "seg": 2,
@@ -757,6 +841,7 @@
  },
  {
   "key": "7c9650ca8f33",
+  "story": "hollow-bell",
   "scene": "r4_matron",
   "index": 0,
   "seg": 3,
@@ -766,6 +851,7 @@
  },
  {
   "key": "2e8f13793b27",
+  "story": "hollow-bell",
   "scene": "r4_matron",
   "index": 0,
   "seg": 4,
@@ -775,6 +861,7 @@
  },
  {
   "key": "36da9df1c364",
+  "story": "hollow-bell",
   "scene": "r4_shooed",
   "index": 0,
   "seg": 0,
@@ -784,6 +871,7 @@
  },
  {
   "key": "76205fd08879",
+  "story": "hollow-bell",
   "scene": "r4_shooed",
   "index": 0,
   "seg": 1,
@@ -793,6 +881,7 @@
  },
  {
   "key": "2403b4df1390",
+  "story": "hollow-bell",
   "scene": "r3_morning",
   "index": 0,
   "seg": 0,
@@ -802,6 +891,7 @@
  },
  {
   "key": "061f412742ab",
+  "story": "hollow-bell",
   "scene": "r3_morning",
   "index": 1,
   "seg": 0,
@@ -811,6 +901,7 @@
  },
  {
   "key": "ed622ff0b546",
+  "story": "hollow-bell",
   "scene": "r3_morning",
   "index": 2,
   "seg": 0,
@@ -820,6 +911,7 @@
  },
  {
   "key": "f53ae8989c82",
+  "story": "hollow-bell",
   "scene": "r3_watch",
   "index": 0,
   "seg": 0,
@@ -829,6 +921,7 @@
  },
  {
   "key": "82c914f09e41",
+  "story": "hollow-bell",
   "scene": "r3_ashgrove",
   "index": 0,
   "seg": 0,
@@ -838,6 +931,7 @@
  },
  {
   "key": "1b07fdf68fdb",
+  "story": "hollow-bell",
   "scene": "r3_ashgrove",
   "index": 0,
   "seg": 1,
@@ -847,6 +941,7 @@
  },
  {
   "key": "ed4f1f30a7f2",
+  "story": "hollow-bell",
   "scene": "r3_ashgrove",
   "index": 1,
   "seg": 0,
@@ -856,6 +951,7 @@
  },
  {
   "key": "4435893460de",
+  "story": "hollow-bell",
   "scene": "r3_ashgrove",
   "index": 1,
   "seg": 1,
@@ -865,6 +961,7 @@
  },
  {
   "key": "f680c5fabef7",
+  "story": "hollow-bell",
   "scene": "r3_mirela",
   "index": 0,
   "seg": 0,
@@ -874,6 +971,7 @@
  },
  {
   "key": "44b1c3c98a67",
+  "story": "hollow-bell",
   "scene": "r3_mirela",
   "index": 1,
   "seg": 0,
@@ -883,6 +981,7 @@
  },
  {
   "key": "96af95dcb63c",
+  "story": "hollow-bell",
   "scene": "r3_mirela",
   "index": 1,
   "seg": 1,
@@ -892,6 +991,7 @@
  },
  {
   "key": "f22f687c3233",
+  "story": "hollow-bell",
   "scene": "r3_mirela",
   "index": 1,
   "seg": 2,
@@ -901,6 +1001,7 @@
  },
  {
   "key": "08b863c9479b",
+  "story": "hollow-bell",
   "scene": "r3_mirela",
   "index": 1,
   "seg": 3,
@@ -910,6 +1011,7 @@
  },
  {
   "key": "03c8ab61a7b8",
+  "story": "hollow-bell",
   "scene": "r3_mirela",
   "index": 1,
   "seg": 4,
@@ -919,6 +1021,7 @@
  },
  {
   "key": "5de176ab7035",
+  "story": "hollow-bell",
   "scene": "d_harrow",
   "index": 0,
   "seg": 0,
@@ -928,6 +1031,7 @@
  },
  {
   "key": "a406a9d5c5e8",
+  "story": "hollow-bell",
   "scene": "d_harrow",
   "index": 1,
   "seg": 0,
@@ -937,6 +1041,7 @@
  },
  {
   "key": "f40a5098aed2",
+  "story": "hollow-bell",
   "scene": "d_harrow",
   "index": 1,
   "seg": 1,
@@ -946,6 +1051,7 @@
  },
  {
   "key": "ba7ce67b2089",
+  "story": "hollow-bell",
   "scene": "d_harrow",
   "index": 1,
   "seg": 2,
@@ -955,6 +1061,7 @@
  },
  {
   "key": "d5601194fac7",
+  "story": "hollow-bell",
   "scene": "d_harrow",
   "index": 2,
   "seg": 0,
@@ -964,6 +1071,7 @@
  },
  {
   "key": "fe18a919d47b",
+  "story": "hollow-bell",
   "scene": "d_harrow",
   "index": 3,
   "seg": 0,
@@ -973,6 +1081,7 @@
  },
  {
   "key": "041a1346554c",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 0,
   "seg": 0,
@@ -982,6 +1091,7 @@
  },
  {
   "key": "a95ea4162ed5",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 0,
   "seg": 1,
@@ -991,6 +1101,7 @@
  },
  {
   "key": "e0ac2cf7e34b",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 0,
   "seg": 2,
@@ -1000,6 +1111,7 @@
  },
  {
   "key": "a43ac44085d7",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 0,
   "seg": 3,
@@ -1009,6 +1121,7 @@
  },
  {
   "key": "63f6a4607007",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 0,
   "seg": 4,
@@ -1018,6 +1131,7 @@
  },
  {
   "key": "2e976c9ad2e5",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 1,
   "seg": 0,
@@ -1027,6 +1141,7 @@
  },
  {
   "key": "1bb0728dd413",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 1,
   "seg": 1,
@@ -1036,6 +1151,7 @@
  },
  {
   "key": "321d2539d112",
+  "story": "hollow-bell",
   "scene": "d_harrow_accuse",
   "index": 1,
   "seg": 2,
@@ -1045,6 +1161,7 @@
  },
  {
   "key": "66a7814d1956",
+  "story": "hollow-bell",
   "scene": "d_harrow_forgive",
   "index": 0,
   "seg": 0,
@@ -1054,6 +1171,7 @@
  },
  {
   "key": "60e766d6cd14",
+  "story": "hollow-bell",
   "scene": "d_harrow_forgive",
   "index": 0,
   "seg": 1,
@@ -1063,6 +1181,7 @@
  },
  {
   "key": "f6a37211e895",
+  "story": "hollow-bell",
   "scene": "d_harrow_forgive",
   "index": 0,
   "seg": 2,
@@ -1072,6 +1191,7 @@
  },
  {
   "key": "533d5773d313",
+  "story": "hollow-bell",
   "scene": "d_harrow_forgive",
   "index": 0,
   "seg": 3,
@@ -1081,6 +1201,7 @@
  },
  {
   "key": "2ac1667c1c36",
+  "story": "hollow-bell",
   "scene": "d_harrow_story",
   "index": 0,
   "seg": 0,
@@ -1090,6 +1211,7 @@
  },
  {
   "key": "74868b1d7444",
+  "story": "hollow-bell",
   "scene": "d_harrow_story",
   "index": 0,
   "seg": 1,
@@ -1099,6 +1221,7 @@
  },
  {
   "key": "0270d807627b",
+  "story": "hollow-bell",
   "scene": "d_harrow_story",
   "index": 1,
   "seg": 0,
@@ -1108,6 +1231,7 @@
  },
  {
   "key": "a42ee3fb7d6c",
+  "story": "hollow-bell",
   "scene": "d_harrow_key",
   "index": 0,
   "seg": 0,
@@ -1117,6 +1241,7 @@
  },
  {
   "key": "2220f747926a",
+  "story": "hollow-bell",
   "scene": "d_harrow_key",
   "index": 0,
   "seg": 1,
@@ -1126,6 +1251,7 @@
  },
  {
   "key": "19df36e666d9",
+  "story": "hollow-bell",
   "scene": "d_harrow_key",
   "index": 0,
   "seg": 2,
@@ -1135,6 +1261,7 @@
  },
  {
   "key": "27186359d156",
+  "story": "hollow-bell",
   "scene": "hub",
   "index": 0,
   "seg": 0,
@@ -1144,6 +1271,7 @@
  },
  {
   "key": "4a5a6076b26f",
+  "story": "hollow-bell",
   "scene": "hub",
   "index": 1,
   "seg": 0,
@@ -1153,6 +1281,7 @@
  },
  {
   "key": "341d6f8bd561",
+  "story": "hollow-bell",
   "scene": "hub",
   "index": 2,
   "seg": 0,
@@ -1162,6 +1291,7 @@
  },
  {
   "key": "53fa2f3b3045",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 0,
   "seg": 0,
@@ -1171,6 +1301,7 @@
  },
  {
   "key": "ca99cf4e2be8",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 0,
   "seg": 1,
@@ -1180,6 +1311,7 @@
  },
  {
   "key": "564a5e2c596b",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 0,
   "seg": 2,
@@ -1189,6 +1321,7 @@
  },
  {
   "key": "78ea1206af2d",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 0,
   "seg": 3,
@@ -1198,6 +1331,7 @@
  },
  {
   "key": "8d5c9a2da59d",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 1,
   "seg": 0,
@@ -1207,6 +1341,7 @@
  },
  {
   "key": "16e8cf5bdd31",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 1,
   "seg": 1,
@@ -1216,6 +1351,7 @@
  },
  {
   "key": "94cdf1271fbd",
+  "story": "hollow-bell",
   "scene": "mirela_talk",
   "index": 1,
   "seg": 2,
@@ -1225,6 +1361,7 @@
  },
  {
   "key": "874d42dc7fbd",
+  "story": "hollow-bell",
   "scene": "mirela_wait",
   "index": 0,
   "seg": 0,
@@ -1234,6 +1371,7 @@
  },
  {
   "key": "8bab673d4e3a",
+  "story": "hollow-bell",
   "scene": "mirela_wait",
   "index": 0,
   "seg": 1,
@@ -1243,6 +1381,7 @@
  },
  {
   "key": "49a139f9dcdd",
+  "story": "hollow-bell",
   "scene": "mirela_wait",
   "index": 1,
   "seg": 0,
@@ -1252,6 +1391,7 @@
  },
  {
   "key": "f4d80391a0bc",
+  "story": "hollow-bell",
   "scene": "mirela_hurt",
   "index": 0,
   "seg": 0,
@@ -1261,6 +1401,7 @@
  },
  {
   "key": "34bc29c2c267",
+  "story": "hollow-bell",
   "scene": "mirela_hurt",
   "index": 0,
   "seg": 1,
@@ -1270,6 +1411,7 @@
  },
  {
   "key": "53e5438a2a0d",
+  "story": "hollow-bell",
   "scene": "mirela_hurt",
   "index": 0,
   "seg": 2,
@@ -1279,6 +1421,7 @@
  },
  {
   "key": "af8179a30070",
+  "story": "hollow-bell",
   "scene": "mirela_hurt",
   "index": 0,
   "seg": 3,
@@ -1288,6 +1431,7 @@
  },
  {
   "key": "ba3b7336a179",
+  "story": "hollow-bell",
   "scene": "mirela_hurt",
   "index": 0,
   "seg": 4,
@@ -1297,6 +1441,7 @@
  },
  {
   "key": "e0c234bdceb7",
+  "story": "hollow-bell",
   "scene": "mirela_hurt",
   "index": 0,
   "seg": 5,
@@ -1306,6 +1451,7 @@
  },
  {
   "key": "16813d32211e",
+  "story": "hollow-bell",
   "scene": "a1_archive",
   "index": 0,
   "seg": 0,
@@ -1315,6 +1461,7 @@
  },
  {
   "key": "be1109812057",
+  "story": "hollow-bell",
   "scene": "a1_archive",
   "index": 1,
   "seg": 0,
@@ -1324,6 +1471,7 @@
  },
  {
   "key": "45481983beca",
+  "story": "hollow-bell",
   "scene": "a1_archive",
   "index": 1,
   "seg": 1,
@@ -1333,6 +1481,7 @@
  },
  {
   "key": "ea56a2cda421",
+  "story": "hollow-bell",
   "scene": "a1_archive",
   "index": 2,
   "seg": 0,
@@ -1342,6 +1491,7 @@
  },
  {
   "key": "a77d1b3cd5d1",
+  "story": "hollow-bell",
   "scene": "a1_archive",
   "index": 2,
   "seg": 1,
@@ -1351,6 +1501,7 @@
  },
  {
   "key": "56d03850ebe7",
+  "story": "hollow-bell",
   "scene": "a1_archive",
   "index": 2,
   "seg": 2,
@@ -1360,6 +1511,7 @@
  },
  {
   "key": "677be4ed690e",
+  "story": "hollow-bell",
   "scene": "a2_truth",
   "index": 0,
   "seg": 0,
@@ -1369,6 +1521,7 @@
  },
  {
   "key": "a8f5c5f4ead5",
+  "story": "hollow-bell",
   "scene": "a2_truth",
   "index": 0,
   "seg": 1,
@@ -1378,6 +1531,7 @@
  },
  {
   "key": "b26a6f0903a4",
+  "story": "hollow-bell",
   "scene": "a2_truth",
   "index": 1,
   "seg": 0,
@@ -1387,6 +1541,7 @@
  },
  {
   "key": "661aaf126111",
+  "story": "hollow-bell",
   "scene": "a2_truth",
   "index": 2,
   "seg": 0,
@@ -1396,6 +1551,7 @@
  },
  {
   "key": "544a17547c94",
+  "story": "hollow-bell",
   "scene": "a2_truth",
   "index": 2,
   "seg": 1,
@@ -1405,6 +1561,7 @@
  },
  {
   "key": "47fc8941b060",
+  "story": "hollow-bell",
   "scene": "a2_sneak",
   "index": 0,
   "seg": 0,
@@ -1414,6 +1571,7 @@
  },
  {
   "key": "88d3bbdf2725",
+  "story": "hollow-bell",
   "scene": "a2_sneak",
   "index": 1,
   "seg": 0,
@@ -1423,6 +1581,7 @@
  },
  {
   "key": "a7b815124671",
+  "story": "hollow-bell",
   "scene": "a2_sneak",
   "index": 1,
   "seg": 1,
@@ -1432,6 +1591,7 @@
  },
  {
   "key": "92f381d75e83",
+  "story": "hollow-bell",
   "scene": "a2_sneak",
   "index": 1,
   "seg": 2,
@@ -1441,6 +1601,7 @@
  },
  {
   "key": "3b9fac22200a",
+  "story": "hollow-bell",
   "scene": "a2_sneak",
   "index": 1,
   "seg": 3,
@@ -1450,6 +1611,7 @@
  },
  {
   "key": "877781be6ddf",
+  "story": "hollow-bell",
   "scene": "a_quill_past",
   "index": 0,
   "seg": 0,
@@ -1459,6 +1621,7 @@
  },
  {
   "key": "65228b7a028a",
+  "story": "hollow-bell",
   "scene": "a_quill_past",
   "index": 0,
   "seg": 1,
@@ -1468,6 +1631,7 @@
  },
  {
   "key": "981de907ea44",
+  "story": "hollow-bell",
   "scene": "a_quill_past",
   "index": 1,
   "seg": 0,
@@ -1477,6 +1641,7 @@
  },
  {
   "key": "b267e3d0e441",
+  "story": "hollow-bell",
   "scene": "a_quill_past",
   "index": 1,
   "seg": 1,
@@ -1486,6 +1651,7 @@
  },
  {
   "key": "e58e4b499709",
+  "story": "hollow-bell",
   "scene": "a3_search",
   "index": 0,
   "seg": 0,
@@ -1495,6 +1661,7 @@
  },
  {
   "key": "8f8c9b63591d",
+  "story": "hollow-bell",
   "scene": "a3_search",
   "index": 0,
   "seg": 1,
@@ -1504,6 +1671,7 @@
  },
  {
   "key": "7e2577cfe229",
+  "story": "hollow-bell",
   "scene": "a3_search",
   "index": 0,
   "seg": 2,
@@ -1513,6 +1681,7 @@
  },
  {
   "key": "dd03605d50c3",
+  "story": "hollow-bell",
   "scene": "a3_search",
   "index": 0,
   "seg": 3,
@@ -1522,6 +1691,7 @@
  },
  {
   "key": "4f2d07351b34",
+  "story": "hollow-bell",
   "scene": "a4_found",
   "index": 0,
   "seg": 0,
@@ -1531,6 +1701,7 @@
  },
  {
   "key": "b148a1d29845",
+  "story": "hollow-bell",
   "scene": "a4_found",
   "index": 1,
   "seg": 0,
@@ -1540,6 +1711,7 @@
  },
  {
   "key": "40afa54fbe56",
+  "story": "hollow-bell",
   "scene": "a4_found",
   "index": 1,
   "seg": 1,
@@ -1549,6 +1721,7 @@
  },
  {
   "key": "f4abf4cc06d4",
+  "story": "hollow-bell",
   "scene": "a4_hum",
   "index": 0,
   "seg": 0,
@@ -1558,6 +1731,7 @@
  },
  {
   "key": "70087a67debe",
+  "story": "hollow-bell",
   "scene": "a4_hum",
   "index": 1,
   "seg": 0,
@@ -1567,6 +1741,7 @@
  },
  {
   "key": "876b8ea01607",
+  "story": "hollow-bell",
   "scene": "a4_hum",
   "index": 1,
   "seg": 1,
@@ -1576,6 +1751,7 @@
  },
  {
   "key": "3582df560229",
+  "story": "hollow-bell",
   "scene": "a4_hum",
   "index": 1,
   "seg": 2,
@@ -1585,6 +1761,7 @@
  },
  {
   "key": "eba2b5683a16",
+  "story": "hollow-bell",
   "scene": "a4_hum",
   "index": 1,
   "seg": 3,
@@ -1594,6 +1771,7 @@
  },
  {
   "key": "c1728dfb4fe3",
+  "story": "hollow-bell",
   "scene": "a4_missed",
   "index": 0,
   "seg": 0,
@@ -1603,6 +1781,7 @@
  },
  {
   "key": "5ff6cc8bad06",
+  "story": "hollow-bell",
   "scene": "a4_missed",
   "index": 1,
   "seg": 0,
@@ -1612,6 +1791,7 @@
  },
  {
   "key": "e8e876ee3bab",
+  "story": "hollow-bell",
   "scene": "a4_missed",
   "index": 1,
   "seg": 1,
@@ -1621,6 +1801,7 @@
  },
  {
   "key": "f127346810bc",
+  "story": "hollow-bell",
   "scene": "a4_missed",
   "index": 1,
   "seg": 2,
@@ -1630,6 +1811,7 @@
  },
  {
   "key": "245b477a22d9",
+  "story": "hollow-bell",
   "scene": "b1_door",
   "index": 0,
   "seg": 0,
@@ -1639,6 +1821,7 @@
  },
  {
   "key": "5ba498b48c2f",
+  "story": "hollow-bell",
   "scene": "b2_soft",
   "index": 0,
   "seg": 0,
@@ -1648,6 +1831,7 @@
  },
  {
   "key": "f9e2c452143a",
+  "story": "hollow-bell",
   "scene": "b2_soft",
   "index": 1,
   "seg": 0,
@@ -1657,6 +1841,7 @@
  },
  {
   "key": "3d9e2ca46eb8",
+  "story": "hollow-bell",
   "scene": "b2_soft",
   "index": 1,
   "seg": 1,
@@ -1666,6 +1851,7 @@
  },
  {
   "key": "0d0d6c32a988",
+  "story": "hollow-bell",
   "scene": "b2_soft",
   "index": 1,
   "seg": 2,
@@ -1675,6 +1861,7 @@
  },
  {
   "key": "2bfa3db855e7",
+  "story": "hollow-bell",
   "scene": "b2_hard",
   "index": 0,
   "seg": 0,
@@ -1684,6 +1871,7 @@
  },
  {
   "key": "3be72f0a58ee",
+  "story": "hollow-bell",
   "scene": "b2_hard",
   "index": 1,
   "seg": 0,
@@ -1693,6 +1881,7 @@
  },
  {
   "key": "86cb880ccfdf",
+  "story": "hollow-bell",
   "scene": "b2_hard",
   "index": 1,
   "seg": 1,
@@ -1702,6 +1891,7 @@
  },
  {
   "key": "a93f11976316",
+  "story": "hollow-bell",
   "scene": "b2_hard",
   "index": 1,
   "seg": 2,
@@ -1711,6 +1901,7 @@
  },
  {
   "key": "24bf40e69768",
+  "story": "hollow-bell",
   "scene": "b_flash1",
   "index": 0,
   "seg": 0,
@@ -1720,6 +1911,7 @@
  },
  {
   "key": "e6a06ff811c3",
+  "story": "hollow-bell",
   "scene": "b_flash1",
   "index": 1,
   "seg": 0,
@@ -1729,6 +1921,7 @@
  },
  {
   "key": "46a594a9f9a7",
+  "story": "hollow-bell",
   "scene": "b_flash2",
   "index": 0,
   "seg": 0,
@@ -1738,6 +1931,7 @@
  },
  {
   "key": "4d554a87d10e",
+  "story": "hollow-bell",
   "scene": "b_flash2",
   "index": 1,
   "seg": 0,
@@ -1747,6 +1941,7 @@
  },
  {
   "key": "bdaba4cd6ec0",
+  "story": "hollow-bell",
   "scene": "b_flash2",
   "index": 1,
   "seg": 1,
@@ -1756,6 +1951,7 @@
  },
  {
   "key": "b164ac75bc6b",
+  "story": "hollow-bell",
   "scene": "b_flash3",
   "index": 0,
   "seg": 0,
@@ -1765,6 +1961,7 @@
  },
  {
   "key": "17daf9e00119",
+  "story": "hollow-bell",
   "scene": "b_flash3",
   "index": 1,
   "seg": 0,
@@ -1774,6 +1971,7 @@
  },
  {
   "key": "1198ae1b9645",
+  "story": "hollow-bell",
   "scene": "b_flash3",
   "index": 1,
   "seg": 1,
@@ -1783,6 +1981,7 @@
  },
  {
   "key": "f2478534f070",
+  "story": "hollow-bell",
   "scene": "b_flash3",
   "index": 1,
   "seg": 2,
@@ -1792,6 +1991,7 @@
  },
  {
   "key": "8a8fe543a226",
+  "story": "hollow-bell",
   "scene": "b3_gift",
   "index": 0,
   "seg": 0,
@@ -1801,6 +2001,7 @@
  },
  {
   "key": "8226cd8550d4",
+  "story": "hollow-bell",
   "scene": "b3_gift",
   "index": 1,
   "seg": 0,
@@ -1810,6 +2011,7 @@
  },
  {
   "key": "f4ed93a11cf0",
+  "story": "hollow-bell",
   "scene": "b3_gift",
   "index": 1,
   "seg": 1,
@@ -1819,6 +2021,7 @@
  },
  {
   "key": "0307a556fdab",
+  "story": "hollow-bell",
   "scene": "b3_press",
   "index": 0,
   "seg": 0,
@@ -1828,6 +2031,7 @@
  },
  {
   "key": "56f2ec7d75f1",
+  "story": "hollow-bell",
   "scene": "b3_press",
   "index": 0,
   "seg": 1,
@@ -1837,6 +2041,7 @@
  },
  {
   "key": "eede20e678ba",
+  "story": "hollow-bell",
   "scene": "b3_press",
   "index": 0,
   "seg": 2,
@@ -1846,6 +2051,7 @@
  },
  {
   "key": "70435a390162",
+  "story": "hollow-bell",
   "scene": "b_vale_ash",
   "index": 0,
   "seg": 0,
@@ -1855,6 +2061,7 @@
  },
  {
   "key": "4801f11a6c6d",
+  "story": "hollow-bell",
   "scene": "b_vale_ash",
   "index": 0,
   "seg": 1,
@@ -1864,6 +2071,7 @@
  },
  {
   "key": "22800759c8b6",
+  "story": "hollow-bell",
   "scene": "b_vale_ash",
   "index": 0,
   "seg": 2,
@@ -1873,6 +2081,7 @@
  },
  {
   "key": "25520dc15519",
+  "story": "hollow-bell",
   "scene": "b_vale_ash",
   "index": 0,
   "seg": 3,
@@ -1882,6 +2091,7 @@
  },
  {
   "key": "238bcbecb326",
+  "story": "hollow-bell",
   "scene": "b_vale_ash",
   "index": 1,
   "seg": 0,
@@ -1891,6 +2101,7 @@
  },
  {
   "key": "47ba2de41304",
+  "story": "hollow-bell",
   "scene": "c1_office",
   "index": 0,
   "seg": 0,
@@ -1900,6 +2111,7 @@
  },
  {
   "key": "70278a8ae6b4",
+  "story": "hollow-bell",
   "scene": "c1_office",
   "index": 1,
   "seg": 0,
@@ -1909,6 +2121,7 @@
  },
  {
   "key": "5ab4db0eefa5",
+  "story": "hollow-bell",
   "scene": "c2_talk",
   "index": 0,
   "seg": 0,
@@ -1918,6 +2131,7 @@
  },
  {
   "key": "2a814fafa411",
+  "story": "hollow-bell",
   "scene": "c2_talk",
   "index": 1,
   "seg": 0,
@@ -1927,6 +2141,7 @@
  },
  {
   "key": "d56a88624eaa",
+  "story": "hollow-bell",
   "scene": "c_ashgrove_past",
   "index": 0,
   "seg": 0,
@@ -1936,6 +2151,7 @@
  },
  {
   "key": "9cf86119865a",
+  "story": "hollow-bell",
   "scene": "c_ashgrove_past",
   "index": 0,
   "seg": 1,
@@ -1945,6 +2161,7 @@
  },
  {
   "key": "b256e640b24a",
+  "story": "hollow-bell",
   "scene": "c_ashgrove_past",
   "index": 1,
   "seg": 0,
@@ -1954,6 +2171,7 @@
  },
  {
   "key": "87ac13b42ce5",
+  "story": "hollow-bell",
   "scene": "c3_hints",
   "index": 0,
   "seg": 0,
@@ -1963,6 +2181,7 @@
  },
  {
   "key": "4cd47cf6d5c6",
+  "story": "hollow-bell",
   "scene": "c3_hints",
   "index": 0,
   "seg": 1,
@@ -1972,6 +2191,7 @@
  },
  {
   "key": "3925c0910f39",
+  "story": "hollow-bell",
   "scene": "c3_hints",
   "index": 0,
   "seg": 2,
@@ -1981,6 +2201,7 @@
  },
  {
   "key": "90831f09a22d",
+  "story": "hollow-bell",
   "scene": "c3_hints",
   "index": 0,
   "seg": 3,
@@ -1990,6 +2211,7 @@
  },
  {
   "key": "0f6df6150985",
+  "story": "hollow-bell",
   "scene": "c3_hints",
   "index": 1,
   "seg": 0,
@@ -1999,6 +2221,7 @@
  },
  {
   "key": "a6a09d75ece9",
+  "story": "hollow-bell",
   "scene": "c4_leave",
   "index": 0,
   "seg": 0,
@@ -2008,6 +2231,7 @@
  },
  {
   "key": "35875cf98a68",
+  "story": "hollow-bell",
   "scene": "c4_leave",
   "index": 0,
   "seg": 1,
@@ -2017,6 +2241,7 @@
  },
  {
   "key": "ae733c45dda7",
+  "story": "hollow-bell",
   "scene": "c4_leave",
   "index": 0,
   "seg": 2,
@@ -2026,6 +2251,7 @@
  },
  {
   "key": "6aea4372a1da",
+  "story": "hollow-bell",
   "scene": "c2_ledger",
   "index": 0,
   "seg": 0,
@@ -2035,6 +2261,7 @@
  },
  {
   "key": "c28415bea0c9",
+  "story": "hollow-bell",
   "scene": "c2_ledger",
   "index": 1,
   "seg": 0,
@@ -2044,6 +2271,7 @@
  },
  {
   "key": "483a02843e7a",
+  "story": "hollow-bell",
   "scene": "c2_out",
   "index": 0,
   "seg": 0,
@@ -2053,6 +2281,7 @@
  },
  {
   "key": "e11a32b70784",
+  "story": "hollow-bell",
   "scene": "c2_drawer",
   "index": 0,
   "seg": 0,
@@ -2062,6 +2291,7 @@
  },
  {
   "key": "88e39c312b5e",
+  "story": "hollow-bell",
   "scene": "c2_drawer",
   "index": 1,
   "seg": 0,
@@ -2071,6 +2301,7 @@
  },
  {
   "key": "749ecc9fca6b",
+  "story": "hollow-bell",
   "scene": "c2_caught",
   "index": 0,
   "seg": 0,
@@ -2080,6 +2311,7 @@
  },
  {
   "key": "b77d98795d3d",
+  "story": "hollow-bell",
   "scene": "c2_caught",
   "index": 0,
   "seg": 1,
@@ -2089,6 +2321,7 @@
  },
  {
   "key": "40a07dd5157b",
+  "story": "hollow-bell",
   "scene": "c2_caught",
   "index": 0,
   "seg": 2,
@@ -2098,6 +2331,7 @@
  },
  {
   "key": "141d07263bf3",
+  "story": "hollow-bell",
   "scene": "c2_caught",
   "index": 0,
   "seg": 3,
@@ -2107,6 +2341,7 @@
  },
  {
   "key": "b9d1c5d13246",
+  "story": "hollow-bell",
   "scene": "c2_caught",
   "index": 1,
   "seg": 0,
@@ -2116,6 +2351,7 @@
  },
  {
   "key": "efee48032e0e",
+  "story": "hollow-bell",
   "scene": "ev_mirela_ashgrove",
   "index": 0,
   "seg": 0,
@@ -2125,6 +2361,7 @@
  },
  {
   "key": "5c48b2846e31",
+  "story": "hollow-bell",
   "scene": "ev_mirela_ashgrove",
   "index": 0,
   "seg": 1,
@@ -2134,6 +2371,7 @@
  },
  {
   "key": "0612a09542ad",
+  "story": "hollow-bell",
   "scene": "ev_mirela_ashgrove",
   "index": 1,
   "seg": 0,
@@ -2143,6 +2381,7 @@
  },
  {
   "key": "1d06e02797c3",
+  "story": "hollow-bell",
   "scene": "ev_mirela_ashgrove",
   "index": 1,
   "seg": 1,
@@ -2152,6 +2391,7 @@
  },
  {
   "key": "a2b337d61921",
+  "story": "hollow-bell",
   "scene": "ev_mirela_ashgrove",
   "index": 1,
   "seg": 2,
@@ -2161,6 +2401,7 @@
  },
  {
   "key": "bed5fa9f3777",
+  "story": "hollow-bell",
   "scene": "ev_quill_mirela",
   "index": 0,
   "seg": 0,
@@ -2170,6 +2411,7 @@
  },
  {
   "key": "44876d6e09c8",
+  "story": "hollow-bell",
   "scene": "ev_quill_mirela",
   "index": 1,
   "seg": 0,
@@ -2179,6 +2421,7 @@
  },
  {
   "key": "37b99dfd968e",
+  "story": "hollow-bell",
   "scene": "ev_quill_mirela",
   "index": 1,
   "seg": 1,
@@ -2188,6 +2431,7 @@
  },
  {
   "key": "a41a57d912e2",
+  "story": "hollow-bell",
   "scene": "ev_quill_mirela",
   "index": 1,
   "seg": 2,
@@ -2197,6 +2441,7 @@
  },
  {
   "key": "c4e0ff048a4d",
+  "story": "hollow-bell",
   "scene": "ev_harrow_quill",
   "index": 0,
   "seg": 0,
@@ -2206,6 +2451,7 @@
  },
  {
   "key": "d43dc011fa5a",
+  "story": "hollow-bell",
   "scene": "ev_harrow_quill",
   "index": 0,
   "seg": 1,
@@ -2215,6 +2461,7 @@
  },
  {
   "key": "e95692d3e821",
+  "story": "hollow-bell",
   "scene": "ev_harrow_quill",
   "index": 0,
   "seg": 2,
@@ -2224,6 +2471,7 @@
  },
  {
   "key": "2b386ce4696e",
+  "story": "hollow-bell",
   "scene": "ev_harrow_quill",
   "index": 0,
   "seg": 3,
@@ -2233,6 +2481,7 @@
  },
  {
   "key": "275c7fa9c6b0",
+  "story": "hollow-bell",
   "scene": "ev_harrow_quill",
   "index": 0,
   "seg": 4,
@@ -2242,6 +2491,7 @@
  },
  {
   "key": "7e0cbf58b89a",
+  "story": "hollow-bell",
   "scene": "ev_vale_ashgrove",
   "index": 0,
   "seg": 0,
@@ -2251,6 +2501,7 @@
  },
  {
   "key": "8e21856e362b",
+  "story": "hollow-bell",
   "scene": "ev_vale_ashgrove",
   "index": 0,
   "seg": 1,
@@ -2260,6 +2511,7 @@
  },
  {
   "key": "c260b4d2e046",
+  "story": "hollow-bell",
   "scene": "ev_vale_ashgrove",
   "index": 0,
   "seg": 2,
@@ -2269,6 +2521,7 @@
  },
  {
   "key": "2638ad37c6d4",
+  "story": "hollow-bell",
   "scene": "ev_vale_ashgrove",
   "index": 0,
   "seg": 3,
@@ -2278,6 +2531,7 @@
  },
  {
   "key": "0a6eed5fa844",
+  "story": "hollow-bell",
   "scene": "ev_vale_ashgrove",
   "index": 0,
   "seg": 4,
@@ -2287,6 +2541,7 @@
  },
  {
   "key": "4620cc1f41b0",
+  "story": "hollow-bell",
   "scene": "ev_quill_ashgrove",
   "index": 0,
   "seg": 0,
@@ -2296,6 +2551,7 @@
  },
  {
   "key": "434f4baeeb11",
+  "story": "hollow-bell",
   "scene": "ev_quill_ashgrove",
   "index": 0,
   "seg": 1,
@@ -2305,6 +2561,7 @@
  },
  {
   "key": "fce3e1b224f0",
+  "story": "hollow-bell",
   "scene": "ev_quill_ashgrove",
   "index": 0,
   "seg": 2,
@@ -2314,6 +2571,7 @@
  },
  {
   "key": "c1ad7270701d",
+  "story": "hollow-bell",
   "scene": "ev_mirela_key",
   "index": 0,
   "seg": 0,
@@ -2323,6 +2581,7 @@
  },
  {
   "key": "684819a43290",
+  "story": "hollow-bell",
   "scene": "ev_mirela_key",
   "index": 0,
   "seg": 1,
@@ -2332,6 +2591,7 @@
  },
  {
   "key": "59346c120a0d",
+  "story": "hollow-bell",
   "scene": "ev_mirela_key",
   "index": 0,
   "seg": 2,
@@ -2341,6 +2601,7 @@
  },
  {
   "key": "f9b696e68b7b",
+  "story": "hollow-bell",
   "scene": "ev_mirela_key",
   "index": 0,
   "seg": 3,
@@ -2350,6 +2611,7 @@
  },
  {
   "key": "0c82f5d43657",
+  "story": "hollow-bell",
   "scene": "ev_harrow_ashgrove",
   "index": 0,
   "seg": 0,
@@ -2359,6 +2621,7 @@
  },
  {
   "key": "b1a6cf02ff43",
+  "story": "hollow-bell",
   "scene": "ev_harrow_ashgrove",
   "index": 0,
   "seg": 1,
@@ -2368,6 +2631,7 @@
  },
  {
   "key": "a1fca0b333d5",
+  "story": "hollow-bell",
   "scene": "ev_harrow_ashgrove",
   "index": 0,
   "seg": 2,
@@ -2377,6 +2641,7 @@
  },
  {
   "key": "6a8cb69b4a44",
+  "story": "hollow-bell",
   "scene": "ev_harrow_ashgrove",
   "index": 0,
   "seg": 3,
@@ -2386,6 +2651,7 @@
  },
  {
   "key": "ba95779bff57",
+  "story": "hollow-bell",
   "scene": "ev_suspect",
   "index": 0,
   "seg": 0,
@@ -2395,6 +2661,7 @@
  },
  {
   "key": "d2ac3f8c3933",
+  "story": "hollow-bell",
   "scene": "n0_dusk",
   "index": 0,
   "seg": 0,
@@ -2404,6 +2671,7 @@
  },
  {
   "key": "e6bde33bcac4",
+  "story": "hollow-bell",
   "scene": "n0_dusk",
   "index": 1,
   "seg": 0,
@@ -2413,6 +2681,7 @@
  },
  {
   "key": "3b4847e7a59a",
+  "story": "hollow-bell",
   "scene": "n1_evening",
   "index": 0,
   "seg": 0,
@@ -2422,6 +2691,7 @@
  },
  {
   "key": "781a5fdd795c",
+  "story": "hollow-bell",
   "scene": "n1_evening",
   "index": 1,
   "seg": 0,
@@ -2431,6 +2701,7 @@
  },
  {
   "key": "368c54aff41a",
+  "story": "hollow-bell",
   "scene": "n1b_mirela",
   "index": 0,
   "seg": 0,
@@ -2440,6 +2711,7 @@
  },
  {
   "key": "4be2cf961d03",
+  "story": "hollow-bell",
   "scene": "n1b_mirela",
   "index": 0,
   "seg": 1,
@@ -2449,6 +2721,7 @@
  },
  {
   "key": "1a4cc3507b9f",
+  "story": "hollow-bell",
   "scene": "n1b_mirela",
   "index": 0,
   "seg": 2,
@@ -2458,6 +2731,7 @@
  },
  {
   "key": "6b76a1740426",
+  "story": "hollow-bell",
   "scene": "n1b_mirela",
   "index": 0,
   "seg": 3,
@@ -2467,6 +2741,7 @@
  },
  {
   "key": "4871d2f3939b",
+  "story": "hollow-bell",
   "scene": "m1_door",
   "index": 0,
   "seg": 0,
@@ -2476,6 +2751,7 @@
  },
  {
   "key": "230dbddf5bf2",
+  "story": "hollow-bell",
   "scene": "m1_door",
   "index": 1,
   "seg": 0,
@@ -2485,6 +2761,7 @@
  },
  {
   "key": "797813866567",
+  "story": "hollow-bell",
   "scene": "m2_holds",
   "index": 0,
   "seg": 0,
@@ -2494,6 +2771,7 @@
  },
  {
   "key": "226b07700225",
+  "story": "hollow-bell",
   "scene": "m2_holds",
   "index": 1,
   "seg": 0,
@@ -2503,6 +2781,7 @@
  },
  {
   "key": "de9dfef2c249",
+  "story": "hollow-bell",
   "scene": "m2_falls",
   "index": 0,
   "seg": 0,
@@ -2512,6 +2791,7 @@
  },
  {
   "key": "603365722543",
+  "story": "hollow-bell",
   "scene": "m2_falls",
   "index": 1,
   "seg": 0,
@@ -2521,6 +2801,7 @@
  },
  {
   "key": "dea7bf3281f4",
+  "story": "hollow-bell",
   "scene": "m2_retreats",
   "index": 0,
   "seg": 0,
@@ -2530,6 +2811,7 @@
  },
  {
   "key": "2ced9278f461",
+  "story": "hollow-bell",
   "scene": "m2_retreats",
   "index": 1,
   "seg": 0,
@@ -2539,6 +2821,7 @@
  },
  {
   "key": "d6b935a688a5",
+  "story": "hollow-bell",
   "scene": "n2_stairs",
   "index": 0,
   "seg": 0,
@@ -2548,6 +2831,7 @@
  },
  {
   "key": "63d1a27ecd45",
+  "story": "hollow-bell",
   "scene": "n2_stairs",
   "index": 1,
   "seg": 0,
@@ -2557,6 +2841,7 @@
  },
  {
   "key": "d0d1d648b53f",
+  "story": "hollow-bell",
   "scene": "n2_stairs",
   "index": 2,
   "seg": 0,
@@ -2566,6 +2851,7 @@
  },
  {
   "key": "6f13325523d5",
+  "story": "hollow-bell",
   "scene": "n2_setback",
   "index": 0,
   "seg": 0,
@@ -2575,6 +2861,7 @@
  },
  {
   "key": "07dcacf752a1",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 0,
   "seg": 0,
@@ -2584,6 +2871,7 @@
  },
  {
   "key": "9eec1934e2ef",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 1,
   "seg": 0,
@@ -2593,6 +2881,7 @@
  },
  {
   "key": "16eea852ab84",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 2,
   "seg": 0,
@@ -2602,6 +2891,7 @@
  },
  {
   "key": "59469283f97d",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 2,
   "seg": 1,
@@ -2611,6 +2901,7 @@
  },
  {
   "key": "68e6a8810110",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 3,
   "seg": 0,
@@ -2620,6 +2911,7 @@
  },
  {
   "key": "3485ee29679a",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 3,
   "seg": 1,
@@ -2629,6 +2921,7 @@
  },
  {
   "key": "fa2328c0d4c5",
+  "story": "hollow-bell",
   "scene": "n3_belfry",
   "index": 3,
   "seg": 2,
@@ -2638,6 +2931,7 @@
  },
  {
   "key": "15dd8142fbed",
+  "story": "hollow-bell",
   "scene": "n3_vale_breaks",
   "index": 0,
   "seg": 0,
@@ -2647,6 +2941,7 @@
  },
  {
   "key": "eac2bbad9964",
+  "story": "hollow-bell",
   "scene": "n3_vale_breaks",
   "index": 0,
   "seg": 1,
@@ -2656,6 +2951,7 @@
  },
  {
   "key": "8ff532433b64",
+  "story": "hollow-bell",
   "scene": "n3_vale_breaks",
   "index": 1,
   "seg": 0,
@@ -2665,6 +2961,7 @@
  },
  {
   "key": "cc5d601da00a",
+  "story": "hollow-bell",
   "scene": "n3_vale_breaks",
   "index": 1,
   "seg": 1,
@@ -2674,6 +2971,7 @@
  },
  {
   "key": "6ed1caddde8e",
+  "story": "hollow-bell",
   "scene": "n3_vale_breaks",
   "index": 1,
   "seg": 2,
@@ -2683,6 +2981,7 @@
  },
  {
   "key": "88ba43795b48",
+  "story": "hollow-bell",
   "scene": "n4_talk",
   "index": 0,
   "seg": 0,
@@ -2692,6 +2991,7 @@
  },
  {
   "key": "9ba42ce15697",
+  "story": "hollow-bell",
   "scene": "n4_talk",
   "index": 0,
   "seg": 1,
@@ -2701,6 +3001,7 @@
  },
  {
   "key": "c65076e78d97",
+  "story": "hollow-bell",
   "scene": "n4_talk",
   "index": 0,
   "seg": 2,
@@ -2710,6 +3011,7 @@
  },
  {
   "key": "979b2d4fe01c",
+  "story": "hollow-bell",
   "scene": "n4_talk",
   "index": 1,
   "seg": 0,
@@ -2719,6 +3021,7 @@
  },
  {
   "key": "ff4881ac0923",
+  "story": "hollow-bell",
   "scene": "n4_talk",
   "index": 1,
   "seg": 1,
@@ -2728,6 +3031,7 @@
  },
  {
   "key": "db1dbea8fa0e",
+  "story": "hollow-bell",
   "scene": "n4_talk",
   "index": 2,
   "seg": 0,
@@ -2737,6 +3041,7 @@
  },
  {
   "key": "dc832ab3433f",
+  "story": "hollow-bell",
   "scene": "n4_fight",
   "index": 0,
   "seg": 0,
@@ -2746,6 +3051,7 @@
  },
  {
   "key": "67867a130945",
+  "story": "hollow-bell",
   "scene": "n4_clapper",
   "index": 0,
   "seg": 0,
@@ -2755,6 +3061,7 @@
  },
  {
   "key": "6c5b072db999",
+  "story": "hollow-bell",
   "scene": "n4_clapper",
   "index": 1,
   "seg": 0,
@@ -2764,6 +3071,7 @@
  },
  {
   "key": "0474f546b1d3",
+  "story": "hollow-bell",
   "scene": "n4_clapper",
   "index": 1,
   "seg": 1,
@@ -2773,6 +3081,7 @@
  },
  {
   "key": "ef9c6b9e0480",
+  "story": "hollow-bell",
   "scene": "n4_clapper",
   "index": 1,
   "seg": 2,
@@ -2782,6 +3091,7 @@
  },
  {
   "key": "71f502c8a184",
+  "story": "hollow-bell",
   "scene": "n4_clapper",
   "index": 1,
   "seg": 3,
@@ -2791,6 +3101,7 @@
  },
  {
   "key": "fb5815f08409",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 0,
   "seg": 0,
@@ -2800,6 +3111,7 @@
  },
  {
   "key": "205d0f7bf945",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 0,
   "seg": 1,
@@ -2809,6 +3121,7 @@
  },
  {
   "key": "ddcb2d8c4588",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 0,
   "seg": 2,
@@ -2818,6 +3131,7 @@
  },
  {
   "key": "6af08efb6444",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 0,
   "seg": 3,
@@ -2827,6 +3141,7 @@
  },
  {
   "key": "dadfc56b3b82",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 1,
   "seg": 0,
@@ -2836,6 +3151,7 @@
  },
  {
   "key": "5a239781ac33",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 2,
   "seg": 0,
@@ -2845,6 +3161,7 @@
  },
  {
   "key": "36b3c3fd4b5f",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 2,
   "seg": 1,
@@ -2854,6 +3171,7 @@
  },
  {
   "key": "318195397199",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 2,
   "seg": 2,
@@ -2863,6 +3181,7 @@
  },
  {
   "key": "9afbf028deec",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 3,
   "seg": 0,
@@ -2872,6 +3191,7 @@
  },
  {
   "key": "21f11a88d6f9",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 3,
   "seg": 1,
@@ -2881,6 +3201,7 @@
  },
  {
   "key": "226bb6440acf",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 3,
   "seg": 2,
@@ -2890,6 +3211,7 @@
  },
  {
   "key": "39bede353cba",
+  "story": "hollow-bell",
   "scene": "n4_quill",
   "index": 3,
   "seg": 3,
@@ -2899,6 +3221,7 @@
  },
  {
   "key": "b1fe6ad17e00",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 0,
   "seg": 0,
@@ -2908,6 +3231,7 @@
  },
  {
   "key": "76e0bc83c1c9",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 0,
   "seg": 1,
@@ -2917,6 +3241,7 @@
  },
  {
   "key": "a0b755ae58fd",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 0,
   "seg": 2,
@@ -2926,6 +3251,7 @@
  },
  {
   "key": "17ad0fc6aaeb",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 0,
   "seg": 3,
@@ -2935,6 +3261,7 @@
  },
  {
   "key": "af175821e696",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 1,
   "seg": 0,
@@ -2944,6 +3271,7 @@
  },
  {
   "key": "04a69ce6465f",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 2,
   "seg": 0,
@@ -2953,6 +3281,7 @@
  },
  {
   "key": "3406d4c88e59",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 2,
   "seg": 1,
@@ -2962,6 +3291,7 @@
  },
  {
   "key": "0d182f706d90",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 2,
   "seg": 2,
@@ -2971,6 +3301,7 @@
  },
  {
   "key": "13dbe5549548",
+  "story": "hollow-bell",
   "scene": "n5_yields",
   "index": 2,
   "seg": 3,
@@ -2980,6 +3311,7 @@
  },
  {
   "key": "6f0a6441f764",
+  "story": "hollow-bell",
   "scene": "n5_cantor",
   "index": 0,
   "seg": 0,
@@ -2989,6 +3321,7 @@
  },
  {
   "key": "4b799360554e",
+  "story": "hollow-bell",
   "scene": "n5_cantor",
   "index": 0,
   "seg": 1,
@@ -2998,6 +3331,7 @@
  },
  {
   "key": "84efa1bca925",
+  "story": "hollow-bell",
   "scene": "n5_cantor",
   "index": 1,
   "seg": 0,
@@ -3007,6 +3341,7 @@
  },
  {
   "key": "8294911ababf",
+  "story": "hollow-bell",
   "scene": "n6_bargain",
   "index": 0,
   "seg": 0,
@@ -3016,6 +3351,7 @@
  },
  {
   "key": "7622dd0f630c",
+  "story": "hollow-bell",
   "scene": "n6_bargain",
   "index": 0,
   "seg": 1,
@@ -3025,6 +3361,7 @@
  },
  {
   "key": "ab7831247573",
+  "story": "hollow-bell",
   "scene": "n6_bargain",
   "index": 0,
   "seg": 2,
@@ -3034,6 +3371,7 @@
  },
  {
   "key": "81fd57105d2c",
+  "story": "hollow-bell",
   "scene": "n6_bargain",
   "index": 1,
   "seg": 0,
@@ -3043,6 +3381,7 @@
  },
  {
   "key": "39fa47786ec8",
+  "story": "hollow-bell",
   "scene": "n7_reseal",
   "index": 0,
   "seg": 0,
@@ -3052,6 +3391,7 @@
  },
  {
   "key": "769cda097d84",
+  "story": "hollow-bell",
   "scene": "n7_reseal",
   "index": 1,
   "seg": 0,
@@ -3061,6 +3401,7 @@
  },
  {
   "key": "740f35b4f873",
+  "story": "hollow-bell",
   "scene": "n7_reseal",
   "index": 2,
   "seg": 0,
@@ -3070,6 +3411,7 @@
  },
  {
   "key": "07a40b3dfbad",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 0,
   "seg": 0,
@@ -3079,6 +3421,7 @@
  },
  {
   "key": "d3157dd49bfe",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 1,
   "seg": 0,
@@ -3088,6 +3431,7 @@
  },
  {
   "key": "4a629f34b4bc",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 1,
   "seg": 1,
@@ -3097,6 +3441,7 @@
  },
  {
   "key": "dfd58b8408f5",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 2,
   "seg": 0,
@@ -3106,6 +3451,7 @@
  },
  {
   "key": "73efd90bf563",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 3,
   "seg": 0,
@@ -3115,6 +3461,7 @@
  },
  {
   "key": "50c2ff401b6b",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 4,
   "seg": 0,
@@ -3124,6 +3471,7 @@
  },
  {
   "key": "50bdb0d87d4e",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 5,
   "seg": 0,
@@ -3133,6 +3481,7 @@
  },
  {
   "key": "ed3ba8bc5db1",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 6,
   "seg": 0,
@@ -3142,6 +3491,7 @@
  },
  {
   "key": "49776fd2e92a",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 7,
   "seg": 0,
@@ -3151,6 +3501,7 @@
  },
  {
   "key": "c6590ad6e581",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 8,
   "seg": 0,
@@ -3160,6 +3511,7 @@
  },
  {
   "key": "76c6fe0b490e",
+  "story": "hollow-bell",
   "scene": "ending_waking_together",
   "index": 9,
   "seg": 0,
@@ -3169,6 +3521,7 @@
  },
  {
   "key": "fdcbb594a2d2",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 0,
   "seg": 0,
@@ -3178,6 +3531,7 @@
  },
  {
   "key": "abe9fa676133",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 1,
   "seg": 0,
@@ -3187,6 +3541,7 @@
  },
  {
   "key": "58f5c0f1f99c",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 2,
   "seg": 0,
@@ -3196,6 +3551,7 @@
  },
  {
   "key": "d26338cebd83",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 2,
   "seg": 1,
@@ -3205,6 +3561,7 @@
  },
  {
   "key": "05400913bbfd",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 2,
   "seg": 2,
@@ -3214,6 +3571,7 @@
  },
  {
   "key": "9cacd3479659",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 2,
   "seg": 3,
@@ -3223,6 +3581,7 @@
  },
  {
   "key": "7700f14f095b",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 3,
   "seg": 0,
@@ -3232,6 +3591,7 @@
  },
  {
   "key": "a58fbecce265",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 4,
   "seg": 0,
@@ -3241,6 +3601,7 @@
  },
  {
   "key": "6804453c6ce9",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 5,
   "seg": 0,
@@ -3250,6 +3611,7 @@
  },
  {
   "key": "604ad6d8b120",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 6,
   "seg": 0,
@@ -3259,6 +3621,7 @@
  },
  {
   "key": "6efcc5567377",
+  "story": "hollow-bell",
   "scene": "ending_waking",
   "index": 7,
   "seg": 0,
@@ -3268,6 +3631,7 @@
  },
  {
   "key": "d3f5bb18410d",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 0,
   "seg": 0,
@@ -3277,6 +3641,7 @@
  },
  {
   "key": "114481adb338",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 1,
   "seg": 0,
@@ -3286,6 +3651,7 @@
  },
  {
   "key": "88d61f28d832",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 1,
   "seg": 1,
@@ -3295,6 +3661,7 @@
  },
  {
   "key": "2df8fbffefb0",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 1,
   "seg": 2,
@@ -3304,6 +3671,7 @@
  },
  {
   "key": "4e2b72ed26c4",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 1,
   "seg": 3,
@@ -3313,6 +3681,7 @@
  },
  {
   "key": "b3999f1bbcc5",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 1,
   "seg": 4,
@@ -3322,6 +3691,7 @@
  },
  {
   "key": "87a61d57cfbd",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 2,
   "seg": 0,
@@ -3331,6 +3701,7 @@
  },
  {
   "key": "4e5530c58802",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 3,
   "seg": 0,
@@ -3340,6 +3711,7 @@
  },
  {
   "key": "db31062c12b1",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 4,
   "seg": 0,
@@ -3349,6 +3721,7 @@
  },
  {
   "key": "64cc84ba514d",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 5,
   "seg": 0,
@@ -3358,6 +3731,7 @@
  },
  {
   "key": "c95b475f7968",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 5,
   "seg": 1,
@@ -3367,6 +3741,7 @@
  },
  {
   "key": "285bef2ff6fb",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 5,
   "seg": 2,
@@ -3376,6 +3751,7 @@
  },
  {
   "key": "f218d45721fe",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 6,
   "seg": 0,
@@ -3385,6 +3761,7 @@
  },
  {
   "key": "1c5a8cfec954",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 6,
   "seg": 1,
@@ -3394,6 +3771,7 @@
  },
  {
   "key": "e783767698c5",
+  "story": "hollow-bell",
   "scene": "ending_cantors_rest",
   "index": 6,
   "seg": 2,
@@ -3403,6 +3781,7 @@
  },
  {
   "key": "61aa95c1f1a0",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 0,
   "seg": 0,
@@ -3412,6 +3791,7 @@
  },
  {
   "key": "a7cda53f07dc",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 1,
   "seg": 0,
@@ -3421,6 +3801,7 @@
  },
  {
   "key": "ec3b4876dc2a",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 2,
   "seg": 0,
@@ -3430,6 +3811,7 @@
  },
  {
   "key": "3e6c4c752925",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 3,
   "seg": 0,
@@ -3439,6 +3821,7 @@
  },
  {
   "key": "9dfd9b77d010",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 4,
   "seg": 0,
@@ -3448,6 +3831,7 @@
  },
  {
   "key": "da718e5543ad",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 4,
   "seg": 1,
@@ -3457,6 +3841,7 @@
  },
  {
   "key": "646e3d79156e",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 4,
   "seg": 2,
@@ -3466,6 +3851,7 @@
  },
  {
   "key": "501ea7cb9ea8",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 5,
   "seg": 0,
@@ -3475,6 +3861,7 @@
  },
  {
   "key": "1be7c27bf0db",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 5,
   "seg": 1,
@@ -3484,6 +3871,7 @@
  },
  {
   "key": "251b97e71793",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 5,
   "seg": 2,
@@ -3493,6 +3881,7 @@
  },
  {
   "key": "56c187a6cf67",
+  "story": "hollow-bell",
   "scene": "ending_broken_bell",
   "index": 6,
   "seg": 0,
@@ -3502,6 +3891,7 @@
  },
  {
   "key": "41edca214a0c",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 0,
   "seg": 0,
@@ -3511,6 +3901,7 @@
  },
  {
   "key": "664b5939a134",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 1,
   "seg": 0,
@@ -3520,6 +3911,7 @@
  },
  {
   "key": "ebca117d3f9d",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 2,
   "seg": 0,
@@ -3529,6 +3921,7 @@
  },
  {
   "key": "4127a6b8b6f6",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 3,
   "seg": 0,
@@ -3538,6 +3931,7 @@
  },
  {
   "key": "5559f801364c",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 4,
   "seg": 0,
@@ -3547,6 +3941,7 @@
  },
  {
   "key": "6a111b3ed60a",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 5,
   "seg": 0,
@@ -3556,6 +3951,7 @@
  },
  {
   "key": "911f46c5f85c",
+  "story": "hollow-bell",
   "scene": "ending_last_toll",
   "index": 6,
   "seg": 0,
@@ -3565,6 +3961,7 @@
  },
  {
   "key": "98bc31768b5d",
+  "story": "hollow-bell",
   "scene": "ending_silence",
   "index": 0,
   "seg": 0,
@@ -3574,6 +3971,7 @@
  },
  {
   "key": "c6dfe527a7d4",
+  "story": "hollow-bell",
   "scene": "ending_silence",
   "index": 1,
   "seg": 0,
@@ -3583,6 +3981,7 @@
  },
  {
   "key": "c45f989c96cd",
+  "story": "hollow-bell",
   "scene": "ending_silence",
   "index": 2,
   "seg": 0,
@@ -3592,6 +3991,7 @@
  },
  {
   "key": "392d1d4d2f67",
+  "story": "hollow-bell",
   "scene": "ending_expelled",
   "index": 0,
   "seg": 0,
@@ -3601,6 +4001,7 @@
  },
  {
   "key": "f6affc3755ba",
+  "story": "hollow-bell",
   "scene": "ending_expelled",
   "index": 0,
   "seg": 1,
@@ -3610,6 +4011,7 @@
  },
  {
   "key": "0089a2761d6e",
+  "story": "hollow-bell",
   "scene": "ending_expelled",
   "index": 1,
   "seg": 0,
@@ -3619,6 +4021,7 @@
  },
  {
   "key": "c5f9d9961869",
+  "story": "hollow-bell",
   "scene": "ending_expelled",
   "index": 2,
   "seg": 0,
@@ -3628,6 +4031,7 @@
  },
  {
   "key": "68d9383437b5",
+  "story": "hollow-bell",
   "scene": "ending_quiet_bargain",
   "index": 0,
   "seg": 0,
@@ -3637,6 +4041,7 @@
  },
  {
   "key": "b2b69012be88",
+  "story": "hollow-bell",
   "scene": "ending_quiet_bargain",
   "index": 1,
   "seg": 0,
@@ -3646,6 +4051,7 @@
  },
  {
   "key": "3c6b44b2882c",
+  "story": "hollow-bell",
   "scene": "ending_quiet_bargain",
   "index": 2,
   "seg": 0,
@@ -3655,11 +4061,4302 @@
  },
  {
   "key": "61bc61721060",
+  "story": "hollow-bell",
   "scene": "ending_quiet_bargain",
   "index": 3,
   "seg": 0,
   "speaker": "Narrator",
   "tone": "slow",
   "text": "Pip notices that you never sleep. He says nothing, but he leaves a cup of tea on the stairs every evening."
+ },
+ {
+  "key": "e751db479fcd",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Snow has been falling on the castle since lunch, and the Great Hall has given up pretending to be a dining room. Tonight it is a ballroom: four hundred floating candles, a ceiling full of slow snow that never lands, and a string quartet of enchanted instruments that plays a little faster whenever a teacher walks past."
+ },
+ {
+  "key": "86a6b66c7cd3",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Gryffindor and Kristian of Gryffindor have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "a497ec929ef6",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Gryffindor and Kristian of Slytherin have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "b2626075d97d",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Gryffindor and Kristian of Ravenclaw have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "205101e366e1",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Gryffindor and Kristian of Hufflepuff have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "851cb494c378",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Slytherin and Kristian of Gryffindor have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "6f415f0872c9",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Slytherin and Kristian of Slytherin have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "a4272f4ef7d1",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Slytherin and Kristian of Ravenclaw have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "d0409d13430b",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Slytherin and Kristian of Hufflepuff have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "810b13eb53fa",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Ravenclaw and Kristian of Gryffindor have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "eaecbe60226b",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Ravenclaw and Kristian of Slytherin have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "35831f7f1fa1",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Ravenclaw and Kristian of Ravenclaw have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "bfd576ecdbb0",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Ravenclaw and Kristian of Hufflepuff have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "d6ebd7e0fc41",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Hufflepuff and Kristian of Gryffindor have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "dd97ad398ac5",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Hufflepuff and Kristian of Slytherin have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "1c2b931b595f",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Hufflepuff and Kristian of Ravenclaw have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "5bff2e11a987",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid of Hufflepuff and Kristian of Hufflepuff have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour."
+ },
+ {
+  "key": "aee808d337bb",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "It is Ingerid who notices it first. Behind the tapestry of the dancing trolls, where there has always been stone, there is a corridor. Its floor is polished like ice. At the far end, something catches the candlelight and throws it back."
+ },
+ {
+  "key": "48a214b59f0d",
+  "story": "mirror",
+  "scene": "m_ball",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Ottoline Pell, the librarian, is chaperoning tonight from a chair by the door with a book in her lap. She has not looked up in an hour."
+ },
+ {
+  "key": "421a9fc73611",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid takes Kristian's hand without a word and pulls. The tapestry trolls stop dancing to watch them go."
+ },
+ {
+  "key": "7c8570a0250c",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Ingerid",
+  "tone": "neutral",
+  "text": "Wait here,"
+ },
+ {
+  "key": "043bd0149cfd",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Ingerid, and takes three careful steps onto the icy floor, testing it like a frozen pond."
+ },
+ {
+  "key": "c98b76ff3470",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid crosses the hall to Madam Pell, who listens, closes her book on one finger, and looks at the tapestry for a long moment."
+ },
+ {
+  "key": "624abe5c05f4",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Madam Pell",
+  "tone": "quiet",
+  "text": "That corridor,"
+ },
+ {
+  "key": "cb7a883c15e8",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says quietly,"
+ },
+ {
+  "key": "8c6ff640292e",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 2,
+  "seg": 3,
+  "speaker": "Madam Pell",
+  "tone": "quiet",
+  "text": "was bricked up in 1923. Do not go far. I will be right behind you."
+ },
+ {
+  "key": "e5faa6f8b7f6",
+  "story": "mirror",
+  "scene": "m_ball_k",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The music behind them goes thin, as if it is being played in another room. The corridor smells of cold glass and old roses."
+ },
+ {
+  "key": "8d6105503821",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The corridor opens into a long gallery of mirrors, floor to ceiling, each one taller than a door. Moonlight comes in from nowhere. In every mirror there are two of them, and then four, and then a hundred, all the way down into silver."
+ },
+ {
+  "key": "a57ec5370416",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian's joke about haunted corridors echoes back from the glass a moment too late, in a voice that is almost his."
+ },
+ {
+  "key": "f26ccb0e3b3e",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Between two mirrors hangs a portrait of an old wizard asleep in an armchair, snoring gently. The brass plate reads: Sir Aldous Vane, Keeper of the Hall."
+ },
+ {
+  "key": "fc7abe32de27",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Then one of the reflections of Kristian does not move when he moves. It tilts its head. It smiles, politely, the way a stranger smiles across a train carriage."
+ },
+ {
+  "key": "f880d8c009b0",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Good evening,"
+ },
+ {
+  "key": "64a6d50d2ab0",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "it says to Ingerid."
+ },
+ {
+  "key": "507cecabc231",
+  "story": "mirror",
+  "scene": "m_hall",
+  "index": 4,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You have no idea how long it has been since anyone came to the ball."
+ },
+ {
+  "key": "5c4798444a43",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Ingerid",
+  "tone": "neutral",
+  "text": "Who are you?"
+ },
+ {
+  "key": "dbd5956b4f25",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "asks Ingerid. The reflection bows."
+ },
+ {
+  "key": "9d874cd2e99b",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Leander Gloam,"
+ },
+ {
+  "key": "217dfed56005",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "it says."
+ },
+ {
+  "key": "0aee5e29707d",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 0,
+  "seg": 4,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Fifth year. Ravenclaw, once. I came to a ball like this one and I never quite left."
+ },
+ {
+  "key": "d5f9e5d626c4",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid raps on the frame of the portrait. Sir Aldous wakes with a snort, sees the smiling reflection and goes white under his paint."
+ },
+ {
+  "key": "a698c2fc6918",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Sir Aldous",
+  "tone": "shout",
+  "text": "Do not give it your name!"
+ },
+ {
+  "key": "4c3702bfd723",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he cries."
+ },
+ {
+  "key": "4d45cebe76b0",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Sir Aldous",
+  "tone": "shout",
+  "text": "Whatever it offers, girl, it must never have your name!"
+ },
+ {
+  "key": "f67df477da9b",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid grabs Kristian's sleeve and holds on. In the confusion her scarf ends up wound around his wrist."
+ },
+ {
+  "key": "5357f1ece602",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The reflection turns to Kristian."
+ },
+ {
+  "key": "a9eda18be37b",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 3,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "And you,"
+ },
+ {
+  "key": "cdd311de9d27",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 3,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "it says warmly."
+ },
+ {
+  "key": "508c55248170",
+  "story": "mirror",
+  "scene": "m_hall_k",
+  "index": 3,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You look like someone who would understand. Come closer. The glass is cold, but it is honest."
+ },
+ {
+  "key": "39f9958a8b17",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian's fingertips meet the glass, and the glass does not stop them. It gives, like the skin of cold water."
+ },
+ {
+  "key": "6f2fc52adf20",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian steps back, hard. It makes no difference. The floor tilts like the deck of a ship, and he slides toward the mirror as if the whole hall has decided it."
+ },
+ {
+  "key": "71ed6fbe740d",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Kristian",
+  "tone": "neutral",
+  "text": "Good evening,"
+ },
+ {
+  "key": "b5f9b5260cf4",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Kristian, because his grandmother raised him properly. The reflection looks genuinely touched. Then the mirror opens like a door, and Kristian is on the other side of it."
+ },
+ {
+  "key": "0ecddb34f092",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "There is no sound. There is no flash. One moment Kristian is standing next to Ingerid; the next he is standing next to her in the mirror, and nowhere else."
+ },
+ {
+  "key": "6fb785e0ae89",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf has gone with him. She can see the end of it trailing from his wrist, in the glass."
+ },
+ {
+  "key": "dee3c7062c81",
+  "story": "mirror",
+  "scene": "m_split",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He presses his hands to the glass from the inside. His mouth moves. Ingerid cannot hear a single word."
+ },
+ {
+  "key": "45fb6dcf390f",
+  "story": "mirror",
+  "scene": "m_k_silver",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "On the other side of the glass the castle is exactly the same and completely wrong. The candles burn downward. The tapestry trolls dance backwards. Every word on every sign is written the wrong way round, and the snow outside the windows falls up."
+ },
+ {
+  "key": "ac069adae6cf",
+  "story": "mirror",
+  "scene": "m_k_silver",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "There is no colour here, only silver and grey and the deep blue of moonlight. Kristian's own footsteps reach his ears a heartbeat before he takes them."
+ },
+ {
+  "key": "5fd7eba1ace0",
+  "story": "mirror",
+  "scene": "m_k_silver",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He still has Ingerid's scarf around his wrist. It is the only warm colour in the whole world."
+ },
+ {
+  "key": "d297d0cb281d",
+  "story": "mirror",
+  "scene": "m_k_silver",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Through the mirror he can see Ingerid, small and real and very far away, in a hall full of ordinary candlelight."
+ },
+ {
+  "key": "80c92206e401",
+  "story": "mirror",
+  "scene": "m_k_silver",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "At the end of the silver gallery, a figure in old-fashioned school robes beckons to him, and then slips round a corner."
+ },
+ {
+  "key": "90fa187a12c6",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid stands alone in the Hall of Glass. The quartet in the Great Hall has started a waltz. Nobody has noticed that two students are missing."
+ },
+ {
+  "key": "f29cb38b0992",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the mirror, Kristian is crouching, picking something up from the silver floor: a long, sharp sliver of glass that glows faintly. He holds it up so she can see."
+ },
+ {
+  "key": "374fde0ebe87",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the mirror, Kristian walks the length of the silver gallery and back again, twice, and each time ends up exactly where he started. He looks very tired of it."
+ },
+ {
+  "key": "813999a54be5",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the mirror, Kristian hurries after a figure in old school robes, and the two of them vanish round a corner. A minute later Kristian comes back alone, looking thoughtful."
+ },
+ {
+  "key": "0b3abd96df6c",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the mirror, Kristian breathes on the glass and writes in the mist with one finger. The letters come out backwards on her side, but she can read them: ARE YOU OK? HOW DO I GET BACK?"
+ },
+ {
+  "key": "862d73023f50",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Sir Aldous",
+  "tone": "quiet",
+  "text": "The hall opens at midnight,"
+ },
+ {
+  "key": "169bc488e316",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "mutters Sir Aldous from his frame,"
+ },
+ {
+  "key": "a4cd4363ae49",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 5,
+  "seg": 2,
+  "speaker": "Sir Aldous",
+  "tone": "quiet",
+  "text": "on the last stroke, and only if both sides turn together. That is all I know, and it is a great deal more than I should."
+ },
+ {
+  "key": "fb229ef4a94b",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The great clock above the ballroom says a quarter past eleven. Every story Ingerid has ever heard about this castle's lost hall ends the same way: whoever is still inside at the last stroke of midnight stays inside for a hundred years."
+ },
+ {
+  "key": "672ab177cb24",
+  "story": "mirror",
+  "scene": "m_i_glass",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She has three quarters of an hour to get Kristian back."
+ },
+ {
+  "key": "1045a3242bb1",
+  "story": "mirror",
+  "scene": "m_code",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "For a few minutes the mirror becomes a slate. Ingerid writes, Kristian writes back. It is slow, and every word has to be read backwards, and it is the best conversation either of them has had all year."
+ },
+ {
+  "key": "cc064fefc65f",
+  "story": "mirror",
+  "scene": "m_code",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "They agree on one thing, in capitals, underlined twice: whatever happens, they will act together on the twelfth stroke of midnight. TWELVE, writes Kristian. TWELVE, writes Ingerid."
+ },
+ {
+  "key": "9d2fc4226368",
+  "story": "mirror",
+  "scene": "m_k_gallery",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the real hall, Ingerid is gone, running. Kristian watches her go and feels, for the first time, properly alone."
+ },
+ {
+  "key": "be4cb19ee80c",
+  "story": "mirror",
+  "scene": "m_k_gallery",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the real hall, Ingerid stands perfectly still and watches him, not blinking, like a cat at a window. It helps more than he would have guessed."
+ },
+ {
+  "key": "abee6d7d3f15",
+  "story": "mirror",
+  "scene": "m_k_gallery",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "On the glass, in her handwriting, backwards from his side: HOLD ON. I'M HERE."
+ },
+ {
+  "key": "066252e6f741",
+  "story": "mirror",
+  "scene": "m_k_gallery",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The silver castle goes on and on. Kristian walks into a gallery of portraits, every one of them the reflection of a painting he has walked past a hundred times. Here, the painted people are awake, and they are all looking at him."
+ },
+ {
+  "key": "547c0438ac68",
+  "story": "mirror",
+  "scene": "m_k_gallery",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "At the far end, somewhere beyond the portraits, a music box is playing a waltz, very slowly, as if it is running down. Above him, a door stands open onto a balcony where the snow is falling the wrong way."
+ },
+ {
+  "key": "99a764d9c469",
+  "story": "mirror",
+  "scene": "m_i_corridors",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid leaves the Hall of Glass and the music of the ball behind her. The real castle at a quarter to midnight is all moving staircases and sleepy portraits, and every corridor seems longer than it is in daylight."
+ },
+ {
+  "key": "61a074e3b2a6",
+  "story": "mirror",
+  "scene": "m_i_corridors",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a window as she passes, she catches a glimpse of Kristian in a silver gallery, deep in conversation with a row of paintings."
+ },
+ {
+  "key": "601d3a0bfcb6",
+  "story": "mirror",
+  "scene": "m_i_corridors",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a window as she passes, she catches a glimpse of Kristian, hurrying down a silver corridor as though he is following a tune."
+ },
+ {
+  "key": "752ac2ff1623",
+  "story": "mirror",
+  "scene": "m_i_corridors",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a window as she passes, she catches a glimpse of Kristian climbing out onto a balcony, into snow that is falling up."
+ },
+ {
+  "key": "cd37d82bf66e",
+  "story": "mirror",
+  "scene": "m_i_corridors",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Three ways lie open. Up the spiral stair to the clock tower, where the great clock of the ballroom keeps its works. Along the east corridor, where the castle ghost called Sister Wren is said to walk on winter nights. Or down to Madam Pell's office, which is never locked, because nobody would dare."
+ },
+ {
+  "key": "16d9e7492281",
+  "story": "mirror",
+  "scene": "m_k_portraits",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The silver portraits whisper among themselves as Kristian comes closer. The reflection of Sir Aldous Vane is here too, awake and much braver than the original."
+ },
+ {
+  "key": "bb36a11574fa",
+  "story": "mirror",
+  "scene": "m_k_portraits",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Sir Aldous",
+  "tone": "shout",
+  "text": "A living boy, on this side!"
+ },
+ {
+  "key": "be10267f6016",
+  "story": "mirror",
+  "scene": "m_k_portraits",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "a6061723e93f",
+  "story": "mirror",
+  "scene": "m_k_portraits",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Sir Aldous",
+  "tone": "neutral",
+  "text": "We have not had one of those since the twenties. Ask, lad, ask. We have been dying to be asked anything at all for a hundred years."
+ },
+ {
+  "key": "3781704cf46b",
+  "story": "mirror",
+  "scene": "m_k_room",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The music box is in a dormitory that has not changed in a hundred years: one bed made with hospital corners, a school trunk with a name painted on the lid, a wireless set, a single photograph propped against the lamp. The box is still turning, slower and slower."
+ },
+ {
+  "key": "6394a00f9f94",
+  "story": "mirror",
+  "scene": "m_k_room",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The name on the trunk is L. GLOAM."
+ },
+ {
+  "key": "605a4e8e9390",
+  "story": "mirror",
+  "scene": "m_k_balcony",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The balcony hangs over a silver courtyard. Snow rises past Kristian in slow flakes and vanishes into a black sky with no stars, only one enormous moon. Across the courtyard, the backwards clock tower shows its face: the hands are creeping toward twelve, from the wrong side."
+ },
+ {
+  "key": "b58efca27e2f",
+  "story": "mirror",
+  "scene": "m_k_balcony",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Below him, through a window that is a mirror on the other side, he can see straight into the real castle: warm corridors, candles, and somewhere in there, Ingerid."
+ },
+ {
+  "key": "7f702a7093ca",
+  "story": "mirror",
+  "scene": "m_i_tower",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Through a narrow window on the stair, Ingerid sees a silver figure on a balcony in a sky that is not there, waving. She waves back before she can feel silly about it."
+ },
+ {
+  "key": "87bcba2ea015",
+  "story": "mirror",
+  "scene": "m_i_tower",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Somewhere in the walls, very faintly, a music box starts playing a waltz."
+ },
+ {
+  "key": "7b0802c5926b",
+  "story": "mirror",
+  "scene": "m_i_tower",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "At the top of the spiral stair the clock tower is one great machine: wheels the size of cartwheels, a pendulum as long as a boat, and the back of the ballroom clock's face, glowing like a moon from behind."
+ },
+ {
+  "key": "6a1813456634",
+  "story": "mirror",
+  "scene": "m_i_tower",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "A small portrait hangs among the gears, of a clockmaker with a jeweller's glass screwed into one eye. He is fast asleep, and ticking."
+ },
+ {
+  "key": "8f667c7dc9fa",
+  "story": "mirror",
+  "scene": "m_i_ghost",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "As Ingerid turns into the east corridor, a music box starts to play somewhere inside the walls, and the air goes cold."
+ },
+ {
+  "key": "5a99d8a0740b",
+  "story": "mirror",
+  "scene": "m_i_ghost",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren is exactly where the stories say: drifting along the east corridor in a nun's grey habit, humming. She has been dead for four hundred years and says she has never been bored once."
+ },
+ {
+  "key": "d79a259980b0",
+  "story": "mirror",
+  "scene": "m_i_ghost",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Sister Wren",
+  "tone": "neutral",
+  "text": "A living girl, out of bed, on the night of the ball,"
+ },
+ {
+  "key": "5267320d5f7c",
+  "story": "mirror",
+  "scene": "m_i_ghost",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "she says."
+ },
+ {
+  "key": "c9fcca999cfd",
+  "story": "mirror",
+  "scene": "m_i_ghost",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Sister Wren",
+  "tone": "neutral",
+  "text": "You have come about the Hall of Glass. Everybody always does, eventually. Ask your question, dear. I have time."
+ },
+ {
+  "key": "dd7b1904c386",
+  "story": "mirror",
+  "scene": "m_i_office",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the dark window of the office, Ingerid glimpses a silver boy on a silver balcony, waving. She waves back."
+ },
+ {
+  "key": "b368fe7fb79d",
+  "story": "mirror",
+  "scene": "m_i_office",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell's office smells of tea and glue. There are books on every surface, including the chair, and a cat asleep in the in-tray who opens one eye and closes it again."
+ },
+ {
+  "key": "36664a9c825d",
+  "story": "mirror",
+  "scene": "m_i_office",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On the desk: a filing cabinet drawer marked INCIDENTS 1900-1950, a pair of odd spectacles with silver lenses, and a pad of paper for leaving notes."
+ },
+ {
+  "key": "2dcd4217f593",
+  "story": "mirror",
+  "scene": "m_k_library",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The silver library is silent in the way only libraries and graves are. Behind the desk sits a librarian made of moonlight: Madam Pell's shape, Madam Pell's spectacles, and no face at all. The plaque on the desk says ECHO."
+ },
+ {
+  "key": "57d77c308b75",
+  "story": "mirror",
+  "scene": "m_k_library",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "On the desk lies a book bound in mirror. Its title runs backwards: The Charm of the Two Sides. Half its pages are blank. The other half are written in a hand so reversed that it hurts to look at."
+ },
+ {
+  "key": "ae0c065d8931",
+  "story": "mirror",
+  "scene": "m_k_library",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Echo",
+  "tone": "neutral",
+  "text": "Two halves,"
+ },
+ {
+  "key": "3bfee2f1d638",
+  "story": "mirror",
+  "scene": "m_k_library",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says the Echo, in a voice like a spoon against a glass."
+ },
+ {
+  "key": "da831a8749ba",
+  "story": "mirror",
+  "scene": "m_k_library",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Echo",
+  "tone": "neutral",
+  "text": "Two hands. The last word."
+ },
+ {
+  "key": "fa32eb35b147",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The castle library at half past eleven on the night of the ball is dark and smells of candle smoke. Ingerid has never been here alone after hours."
+ },
+ {
+  "key": "dbde01370f53",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell is here before her, already pulling a ladder along the shelves."
+ },
+ {
+  "key": "7c0867e55335",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "1923,"
+ },
+ {
+  "key": "8416269a7f56",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says, without turning round."
+ },
+ {
+  "key": "c312c9091427",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "A boy went into that hall and did not come out, and the headmaster of the day bricked it up and told everyone it was a draught. I have always hated that story."
+ },
+ {
+  "key": "55b7c8594dcd",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell's chair at the front desk is empty; she is still at the ball. The restricted section is behind a little iron gate with a lock that looks bored."
+ },
+ {
+  "key": "1e78f6e0427a",
+  "story": "mirror",
+  "scene": "m_i_library",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Somewhere on the other side of the glass, Ingerid feels rather than knows that Kristian has found something."
+ },
+ {
+  "key": "c0f886e6a6ee",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the real library, Ingerid finds a thin book with a mirror for a cover, the twin of one she has never seen. Half its pages are blank. The other half hold the first half of a charm."
+ },
+ {
+  "key": "94f40c9cb09a",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the real library, the iron gate squeals, and a prefect on patrol sends Ingerid back to the corridor with a warning and nothing in her hands."
+ },
+ {
+  "key": "4436c70e75c4",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the real library, Ingerid pulls down every book with mirror in the title and finds hand mirrors, shaving charms and a very long poem, but nothing about a hall of glass."
+ },
+ {
+  "key": "4e9e29c77ee5",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the real library, Ingerid finds him in the 1923 yearbook: Leander Gloam, fifth year, most likely to be overlooked . Someone has written in pencil beside his photograph: he only wanted somebody to notice him. Underneath, a staff note: last seen in the Hall of Glass, in the company of the Keeper of the Hall, Sir Aldous Vane."
+ },
+ {
+  "key": "9bdc39b16c6b",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the silver castle, Kristian runs with the mirror-bound book under his arm, and behind him comes the Echo: no feet, no face, only the sound of a library's worth of shushing, getting louder."
+ },
+ {
+  "key": "c6094974722b",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Echo",
+  "tone": "neutral",
+  "text": "Return,"
+ },
+ {
+  "key": "5d2c98c99187",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "it says, from everywhere at once."
+ },
+ {
+  "key": "6d3888c84c11",
+  "story": "mirror",
+  "scene": "m_k_echo_chase",
+  "index": 5,
+  "seg": 2,
+  "speaker": "Echo",
+  "tone": "neutral",
+  "text": "Return what is borrowed."
+ },
+ {
+  "key": "429c60ec2267",
+  "story": "mirror",
+  "scene": "m_k_stair",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the real library, Ingerid finds a thin book with a mirror for a cover, the twin of one she has never seen. Half its pages are blank. The other half hold the first half of a charm."
+ },
+ {
+  "key": "b2b6192c60ae",
+  "story": "mirror",
+  "scene": "m_k_stair",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the real library, the iron gate squeals, and a prefect on patrol sends Ingerid back to the corridor with a warning and nothing in her hands."
+ },
+ {
+  "key": "b1ca82300648",
+  "story": "mirror",
+  "scene": "m_k_stair",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the real library, Ingerid pulls down every book with mirror in the title and finds hand mirrors, shaving charms and a very long poem, but nothing about a hall of glass."
+ },
+ {
+  "key": "b3650f189fdd",
+  "story": "mirror",
+  "scene": "m_k_stair",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the real library, Ingerid finds him in the 1923 yearbook: Leander Gloam, fifth year, most likely to be overlooked . Someone has written in pencil beside his photograph: he only wanted somebody to notice him. Underneath, a staff note: last seen in the Hall of Glass, in the company of the Keeper of the Hall, Sir Aldous Vane."
+ },
+ {
+  "key": "5e1d86617163",
+  "story": "mirror",
+  "scene": "m_k_stair",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the silver castle, Kristian sits down on a staircase that goes downward to go up, and lets himself breathe for a minute. The quiet here is enormous. He can hear his own heart, and, very far away, the waltz from the ball, playing backwards."
+ },
+ {
+  "key": "ad50bcd9257f",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a dark window, Ingerid sees Kristian slip away from something made of moonlight. Good."
+ },
+ {
+  "key": "c4905b5141a6",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a dark window, Ingerid sees Kristian backed against a silver shelf by something made of moonlight. Her heart jumps."
+ },
+ {
+  "key": "76e0511bd4a7",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On the dark window, backwards: STILL OK. YOU?"
+ },
+ {
+  "key": "c670a4ac0eb2",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The prefect who caught her has a badge so polished it could be used for signalling ships, and the expression of a boy who has read the school rules for pleasure. He would get on, Ingerid thinks, with a certain Percy she has read about."
+ },
+ {
+  "key": "14c6af0858be",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Prefect",
+  "tone": "neutral",
+  "text": "Out of bed, out of the ball, out of bounds,"
+ },
+ {
+  "key": "ce6ea831ec06",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "8b793d6493ce",
+  "story": "mirror",
+  "scene": "m_i_prefect",
+  "index": 4,
+  "seg": 2,
+  "speaker": "Prefect",
+  "tone": "neutral",
+  "text": "That's three things. I'm going to have to write all three down."
+ },
+ {
+  "key": "2053e3807f72",
+  "story": "mirror",
+  "scene": "m_i_stairs",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a dark window, Ingerid sees Kristian slip away from something made of moonlight. Good."
+ },
+ {
+  "key": "9e07032f3e1b",
+  "story": "mirror",
+  "scene": "m_i_stairs",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In a dark window, Ingerid sees Kristian backed against a silver shelf by something made of moonlight. Her heart jumps."
+ },
+ {
+  "key": "a58334b99bde",
+  "story": "mirror",
+  "scene": "m_i_stairs",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On the dark window, backwards: STILL OK. YOU?"
+ },
+ {
+  "key": "c0b525369cc1",
+  "story": "mirror",
+  "scene": "m_i_stairs",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On her way back to the Hall of Glass, the great staircases start to move, the way they do when they are bored. One swings away into the dark. One offers itself, creaking, like a dog wanting a walk."
+ },
+ {
+  "key": "1e635c278643",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the silver castle, the boy in old robes is waiting for Kristian on the backwards staircase. He is pale and thin and perfectly polite, and his edges shimmer like heat over a road."
+ },
+ {
+  "key": "4e58c74089c1",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "We meet again,"
+ },
+ {
+  "key": "0092fe484bdd",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "33ee228932ba",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You followed me. Nobody ever follows me."
+ },
+ {
+  "key": "cd09e9d11b73",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You said good evening,"
+ },
+ {
+  "key": "09d00a1fb60e",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "06df22a37239",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "In a hundred years, you are the first."
+ },
+ {
+  "key": "2ed674db5f8b",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian remembers how the silver portraits went quiet when he asked about this boy, and how quickly Sir Aldous changed the subject."
+ },
+ {
+  "key": "f3f96657dcaa",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "whisper",
+  "text": "Not so loud,"
+ },
+ {
+  "key": "cff5680b66e8",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "the boy whispers, glancing up the staircase."
+ },
+ {
+  "key": "4250eeeab4ee",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 4,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "whisper",
+  "text": "He listens through every frame."
+ },
+ {
+  "key": "6dcce7853f4a",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "On the landing above them hangs an empty silver frame. As Kristian looks up, it is not empty any more. The reflection of Sir Aldous Vane settles into it, beaming, kindly, like a favourite grandfather."
+ },
+ {
+  "key": "24812ada98d6",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Sir Aldous",
+  "tone": "shout",
+  "text": "The living boy!"
+ },
+ {
+  "key": "c9b2090d0623",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 6,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Sir Aldous."
+ },
+ {
+  "key": "3ff194bf2690",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 6,
+  "seg": 2,
+  "speaker": "Sir Aldous",
+  "tone": "neutral",
+  "text": "Splendid. I am the Keeper of this Hall, lad, and I can have you home by midnight. One small formality. Tell me your name, your whole name, and I will write it in the register of the living, and the door will open for you."
+ },
+ {
+  "key": "7423425f2a23",
+  "story": "mirror",
+  "scene": "m_talk1",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Behind the frame, where only Kristian can see, the pale boy shakes his head, very slightly, again and again."
+ },
+ {
+  "key": "be16b9d85577",
+  "story": "mirror",
+  "scene": "m_talk2",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid is back in the Hall of Glass. In the biggest mirror she can see them: Kristian and a pale boy on a staircase that goes the wrong way, and above them, in a silver frame, the beaming face of Sir Aldous Vane."
+ },
+ {
+  "key": "3784bfcca959",
+  "story": "mirror",
+  "scene": "m_talk2",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kristian is listening. The boy is talking with his hands, quickly, like someone who has saved up a hundred years of things to say."
+ },
+ {
+  "key": "e88b1568777e",
+  "story": "mirror",
+  "scene": "m_talk2",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kristian shakes his head. The boy's smile does not change, but his edges flicker."
+ },
+ {
+  "key": "e052ad6e43e1",
+  "story": "mirror",
+  "scene": "m_talk2",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kristian turns to the portrait and opens his mouth to say something, and Sir Aldous leans so far out of his frame to hear it that his painted fingers curl over the edge."
+ },
+ {
+  "key": "78891f0ab455",
+  "story": "mirror",
+  "scene": "m_talk2",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "There is still a little mist on the glass. Enough for a few words."
+ },
+ {
+  "key": "0ed80986a47b",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Over the boy's shoulder, Kristian sees letters bloom in the mist on the glass: DON'T TELL IT YOUR NAME."
+ },
+ {
+  "key": "d8a63012b31a",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Over the portrait's shoulder, letters bloom in the mist: DON'T TRUST THE PORTRAIT."
+ },
+ {
+  "key": "63690b5199d2",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian shuts his mouth on the first syllable. Sir Aldous's smile freezes. For one moment the painted face is not kind at all."
+ },
+ {
+  "key": "b97e643fc25d",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian says his name, all of it. Sir Aldous closes his painted eyes as if he is tasting it."
+ },
+ {
+  "key": "9705357f4edf",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 3,
+  "seg": 1,
+  "speaker": "Sir Aldous",
+  "tone": "neutral",
+  "text": "Thank you, Kristian,"
+ },
+ {
+  "key": "ee38aa37d958",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 3,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says, and then he does something portraits cannot do: he steps out of his frame, tall and grey and smiling, and his smile is Kristian's smile."
+ },
+ {
+  "key": "cd3a31301076",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Sir Aldous",
+  "tone": "quiet",
+  "text": "A pity,"
+ },
+ {
+  "key": "ad0910a3bda4",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Sir Aldous softly, and the frame is empty again. Somewhere in the silver castle, a door closes."
+ },
+ {
+  "key": "da786248ec47",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The boy lets out a breath he seems to have been holding for a hundred years."
+ },
+ {
+  "key": "4a4617adfc3c",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Now you know,"
+ },
+ {
+  "key": "e16cd3dcce85",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 5,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "9c9488a874db",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 5,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "He is the Keeper of the Hall. In 1923 he took my name, the same way, so that he could go on living in his frame. A name buys a portrait a hundred years. Two names would buy him a body. He has been waiting at that door for someone like you."
+ },
+ {
+  "key": "b7d8a4b957b1",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian thinks of how friendly the portrait was, how helpful. He was counting on that."
+ },
+ {
+  "key": "44f9fc5b1dbe",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "ASK HIM ABOUT 1923, says the mist. Kristian does. And the boy tells him: a ball, a girl he never dared ask to dance, a wish made to a mirror to be seen, just once. The mirror saw him. It has not stopped seeing him since."
+ },
+ {
+  "key": "2dbaeb126a57",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "A spell from the other side hits the mirror like a thrown stone. A crack runs across the glass, and a long shard of it drops at Kristian's feet. The boy's face goes cold."
+ },
+ {
+  "key": "3452cf9d95fd",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 8,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "That,"
+ },
+ {
+  "key": "ea502ef37abd",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 8,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says,"
+ },
+ {
+  "key": "0c703f24d939",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 8,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "was not kind."
+ },
+ {
+  "key": "ce5f4cc49b63",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "On the other side of the glass, Ingerid simply stands and waits, and Kristian can feel it: she trusts him to get this right."
+ },
+ {
+  "key": "0178a6d878a4",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "And yet, with his name gone, Kristian finds he can still remember exactly how Ingerid laughs at his jokes. Some things the glass cannot take. Not if you hold on to them."
+ },
+ {
+  "key": "2da300171b6e",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Midnight is coming,"
+ },
+ {
+  "key": "af42b99464ae",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 11,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Leander Gloam."
+ },
+ {
+  "key": "6389d905f147",
+  "story": "mirror",
+  "scene": "m_talk3",
+  "index": 11,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "At midnight the hall opens, only for a moment, and only if both sides turn their clocks together. If you are not through by the last stroke, it will not open again for a hundred years. And he will be waiting at the door."
+ },
+ {
+  "key": "99bd169b4a33",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid watches Kristian say something to the pale boy, and the boy's whole face changes, as though nobody has promised him anything in a very long time."
+ },
+ {
+  "key": "b707d4e747dd",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid watches Kristian turn away from the pale boy without a word. The boy watches him go."
+ },
+ {
+  "key": "61fe123ef93a",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid sees the pale boy hand something back to Kristian, something she cannot see, and Kristian looks suddenly more like himself."
+ },
+ {
+  "key": "d52ab2337d76",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Then Leander Gloam turns to the glass and looks straight at Ingerid, as if he has known she was there all along."
+ },
+ {
+  "key": "7e894de356b1",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "And you,"
+ },
+ {
+  "key": "5f96a2612e13",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says. She can hear him. His voice comes through the mirror like a voice through ice."
+ },
+ {
+  "key": "6a45438783f7",
+  "story": "mirror",
+  "scene": "m_talk4",
+  "index": 4,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "The one on the warm side. What do you say?"
+ },
+ {
+  "key": "59951088b56e",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "quiet",
+  "text": "She said they'd take me with them,"
+ },
+ {
+  "key": "c16a8d98d72f",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Gloam, very quietly, almost to himself."
+ },
+ {
+  "key": "cf51dae3a584",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "She asked who I really am,"
+ },
+ {
+  "key": "315cbdaa2051",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Gloam. He sounds amazed."
+ },
+ {
+  "key": "22f9745dbddc",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Nobody has asked me that since 1923."
+ },
+ {
+  "key": "f65c3c0f14a4",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "And he tells them both, through the glass: a ball, a girl he never dared ask to dance, a wish made to a mirror to be seen, just once."
+ },
+ {
+  "key": "7f20733b218b",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Gloam looks at Ingerid through the glass for a long moment and bows, very slightly, as one does to a worthy opponent."
+ },
+ {
+  "key": "ce052db65d96",
+  "story": "mirror",
+  "scene": "m_k_prepare",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Five minutes to midnight. The backwards clock of the silver ballroom is somewhere above them. Kristian has time to do one more thing before he climbs to it."
+ },
+ {
+  "key": "1b227455532c",
+  "story": "mirror",
+  "scene": "m_i_prepare",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On the mirror by the ballroom door, in backwards letters: TWELVE."
+ },
+ {
+  "key": "2d08f474d7de",
+  "story": "mirror",
+  "scene": "m_i_prepare",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the glass, Kristian and the pale boy climb a silver stair together."
+ },
+ {
+  "key": "2c75c80f0ebf",
+  "story": "mirror",
+  "scene": "m_i_prepare",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The shortcut was a good one. Ingerid is back at the ballroom with minutes to spare."
+ },
+ {
+  "key": "51a923de8859",
+  "story": "mirror",
+  "scene": "m_i_prepare",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The staircase dumped her two floors too low. Ingerid arrives at the ballroom breathless, with almost no time left."
+ },
+ {
+  "key": "50a4cbac0876",
+  "story": "mirror",
+  "scene": "m_i_prepare",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "It took ages to get away from the prefect. Ingerid arrives at the ballroom breathless, with almost no time left."
+ },
+ {
+  "key": "ccccffd7400d",
+  "story": "mirror",
+  "scene": "m_i_prepare",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The great clock above the ballroom doors says five to midnight. Nobody else has noticed anything at all."
+ },
+ {
+  "key": "c383081f0323",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the glass of the clock face, Kristian can see the real ballroom clock from behind, and two people climbing to it: Ingerid, and Madam Pell."
+ },
+ {
+  "key": "592e1b89b2bf",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On the inside of the clock face, backwards, in Ingerid's handwriting: TWELVE."
+ },
+ {
+  "key": "3565408ff73c",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the silver ballroom the clock runs backwards, and its strokes arrive before they are struck. Kristian climbs to it and puts both hands on the minute hand."
+ },
+ {
+  "key": "ac310005a792",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Two halves. Two hands. The last word. The riddle goes round and round in his head."
+ },
+ {
+  "key": "aae31052adb1",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He has studied this clock from the balcony. He knows which way its hands really go."
+ },
+ {
+  "key": "5d4f8132caea",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "And then, from the glass of the clock face, a voice that sounds exactly like Ingerid's:"
+ },
+ {
+  "key": "562b51c06fad",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Ingerid",
+  "tone": "shout",
+  "text": "Now, Kristian! The sixth stroke! Turn it now!"
+ },
+ {
+  "key": "6cc7a7a69913",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He almost does. Then he stops. Ingerid would never rush. That is not her. That is him."
+ },
+ {
+  "key": "5ca74bbfeed5",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The Echo drifts up beside him, a librarian made of moonlight, no longer angry."
+ },
+ {
+  "key": "70f6c00eb9a0",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 7,
+  "seg": 1,
+  "speaker": "Echo",
+  "tone": "neutral",
+  "text": "The last word,"
+ },
+ {
+  "key": "95a21043df57",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 7,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "it says, quite kindly."
+ },
+ {
+  "key": "414290be86af",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 7,
+  "seg": 3,
+  "speaker": "Echo",
+  "tone": "neutral",
+  "text": "Always the last word."
+ },
+ {
+  "key": "2cff8bd5e94e",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He knows Ingerid. She always makes sure, and then makes sure again. She will wait for the very last stroke."
+ },
+ {
+  "key": "c9659cee05a8",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He remembers the word in the mist, underlined twice."
+ },
+ {
+  "key": "0fce6f01155d",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Gloam stands at his shoulder."
+ },
+ {
+  "key": "f619c31870ac",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 10,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Whenever you are ready,"
+ },
+ {
+  "key": "649ee29add5b",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 10,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "300a3aa4c17d",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 10,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "I will hold the door for as long as I can."
+ },
+ {
+  "key": "fd7259bab842",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Behind him, in the dark of the silver hall, something made of moonlight is following him, and it does not sound pleased."
+ },
+ {
+  "key": "71f76a19419f",
+  "story": "mirror",
+  "scene": "m_clock_k",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The first stroke of midnight rolls through both castles. Kristian has to choose his moment now. Ingerid will choose hers on the other side, without knowing his."
+ },
+ {
+  "key": "8838264e2688",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The ball is still going. The great clock above the doors is striking midnight, and its hands are as long as broomsticks. Ingerid has both hands on the minute hand."
+ },
+ {
+  "key": "2c37f5534791",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "The old clocks only listen on the last stroke,"
+ },
+ {
+  "key": "31fe4f443201",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Madam Pell, puffing, at her elbow."
+ },
+ {
+  "key": "cb640e259cfd",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "Everything else is just noise."
+ },
+ {
+  "key": "3f6532838d64",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "And bring that boy home,"
+ },
+ {
+  "key": "ea16f83c9857",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she adds, fiercely."
+ },
+ {
+  "key": "cc5d0db8daa9",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "A hundred years is long enough."
+ },
+ {
+  "key": "783cd6ecb944",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 2,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid has never heard her voice shake before."
+ },
+ {
+  "key": "b2e4c81a93df",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "And from the frame by the ballroom doors, a voice that sounds exactly like Kristian's:"
+ },
+ {
+  "key": "62b75f1bbb25",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 3,
+  "seg": 1,
+  "speaker": "Kristian",
+  "tone": "shout",
+  "text": "The first stroke, Ingerid! Now, before it's too late!"
+ },
+ {
+  "key": "9231b091db0a",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She doesn't move. Kristian has never been early for anything in his life. That is not him."
+ },
+ {
+  "key": "ef38386e1759",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She knows Kristian. He always waits until the very last moment for everything: homework, apologies, the end of a song. He will wait for this."
+ },
+ {
+  "key": "f817ebf8a8b3",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She remembers what Sir Aldous muttered from his frame: on the last stroke, and only if both sides turn together."
+ },
+ {
+  "key": "77a8ab637fbc",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She has seen this clock's works from the inside. The latch that lets the hall open only drops on the final stroke."
+ },
+ {
+  "key": "49c610a4a99d",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On the mirror by the doors, backwards, in Kristian's handwriting: TWELVE."
+ },
+ {
+  "key": "26f3fc9cb1f9",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "And very faintly, through the glass of the clock face, she hears a voice that can only be Kristian's, whispering a single word:"
+ },
+ {
+  "key": "0157d5379396",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 9,
+  "seg": 1,
+  "speaker": "Kristian",
+  "tone": "whisper",
+  "text": "twelve"
+ },
+ {
+  "key": "54799f34b0a3",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She remembers the word they both wrote in the mist, underlined twice."
+ },
+ {
+  "key": "f4d398e41be9",
+  "story": "mirror",
+  "scene": "m_clock_i",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She cannot know when Kristian turned his clock. She can only choose her own moment and hope it is the same."
+ },
+ {
+  "key": "0e49928d5762",
+  "story": "mirror",
+  "scene": "m_door",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Two clocks turn in two castles at the same instant. Somewhere between them, something clicks, like a key that has waited a hundred years for the right hand."
+ },
+ {
+  "key": "15c85db3cc05",
+  "story": "mirror",
+  "scene": "m_door",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The twelfth stroke rings out in both worlds at once, and for the first time it sounds like one bell instead of two."
+ },
+ {
+  "key": "4e1c924d905f",
+  "story": "mirror",
+  "scene": "m_door",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the Hall of Glass the biggest mirror opens like a door. Ingerid stands on one side of it and Kristian on the other, close enough to touch. Between them, on the threshold, stands Leander Gloam."
+ },
+ {
+  "key": "79621ccc70af",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Two clocks turn, a heartbeat apart. The hall shudders. The biggest mirror opens a crack, a hand's width, and starts to close again, slowly, like a heavy door on a cold night."
+ },
+ {
+  "key": "abb47c0661fa",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid and Kristian can see each other through the gap. Between them, holding the door open with both hands and visibly straining, is Leander Gloam."
+ },
+ {
+  "key": "779b21b35812",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Up in the clock tower, the gear Ingerid freed earlier keeps turning a moment longer than it should, and the door stops closing."
+ },
+ {
+  "key": "53c0f49f3185",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "On the silver side, the Echo puts its moonlight hands against the glass and pushes, holding the door from behind."
+ },
+ {
+  "key": "ad771c1eb7de",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Gloam is holding the door, but he is looking at Kristian, and his face is very still. He has not forgotten how they treated him."
+ },
+ {
+  "key": "5b17818d96e7",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Quickly,"
+ },
+ {
+  "key": "23d72c8ff1e1",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he gasps."
+ },
+ {
+  "key": "c7fbb30bd2c5",
+  "story": "mirror",
+  "scene": "m_door_miss",
+  "index": 5,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "I cannot hold this for long."
+ },
+ {
+  "key": "edb18e3f76a2",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane is standing in the doorway, outside his frame at last, tall and grey and smiling."
+ },
+ {
+  "key": "93e09e3c0e6b",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He is wearing Kristian's face, very nearly. It is getting harder to tell which of them is the reflection."
+ },
+ {
+  "key": "38de23d79d29",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Sir Aldous",
+  "tone": "neutral",
+  "text": "Here is the rule of the glass,"
+ },
+ {
+  "key": "a767a6390e7d",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says the Keeper pleasantly."
+ },
+ {
+  "key": "d246993dae08",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Sir Aldous",
+  "tone": "neutral",
+  "text": "Two may pass. Three is one too many. Someone stays. I do so hope it is not you, my dear."
+ },
+ {
+  "key": "7232a2556cc9",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "quiet",
+  "text": "That is his rule,"
+ },
+ {
+  "key": "5f7293db39df",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 3,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Leander Gloam quietly."
+ },
+ {
+  "key": "3e47d5bcaadb",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 3,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "quiet",
+  "text": "Not the glass's. He made it in 1923. A rule like that can be broken, if you know the words."
+ },
+ {
+  "key": "10936ab227c0",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid has half a charm in a mirror-bound book. Kristian has the other half in his head. The Charm of the Two Sides: two halves, two hands, the last word."
+ },
+ {
+  "key": "5107f0722e13",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "quiet",
+  "text": "You promised,"
+ },
+ {
+  "key": "9014d3327e5b",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Gloam to Kristian, quietly. It is not an accusation. It sounds like hope."
+ },
+ {
+  "key": "bcbf5f9d65ff",
+  "story": "mirror",
+  "scene": "m_offer_k",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian speaks first."
+ },
+ {
+  "key": "bad9212175e8",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian speaks his half of the charm into the glass. The words come out backwards and right at the same time, and the mirror begins to hum."
+ },
+ {
+  "key": "626991a96770",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian steps toward the door. Gloam does not stop him. He only watches, like someone who has watched a hundred people leave."
+ },
+ {
+  "key": "eaa7d43158f4",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian steps back from the door."
+ },
+ {
+  "key": "0e35ac765c0d",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Kristian",
+  "tone": "neutral",
+  "text": "Go,"
+ },
+ {
+  "key": "5f2dfd839f80",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says to Ingerid, through the gap."
+ },
+ {
+  "key": "0108cdef9fa0",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 2,
+  "seg": 3,
+  "speaker": "Kristian",
+  "tone": "neutral",
+  "text": "One of us gets home tonight. Make it you."
+ },
+ {
+  "key": "b09d740c8ab1",
+  "story": "mirror",
+  "scene": "m_offer_i",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Now it is Ingerid's turn. The last word is hers."
+ },
+ {
+  "key": "fe1d54dfc607",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid speaks the last word. Two halves of the charm meet in the middle of the glass, and the rule of two breaks like a held breath let go."
+ },
+ {
+  "key": "641ece2ad526",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sir Aldous Vane screams. The bargain he made in 1923 comes undone, and the glass takes back what it lent him: he is pulled backwards, out of the doorway and into the mirror, until he is only a reflection, very small and very far away, shouting at nobody."
+ },
+ {
+  "key": "92cbe009c058",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kristian steps through. So does Leander Gloam, blinking, into ordinary candlelight, a hundred years late for the ball and dressed for it."
+ },
+ {
+  "key": "f19e21d07017",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The quartet is still playing. Gloam stands at the edge of the dance floor and stares at the colours as if he has forgotten that the world has any."
+ },
+ {
+  "key": "eb5d8299dade",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "And then Madam Pell comes in from the corridor, and stops. Her book falls out of her hand."
+ },
+ {
+  "key": "640c604bcaed",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Madam Pell",
+  "tone": "neutral",
+  "text": "Leander?"
+ },
+ {
+  "key": "3c6ef47f80c8",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says. He turns, and his face does something it has not done in a hundred years."
+ },
+ {
+  "key": "8436f72a1f82",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Ottoline,"
+ },
+ {
+  "key": "385ddbfb010a",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "b0a79d7236d8",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 5,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You came to the ball after all."
+ },
+ {
+  "key": "f42ccb667452",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 4,
+  "seg": 6,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She was the girl he never dared ask to dance. She has been the librarian here ever since, waiting, and she never told anyone why."
+ },
+ {
+  "key": "5f7f6e432630",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Behind her, in the dark glass of the window, a figure made of moonlight bows to the old librarian, and quietly becomes her reflection again. Some part of her had been waiting on the other side all along."
+ },
+ {
+  "key": "a6c5dfc3a6a2",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You listened,"
+ },
+ {
+  "key": "4b941525054b",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 6,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says to Kristian."
+ },
+ {
+  "key": "f83317dbe072",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 6,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "That was the whole trick, I think. Somebody only had to listen."
+ },
+ {
+  "key": "7d7cab8d62bd",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He finds Ingerid by the drinks table."
+ },
+ {
+  "key": "e0f99d732e65",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 7,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You knew about 1923,"
+ },
+ {
+  "key": "5cda2dd90ee4",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 7,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "97be4ab62470",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 7,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "You looked me up."
+ },
+ {
+  "key": "7de345893938",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 7,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He seems more moved by that than by anything else."
+ },
+ {
+  "key": "03f71f65cfc7",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Somebody wound my music box,"
+ },
+ {
+  "key": "74d64c719a8b",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 8,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says, to nobody in particular."
+ },
+ {
+  "key": "972a4b44d725",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 8,
+  "seg": 2,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "I heard it from the other end of the castle. I knew then."
+ },
+ {
+  "key": "066de4500ad1",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kristian gives him back his photograph. Gloam looks at it for a long time: a girl in a 1923 ball gown, laughing at something out of frame."
+ },
+ {
+  "key": "3ce4f6c94030",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid and Kristian never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says twelve , the other one smiles."
+ },
+ {
+  "key": "3ae6ad8ed30b",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Afterwards, Ingerid and Kristian find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+ },
+ {
+  "key": "e9e17e838785",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "99cae197c8cd",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "4d5a7cd72438",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 14,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "eec4089cb055",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 15,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "81f37cd2d8e2",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 16,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "db9d6765f2c1",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 17,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "d49c5816fa72",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 18,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "0fb25b9976d9",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 19,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "b7cdbf6acc54",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 20,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "b1022a2e17cb",
+  "story": "mirror",
+  "scene": "ending_all_free",
+  "index": 21,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The Hall of Glass is just a hall again by morning. The mirrors show what is in front of them, and nothing else. Every now and then, though, Ingerid and Kristian catch each other's reflection in a window and wave, just to check."
+ },
+ {
+  "key": "38d58e6d5411",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The charm works. The rule of two bends, and Kristian steps through into the real castle, warm and loud and smelling of candle smoke."
+ },
+ {
+  "key": "f70f0d794025",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "But Leander Gloam does not follow. He stands on the threshold, and the charm passes through him like light through glass."
+ },
+ {
+  "key": "364e3a572c83",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "quiet",
+  "text": "It needed more than words,"
+ },
+ {
+  "key": "d864a39d9e3b",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says gently."
+ },
+ {
+  "key": "0ad0eb2effe7",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "quiet",
+  "text": "It needed someone to know me. Never mind. You two go."
+ },
+ {
+  "key": "f5a3f402d36a",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Behind him, Sir Aldous Vane steps back into his frame, straightens his painted collar, and smiles. He has waited a hundred years. He can wait another."
+ },
+ {
+  "key": "6d34401aa172",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The clocks were out of step. The door could only hold so long."
+ },
+ {
+  "key": "17afeeb6a8e2",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The mirror closes. For a moment Ingerid sees him in it, waving, and then only their own faces."
+ },
+ {
+  "key": "3baa1ab21ce5",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid and Kristian never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says twelve , the other one smiles."
+ },
+ {
+  "key": "a55eabcc8bf6",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Afterwards, Ingerid and Kristian find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+ },
+ {
+  "key": "a5a7f2488e58",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "456a37cd0358",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "8cdf514715e2",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "1b8bf1cf2f71",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "a4e46be86ce6",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "297d912b1925",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "2b8968b912ac",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "0537924d5fdc",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 14,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "eff8de06b624",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 15,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "42d56a34cb7d",
+  "story": "mirror",
+  "scene": "ending_two_halves",
+  "index": 16,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "They go back to the ball, because there is nothing else to do. Afterwards, neither of them can stop wondering what they would have needed to know."
+ },
+ {
+  "key": "87449a631ee8",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kristian comes through the door and falls into Ingerid's arms, and the mirror slams shut behind him like a book."
+ },
+ {
+  "key": "c6b803b5480c",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Leander Gloam is left on the other side. He does not shout. He only watches until the glass is ordinary again."
+ },
+ {
+  "key": "8c7d4612c3b5",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid seals it. A charm from the back of a textbook, cast with shaking hands, and a crust of frost spreads over every mirror in the hall."
+ },
+ {
+  "key": "8edaa3048b56",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid and Kristian never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says twelve , the other one smiles."
+ },
+ {
+  "key": "71325f2fb94e",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Afterwards, Ingerid and Kristian find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+ },
+ {
+  "key": "3a0f170fd4fc",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "7d46c9e89bb6",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "38f90fbf428d",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "9f997c16d88c",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "a92759a0c902",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "2a7136ed290b",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "a913d6a89b9b",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "aafcc3fc4897",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "5529a59fef2f",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "0d5a02737055",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 14,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On Monday the corridor behind the tapestry is gone again, bricked up as if it had never been. They are both safe. The castle has one more story that nobody tells."
+ },
+ {
+  "key": "91d60c2ee556",
+  "story": "mirror",
+  "scene": "ending_sealed",
+  "index": 15,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Only the portrait of Sir Aldous Vane has been moved, somehow, to the corridor outside the ballroom. When Ingerid walks past it, he wakes, and winks."
+ },
+ {
+  "key": "4e8347437d4e",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Ingerid",
+  "tone": "neutral",
+  "text": "Go,"
+ },
+ {
+  "key": "317b76aeaf30",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Ingerid. She steps through to the silver side as Kristian steps out of it, and for one second they pass each other in the doorway."
+ },
+ {
+  "key": "73711f671eb5",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Leander Gloam goes out too, into the candlelight, a hundred years late. He looks back at her, astonished. Nobody has ever traded places with him on purpose."
+ },
+ {
+  "key": "56f7109f6209",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The mirror closes. Kristian stands in the Hall of Glass with Ingerid on the other side of it, and this time it is his breath on the glass, and his finger writing: I WILL GET YOU OUT."
+ },
+ {
+  "key": "981492c19b15",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid and Kristian never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says twelve , the other one smiles."
+ },
+ {
+  "key": "4e4952905379",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Afterwards, Ingerid and Kristian find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+ },
+ {
+  "key": "812006ad0f2e",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "8dae1ce5651b",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "899c38d688eb",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "e1e165c3ee2a",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "b4d7229596fb",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "3b68c9562375",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "1982ff522069",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "33489386da2c",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "36612c96a5aa",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "9d33b2dca8fc",
+  "story": "mirror",
+  "scene": "ending_ingerid_stays",
+  "index": 14,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He means it. Next year's Winter Ball is three hundred and sixty-four days away, and he has already started counting."
+ },
+ {
+  "key": "b13a0aecd078",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian stays where he is. He pushes Gloam gently toward the door instead."
+ },
+ {
+  "key": "5069204f57ca",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Kristian",
+  "tone": "quiet",
+  "text": "You've waited longer,"
+ },
+ {
+  "key": "94cdaf3e1570",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "2917c53989f3",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Leander Gloam stumbles out into the real castle and stands beside Ingerid, staring at his own hands as if they might vanish."
+ },
+ {
+  "key": "a0f64cb7f6fb",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The mirror closes. Kristian raises one hand on the other side. Ingerid raises hers to meet it, and the glass is cold between them."
+ },
+ {
+  "key": "b4b893b938c3",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid and Kristian never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says twelve , the other one smiles."
+ },
+ {
+  "key": "d2a552027a07",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Afterwards, Ingerid and Kristian find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+ },
+ {
+  "key": "32590356aec8",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "521b75db436f",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "b21a7017726c",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "bc5407a52d54",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "01cc6a8b4b28",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "b94cdd609a5d",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "2042f17f1199",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "31005b28403c",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "6807dbb54303",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "125949987281",
+  "story": "mirror",
+  "scene": "ending_kristian_stays",
+  "index": 14,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "She visits the Hall of Glass every evening after that. They write to each other in the mist. It is a strange way to be friends, but it is still a way."
+ },
+ {
+  "key": "60338d498951",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Someone comes through the mirror wearing Kristian's face. He hugs Ingerid, says the right things in the right voice, and walks her back to the ball. In the Hall of Glass, the frame of Sir Aldous Vane hangs empty."
+ },
+ {
+  "key": "3de814ac2fee",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "It is only later, by the drinks table, that she notices he reaches for the cup with the wrong hand. And that when he looks into the punch bowl, there is no reflection looking back."
+ },
+ {
+  "key": "4f1160644184",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren drifts straight through him on the stairs, stops, and turns."
+ },
+ {
+  "key": "ad17b6714ba3",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Sister Wren",
+  "tone": "neutral",
+  "text": "You,"
+ },
+ {
+  "key": "4709b842f885",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "she says,"
+ },
+ {
+  "key": "30fc183480aa",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 2,
+  "seg": 3,
+  "speaker": "Sister Wren",
+  "tone": "neutral",
+  "text": "are not that boy."
+ },
+ {
+  "key": "f9852e463b43",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 2,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He smiles Kristian's smile at her and walks on."
+ },
+ {
+  "key": "f574d94bdb48",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In every mirror in the castle, very faintly, a boy is knocking on the glass. Two boys, now."
+ },
+ {
+  "key": "efc978b37e3a",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "4663dcd80e38",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "43bb0e49dd1b",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "ccf4d79293a5",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "41cfe51f355a",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "89978ffc9822",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "e1e51cc425f8",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "41ace536b419",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "fc3bb4206461",
+  "story": "mirror",
+  "scene": "ending_swapped",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "e9352286deb8",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The last stroke of midnight dies away, and the door in the glass closes with it, gently and completely."
+ },
+ {
+  "key": "3ae1df748fc6",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid is alone in the Hall of Glass. In the mirror, Kristian and the pale boy stand side by side, as quiet as photographs."
+ },
+ {
+  "key": "7611a3fc6aaf",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In his frame, Sir Aldous Vane is smiling. He has another hundred years, and two more names to keep him company."
+ },
+ {
+  "key": "0387fd83b28c",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The ball ends. The candles go out one by one. By Monday the corridor has been bricked up again, and when Ingerid tells the staff what happened, they say it must have been a draught."
+ },
+ {
+  "key": "f61ee0e7c999",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "0b0c7fef1dcf",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "a5ce2ab75212",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "7782ee3ef45b",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "e141d14d66d2",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "00b331c7c114",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "790c7e652181",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "d3e4c10be105",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "0081beffb884",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "e82393e1dabc",
+  "story": "mirror",
+  "scene": "ending_midnight",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "She goes back to the tapestry of the dancing trolls every night, all year, and waits for the Winter Ball."
+ },
+ {
+  "key": "b3faf4794e20",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kristian says he will stay. Ingerid says she will stay. They say it at almost the same moment, and then look at each other through the gap in the glass with identical expressions of outrage."
+ },
+ {
+  "key": "9934835e084f",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Leander Gloam starts to laugh, and cannot stop."
+ },
+ {
+  "key": "417586bc627e",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Two,"
+ },
+ {
+  "key": "dc1fd007c8c9",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "42d40b4d4c9d",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Gloam",
+  "tone": "neutral",
+  "text": "Two may pass. Go on, then."
+ },
+ {
+  "key": "5ac38a9c6220",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 1,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "And he steps out of the glass himself, into the candlelight, while Ingerid steps in."
+ },
+ {
+  "key": "bc3b8856bf68",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The mirror closes on the two of them, together, on the silver side."
+ },
+ {
+  "key": "4921caf0f7e2",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "It is not so bad, the backwards castle, with company. The snow falls up. The library is very quiet. They have a whole year to find the other half of every charm in it."
+ },
+ {
+  "key": "1ceaca241735",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane, on the silver side, discovers that two stubborn people in his hall are far worse company than one lonely boy. They have already started looking for his frame."
+ },
+ {
+  "key": "16f51f4f0e39",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid and Kristian never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says twelve , the other one smiles."
+ },
+ {
+  "key": "f33576e4049a",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Afterwards, Ingerid and Kristian find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+ },
+ {
+  "key": "0327ab1d8075",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+ },
+ {
+  "key": "48a82450c75b",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+ },
+ {
+  "key": "811f0b63e747",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+ },
+ {
+  "key": "323399c61efb",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 10,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ingerid's scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+ },
+ {
+  "key": "7efad8143b4a",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 11,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "For the rest of the year, every library book Kristian borrows comes back with one page written backwards."
+ },
+ {
+  "key": "b101b6e4e4ea",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 12,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+ },
+ {
+  "key": "34b22e4fca1d",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 13,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+ },
+ {
+  "key": "445aac3fb4b3",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 14,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+ },
+ {
+  "key": "f2ac67fd7996",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 15,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The great clock runs two seconds fast for the rest of the year. Nobody but Ingerid knows why."
+ },
+ {
+  "key": "e7d76ecd2a4d",
+  "story": "mirror",
+  "scene": "ending_two_sides",
+  "index": 16,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "And in the real castle, a boy from 1923 asks a girl to dance, a hundred years late, and she says yes."
  }
 ]

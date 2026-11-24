@@ -25,3 +25,19 @@ body.offline .reconnect { display: block; }
 .join { margin: auto 0; display: flex; flex-direction: column; gap: 0.8rem; }
 .join input { font-size: 2rem; letter-spacing: 0.25em; text-align: center; text-transform: uppercase; padding: 0.5rem; border-radius: 14px; border: 1px solid rgba(243, 234, 215, 0.3); background: rgba(255, 255, 255, 0.06); }
 .join button { background: #8a3a2a; border-color: #8a3a2a; }
+.seats, .houses { display: flex; flex-direction: column; gap: 0.6rem; }
+.houses .picked { border-color: #d9a45a; background: rgba(217, 164, 90, 0.2); }
+.stats { display: flex; flex-direction: column; gap: 0.5rem; }
+.stat { display: grid; grid-template-columns: 6.5em auto 1fr auto; align-items: center; gap: 0.6rem; }
+.stat .dots { color: #d9a45a; letter-spacing: 0.15em; }
+button.small { min-width: 2.6rem; min-height: 2.6rem; border-radius: 12px; border: 1px solid rgba(243, 234, 215, 0.3); background: rgba(243, 234, 215, 0.08); }
+.go { background: #8a3a2a; border-color: #8a3a2a; }
+.ripple { font-style: italic; color: #d9c4ff; border-left: 3px solid #d9a45a; padding-left: 0.7rem; }
+h2 { font-size: 1.2rem; }
+.preview-box { display: flex; justify-content: center; background: radial-gradient(circle at 50% 60%, rgba(217, 164, 90, 0.18), transparent 70%); border-radius: 16px; }
+.preview { width: 140px; height: 220px; }
+.look-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.chip { border-radius: 999px; border: 1px solid rgba(243, 234, 215, 0.3); background: rgba(243, 234, 215, 0.08); padding: 0.55rem 1rem; }
+.chip.picked { border-color: #d9a45a; background: rgba(217, 164, 90, 0.25); }
+.swatch { width: 2.4rem; height: 2.4rem; border-radius: 50%; background: var(--c); border: 2px solid rgba(243, 234, 215, 0.3); padding: 0; }
+.swatch.picked { outline: 3px solid #d9a45a; outline-offset: 2px; }

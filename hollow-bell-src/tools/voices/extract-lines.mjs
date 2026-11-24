@@ -34,16 +34,37 @@ function toneFor(raw, segText, speaker, mood) {
 }
 
 const lines = [];
-for (const [id, sc] of Object.entries(story.scenes)) {
-  for (const [index, p] of (sc.text ?? []).entries()) {
-    const raw = typeof p === 'string' ? p : p.text;
-    const segs = segmentParagraph(raw, voices.lines[`${id}#${index}`], sc.speaker);
-    for (const [seg, s] of segs.entries()) {
-      const tone = toneFor(raw, s.text, s.speaker, sc.mood);
-      const variants = /\{house\}/.test(s.text) ? houses : [houses[0]];
-      for (const house of variants) {
-        const text = speakable(fillVars(s.text, { name, house }));
-        lines.push({ key: await voiceKey(id, index, seg, text), scene: id, index, seg, speaker: s.speaker, tone, text });
+// Both stories: the single-player story (its default player name, one variant per house) and the
+// two-player story (fixed names, one variant per house for each player who has one in the line).
+const mirror = JSON.parse(readFileSync(new URL('src/stories/mirror.json', root), 'utf8'));
+const mirrorVoices = JSON.parse(readFileSync(new URL('src/stories/mirror.voices.json', root), 'utf8'));
+const SOURCES = [
+  { story, voices, vars: (t) => (/\{house\}/.test(t) ? houses : [houses[0]]).map((house) => ({ name, house })) },
+  {
+    story: mirror,
+    voices: mirrorVoices,
+    vars: (t) => {
+      const base = Object.fromEntries(mirror.players.map((p) => [p.id, p.name]));
+      const iH = /\{ingeridHouse\}/.test(t) ? mirror.houses : [mirror.houses[0]];
+      const kH = /\{kristianHouse\}/.test(t) ? mirror.houses : [mirror.houses[0]];
+      return iH.flatMap((ingeridHouse) => kH.map((kristianHouse) => ({ ...base, ingeridHouse, kristianHouse })));
+    },
+  },
+];
+for (const src of SOURCES) {
+  for (const [id, sc] of Object.entries(src.story.scenes)) {
+    for (const [index, p] of (sc.text ?? []).entries()) {
+      const raw = typeof p === 'string' ? p : p.text;
+      const segs = segmentParagraph(raw, src.voices.lines[`${id}#${index}`], sc.speaker);
+      for (const [seg, s] of segs.entries()) {
+        const tone = toneFor(raw, s.text, s.speaker, sc.mood);
+        const seenText = new Set();
+        for (const v of src.vars(s.text)) {
+          const text = speakable(fillVars(s.text, v));
+          if (seenText.has(text)) continue;
+          seenText.add(text);
+          lines.push({ key: await voiceKey(id, index, seg, text), story: src.story.id, scene: id, index, seg, speaker: s.speaker, tone, text });
+        }
       }
     }
   }
