@@ -108,6 +108,26 @@
         },
         "$other": { ".validate": false }
       }
+    },
+    "hollowbell": {
+      "$code": {
+        ".read": "auth != null && $code.matches(/^[A-HJKMNP-Z2-9]{6}$/)",
+        ".write": "auth != null && $code.matches(/^[A-HJKMNP-Z2-9]{6}$/) && (!data.exists() || data.child('host').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['host', 'created', 'state'])",
+        "host": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+        "created": { ".validate": "newData.isNumber()" },
+        "state": { ".validate": "newData.isString() && newData.val().length < 20000" },
+        "input": {
+          ".write": "auth != null && $code.matches(/^[A-HJKMNP-Z2-9]{6}$/) && root.child('hollowbell/' + $code + '/host').exists()",
+          ".validate": "newData.hasChildren(['choiceId', 'rev', 'from', 'at'])",
+          "choiceId": { ".validate": "newData.isString() && newData.val().length <= 12" },
+          "rev": { ".validate": "newData.isNumber()" },
+          "from": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+          "at": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        },
+        "$other": { ".validate": false }
+      }
     }
   }
 }

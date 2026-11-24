@@ -1,0 +1,33 @@
+{
+  "name": "hollow-bell",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "play": "npm run build && vite preview --port 4173 --strictPort --open",
+    "test": "vitest run",
+    "validate": "node tools/validate-all.mjs",
+    "check": "node tools/check.mjs 10000",
+    "story:build": "node story-src/SPOILERS/en/build.mjs",
+    "sfx": "node tools/audio/render-sfx.mjs",
+    "build:e2e": "vite build --mode e2e --outDir dist-e2e --emptyOutDir",
+    "e2e": "npm run build:e2e && node e2e/run.mjs",
+    "e2e:remote": "npm run build:e2e && npx -y firebase-tools@15.34.2 emulators:exec --only database,auth --project demo-hide-and-seek --config ../hide-and-seek-src/firebase.json 'node e2e/run.mjs --remote'"
+  },
+  "dependencies": {
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/im-fell-english": "^5.3.0",
+    "firebase": "^13.4.0",
+    "qrcode-generator": "^1.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "playwright": "^1.48.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}

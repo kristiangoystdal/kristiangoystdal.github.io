@@ -1,6 +1,8 @@
 # Bygger, tester og publiserer hele nettsiden til GitHub Pages.
 # Hide and Seek bygges alltid fra hide-and-seek-src (bygget ligger ikke i git). Testene (enhetstester,
 # simulerte runder og klikk-tester som iPhone og Android) kjøres bare når noe i hide-and-seek-src er endret.
+# The Hollow Bell bygges på samme måte fra hollow-bell-src til hollow-bell/, og testene kjøres bare når
+# noe i hollow-bell-src er endret.
 # Resten av nettsiden publiseres som den ligger.
 name: Bygg, test og publiser
 
@@ -45,22 +47,32 @@ jobs:
         run: |
           if [ "$EVENT" = "pull_request" ]; then FROM="$BASE"; elif [ "$EVENT" = "push" ]; then FROM="$BEFORE"; else FROM=""; fi
           if [ -z "$FROM" ] || ! git cat-file -e "$FROM^{commit}" 2>/dev/null; then
-            echo "Ingenting å sammenligne med: kjører alle testene."; echo "hs=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "$FROM" HEAD | grep -q '^hide-and-seek-src/'; then
+            echo "Ingenting å sammenligne med: kjører alle testene."; echo "hs=true" >> "$GITHUB_OUTPUT"; echo "hb=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only "$FROM" HEAD)
+          if echo "$CHANGED" | grep -q '^hide-and-seek-src/'; then
             echo "Hide and Seek er endret: kjører testene."; echo "hs=true" >> "$GITHUB_OUTPUT"
           else
             echo "Hide and Seek er ikke endret: hopper over testene."; echo "hs=false" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$CHANGED" | grep -q '^hollow-bell-src/'; then
+            echo "The Hollow Bell er endret: kjører testene."; echo "hb=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "The Hollow Bell er ikke endret: hopper over testene."; echo "hb=false" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: hide-and-seek-src/package-lock.json
+          cache-dependency-path: |
+            hide-and-seek-src/package-lock.json
+            hollow-bell-src/package-lock.json
 
-      # Firebase-emulatoren (for databasereglene og delte oppsett) trenger Java.
+      # Firebase-emulatoren (for databasereglene, delte oppsett og mobilkontrollen i The Hollow Bell) trenger Java.
       - uses: actions/setup-java@v4
-        if: steps.changes.outputs.hs == 'true'
+        if: steps.changes.outputs.hs == 'true' || steps.changes.outputs.hb == 'true'
         with:
           distribution: temurin
           java-version: 21
@@ -99,11 +111,43 @@ jobs:
         env:
           CI: true
 
+      - name: Installer The Hollow Bell
+        working-directory: hollow-bell-src
+        run: npm ci
+
+      - name: "The Hollow Bell: historiene og enhetstester"
+        if: steps.changes.outputs.hb == 'true'
+        working-directory: hollow-bell-src
+        run: npm run validate && npm test
+
+      - name: Bygg The Hollow Bell
+        working-directory: hollow-bell-src
+        run: npm run build
+        env:
+          # Samme Firebase-prosjekt og hemmeligheter som Hide and Seek (mobilkontrollen, mappen hollowbell/).
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      - name: "The Hollow Bell: nettleser for klikk-testene"
+        if: steps.changes.outputs.hb == 'true'
+        working-directory: hollow-bell-src
+        run: npx playwright install --with-deps chromium
+
+      - name: "The Hollow Bell: spill gjennom i nettleseren"
+        if: steps.changes.outputs.hb == 'true'
+        working-directory: hollow-bell-src
+        run: npm run e2e
+
+      - name: "The Hollow Bell: mobilkontrollen, mot Firebase-emulatoren"
+        if: steps.changes.outputs.hb == 'true'
+        working-directory: hollow-bell-src
+        run: npm run e2e:remote
+
       - name: Sett sammen nettsiden
         working-directory: .
         run: |
           mkdir _site
-          rsync -a --exclude '.git' --exclude '.github' --exclude '.claude' --exclude 'hide-and-seek-src' --exclude '_site' --exclude '.DS_Store' ./ _site/
+          rsync -a --exclude '.git' --exclude '.github' --exclude '.claude' --exclude 'hide-and-seek-src' --exclude 'hollow-bell-src' --exclude '_site' --exclude '.DS_Store' ./ _site/
           # Uten Jekyll: filer som begynner med understrek (f.eks. assets/_gameId_-*.js) publiseres også.
           touch _site/.nojekyll
 

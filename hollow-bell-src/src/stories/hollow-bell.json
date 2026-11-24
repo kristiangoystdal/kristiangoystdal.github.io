@@ -1,0 +1,5224 @@
+{
+  "id": "hollow-bell",
+  "title": "The Hollow Bell",
+  "language": "en",
+  "tagline": "Every night a bell rings that no one should hear. Every morning, more students do not wake.",
+  "difficulty": 2,
+  "estimatedMinutes": 15,
+  "startScene": "intro_title",
+  "characterCreation": {
+    "nameInput": {
+      "label": "What is your name?",
+      "default": "Alex",
+      "maxLength": 16,
+      "placeholder": "Type your name"
+    },
+    "houseChoice": [
+      "Gryffindor",
+      "Slytherin",
+      "Ravenclaw",
+      "Hufflepuff"
+    ],
+    "bonusPoints": 6,
+    "note": "{name} and {house} are used throughout the text. The name is stored in GameState.player.name."
+  },
+  "credits": {
+    "title": "The Hollow Bell",
+    "lines": [
+      "A choose-your-own-adventure",
+      "Story, sound and design: Kristian, with Claude",
+      "Thank you for playing, {name}."
+    ],
+    "showEndingCount": true,
+    "endingCountText": "Endings found: {found} of {total}",
+    "buttons": [
+      "Play again",
+      "Back to title"
+    ]
+  },
+  "ui": {
+    "titleScene": "intro_title",
+    "skipIntroOnLoop": true
+  },
+  "initialState": {
+    "stats": {
+      "courage": 2,
+      "wit": 2,
+      "kindness": 2,
+      "cunning": 2
+    },
+    "flags": {},
+    "items": [],
+    "relations": {
+      "mirela": 0,
+      "quill": 0,
+      "cantor": 0,
+      "ashgrove": 0,
+      "harrow": 0
+    },
+    "bonds": {
+      "ashgrove|cantor": -1,
+      "ashgrove|harrow": 0,
+      "ashgrove|mirela": 0,
+      "ashgrove|quill": 1,
+      "harrow|mirela": 0,
+      "harrow|quill": 1,
+      "mirela|quill": 0
+    },
+    "counters": {
+      "song": 0
+    }
+  },
+  "pools": {
+    "dusk": {
+      "description": "Afternoon events. The director picks the most relevant ones from bonds, relations and flags."
+    }
+  },
+  "scenes": {
+    "intro_title": {
+      "id": "intro_title",
+      "title": "The Hollow Bell",
+      "mood": "tense",
+      "visual": {
+        "preset": "window-night",
+        "particles": [
+          "fog",
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_night_wind",
+        "sfx": [
+          "bell_far",
+          "wind_gust"
+        ]
+      },
+      "text": [
+        "Rain on old glass. A castle of a thousand windows, and only a few of them lit.",
+        "Every old school keeps a secret. This one keeps it under a tower, and the secret has begun to ring."
+      ],
+      "choices": [
+        {
+          "label": "Begin",
+          "to": "intro_arrival"
+        }
+      ]
+    },
+    "intro_arrival": {
+      "id": "intro_arrival",
+      "title": "Two months in",
+      "mood": "cozy",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": [
+          "chime_soft"
+        ]
+      },
+      "text": [
+        "You, {name}, of {house}, have been at the castle long enough to stop getting lost on the way to breakfast, and not nearly long enough to know where it keeps its shadows.",
+        "Dinner tonight was loud and warm, the way it always is. You laughed at something. You fell asleep to the sound of rain.",
+        "Whatever happens next, you will remember this as the last ordinary evening."
+      ],
+      "choices": [
+        {
+          "label": "Close your eyes",
+          "to": "p01_midnight"
+        }
+      ]
+    },
+    "p01_midnight": {
+      "id": "p01_midnight",
+      "title": "Midnight",
+      "mood": "tense",
+      "visual": {
+        "preset": "dormitory-night",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dorm",
+        "sfx": [
+          "bell_far"
+        ]
+      },
+      "text": [
+        "The clock above the {house} dormitory fireplace shows a few minutes past midnight when you wake. Something has pulled you out of sleep, and it takes a moment to understand that it is a sound: a deep, hollow note, like a bell rung at the bottom of a lake.",
+        "Nobody else stirs. In the next bed Pip Marlowe lies with his mouth slightly open, breathing slow and even, one hand curled around the wrapper of a chocolate frog he must have fallen asleep eating.",
+        {
+          "if": {
+            "flag": "looped"
+          },
+          "text": "You have stood in this room before. You remember how this night ends, and you remember what it cost."
+        },
+        "The note comes again. This time you feel it in your breastbone, as if the castle has a pulse and has just skipped a beat."
+      ],
+      "choices": [
+        {
+          "label": "Try to wake Pip",
+          "to": "p02_pip"
+        },
+        {
+          "label": "Go to the window",
+          "to": "p03_window"
+        }
+      ]
+    },
+    "p02_pip": {
+      "id": "p02_pip",
+      "title": "Pip",
+      "mood": "tense",
+      "visual": {
+        "preset": "dormitory-night",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dorm",
+        "sfx": [
+          "heartbeat"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "kindness",
+          "add": 1
+        },
+        {
+          "flag": "tried_wake_pip",
+          "set": true
+        }
+      ],
+      "text": [
+        "You shake Pip by the shoulder. His skin is cold as a stone in a stream, and he does not respond. His eyes move fast beneath the lids, the way eyes do when someone is dreaming something they cannot climb out of.",
+        "You whisper his name three times. Nothing. But when the bell tolls again, his fingers tighten on the chocolate frog wrapper, as if something has taken hold of him and he is holding on."
+      ],
+      "choices": [
+        {
+          "label": "Go to the window",
+          "to": "p03_window"
+        },
+        {
+          "label": "This can’t wait. You have to do something",
+          "to": "p04_choice"
+        }
+      ]
+    },
+    "p03_window": {
+      "id": "p03_window",
+      "title": "The light in the tower",
+      "mood": "tense",
+      "visual": {
+        "preset": "window-night",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_night_wind",
+        "sfx": [
+          "bell_far"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "wit",
+          "add": 1
+        },
+        {
+          "flag": "saw_light",
+          "set": true
+        }
+      ],
+      "text": [
+        "Beyond the window the grounds lie silver under the moon. High above the rooftops, at the top of Hollow Tower, the old clock tower that has been sealed for fifty years, a pale light flickers.",
+        "Each time the bell tolls the light pulses, and a thin mist seeps out of the tower windows and drifts down toward the dormitories like breath on cold glass.",
+        "You count the tolls. Seven. Then silence. Then it begins again, and you notice that the gaps are getting shorter."
+      ],
+      "choices": [
+        {
+          "label": "You can’t just stand here",
+          "to": "p04_choice"
+        }
+      ]
+    },
+    "p04_choice": {
+      "id": "p04_choice",
+      "title": "Three roads",
+      "mood": "tense",
+      "visual": {
+        "preset": "dormitory-night",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dorm"
+      },
+      "text": [
+        "Pip does not wake. The whole castle sleeps too deeply, too evenly, and somewhere above it the bell keeps its patient time. You have three options, and none of them is safe."
+      ],
+      "choices": [
+        {
+          "label": "Go alone to Hollow Tower, now",
+          "to": "r1_stairs"
+        },
+        {
+          "label": "Wake the prefect, Mirela Voss",
+          "to": "r2_mirela"
+        },
+        {
+          "label": "Wait for dawn and look for answers in daylight",
+          "to": "r4_wing"
+        }
+      ]
+    },
+    "r1_stairs": {
+      "id": "r1_stairs",
+      "title": "The corridors",
+      "mood": "dark",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": [
+          "footsteps"
+        ]
+      },
+      "text": [
+        "You slip into the corridors with your wand in your fist and no light. The castle is another place at night. Portraits breathe in their frames, suits of armour seem to be listening, and the air tastes of cold iron.",
+        "At the foot of the tower stairs the silence thickens. The sound of your footsteps leaves your feet and does not arrive at your ears, as if something is eating it.",
+        "Ahead, around the corner, a light swings. Someone is coming."
+      ],
+      "choices": [
+        {
+          "label": "Stand your ground and keep walking",
+          "to": "r1_split",
+          "check": {
+            "stat": "courage",
+            "difficulty": 6,
+            "successTo": "r1_split",
+            "failTo": "r1_caught"
+          }
+        },
+        {
+          "label": "Slip behind the suits of armour",
+          "to": "r1_split",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 5,
+            "successTo": "r1_split",
+            "failTo": "r1_caught"
+          }
+        }
+      ]
+    },
+    "r1_split": {
+      "id": "r1_split",
+      "title": "Two lights",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": [
+          "keys_chime"
+        ]
+      },
+      "text": [
+        "From the shadow of an alcove you watch two lights part ways. One is a warm, swinging lantern heading down toward the kitchen stairs. The other is no light at all: a hooded figure with a ring of keys that chimes faintly, crossing the courtyard arch toward the tower.",
+        "You have time to follow only one. Or to go straight to the door they’re both avoiding."
+      ],
+      "choices": [
+        {
+          "label": "Follow the lantern",
+          "to": "r1_quill_meet"
+        },
+        {
+          "label": "Follow the hooded figure",
+          "to": "r1_figure",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 5,
+            "successTo": "r1_figure",
+            "failTo": "r1_caught"
+          }
+        },
+        {
+          "label": "Go straight to the tower door",
+          "to": "r1_door"
+        }
+      ]
+    },
+    "r1_quill_meet": {
+      "id": "r1_quill_meet",
+      "title": "The night archivist",
+      "mood": "magic",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "relation": "quill",
+          "add": 1
+        },
+        {
+          "stat": "courage",
+          "add": 1
+        }
+      ],
+      "text": [
+        "The lantern belongs to an old man in a patched coat, a brass spyglass hanging on a cord around his neck. He stops as though he had been expecting you, then seems embarrassed to be caught expecting.",
+        "“Oh. Oh, you hear it too. Forgive me, I’m— Quill. Night archivist. Nobody asks what an archivist does at night, which is lucky, because mostly it’s listening.” He lowers his voice. “I have waited fifty years for someone else to hear it.”",
+        "He takes your elbow with surprising firmness and steers you away from the tower. “Not tonight. The bell is hungry, and you are rather small to feed it. Come to the archive tomorrow. Bring questions. Bring tea, if you can steal any.”"
+      ],
+      "choices": [
+        {
+          "label": "Let him walk you back",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "r1_figure": {
+      "id": "r1_figure",
+      "title": "Keys in the dark",
+      "mood": "dark",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": [
+          "keys_chime",
+          "door_creak",
+          "cough"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "wit",
+          "add": 1
+        },
+        {
+          "stat": "cunning",
+          "add": 1
+        },
+        {
+          "flag": "saw_figure",
+          "set": true
+        }
+      ],
+      "text": [
+        "You keep to the shadows and follow the chiming keys. The figure unlocks the tower door without hesitation, slips inside, and pulls it shut behind them. You wait. The bell tolls above you, twice, and the door opens again.",
+        "The figure comes out coughing into a sleeve, a hard dry cough you almost recognise, and locks up. They pass your hiding place close enough that you smell pipe smoke and lamp oil. You never see a face."
+      ],
+      "choices": [
+        {
+          "label": "Slip back to bed before dawn",
+          "to": "r3_morning"
+        }
+      ]
+    },
+    "r1_door": {
+      "id": "r1_door",
+      "title": "The black door",
+      "mood": "dark",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "hum_low",
+          "whisper"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "courage",
+          "add": 1
+        },
+        {
+          "flag": "felt_hum",
+          "set": true
+        }
+      ],
+      "text": [
+        "The tower door is black oak banded with iron, and cold radiates from it like winter from a cellar. Your hand is on the handle before you decide to move it.",
+        "Beneath your palm the wood hums, low and patient, and the hum finds the bones of your wrist. For a moment you hear something that is not the bell. A voice, almost: a lullaby with its words worn smooth. Then you snatch your hand away and the silence rushes back in."
+      ],
+      "choices": [
+        {
+          "label": "Retreat to the dormitory",
+          "to": "r3_morning"
+        }
+      ]
+    },
+    "r1_caught": {
+      "id": "r1_caught",
+      "title": "Caught",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": [
+          "lantern_swing"
+        ]
+      },
+      "text": [
+        "A lantern beam catches you square in the chest. “Well, well.” It’s Harrow, the caretaker, lamp in one hand and a face that hasn’t smiled since before you were born. His coat smells of pipe smoke.",
+        "“Out of bed past midnight, {name}. Explain yourself.”"
+      ],
+      "choices": [
+        {
+          "label": "Tell him the truth about Pip and the light",
+          "to": "r1_truth"
+        },
+        {
+          "label": "Lie: you were sleepwalking",
+          "to": "r3_morning",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 6,
+            "successTo": "r3_morning",
+            "failTo": "r1_detention"
+          }
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "r1_truth": {
+      "id": "r1_truth",
+      "title": "The truth",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "stat": "kindness",
+          "add": 1
+        },
+        {
+          "relation": "harrow",
+          "add": 1
+        }
+      ],
+      "text": [
+        "You tell him everything: Pip, the bell, the light on the tower. Harrow listens without a word, his jaw working. When you finish he lets out a long breath through his nose.",
+        "“The bell has rung before,” he says. “I was young. I told myself I dreamed it.” He jerks his head toward the stairs. “Get to bed, {name}. And when you can, talk to Quill in the archive before you talk to anyone else with a title.”"
+      ],
+      "choices": [
+        {
+          "label": "Go to bed",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "r1_detention": {
+      "id": "r1_detention",
+      "title": "First warning",
+      "mood": "dark",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "flag": "strike",
+          "set": true
+        }
+      ],
+      "text": [
+        "Harrow looks straight through you. “Sleepwalkers don’t carry wands.” You spend the rest of the night polishing brass plaques in the trophy room while the bell tolls faintly through the walls.",
+        "By dawn your name is in his book: first warning. One more, and a letter goes home."
+      ],
+      "choices": [
+        {
+          "label": "Stagger to bed at daybreak",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "r2_mirela": {
+      "id": "r2_mirela",
+      "title": "The prefect",
+      "mood": "tense",
+      "visual": {
+        "preset": "dormitory-night",
+        "particles": [
+          "candles"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dorm"
+      },
+      "onEnter": [
+        {
+          "relation": "mirela",
+          "add": 2
+        },
+        {
+          "flag": "mirela_ally",
+          "set": true
+        }
+      ],
+      "text": [
+        "Mirela Voss, sixth-year prefect, opens her door in a dressing gown, hair wild, a book already open in one hand. She does not tell you to go back to bed. She listens to every word with her eyebrows slowly rising.",
+        "“Four last night. Six tonight,” she says. “Asleep, all of them. Calm as lambs, cold as slate. The staff are calling it a stomach bug.” Her mouth thins. “I call it something else.”",
+        "She looks at you properly for the first time. “You heard the bell. Most people don’t. That makes you either very useful or very unlucky. Possibly both.”"
+      ],
+      "choices": [
+        {
+          "label": "Tell her about the light on the tower",
+          "to": "r2_walk",
+          "requires": {
+            "flag": "saw_light"
+          },
+          "effects": [
+            {
+              "relation": "mirela",
+              "add": 1
+            }
+          ],
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Keep the light to yourself for now",
+          "to": "r2_walk",
+          "requires": {
+            "flag": "saw_light"
+          },
+          "effects": [
+            {
+              "stat": "cunning",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Ask her to go and look at the tower with you",
+          "to": "r2_walk"
+        },
+        {
+          "label": "Ask her to keep watch over Pip",
+          "to": "r3_morning",
+          "effects": [
+            {
+              "stat": "kindness",
+              "add": 1
+            },
+            {
+              "relation": "mirela",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "r2_walk": {
+      "id": "r2_walk",
+      "title": "The foot of the tower",
+      "mood": "dark",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs"
+      },
+      "text": [
+        "She takes you the long way, through the library gallery and down the servants’ stair, because she has already mapped which corridors the portraits gossip in. At the foot of Hollow Tower a door of black oak waits, banded with iron.",
+        "Mirela opens her notebook and reads off times in a flat voice. “Tolls every eleven minutes, sometimes ten. It’s speeding up.” She studies the door. “I’d like to know if it’s locked or just unwelcoming.”"
+      ],
+      "choices": [
+        {
+          "label": "Try the handle yourself",
+          "to": "r2_felt",
+          "check": {
+            "stat": "courage",
+            "difficulty": 5,
+            "successTo": "r2_felt",
+            "failTo": "r2_dragged"
+          }
+        },
+        {
+          "label": "Let Mirela try a spell on the lock",
+          "to": "r2_spell"
+        },
+        {
+          "label": "Suggest you leave it and report what you’ve seen",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "r2_felt": {
+      "id": "r2_felt",
+      "title": "The pull",
+      "mood": "dark",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "hum_low"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "courage",
+          "add": 1
+        },
+        {
+          "flag": "felt_hum",
+          "set": true
+        },
+        {
+          "relation": "mirela",
+          "add": 1
+        }
+      ],
+      "text": [
+        "Your fingers close on the iron ring and the door hums through your arm. Something pulls, gently, like a current under smooth water. You stand there and do not let go for far too long, and then you do.",
+        "“Interesting,” says Mirela quietly, though her face has lost its colour. “You held on longer than I would have.”"
+      ],
+      "choices": [
+        {
+          "label": "Go back, shaken",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "r2_dragged": {
+      "id": "r2_dragged",
+      "title": "Hauled back",
+      "mood": "dark",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "whoosh"
+        ]
+      },
+      "onEnter": [
+        {
+          "relation": "mirela",
+          "add": 1
+        }
+      ],
+      "text": [
+        "The hum finds you before you have finished reaching for the handle. The edges of the corridor blur and your knees go soft. Mirela catches you by the collar and hauls you from the door like a kitten from a pond.",
+        "“That,” she says through her teeth, “is not a lock.”"
+      ],
+      "choices": [
+        {
+          "label": "Let her walk you back",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "r2_spell": {
+      "id": "r2_spell",
+      "title": "It listens",
+      "mood": "tense",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "sparks"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "spell"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "wit",
+          "add": 1
+        },
+        {
+          "relation": "mirela",
+          "add": 1
+        }
+      ],
+      "text": [
+        "Mirela whispers a lock-breaker and the air before the door sours. The spell comes back on itself as a puff of cold dust, and her wand hand goes numb. She flexes her fingers, quiet and calculating.",
+        "“Well,” she says. “It listens, at least.”"
+      ],
+      "choices": [
+        {
+          "label": "Head back with her",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "r4_wing": {
+      "id": "r4_wing",
+      "title": "The hospital wing",
+      "mood": "tense",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_hall"
+      },
+      "text": [
+        "At dawn you stand in the doorway of the hospital wing and stop. Every bed is full, and every sleeper is peaceful. Matron Hale moves between them with a clipboard and an expression like a closed door.",
+        "“Sleeping sickness,” she says before you can ask. “Nothing to be done but rest and fluids. Professor Ashgrove has been very kind about it.” Her eyes flick away on the last word."
+      ],
+      "choices": [
+        {
+          "label": "Read the clipboard when she turns away",
+          "to": "r4_chart",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 5,
+            "successTo": "r4_chart",
+            "failTo": "r4_shooed"
+          }
+        },
+        {
+          "label": "Ask her gently what she’s afraid of",
+          "to": "r4_matron",
+          "check": {
+            "stat": "kindness",
+            "difficulty": 5,
+            "successTo": "r4_matron",
+            "failTo": "r4_shooed"
+          }
+        },
+        {
+          "label": "Leave for breakfast",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Matron Hale"
+    },
+    "r4_chart": {
+      "id": "r4_chart",
+      "title": "The chart",
+      "mood": "dark",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": [
+          "page_rustle"
+        ]
+      },
+      "onEnter": [
+        {
+          "stat": "wit",
+          "add": 1
+        },
+        {
+          "flag": "saw_thirteen",
+          "set": true
+        }
+      ],
+      "text": [
+        "Names, dates, times. And in the margin, in a neat professor’s hand, a column of numbers that climbs by two each night: 4, 6, 8. Beside it, circled twice, the number 13."
+      ],
+      "choices": [
+        {
+          "label": "Slip out before she turns",
+          "to": "r3_morning"
+        }
+      ]
+    },
+    "r4_matron": {
+      "id": "r4_matron",
+      "title": "Matron Hale",
+      "mood": "tense",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_hall"
+      },
+      "onEnter": [
+        {
+          "stat": "kindness",
+          "add": 1
+        },
+        {
+          "flag": "matron_hint",
+          "set": true
+        }
+      ],
+      "text": [
+        "“I’m afraid,” she says at last, very quietly, “that I’ve seen this before. Fifty years ago. I was a junior nurse in this wing. Nobody wrote it down. Nobody said a word.” She straightens. “Go and eat, {name}. And find someone who remembers.”"
+      ],
+      "choices": [
+        {
+          "label": "Thank her and go",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Matron Hale"
+    },
+    "r4_shooed": {
+      "id": "r4_shooed",
+      "title": "Out",
+      "mood": "tense",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_hall"
+      },
+      "text": [
+        "“Out,” says Matron Hale, tight-lipped, and she steers you into the corridor with a hand between your shoulder blades. Her hand is shaking."
+      ],
+      "choices": [
+        {
+          "label": "Go to breakfast",
+          "to": "r3_morning"
+        }
+      ],
+      "speaker": "Matron Hale"
+    },
+    "r3_morning": {
+      "id": "r3_morning",
+      "title": "Breakfast",
+      "mood": "tense",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_hall"
+      },
+      "text": [
+        "Day two. The Great Hall is half empty. Eight chairs stand unused along the house tables, and nobody talks at full voice. The staff say the word “illness” often enough to make it sound rehearsed.",
+        {
+          "if": {
+            "flag": "tried_wake_pip"
+          },
+          "text": "Pip’s chair is one of the empty ones. Someone has left his spoon beside the plate, as if he might be back for it."
+        },
+        "At the staff table Professor Corvin Ashgrove, who teaches Defence Against the Dark Arts, sits with a cup of tea and a face you would like to trust. He catches your eye and nods, mild and kind."
+      ],
+      "choices": [
+        {
+          "label": "Tell Professor Ashgrove what you heard",
+          "to": "r3_ashgrove",
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Find Mirela Voss in the courtyard",
+          "to": "r3_mirela",
+          "requires": {
+            "not": {
+              "flag": "mirela_ally"
+            }
+          }
+        },
+        {
+          "label": "Watch the staff table before you decide anything",
+          "to": "r3_watch",
+          "check": {
+            "stat": "wit",
+            "difficulty": 5,
+            "successTo": "r3_watch",
+            "failTo": "d_harrow"
+          }
+        },
+        {
+          "label": "Keep it to yourself and move on",
+          "to": "d_harrow"
+        }
+      ]
+    },
+    "r3_watch": {
+      "id": "r3_watch",
+      "title": "Who isn’t eating",
+      "mood": "tense",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_hall"
+      },
+      "onEnter": [
+        {
+          "stat": "wit",
+          "add": 1
+        },
+        {
+          "flag": "noticed_staff",
+          "set": true
+        }
+      ],
+      "text": [
+        "You pretend to read and watch the staff table over the edge of the page. Ashgrove’s tea has not been touched. His eyes keep drifting to the ceiling. Matron Hale isn’t eating either. And one chair stands empty: the caretaker’s. Harrow, who never misses a meal, is somewhere else."
+      ],
+      "choices": [
+        {
+          "label": "Leave before anyone notices you looking",
+          "to": "d_harrow"
+        }
+      ]
+    },
+    "r3_ashgrove": {
+      "id": "r3_ashgrove",
+      "title": "The professor",
+      "mood": "cozy",
+      "visual": {
+        "preset": "great-hall-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_hall"
+      },
+      "text": [
+        "Professor Ashgrove listens with his whole face, nodding in all the right places, and when you finish he lays a hand on your shoulder. “You were right to come to me, {name}. This is something for adults to handle.”",
+        "His gaze drifts upward for a heartbeat, to the ceiling, to the tower beyond it, and returns. “I need your word that you won’t go after that bell on your own, and that you won’t draw other students into this. For their safety. And yours.”"
+      ],
+      "choices": [
+        {
+          "label": "Give him your word",
+          "to": "d_harrow",
+          "effects": [
+            {
+              "relation": "ashgrove",
+              "add": 2
+            },
+            {
+              "flag": "promised_silence",
+              "set": true
+            }
+          ],
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Tell him honestly you can’t promise that",
+          "to": "d_harrow",
+          "effects": [
+            {
+              "relation": "ashgrove",
+              "add": 1
+            },
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "r3_mirela": {
+      "id": "r3_mirela",
+      "title": "The courtyard wall",
+      "mood": "cozy",
+      "visual": {
+        "preset": "courtyard-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_courtyard"
+      },
+      "onEnter": [
+        {
+          "relation": "mirela",
+          "add": 1
+        },
+        {
+          "flag": "mirela_ally",
+          "set": true
+        }
+      ],
+      "text": [
+        "Mirela sits alone on the courtyard wall with a notebook full of times and the look of a person who has not slept since Monday. She raises an eyebrow as you tell her, then writes something down.",
+        "“The tower was sealed fifty years ago and there’s not a line in the school records about why,” she says. “I think I know how to stop it. I need someone with nerve.” She considers you. “Congratulations. You volunteered.”"
+      ],
+      "choices": [
+        {
+          "label": "Get on with the day",
+          "to": "d_harrow"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "d_harrow": {
+      "id": "d_harrow",
+      "title": "Harrow",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "On your way out of the Great Hall Harrow steps into your path. He has dark rings under his eyes and the look of a man who has not slept in days.",
+        {
+          "if": {
+            "flag": "strike"
+          },
+          "text": "“You’re in my book, {name},” he says dryly. “One warning.”"
+        },
+        {
+          "if": {
+            "relation": "harrow",
+            "gte": 1
+          },
+          "text": "He nods to you, almost as to an equal."
+        },
+        {
+          "if": {
+            "flag": "saw_figure"
+          },
+          "text": "His coat smells of pipe smoke and lamp oil, and when he clears his throat it is a hard, dry cough you have heard before."
+        }
+      ],
+      "choices": [
+        {
+          "label": "Apologise for last night",
+          "to": "d_harrow_forgive",
+          "requires": {
+            "flag": "strike"
+          },
+          "check": {
+            "stat": "kindness",
+            "difficulty": 5,
+            "successTo": "d_harrow_forgive",
+            "failTo": "hub"
+          }
+        },
+        {
+          "label": "Ask where he was at breakfast",
+          "to": "d_harrow_story",
+          "requires": {
+            "flag": "noticed_staff"
+          },
+          "effects": [
+            {
+              "relation": "harrow",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Accuse him of being the one with the keys",
+          "to": "d_harrow_accuse",
+          "requires": {
+            "flag": "saw_figure"
+          }
+        },
+        {
+          "label": "Ask what he knows about the bell",
+          "to": "d_harrow_story"
+        },
+        {
+          "label": "Say you’re in a hurry",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "d_harrow_accuse": {
+      "id": "d_harrow_accuse",
+      "title": "Keys",
+      "mood": "dark",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "relation": "harrow",
+          "add": -1
+        },
+        {
+          "flag": "harrow_was_figure",
+          "set": true
+        }
+      ],
+      "text": [
+        "Harrow goes very still. “You followed someone with keys,” he says. “And you think it was me.” The old man does not shout, and that is worse.",
+        "“It was me,” he says finally. “Every night since the first sleeper. Because if somebody doesn’t watch that door, somebody worse than me will.”"
+      ],
+      "choices": [
+        {
+          "label": "“I’m sorry. Tell me what you know”",
+          "to": "d_harrow_story",
+          "effects": [
+            {
+              "relation": "harrow",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "d_harrow_forgive": {
+      "id": "d_harrow_forgive",
+      "title": "Wiped clean",
+      "mood": "cozy",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "flag": "strike",
+          "set": false
+        },
+        {
+          "relation": "harrow",
+          "add": 1
+        }
+      ],
+      "text": [
+        "Harrow looks at you for a long time. Then he draws out his book, tears the page free, and folds it into his pocket. “We’ll say no more about it,” he says. “You’ve got enough on your plate.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask what he knows about the bell",
+          "to": "d_harrow_story",
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Thank him and go",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "d_harrow_story": {
+      "id": "d_harrow_story",
+      "title": "What Harrow saw",
+      "mood": "dark",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "relation": "harrow",
+          "add": 1
+        }
+      ],
+      "text": [
+        "Harrow glances up and down the corridor and lowers his voice. “I was a junior caretaker the night it started, fifty years back. I saw a boy in an archive coat carry music out of the east wing and lock the door behind him. He was crying. I never asked who it was.”",
+        "“I’ve watched that tower ever since. If you need something, {name}, you come to me.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask if he could lend you a key to the east and west wings",
+          "to": "d_harrow_key",
+          "requires": {
+            "relation": "harrow",
+            "gte": 2
+          },
+          "lockedHint": "Harrow doesn’t trust you that far yet."
+        },
+        {
+          "label": "Thank him and go",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "d_harrow_key": {
+      "id": "d_harrow_key",
+      "title": "The key",
+      "mood": "cozy",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "onEnter": [
+        {
+          "item": "harrow_key",
+          "give": true
+        }
+      ],
+      "text": [
+        "Harrow unhooks a heavy ring from his belt and twists a brass key free. “Opens most doors in the east and west wings. You never had it, understand?” He presses it into your palm and walks away without waiting for an answer."
+      ],
+      "choices": [
+        {
+          "label": "Slip it into your pocket",
+          "to": "hub",
+          "ripple": "This will not be forgotten."
+        }
+      ],
+      "speaker": "Harrow"
+    },
+    "hub": {
+      "id": "hub",
+      "title": "The afternoon",
+      "mood": "tense",
+      "visual": {
+        "preset": "courtyard-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_courtyard"
+      },
+      "text": [
+        "It is early afternoon. The bell will toll again tonight; everyone knows it, and everyone is pretending not to. You have until dusk, and time for two leads, not three.",
+        {
+          "if": {
+            "flag": "strike"
+          },
+          "text": "Harrow’s warning sits in your pocket like a small cold stone."
+        },
+        {
+          "if": {
+            "flag": "mirela_ally"
+          },
+          "text": "Across the courtyard Mirela catches your eye and taps her wrist, once: time."
+        }
+      ],
+      "choices": [
+        {
+          "label": "The archive, three floors below the kitchens",
+          "to": "a1_archive",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "flag": "lead_a_done"
+                }
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "lead_b_done"
+                    },
+                    {
+                      "flag": "lead_c_done"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": "The abandoned music room in the east wing",
+          "to": "b1_door",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "flag": "lead_b_done"
+                }
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "lead_a_done"
+                    },
+                    {
+                      "flag": "lead_c_done"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": "Professor Ashgrove’s office",
+          "to": "c1_office",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "flag": "lead_c_done"
+                }
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "lead_a_done"
+                    },
+                    {
+                      "flag": "lead_b_done"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": "Find Mirela behind the greenhouses",
+          "to": "mirela_talk",
+          "requires": {
+            "all": [
+              {
+                "flag": "mirela_ally"
+              },
+              {
+                "not": {
+                  "flag": "mirela_talk_done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": "Wait for dusk and go to the tower",
+          "to": "dir_dusk",
+          "requires": {
+            "any": [
+              {
+                "flag": "lead_a_done"
+              },
+              {
+                "flag": "lead_b_done"
+              },
+              {
+                "flag": "lead_c_done"
+              }
+            ]
+          },
+          "lockedHint": "You know too little to go up. Follow one lead first."
+        }
+      ]
+    },
+    "mirela_talk": {
+      "id": "mirela_talk",
+      "title": "Mirela’s plan",
+      "mood": "tense",
+      "visual": {
+        "preset": "courtyard-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_courtyard"
+      },
+      "text": [
+        "Mirela is waiting behind the greenhouses with a map of the castle and a long column of numbers: the times the bell has rung. “I’ve done the arithmetic,” she says. “It’s speeding up. At this rate the whole castle is asleep in four days.”",
+        "“I have a plan, and you won’t like it. I found a counter-spell in an old book that can break metal like this. We take the bell.” She looks at you. “But I don’t know what lies under that tower. I only know I can’t watch one more person fall asleep.”"
+      ],
+      "choices": [
+        {
+          "label": "Back her plan",
+          "to": "hub",
+          "effects": [
+            {
+              "relation": "mirela",
+              "add": 1
+            },
+            {
+              "flag": "mirela_plan_smash",
+              "set": true
+            },
+            {
+              "flag": "mirela_talk_done",
+              "set": true
+            }
+          ]
+        },
+        {
+          "label": "Ask her to look for another way first",
+          "to": "mirela_wait",
+          "effects": [
+            {
+              "flag": "mirela_talk_done",
+              "set": true
+            }
+          ],
+          "check": {
+            "stat": "kindness",
+            "difficulty": 5,
+            "successTo": "mirela_wait",
+            "failTo": "mirela_hurt"
+          }
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "mirela_wait": {
+      "id": "mirela_wait",
+      "title": "Wait",
+      "mood": "cozy",
+      "visual": {
+        "preset": "courtyard-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_courtyard"
+      },
+      "onEnter": [
+        {
+          "relation": "mirela",
+          "add": 1
+        },
+        {
+          "flag": "mirela_waits",
+          "set": true
+        }
+      ],
+      "text": [
+        "Mirela bites her lip. Then, reluctantly, she nods. “Fine. But if there’s nothing else by tonight, we take the bell. No more talking.”",
+        "She folds the map into her pocket, and you realise she was relieved. She never wanted to be the one deciding."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "mirela_hurt": {
+      "id": "mirela_hurt",
+      "title": "Too careful",
+      "mood": "dark",
+      "visual": {
+        "preset": "courtyard-day",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_courtyard"
+      },
+      "onEnter": [
+        {
+          "relation": "mirela",
+          "add": -1
+        }
+      ],
+      "text": [
+        "“Careful,” says Mirela bitterly. “We’ve had five careful days.” She folds up the map, and her eyes are hard. “I’ll do it with you or without you, {name}.” She walks away and leaves you standing between the greenhouses."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "a1_archive": {
+      "id": "a1_archive",
+      "title": "The archive",
+      "mood": "cozy",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive",
+        "sfx": [
+          "page_rustle"
+        ]
+      },
+      "text": [
+        "The archive lies three flights beneath the kitchens: shelves to the ceiling, dust that glows in lantern light, a smell of old paper and cold stone. Behind an oak desk sits Quill, spectacles pushed up into his hair, apparently in the middle of an argument with a cat.",
+        {
+          "if": {
+            "relation": "quill",
+            "gte": 1
+          },
+          "text": "He looks up and beams. “Ah! My night visitor. Sit. Mind the cat; she bites scholars.”"
+        },
+        {
+          "if": {
+            "relation": "quill",
+            "lte": 0
+          },
+          "text": "“You’re late,” he says. “Or early. It rather depends what you’re looking for.”"
+        }
+      ],
+      "choices": [
+        {
+          "label": "Tell him about the sleeping students and the bell",
+          "to": "a2_truth",
+          "effects": [
+            {
+              "relation": "quill",
+              "add": 1
+            }
+          ],
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Say Matron Hale sent you",
+          "to": "a2_truth",
+          "requires": {
+            "flag": "matron_hint"
+          },
+          "effects": [
+            {
+              "relation": "quill",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Pretend you’re looking for something else",
+          "to": "a2_sneak",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 5,
+            "successTo": "a2_sneak",
+            "failTo": "a2_truth"
+          }
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a2_truth": {
+      "id": "a2_truth",
+      "title": "Hollow Bell",
+      "mood": "magic",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "onEnter": [
+        {
+          "flag": "knows_pact",
+          "set": true
+        }
+      ],
+      "text": [
+        "Quill sets down his pen and draws out a folder sealed with brown wax. “Hollow Bell. Cast three hundred years ago by Cantor Eadric Vale, who led the castle choir. It was never meant to warn anyone. It was meant to hold something down.”",
+        "“Beneath the tower lies what we call the Hush. It eats sound, and it eats sleep. Vale sang it to rest every night with a song that closes the bell. Then the song was lost, and the bell began to ring by itself. Now it feeds on whoever sleeps.”",
+        "He peers at you over the folder. “The song was written on two pages. I know where one of them is.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask why he cares so much",
+          "to": "a_quill_past"
+        },
+        {
+          "label": "Ask where the page is",
+          "to": "a3_search"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a2_sneak": {
+      "id": "a2_sneak",
+      "title": "Dust and paper",
+      "mood": "tense",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "onEnter": [
+        {
+          "stat": "cunning",
+          "add": 1
+        },
+        {
+          "flag": "knows_pact",
+          "set": true
+        }
+      ],
+      "text": [
+        "While you leaf innocently through a crate of nineteenth-century accounts, you find a letter from Cantor Vale to the headmaster: “The bell will ring itself if the song is forgotten. Remember that the song is written on two pages.”",
+        "Quill has been standing behind you the entire time. “You’re looking for the bell, aren’t you?” He smiles thinly. “You look so innocent that you very nearly fooled me.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask why he’s so interested",
+          "to": "a_quill_past"
+        },
+        {
+          "label": "Ask him to tell you the rest",
+          "to": "a3_search"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a_quill_past": {
+      "id": "a_quill_past",
+      "title": "Quill’s secret",
+      "mood": "dark",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "text": [
+        "Quill takes off his spectacles and rubs his eyes. “I wasn’t always an archivist. Fifty years ago I was Vale’s last student, seventeen years old. The night the bell began ringing by itself, I panicked. I tore out the page with the song and locked the music room. I thought that would stop it.”",
+        "“It did the opposite. Since then I have been an archivist, a watchman and a coward, all at once.” He puts the spectacles back on, and his hands are not quite steady."
+      ],
+      "choices": [
+        {
+          "label": "Forgive him",
+          "to": "a3_search",
+          "effects": [
+            {
+              "relation": "quill",
+              "add": 2
+            },
+            {
+              "stat": "kindness",
+              "add": 1
+            },
+            {
+              "flag": "quill_forgiven",
+              "set": true
+            }
+          ],
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Tell him this is his fault",
+          "to": "a3_search",
+          "effects": [
+            {
+              "relation": "quill",
+              "add": -1
+            },
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Say nothing and ask for the page",
+          "to": "a3_search"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a3_search": {
+      "id": "a3_search",
+      "title": "The missing page",
+      "mood": "tense",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "text": [
+        "Behind Quill the shelves hold a thousand folders, and some are dustier than others. “It’s in there somewhere,” he says. “I can’t search any more. My eyes aren’t what they were.”"
+      ],
+      "choices": [
+        {
+          "label": "You remember where it lay, from a dream you have had before",
+          "to": "a4_found",
+          "requires": {
+            "flag": "looped"
+          }
+        },
+        {
+          "label": "Ask Quill to help you look",
+          "to": "a4_found",
+          "requires": {
+            "relation": "quill",
+            "gte": 2
+          },
+          "lockedHint": "Quill doesn’t trust you enough yet."
+        },
+        {
+          "label": "Ask him to hum what he remembers of the song",
+          "to": "a4_hum",
+          "requires": {
+            "all": [
+              {
+                "flag": "quill_forgiven"
+              },
+              {
+                "relation": "quill",
+                "gte": 3
+              }
+            ]
+          },
+          "lockedHint": "He would only do that for someone he has fully forgiven himself in front of."
+        },
+        {
+          "label": "Search the folders yourself",
+          "to": "a4_found",
+          "check": {
+            "stat": "wit",
+            "difficulty": 6,
+            "successTo": "a4_found",
+            "failTo": "a4_missed"
+          }
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a4_found": {
+      "id": "a4_found",
+      "title": "First page",
+      "mood": "magic",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive",
+        "sfx": [
+          "page_rustle",
+          "chime_soft"
+        ]
+      },
+      "onEnter": [
+        {
+          "item": "page_a",
+          "give": true
+        },
+        {
+          "counter": "song",
+          "add": 1
+        },
+        {
+          "flag": "lead_a_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "Under a stack of old accounts you find a single page in neat, faded ink: the notes of a lullaby. Over them Vale has written: “The Cantor’s close. To be sung from the tower, and the bell shall be stilled.”",
+        "The page is cold in your hand, but you feel it wants something. Quill nods. “Take it. And for heaven’s sake, don’t lose it.”"
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a4_hum": {
+      "id": "a4_hum",
+      "title": "What he remembers",
+      "mood": "magic",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "candles"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive",
+        "sfx": [
+          "hum_voice"
+        ]
+      },
+      "onEnter": [
+        {
+          "counter": "song",
+          "add": 1
+        },
+        {
+          "relation": "quill",
+          "add": 1
+        },
+        {
+          "flag": "lead_a_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "Quill closes his eyes. For a long moment nothing happens. Then, in a thin, cracked voice that has not sung in fifty years, he begins to hum. The melody is simple and very sad, and you find you already know where it is going.",
+        "When he finishes he is crying and pretending not to. “That is as much as I have,” he says. “Mind it well.”"
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "a4_missed": {
+      "id": "a4_missed",
+      "title": "Empty hands",
+      "mood": "dark",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "onEnter": [
+        {
+          "flag": "lead_a_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "You search for hours. The paper crumbles between your fingers, and the ink has run where it is worst. In the end you find only an empty cover and the ragged edge of something torn out long ago.",
+        "“Somebody got here first,” Quill mutters. “It’s not the first time something has disappeared from here.”"
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "b1_door": {
+      "id": "b1_door",
+      "title": "The music room",
+      "mood": "magic",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "frost_crackle"
+        ]
+      },
+      "text": [
+        "The music room in the east wing has been locked for longer than anyone can say. The door is covered in frost flowers, though the day is mild. From behind it comes a hum: a very old melody, almost too faint to be real."
+      ],
+      "choices": [
+        {
+          "label": "Hum the melody you felt through the tower door",
+          "to": "b2_soft",
+          "requires": {
+            "flag": "felt_hum"
+          },
+          "effects": [
+            {
+              "relation": "cantor",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Use Harrow’s key and slip in quietly",
+          "to": "b2_soft",
+          "requires": {
+            "item": "harrow_key"
+          }
+        },
+        {
+          "label": "Knock politely and wait",
+          "to": "b2_soft",
+          "effects": [
+            {
+              "stat": "kindness",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Break the door open with magic",
+          "to": "b2_hard",
+          "requires": {
+            "not": {
+              "flag": "strike"
+            }
+          },
+          "effects": [
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Break the door open with magic. You already have one warning",
+          "to": "b2_hard",
+          "requires": {
+            "flag": "strike"
+          },
+          "check": {
+            "stat": "courage",
+            "difficulty": 6,
+            "successTo": "b2_hard",
+            "failTo": "ending_expelled"
+          },
+          "effects": [
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ],
+          "ripple": "This cannot be undone."
+        }
+      ]
+    },
+    "b2_soft": {
+      "id": "b2_soft",
+      "title": "The Cantor",
+      "mood": "magic",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "door_creak",
+          "choir_hum"
+        ]
+      },
+      "onEnter": [
+        {
+          "relation": "cantor",
+          "add": 2
+        }
+      ],
+      "text": [
+        "The door swings open on its own. In the middle of the room, among overturned stools and a closed grand piano, stands a transparent man in a choir cassock, hands folded before him as if in prayer.",
+        "“No one has knocked here in a very long time,” he says, and his voice carries a strange harmonic, as though two people are speaking. “You are kind. Come in. I am Eadric Vale.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask him to show you what happened",
+          "to": "b_flash1",
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Ask him to tell it briefly",
+          "to": "b3_gift"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "b2_hard": {
+      "id": "b2_hard",
+      "title": "Frost",
+      "mood": "dark",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "door_splinter",
+          "glass_shatter"
+        ]
+      },
+      "text": [
+        "The door splinters on its hinges, and cold pours out of the room. In the middle of it a transparent figure shoots up toward the ceiling, shrieking without sound.",
+        "“You come to take more!” he cries. “I have nothing left to give!”"
+      ],
+      "choices": [
+        {
+          "label": "Apologise and lower your wand",
+          "to": "b3_gift",
+          "check": {
+            "stat": "kindness",
+            "difficulty": 5,
+            "successTo": "b3_gift",
+            "failTo": "b3_press"
+          }
+        },
+        {
+          "label": "Press him for answers",
+          "to": "b3_press",
+          "effects": [
+            {
+              "stat": "cunning",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "b_flash1": {
+      "id": "b_flash1",
+      "title": "Memory: Vale",
+      "mood": "magic",
+      "pov": {
+        "name": "Eadric Vale"
+      },
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "candles",
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "choir_hum"
+        ]
+      },
+      "text": [
+        "You are Eadric Vale, three hundred years ago. It is night and the castle sleeps. Beneath the belfry floor you feel the Hush stirring like a hungry dog.",
+        "You have cast a bell of black metal and written a song on two pages. You know it will work. You do not yet know what it will cost."
+      ],
+      "choices": [
+        {
+          "label": "Sing the song for the first time",
+          "to": "b_flash2",
+          "effects": [
+            {
+              "stat": "kindness",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Hesitate and examine the pact once more",
+          "to": "b_flash2",
+          "effects": [
+            {
+              "stat": "wit",
+              "add": 1
+            }
+          ]
+        }
+      ]
+    },
+    "b_flash2": {
+      "id": "b_flash2",
+      "title": "Memory: the price",
+      "mood": "dark",
+      "pov": {
+        "name": "Eadric Vale"
+      },
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "bell_far"
+        ]
+      },
+      "text": [
+        "The bell answers. The Hush sinks. But with every night you sing, you notice the power must come from somewhere: the students you teach sleep more heavily, and some of them never quite wake.",
+        "“Every pact has a price,” says a calm voice from the wall. It is not hostile. It is only honest."
+      ],
+      "choices": [
+        {
+          "label": "Keep singing to protect the castle",
+          "to": "b_flash3",
+          "effects": [
+            {
+              "flag": "vale_keeps_singing",
+              "set": true
+            }
+          ]
+        },
+        {
+          "label": "Stop, and let it break",
+          "to": "b_flash3",
+          "effects": [
+            {
+              "flag": "vale_stopped",
+              "set": true
+            }
+          ]
+        }
+      ]
+    },
+    "b_flash3": {
+      "id": "b_flash3",
+      "title": "The memory ends",
+      "mood": "magic",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room"
+      },
+      "onEnter": [
+        {
+          "relation": "cantor",
+          "add": 1
+        },
+        {
+          "flag": "knows_pact",
+          "set": true
+        },
+        {
+          "flag": "vale_recalls",
+          "set": true
+        },
+        {
+          "counter": "song",
+          "add": 1
+        }
+      ],
+      "text": [
+        "You blink, and the music room is back. Vale stands before you, and in his eyes you can see that he knows what you have seen.",
+        "“Now you know why I cannot sing alone,” he says quietly. “The song is true only if someone shares the price with me. I remember it all, child. The melody still lives in me. I merely cannot hold it up by myself.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask what he needs",
+          "to": "b3_gift"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "b3_gift": {
+      "id": "b3_gift",
+      "title": "The tuning fork",
+      "mood": "magic",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "fork_ring"
+        ]
+      },
+      "onEnter": [
+        {
+          "item": "tuning_fork",
+          "give": true
+        },
+        {
+          "counter": "song",
+          "add": 1
+        },
+        {
+          "flag": "knows_pact",
+          "set": true
+        },
+        {
+          "flag": "lead_b_done",
+          "set": true
+        },
+        {
+          "relation": "cantor",
+          "add": 1
+        }
+      ],
+      "text": [
+        "Vale speaks softly. He saved the castle once by making a pact: he would sing the Hush to rest every night, and the bell would hold it down. When he died the song stayed in him and bound him to this room. Then someone broke in and took half of the notes. Ever since, he has not been able to sing alone.",
+        "He offers you a small silver fork that glows faintly. “My tuning fork. With it you can tune the bell to the lullaby. And if you find the pages, perhaps we can give them peace together.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask whether anyone else has asked for the song",
+          "to": "b_vale_ash"
+        },
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "b3_press": {
+      "id": "b3_press",
+      "title": "Bitter truth",
+      "mood": "dark",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room"
+      },
+      "onEnter": [
+        {
+          "relation": "cantor",
+          "add": -1
+        },
+        {
+          "flag": "knows_pact",
+          "set": true
+        },
+        {
+          "flag": "lead_b_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "Vale turns away. As you press him, he tells it shortly and bitterly: the pact, the bell, the Hush, and the half of the notes that was stolen. “Now go,” he says, and the door closes behind you."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "b_vale_ash": {
+      "id": "b_vale_ash",
+      "title": "The visitor",
+      "mood": "dark",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room"
+      },
+      "text": [
+        "Vale looks toward the door. “There has been another here,” he says. “The professor. Three times. He wants the song, but not to close the bell. He wants to use it to ring thirteen.”",
+        "“I said no. But he promises me my freedom if I sing. I am tired, child. I am so very tired.”"
+      ],
+      "choices": [
+        {
+          "label": "Ask Vale to promise to stand with you when the time comes",
+          "to": "hub",
+          "effects": [
+            {
+              "relation": "cantor",
+              "add": 1
+            },
+            {
+              "flag": "vale_promised",
+              "set": true
+            }
+          ],
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Say you’ll try to talk Ashgrove round first",
+          "to": "hub",
+          "effects": [
+            {
+              "stat": "wit",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Thank him and go",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "c1_office": {
+      "id": "c1_office",
+      "title": "The office",
+      "mood": "tense",
+      "visual": {
+        "preset": "office-study",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_office",
+        "sfx": [
+          "clock_tick"
+        ]
+      },
+      "text": [
+        "Professor Ashgrove’s office is in the west wing behind a door of dark wood with a small brass nameplate. It is lunchtime, and the room beyond is dark: nobody is home.",
+        "Through the keyhole you see a tidy desk, a glass cabinet of silver instruments, and an open book."
+      ],
+      "choices": [
+        {
+          "label": "Use Harrow’s key and let yourself in",
+          "to": "c2_ledger",
+          "requires": {
+            "item": "harrow_key"
+          }
+        },
+        {
+          "label": "Wait and ask him politely when he comes",
+          "to": "c2_talk"
+        },
+        {
+          "label": "Sneak in while he’s at lunch",
+          "to": "c2_ledger",
+          "requires": {
+            "not": {
+              "flag": "strike"
+            }
+          },
+          "check": {
+            "stat": "cunning",
+            "difficulty": 6,
+            "successTo": "c2_ledger",
+            "failTo": "c2_caught"
+          }
+        },
+        {
+          "label": "Sneak in. You already have one warning",
+          "to": "c2_ledger",
+          "requires": {
+            "flag": "strike"
+          },
+          "check": {
+            "stat": "cunning",
+            "difficulty": 6,
+            "successTo": "c2_ledger",
+            "failTo": "ending_expelled"
+          },
+          "ripple": "One more mistake would be the last."
+        }
+      ]
+    },
+    "c2_talk": {
+      "id": "c2_talk",
+      "title": "Tea with the professor",
+      "mood": "cozy",
+      "visual": {
+        "preset": "office-study",
+        "particles": [
+          "candles"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_office"
+      },
+      "text": [
+        "Ashgrove comes up the corridor with his cloak over his arm and greets you with a warm smile. He lets you in, puts the kettle on, and listens. He is courteous, nearly too courteous.",
+        "As he pours, you notice that the book on his desk lies open to a number circled in pencil: 13."
+      ],
+      "choices": [
+        {
+          "label": "Ask what the number means",
+          "to": "c3_hints"
+        },
+        {
+          "label": "Say you saw the same number on the Matron’s chart",
+          "to": "c3_hints",
+          "requires": {
+            "flag": "saw_thirteen"
+          },
+          "effects": [
+            {
+              "stat": "wit",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Ask why he became a teacher here",
+          "to": "c_ashgrove_past"
+        },
+        {
+          "label": "Thank him for the tea and leave",
+          "to": "c4_leave"
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "c_ashgrove_past": {
+      "id": "c_ashgrove_past",
+      "title": "Lenora",
+      "mood": "dark",
+      "visual": {
+        "preset": "office-study",
+        "particles": [
+          "candles"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_office"
+      },
+      "text": [
+        "Ashgrove looks down into his cup for a long time. “My sister Lenora climbed Hollow Tower when she was twelve, to prove she was brave. She fell asleep up there. She never woke.”",
+        "“I was sixteen. I have spent the rest of my life trying to understand why.”"
+      ],
+      "choices": [
+        {
+          "label": "Tell him you’re sorry, and ask about the number",
+          "to": "c3_hints",
+          "effects": [
+            {
+              "stat": "kindness",
+              "add": 1
+            },
+            {
+              "relation": "ashgrove",
+              "add": 1
+            },
+            {
+              "flag": "knows_ashgrove_grief",
+              "set": true
+            }
+          ],
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Sit in silence with him",
+          "to": "c4_leave",
+          "effects": [
+            {
+              "relation": "ashgrove",
+              "add": 2
+            },
+            {
+              "flag": "knows_ashgrove_grief",
+              "set": true
+            }
+          ],
+          "ripple": "This will not be forgotten."
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "c3_hints": {
+      "id": "c3_hints",
+      "title": "Thirteen",
+      "mood": "dark",
+      "visual": {
+        "preset": "office-study",
+        "particles": [
+          "candles"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_office"
+      },
+      "onEnter": [
+        {
+          "relation": "ashgrove",
+          "add": 1
+        },
+        {
+          "flag": "knows_ashgrove_plan",
+          "set": true
+        },
+        {
+          "flag": "lead_c_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "His smile tightens. “An old arithmetic exercise,” he says, but his finger drums against the desk. After a long moment he adds, more quietly: “Some doors should stay closed, {name}. Trust me. I am trying to protect you.”",
+        "You see how afraid he is beneath the calm. It is not a villain’s fear. It is the fear of a man who has decided on something terrible."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "c4_leave": {
+      "id": "c4_leave",
+      "title": "Polite goodbye",
+      "mood": "cozy",
+      "visual": {
+        "preset": "office-study",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_office"
+      },
+      "onEnter": [
+        {
+          "relation": "ashgrove",
+          "add": 1
+        },
+        {
+          "flag": "lead_c_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "He walks you to the door, still smiling. “Come to me whenever you’re worried.” The door closes behind you, and you feel he was relieved that you did not ask."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "c2_ledger": {
+      "id": "c2_ledger",
+      "title": "The ledger",
+      "mood": "dark",
+      "visual": {
+        "preset": "office-study",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_office",
+        "sfx": [
+          "page_rustle"
+        ]
+      },
+      "text": [
+        "You slip inside and open the book. It is not a book. It is a ledger: rows of names, and beside each the date a student fell asleep. At the bottom, in the professor’s tidy hand: “The Last Toll. Thirteen strokes. When the Hush is full, it seals for ever. The price: the sleepers’ sleep. They will not wake.”",
+        "A desk drawer is slightly ajar."
+      ],
+      "choices": [
+        {
+          "label": "Take the ledger and go",
+          "to": "c2_out"
+        },
+        {
+          "label": "Search the drawers as well",
+          "to": "c2_drawer",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 6,
+            "successTo": "c2_drawer",
+            "failTo": "c2_caught"
+          }
+        }
+      ]
+    },
+    "c2_out": {
+      "id": "c2_out",
+      "title": "Out unseen",
+      "mood": "tense",
+      "visual": {
+        "preset": "office-study",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_office"
+      },
+      "onEnter": [
+        {
+          "item": "ledger",
+          "give": true
+        },
+        {
+          "flag": "knows_ashgrove_plan",
+          "set": true
+        },
+        {
+          "stat": "cunning",
+          "add": 1
+        },
+        {
+          "flag": "lead_c_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "You tuck the ledger under your cloak and are gone before anyone comes."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ]
+    },
+    "c2_drawer": {
+      "id": "c2_drawer",
+      "title": "The second page",
+      "mood": "magic",
+      "visual": {
+        "preset": "office-study",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_office",
+        "sfx": [
+          "drawer_slide",
+          "page_rustle"
+        ]
+      },
+      "onEnter": [
+        {
+          "item": "ledger",
+          "give": true
+        },
+        {
+          "item": "page_b",
+          "give": true
+        },
+        {
+          "counter": "song",
+          "add": 1
+        },
+        {
+          "flag": "knows_ashgrove_plan",
+          "set": true
+        },
+        {
+          "stat": "cunning",
+          "add": 1
+        },
+        {
+          "flag": "lead_c_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "Under a stack of letters lies a single sheet of music, brittle at the creases, written in Vale’s own hand. The other half of the song. He has had it all along.",
+        "You take it, and the ledger, and leave the door exactly as you found it."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub",
+          "ripple": "Something shifts."
+        }
+      ]
+    },
+    "c2_caught": {
+      "id": "c2_caught",
+      "title": "Out",
+      "mood": "dark",
+      "visual": {
+        "preset": "office-study",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_office",
+        "sfx": [
+          "door_slam"
+        ]
+      },
+      "onEnter": [
+        {
+          "relation": "ashgrove",
+          "add": -2
+        },
+        {
+          "flag": "strike",
+          "set": true
+        },
+        {
+          "flag": "lead_c_done",
+          "set": true
+        }
+      ],
+      "text": [
+        "You have barely opened the book when the door swings wide. Ashgrove stands in the opening, and his gaze is suddenly not warm any more. “Interesting,” he says quietly. “Out.”",
+        "He writes something on a slip of paper. You are reported to the headmaster."
+      ],
+      "choices": [
+        {
+          "label": "Back to the afternoon",
+          "to": "hub"
+        }
+      ]
+    },
+    "dir_dusk": {
+      "id": "dir_dusk",
+      "title": "The afternoon",
+      "mood": "tense",
+      "director": {
+        "pool": "dusk",
+        "pick": 2,
+        "then": "n0_dusk"
+      }
+    },
+    "ev_mirela_ashgrove": {
+      "id": "ev_mirela_ashgrove",
+      "title": "In the corridor",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Outside the staff room you hear Mirela’s voice, hard and controlled. “You know more than you say, Professor. Fifteen students have fallen asleep since Monday.”",
+        "Ashgrove answers calmly, but his hands are white. “You do not understand what you are saying, Miss Voss.” You are the only one who sees them."
+      ],
+      "choices": [
+        {
+          "label": "Stand by Mirela",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|mirela",
+              "add": -2
+            },
+            {
+              "relation": "mirela",
+              "add": 1
+            },
+            {
+              "relation": "ashgrove",
+              "add": -1
+            }
+          ]
+        },
+        {
+          "label": "Defend Ashgrove: he’s trying to help",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|mirela",
+              "add": 1
+            },
+            {
+              "relation": "ashgrove",
+              "add": 1
+            },
+            {
+              "relation": "mirela",
+              "add": -1
+            }
+          ]
+        },
+        {
+          "label": "Ask them both to wait, for the students’ sake",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|mirela",
+              "add": 1
+            },
+            {
+              "stat": "kindness",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 6,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "flag": "mirela_ally"
+            },
+            {
+              "bond": "ashgrove|mirela",
+              "lte": 0
+            }
+          ]
+        }
+      }
+    },
+    "ev_quill_mirela": {
+      "id": "ev_quill_mirela",
+      "title": "The vanished page",
+      "mood": "tense",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "text": [
+        "At the archive door you hear Quill tell Mirela what he told you: that he tore out the page fifty years ago. Mirela goes quiet. Then she goes white.",
+        "“You knew why,” she says. “All this time?”"
+      ],
+      "choices": [
+        {
+          "label": "Ask Mirela to understand: he was seventeen and terrified",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "mirela|quill",
+              "add": 1
+            },
+            {
+              "stat": "kindness",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Say she has every right to be angry",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "mirela|quill",
+              "add": -2
+            },
+            {
+              "relation": "mirela",
+              "add": 1
+            },
+            {
+              "relation": "quill",
+              "add": -1
+            }
+          ]
+        },
+        {
+          "label": "Say nothing",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "mirela|quill",
+              "add": -1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 7,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "flag": "quill_forgiven"
+            },
+            {
+              "flag": "mirela_ally"
+            }
+          ]
+        }
+      }
+    },
+    "ev_harrow_quill": {
+      "id": "ev_harrow_quill",
+      "title": "Old debts",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Harrow and Quill stand in the corridor, snarling at each other in low voices. “You locked the door and let us think it was an accident,” says Harrow. “I was seventeen!” Quill retorts. Both look up as you appear."
+      ],
+      "choices": [
+        {
+          "label": "Tell Quill that Harrow isn’t out to judge him",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "harrow|quill",
+              "add": 2
+            }
+          ]
+        },
+        {
+          "label": "Tell Harrow that Quill has had fifty years to regret it",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "harrow|quill",
+              "add": 1
+            },
+            {
+              "stat": "kindness",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Let them argue it out",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "harrow|quill",
+              "add": -1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 4,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "relation": "harrow",
+              "gte": 1
+            },
+            {
+              "relation": "quill",
+              "gte": 1
+            }
+          ]
+        }
+      }
+    },
+    "ev_vale_ashgrove": {
+      "id": "ev_vale_ashgrove",
+      "title": "A visit to the music room",
+      "mood": "tense",
+      "visual": {
+        "preset": "music-room-moon",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_music_room"
+      },
+      "text": [
+        "Passing the music room you see the door standing ajar. Ashgrove is inside, his back to you. “One more time,” he says softly. “Sing it, and I will set you free.” Vale does not answer. He looks at you through the gap."
+      ],
+      "choices": [
+        {
+          "label": "Sneak in and listen",
+          "to": "$return",
+          "effects": [
+            {
+              "stat": "cunning",
+              "add": 1
+            },
+            {
+              "flag": "knows_ashgrove_plan",
+              "set": true
+            },
+            {
+              "bond": "ashgrove|cantor",
+              "add": -1
+            }
+          ]
+        },
+        {
+          "label": "Walk in and get them talking to each other",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|cantor",
+              "add": 2
+            },
+            {
+              "stat": "kindness",
+              "add": 1
+            },
+            {
+              "relation": "ashgrove",
+              "add": 1
+            },
+            {
+              "relation": "cantor",
+              "add": 1
+            }
+          ],
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Warn Vale with a look and walk on",
+          "to": "$return",
+          "effects": [
+            {
+              "relation": "cantor",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 8,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "flag": "lead_b_done"
+            },
+            {
+              "bond": "ashgrove|cantor",
+              "lte": 0
+            }
+          ]
+        }
+      }
+    },
+    "ev_quill_ashgrove": {
+      "id": "ev_quill_ashgrove",
+      "title": "The envelope",
+      "mood": "tense",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_archive"
+      },
+      "text": [
+        "Quill hands you a sealed envelope. “Give this to Corvin. He will understand.” It is heavier than paper should be."
+      ],
+      "choices": [
+        {
+          "label": "Deliver it unopened",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|quill",
+              "add": 2
+            },
+            {
+              "relation": "ashgrove",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Open it and read it first",
+          "to": "$return",
+          "effects": [
+            {
+              "flag": "read_letter",
+              "set": true
+            },
+            {
+              "bond": "ashgrove|quill",
+              "add": 1
+            },
+            {
+              "stat": "cunning",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Burn it",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|quill",
+              "add": -2
+            },
+            {
+              "relation": "quill",
+              "add": -1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 3,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "flag": "lead_a_done"
+            },
+            {
+              "bond": "ashgrove|quill",
+              "gte": 1
+            }
+          ]
+        }
+      }
+    },
+    "ev_mirela_key": {
+      "id": "ev_mirela_key",
+      "title": "The key",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Mirela has spoken to Harrow and is full of questions. “You must have a way into the tower,” she says. “I want to check the tower door before tonight.”"
+      ],
+      "choices": [
+        {
+          "label": "Give her Harrow’s key",
+          "to": "$return",
+          "requires": {
+            "item": "harrow_key"
+          },
+          "lockedHint": "You have no key to give.",
+          "effects": [
+            {
+              "relation": "mirela",
+              "add": 2
+            },
+            {
+              "item": "harrow_key",
+              "give": false
+            },
+            {
+              "flag": "mirela_has_key",
+              "set": true
+            }
+          ]
+        },
+        {
+          "label": "Tell her the key isn’t yours to lend",
+          "to": "$return",
+          "effects": [
+            {
+              "relation": "mirela",
+              "add": -1
+            }
+          ]
+        },
+        {
+          "label": "Suggest asking Harrow together",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "harrow|mirela",
+              "add": 2
+            },
+            {
+              "relation": "mirela",
+              "add": 1
+            },
+            {
+              "relation": "harrow",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 5,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "flag": "mirela_ally"
+            },
+            {
+              "relation": "harrow",
+              "gte": 1
+            }
+          ]
+        }
+      }
+    },
+    "ev_harrow_ashgrove": {
+      "id": "ev_harrow_ashgrove",
+      "title": "A message for Corvin",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Harrow holds you back in a doorway. “Tell Professor Ashgrove I can see he isn’t sleeping,” he says quietly. “And that I would rather have an honest man in that tower than a clever one.”"
+      ],
+      "choices": [
+        {
+          "label": "Pass the message on word for word",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|harrow",
+              "add": 2
+            },
+            {
+              "relation": "ashgrove",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Soften the words so they don’t wound",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|harrow",
+              "add": 1
+            },
+            {
+              "stat": "wit",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Say nothing",
+          "to": "$return",
+          "effects": [
+            {
+              "bond": "ashgrove|harrow",
+              "add": -1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 4,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "relation": "harrow",
+              "gte": 1
+            },
+            {
+              "relation": "ashgrove",
+              "gte": 1
+            }
+          ]
+        }
+      }
+    },
+    "ev_suspect": {
+      "id": "ev_suspect",
+      "title": "A cough in the stairwell",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Somewhere below you someone coughs, a dry hard cough, and you realise you have been wondering all day who owns it. Harrow is two floors down, polishing a doorknob that does not need polishing."
+      ],
+      "choices": [
+        {
+          "label": "Ask him straight out",
+          "to": "$return",
+          "effects": [
+            {
+              "relation": "harrow",
+              "add": -1
+            },
+            {
+              "flag": "harrow_was_figure",
+              "set": true
+            },
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Let it go for now",
+          "to": "$return",
+          "effects": [
+            {
+              "stat": "cunning",
+              "add": 1
+            }
+          ]
+        }
+      ],
+      "storylet": {
+        "pool": "dusk",
+        "priority": 5,
+        "once": true,
+        "when": {
+          "all": [
+            {
+              "flag": "saw_figure"
+            },
+            {
+              "not": {
+                "flag": "harrow_was_figure"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "n0_dusk": {
+      "id": "n0_dusk",
+      "title": "Sunset",
+      "mood": "tense",
+      "visual": {
+        "preset": "dormitory-night",
+        "particles": [
+          "dust"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dorm"
+      },
+      "text": [
+        "The sun sets behind Hollow Tower, and the tower throws a long shadow across the courtyard. In an hour the bell will toll. You go up to the dormitory to fetch what you need.",
+        "Pip lies as he did last night: calm, cold, far away. On the bedside table sit a half-eaten chocolate frog and an unopened letter from his mother."
+      ],
+      "choices": [
+        {
+          "label": "Sit with Pip for a moment",
+          "to": "n1_evening",
+          "effects": [
+            {
+              "stat": "kindness",
+              "add": 1
+            },
+            {
+              "flag": "sat_with_pip",
+              "set": true
+            }
+          ]
+        },
+        {
+          "label": "Take Pip’s chocolate frog with you",
+          "to": "n1_evening",
+          "effects": [
+            {
+              "item": "pip_frog",
+              "give": true
+            },
+            {
+              "stat": "kindness",
+              "add": 1
+            }
+          ],
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Go over what you know once more",
+          "to": "n1_evening",
+          "requires": {
+            "any": [
+              {
+                "counter": "song",
+                "gte": 1
+              },
+              {
+                "flag": "knows_ashgrove_plan"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "stat": "wit",
+              "add": 1
+            }
+          ],
+          "lockedHint": "You haven’t learned enough to go over."
+        },
+        {
+          "label": "Check your gear and steady yourself",
+          "to": "n1_evening",
+          "effects": [
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ]
+        }
+      ]
+    },
+    "n1_evening": {
+      "id": "n1_evening",
+      "title": "Night two",
+      "mood": "dark",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Tonight the bell tolls earlier than yesterday, almost during supper. In two days more than thirty students have fallen asleep in their beds. The castle is closing its eyes.",
+        "You go over what you know and what is in your pockets. What you did today decides what you must manage now."
+      ],
+      "choices": [
+        {
+          "label": "Go with Mirela",
+          "to": "n1b_mirela",
+          "requires": {
+            "relation": "mirela",
+            "gte": 1
+          },
+          "lockedHint": "You haven’t asked Mirela for help.",
+          "effects": [
+            {
+              "flag": "with_mirela",
+              "set": true
+            }
+          ],
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Go alone",
+          "to": "n2_stairs",
+          "effects": [
+            {
+              "stat": "courage",
+              "add": 1
+            }
+          ]
+        }
+      ]
+    },
+    "n1b_mirela": {
+      "id": "n1b_mirela",
+      "title": "At the foot of the tower",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_corridor"
+      },
+      "text": [
+        "Mirela waits at the stairs with her wand in hand. She has not slept, and her gaze is sharp. “What do we do if Ashgrove is up there?” she asks quietly. “If he’s the one ringing, he’s the enemy.”"
+      ],
+      "choices": [
+        {
+          "label": "Go in with wands ready",
+          "to": "m1_door",
+          "effects": [
+            {
+              "stat": "courage",
+              "add": 1
+            },
+            {
+              "flag": "mirela_armed",
+              "set": true
+            }
+          ]
+        },
+        {
+          "label": "Ask her to lower her wand until you’ve heard what he has to say",
+          "to": "m1_door",
+          "effects": [
+            {
+              "stat": "kindness",
+              "add": 1
+            },
+            {
+              "flag": "mirela_calm",
+              "set": true
+            }
+          ]
+        }
+      ],
+      "speaker": "Mirela"
+    },
+    "m1_door": {
+      "id": "m1_door",
+      "title": "Mirela: the door",
+      "mood": "dark",
+      "pov": {
+        "name": "Mirela"
+      },
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "whisper",
+          "hum_low"
+        ]
+      },
+      "text": [
+        "You are Mirela. At the foot of the tower the silence has taken a shape: a tall, soundless shadow across the door. It turns toward you, though it has no head.",
+        "{name} has to get up the stairs. Your job is to hold it back. The notebook shakes in your hand."
+      ],
+      "choices": [
+        {
+          "label": "Lock the tower door with the key you were given",
+          "to": "m2_holds",
+          "requires": {
+            "flag": "mirela_has_key"
+          }
+        },
+        {
+          "label": "Strike back with a defensive spell",
+          "to": "m2_holds",
+          "check": {
+            "stat": "courage",
+            "difficulty": 6,
+            "successTo": "m2_holds",
+            "failTo": "m2_falls"
+          }
+        },
+        {
+          "label": "Read the rhythm from your notebook and answer in time",
+          "to": "m2_holds",
+          "check": {
+            "stat": "wit",
+            "difficulty": 6,
+            "successTo": "m2_holds",
+            "failTo": "m2_falls"
+          }
+        },
+        {
+          "label": "Fall back and shut the door",
+          "to": "m2_retreats"
+        }
+      ]
+    },
+    "m2_holds": {
+      "id": "m2_holds",
+      "title": "Mirela: holding",
+      "mood": "magic",
+      "pov": {
+        "name": "Mirela"
+      },
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "sparks"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "spell"
+        ]
+      },
+      "onEnter": [
+        {
+          "flag": "mirela_awake",
+          "set": true
+        }
+      ],
+      "text": [
+        "The shadow writhes, chokes, and draws back into the walls. You breathe out, shaking, and feel that something has changed: it does not fear you, but it respects you.",
+        "You run up the stairs after {name}."
+      ],
+      "choices": [
+        {
+          "label": "Back to {name}",
+          "to": "n2_stairs"
+        }
+      ]
+    },
+    "m2_falls": {
+      "id": "m2_falls",
+      "title": "Mirela: falling",
+      "mood": "dark",
+      "pov": {
+        "name": "Mirela"
+      },
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "silence_swallow",
+          "sleep_fall"
+        ]
+      },
+      "onEnter": [
+        {
+          "flag": "mirela_asleep",
+          "set": true
+        }
+      ],
+      "text": [
+        "The spell dies in your mouth. The shadow swallows the sound, and your thoughts with it. You watch {name} vanish up the stairs and want to shout, but you have no voice.",
+        "The last thing you feel is the floor against your cheek. Then it goes very, very quiet."
+      ],
+      "choices": [
+        {
+          "label": "Back to {name}",
+          "to": "n2_stairs"
+        }
+      ]
+    },
+    "m2_retreats": {
+      "id": "m2_retreats",
+      "title": "Mirela: falling back",
+      "mood": "tense",
+      "pov": {
+        "name": "Mirela"
+      },
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "door_slam"
+        ]
+      },
+      "text": [
+        "You slam the door and put your back against it. The shadow pounds, but it does not get through. You are safe, but you are going nowhere tonight.",
+        "{name} is alone up there."
+      ],
+      "choices": [
+        {
+          "label": "Back to {name}",
+          "to": "n2_stairs"
+        }
+      ]
+    },
+    "n2_stairs": {
+      "id": "n2_stairs",
+      "title": "The stairs",
+      "mood": "dark",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "footsteps"
+        ]
+      },
+      "text": [
+        "The Hollow Tower stair twists upward in the dark. The higher you climb, the thicker the silence grows: first your footsteps go, then your breath, then your thoughts. It is like wading through black wool.",
+        {
+          "if": {
+            "flag": "sat_with_pip"
+          },
+          "text": "You hold on to the memory of sitting beside Pip, the warmth of his hand. It is something to keep hold of."
+        },
+        "A hundred steps remain. Somewhere above, the bell is waiting."
+      ],
+      "choices": [
+        {
+          "label": "Force your way through the silence",
+          "to": "n3_belfry",
+          "check": {
+            "stat": "courage",
+            "difficulty": 6,
+            "successTo": "n3_belfry",
+            "failTo": "n2_setback"
+          }
+        },
+        {
+          "label": "Read the rhythm of the silence and walk in time with it",
+          "to": "n3_belfry",
+          "check": {
+            "stat": "wit",
+            "difficulty": 6,
+            "successTo": "n3_belfry",
+            "failTo": "n2_setback"
+          }
+        },
+        {
+          "label": "Strike the tuning fork (it will crack)",
+          "to": "n3_belfry",
+          "requires": {
+            "item": "tuning_fork"
+          },
+          "effects": [
+            {
+              "item": "tuning_fork",
+              "give": false
+            },
+            {
+              "counter": "song",
+              "add": -1
+            }
+          ],
+          "ripple": "Something breaks."
+        }
+      ]
+    },
+    "n2_setback": {
+      "id": "n2_setback",
+      "title": "The silence takes you",
+      "mood": "dark",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_tower_stairs",
+        "sfx": [
+          "silence_swallow",
+          "heartbeat"
+        ]
+      },
+      "text": [
+        "The silence seizes you. You can no longer hear yourself. Your knees give way and the steps blur together. You are about to become part of it."
+      ],
+      "choices": [
+        {
+          "label": "Mirela hauls you up the stairs",
+          "to": "n3_belfry",
+          "requires": {
+            "all": [
+              {
+                "flag": "with_mirela"
+              },
+              {
+                "flag": "mirela_awake"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "relation": "mirela",
+              "add": 1
+            },
+            {
+              "stat": "courage",
+              "add": -1
+            }
+          ],
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Hold Pip’s chocolate frog and think of home",
+          "to": "n3_belfry",
+          "requires": {
+            "item": "pip_frog"
+          },
+          "effects": [
+            {
+              "item": "pip_frog",
+              "give": false
+            }
+          ]
+        },
+        {
+          "label": "Harrow and Quill carry you up the stairs together",
+          "to": "n3_belfry",
+          "requires": {
+            "all": [
+              {
+                "bond": "harrow|quill",
+                "gte": 2
+              },
+              {
+                "flag": "quill_forgiven"
+              },
+              {
+                "relation": "harrow",
+                "gte": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "relation": "quill",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Harrow’s lantern cuts through: he has followed you",
+          "to": "n3_belfry",
+          "requires": {
+            "relation": "harrow",
+            "gte": 2
+          },
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Strike the tuning fork (it will crack)",
+          "to": "n3_belfry",
+          "requires": {
+            "item": "tuning_fork"
+          },
+          "effects": [
+            {
+              "item": "tuning_fork",
+              "give": false
+            },
+            {
+              "counter": "song",
+              "add": -1
+            }
+          ]
+        },
+        {
+          "label": "Push on alone",
+          "to": "n3_belfry",
+          "check": {
+            "stat": "courage",
+            "difficulty": 8,
+            "successTo": "n3_belfry",
+            "failTo": "ending_silence"
+          }
+        }
+      ]
+    },
+    "n3_belfry": {
+      "id": "n3_belfry",
+      "title": "The belfry",
+      "mood": "dark",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "bell_near",
+          "wind_gust"
+        ]
+      },
+      "text": [
+        "At the top the stair opens into a round belfry with windows that have no glass, letting in night wind and mist. In the middle hangs the Hollow Bell: black, bigger than a cart, and humming so faintly that you feel it in your teeth.",
+        "Professor Ashgrove stands by the ropes. He does not look surprised. In the corner, bound to the bell’s shadow by chains you cannot see, hangs Eadric Vale, almost lost in the light.",
+        {
+          "if": {
+            "flag": "promised_silence"
+          },
+          "text": "“You gave me your word,” says Ashgrove, not unkindly."
+        },
+        "“I did not ask you to come,” he says. “But now that you are here, I can at least explain.”"
+      ],
+      "choices": [
+        {
+          "label": "Let him explain. Listen to him",
+          "to": "n4_talk"
+        },
+        {
+          "label": "Throw yourself at him and grab the rope",
+          "to": "n4_fight"
+        },
+        {
+          "label": "Smash the bell together with Mirela",
+          "to": "ending_broken_bell",
+          "requires": {
+            "all": [
+              {
+                "flag": "with_mirela"
+              },
+              {
+                "flag": "mirela_awake"
+              }
+            ]
+          },
+          "lockedHint": "Mirela is not here.",
+          "ripple": "This cannot be undone."
+        },
+        {
+          "label": "Give Mirela the signal to strike first",
+          "to": "n4_clapper",
+          "requires": {
+            "all": [
+              {
+                "flag": "mirela_armed"
+              },
+              {
+                "flag": "mirela_awake"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "relation": "ashgrove",
+              "add": -1
+            }
+          ],
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Call on Vale: he promised to stand with you",
+          "to": "n3_vale_breaks",
+          "requires": {
+            "flag": "vale_promised"
+          },
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Take Vale’s place at the bell",
+          "to": "n6_bargain",
+          "requires": {
+            "all": [
+              {
+                "flag": "knows_pact"
+              },
+              {
+                "stat": "cunning",
+                "gte": 4
+              }
+            ]
+          },
+          "lockedHint": "You don’t know the pact well enough, or you’re not cunning enough."
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "n3_vale_breaks": {
+      "id": "n3_vale_breaks",
+      "title": "The chains break",
+      "mood": "magic",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "sparks",
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "chain_snap",
+          "choir_hum"
+        ]
+      },
+      "onEnter": [
+        {
+          "flag": "ashgrove_beaten",
+          "set": true
+        },
+        {
+          "relation": "ashgrove",
+          "add": -1
+        }
+      ],
+      "text": [
+        "“I promised,” says Vale, and for the first time in three hundred years his chains snap. He flings himself between Ashgrove and the bell, and a cold wave throws the professor to the floor.",
+        "“I am sorry,” says Vale. “But this is what I owe them.”"
+      ],
+      "choices": [
+        {
+          "label": "Turn to Vale",
+          "to": "n5_cantor"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "n4_talk": {
+      "id": "n4_talk",
+      "title": "The arithmetic",
+      "mood": "tense",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry"
+      },
+      "text": [
+        "“The Hush beneath us is the only reason this castle still stands,” says Ashgrove. “Every night it grows stronger. The bell holds it down, but it feeds on the sleepers. If I ring thirteen strokes, it seals for ever. The price is those who already sleep.”",
+        "His voice cracks. “Forty-one students for a thousand. I have done the arithmetic for ten years. I am not proud of it.”",
+        "He does not look at you as an enemy. He looks at you as someone who could stop him, and whom he hopes will not."
+      ],
+      "choices": [
+        {
+          "label": "Show him that you have the song",
+          "to": "n5_yields",
+          "requires": {
+            "counter": "song",
+            "gte": 2
+          },
+          "lockedHint": "You don’t have enough of the song yet."
+        },
+        {
+          "label": "Put his own ledger in front of him and demand answers",
+          "to": "n5_yields",
+          "requires": {
+            "item": "ledger"
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 5,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          }
+        },
+        {
+          "label": "Tell him you saw his numbers on the hospital chart",
+          "to": "n5_yields",
+          "requires": {
+            "flag": "saw_thirteen"
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 4,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          }
+        },
+        {
+          "label": "Quote the letter Quill wrote to him",
+          "to": "n5_yields",
+          "requires": {
+            "flag": "read_letter"
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 3,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          }
+        },
+        {
+          "label": "Remind him of the trust between you",
+          "to": "n5_yields",
+          "requires": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "relation": "ashgrove",
+                    "gte": 1
+                  },
+                  {
+                    "not": {
+                      "flag": "promised_silence"
+                    }
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "flag": "promised_silence"
+                  },
+                  {
+                    "not": {
+                      "flag": "with_mirela"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "check": {
+            "stat": "kindness",
+            "difficulty": 4,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          },
+          "lockedHint": "He doesn’t trust you, or you broke your promise by bringing Mirela."
+        },
+        {
+          "label": "Speak his sister’s name: Lenora",
+          "to": "n5_yields",
+          "requires": {
+            "flag": "knows_ashgrove_grief"
+          },
+          "check": {
+            "stat": "kindness",
+            "difficulty": 3,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          }
+        },
+        {
+          "label": "Call for Quill, who has followed you",
+          "to": "n4_quill",
+          "requires": {
+            "flag": "quill_forgiven"
+          },
+          "ripple": "This will not be forgotten."
+        },
+        {
+          "label": "Ask Mirela to lower her wand as a sign of peace",
+          "to": "n5_yields",
+          "requires": {
+            "all": [
+              {
+                "flag": "mirela_calm"
+              },
+              {
+                "flag": "mirela_awake"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Appeal to his conscience",
+          "to": "n5_yields",
+          "check": {
+            "stat": "kindness",
+            "difficulty": 7,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          }
+        },
+        {
+          "label": "Tell him he’s right",
+          "to": "ending_last_toll",
+          "ripple": "This cannot be undone."
+        },
+        {
+          "label": "Say you need time",
+          "to": "n3_belfry"
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "n4_fight": {
+      "id": "n4_fight",
+      "title": "The rope",
+      "mood": "dark",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "sparks",
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "spell",
+          "whoosh"
+        ]
+      },
+      "text": [
+        "Ashgrove is faster than you thought. His wand sends light and shadow flaring against the walls, and the silence takes the words out of your mouth. You wrestle for the rope while the bell hums in time with your heart."
+      ],
+      "choices": [
+        {
+          "label": "Give everything you have",
+          "to": "n4_clapper",
+          "check": {
+            "stat": "courage",
+            "difficulty": 7,
+            "successTo": "n4_clapper",
+            "failTo": "ending_silence"
+          }
+        },
+        {
+          "label": "Snuff the lights and strike from the dark",
+          "to": "n4_clapper",
+          "check": {
+            "stat": "cunning",
+            "difficulty": 6,
+            "successTo": "n4_clapper",
+            "failTo": "ending_silence"
+          }
+        },
+        {
+          "label": "Let Mirela distract him",
+          "to": "n4_clapper",
+          "requires": {
+            "all": [
+              {
+                "flag": "with_mirela"
+              },
+              {
+                "flag": "mirela_awake"
+              }
+            ]
+          },
+          "check": {
+            "stat": "courage",
+            "difficulty": 4,
+            "successTo": "n4_clapper",
+            "failTo": "ending_silence"
+          }
+        }
+      ]
+    },
+    "n4_clapper": {
+      "id": "n4_clapper",
+      "title": "The clapper",
+      "mood": "tense",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "sparks"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "bell_near"
+        ]
+      },
+      "onEnter": [
+        {
+          "flag": "ashgrove_beaten",
+          "set": true
+        },
+        {
+          "relation": "ashgrove",
+          "add": -1
+        }
+      ],
+      "text": [
+        "You seize the clapper in both hands and haul it down. Ashgrove falls to his knees, spent. The bell whines one last time and goes still.",
+        "“Don’t,” he whispers. “You don’t know what’s waiting below.” But from the corner you hear Vale humming, thin and trembling. He needs you."
+      ],
+      "choices": [
+        {
+          "label": "Turn to Vale",
+          "to": "n5_cantor"
+        }
+      ]
+    },
+    "n4_quill": {
+      "id": "n4_quill",
+      "title": "Quill’s confession",
+      "mood": "dark",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry"
+      },
+      "onEnter": [
+        {
+          "relation": "ashgrove",
+          "add": 1
+        }
+      ],
+      "text": [
+        "The footsteps behind you are Quill’s. He has followed, pale and out of breath, lantern in hand. “Corvin,” he says quietly. “It was I who tore out the page. It was I who locked the door. This is my responsibility. Don’t make it your students’.”",
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "with_mirela"
+              },
+              {
+                "flag": "mirela_awake"
+              },
+              {
+                "bond": "mirela|quill",
+                "gte": 1
+              }
+            ]
+          },
+          "text": "Mirela lays a hand on Quill’s shoulder. She says nothing, but she stands there."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "with_mirela"
+              },
+              {
+                "flag": "mirela_awake"
+              },
+              {
+                "bond": "mirela|quill",
+                "lte": -1
+              }
+            ]
+          },
+          "text": "Mirela has drawn her wand. “You let them sleep for fifty years,” she says to Quill, and her voice shakes."
+        },
+        "Ashgrove stares at him. It is the first time you have seen him stop being calm. “You?” he whispers. “All these years?”"
+      ],
+      "choices": [
+        {
+          "label": "Let them have it out",
+          "to": "n5_yields",
+          "requires": {
+            "any": [
+              {
+                "not": {
+                  "flag": "with_mirela"
+                }
+              },
+              {
+                "not": {
+                  "flag": "mirela_awake"
+                }
+              },
+              {
+                "bond": "mirela|quill",
+                "gte": 0
+              }
+            ]
+          }
+        },
+        {
+          "label": "Stop Mirela from attacking Quill",
+          "to": "n5_yields",
+          "requires": {
+            "all": [
+              {
+                "flag": "with_mirela"
+              },
+              {
+                "flag": "mirela_awake"
+              },
+              {
+                "bond": "mirela|quill",
+                "lte": -1
+              }
+            ]
+          },
+          "check": {
+            "stat": "kindness",
+            "difficulty": 6,
+            "successTo": "n5_yields",
+            "failTo": "n4_fight"
+          }
+        }
+      ],
+      "speaker": "Quill"
+    },
+    "n5_yields": {
+      "id": "n5_yields",
+      "title": "He lowers his hand",
+      "mood": "magic",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "chime_soft"
+        ]
+      },
+      "onEnter": [
+        {
+          "flag": "ashgrove_yielded",
+          "set": true
+        },
+        {
+          "relation": "ashgrove",
+          "add": 1
+        }
+      ],
+      "text": [
+        "Ashgrove lowers his hand. He sits in silence for a long moment. “I have been set on this for ten years,” he says at last. “And a child comes and shows me I stopped looking for anything else.”",
+        "He steps aside, and for the first time Vale looks at you with hope.",
+        {
+          "if": {
+            "not": {
+              "item": "page_b"
+            }
+          },
+          "text": "From inside his coat Ashgrove takes a folded sheet, brittle at the creases. “I should have given you this long ago,” he says. “The other half.”"
+        }
+      ],
+      "choices": [
+        {
+          "label": "Take the page he offers",
+          "to": "n5_cantor",
+          "requires": {
+            "not": {
+              "item": "page_b"
+            }
+          },
+          "effects": [
+            {
+              "item": "page_b",
+              "give": true
+            },
+            {
+              "counter": "song",
+              "add": 1
+            }
+          ]
+        },
+        {
+          "label": "Turn to Vale",
+          "to": "n5_cantor",
+          "requires": {
+            "item": "page_b"
+          }
+        }
+      ],
+      "speaker": "Ashgrove"
+    },
+    "n5_cantor": {
+      "id": "n5_cantor",
+      "title": "The Cantor’s song",
+      "mood": "magic",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "choir_hum"
+        ]
+      },
+      "text": [
+        "Eadric Vale drifts out of the bell’s shadow. “If you ask me to sing, I bind myself to the bell once more. I do it gladly. But I need something to sing from.”",
+        {
+          "if": {
+            "flag": "vale_recalls"
+          },
+          "text": "He no longer hides what he remembers. The melody is plainly in him, only waiting for something to hold it up."
+        }
+      ],
+      "choices": [
+        {
+          "label": "Lay out everything you have and strike the fork",
+          "to": "n7_reseal",
+          "requires": {
+            "counter": "song",
+            "gte": 3
+          }
+        },
+        {
+          "label": "Trust him to carry what is missing: he has waited three hundred years for someone who would",
+          "to": "n7_reseal",
+          "requires": {
+            "all": [
+              {
+                "counter": "song",
+                "gte": 2
+              },
+              {
+                "not": {
+                  "counter": "song",
+                  "gte": 3
+                }
+              },
+              {
+                "relation": "cantor",
+                "gte": 3
+              }
+            ]
+          },
+          "lockedHint": "Vale doesn’t trust you enough to carry the song with you.",
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Hum the line you heard in the dark, and let him find the rest",
+          "to": "n7_reseal",
+          "requires": {
+            "all": [
+              {
+                "counter": "song",
+                "gte": 2
+              },
+              {
+                "not": {
+                  "counter": "song",
+                  "gte": 3
+                }
+              },
+              {
+                "flag": "felt_hum"
+              }
+            ]
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 6,
+            "successTo": "n7_reseal",
+            "failTo": "ending_cantors_rest"
+          },
+          "ripple": "Something shifts."
+        },
+        {
+          "label": "Ask him to sing it as far as he remembers",
+          "to": "n7_reseal",
+          "requires": {
+            "all": [
+              {
+                "counter": "song",
+                "gte": 2
+              },
+              {
+                "not": {
+                  "counter": "song",
+                  "gte": 3
+                }
+              }
+            ]
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 8,
+            "successTo": "n7_reseal",
+            "failTo": "ending_cantors_rest"
+          }
+        },
+        {
+          "label": "Try to carry the melody with the little you have",
+          "to": "ending_cantors_rest",
+          "requires": {
+            "all": [
+              {
+                "counter": "song",
+                "gte": 1
+              },
+              {
+                "not": {
+                  "counter": "song",
+                  "gte": 2
+                }
+              }
+            ]
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 10,
+            "successTo": "ending_cantors_rest",
+            "failTo": "ending_silence"
+          }
+        },
+        {
+          "label": "Improvise with him, with nothing to go on",
+          "to": "ending_cantors_rest",
+          "requires": {
+            "not": {
+              "counter": "song",
+              "gte": 1
+            }
+          },
+          "check": {
+            "stat": "wit",
+            "difficulty": 10,
+            "successTo": "ending_cantors_rest",
+            "failTo": "ending_silence"
+          }
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "n6_bargain": {
+      "id": "n6_bargain",
+      "title": "The pact",
+      "mood": "dark",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "hum_low",
+          "bell_near"
+        ]
+      },
+      "text": [
+        "You walk toward the bell’s shadow. Vale looks up, afraid. “What are you doing?” You know the words from the archive and from his story, and you say them aloud: the old pact, with your name on the Cantor’s line.",
+        "The bell answers not with a toll but with something worse and kinder: attention. It knows who you are. The pact is waiting only for a yes."
+      ],
+      "choices": [
+        {
+          "label": "Say yes",
+          "to": "ending_quiet_bargain",
+          "ripple": "This cannot be undone."
+        },
+        {
+          "label": "Pull back and regret it",
+          "to": "n3_belfry"
+        }
+      ],
+      "speaker": "Vale"
+    },
+    "n7_reseal": {
+      "id": "n7_reseal",
+      "title": "The reseal",
+      "mood": "magic",
+      "visual": {
+        "preset": "belfry-storm",
+        "particles": [
+          "fireflies",
+          "sparks"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_belfry",
+        "sfx": [
+          "fork_ring",
+          "choir_hum",
+          "chime_success"
+        ]
+      },
+      "text": [
+        "Vale takes the note from the fork, and his voice, old and clear, fills the belfry. As he sings you read the pages aloud, and the bell begins to answer: not with a hollow toll but with a calm, clear tone that you feel down to your toes.",
+        "Beneath you the Hush turns in its sleep and sinks deeper. And for the first time in two days a real light comes through the windows: dawn.",
+        "Only the last stroke remains. Someone must take the rope and ring it in time with the song."
+      ],
+      "choices": [
+        {
+          "label": "Take the rope together with Ashgrove",
+          "to": "ending_waking_together",
+          "requires": {
+            "all": [
+              {
+                "flag": "ashgrove_yielded"
+              },
+              {
+                "relation": "ashgrove",
+                "gte": 1
+              }
+            ]
+          }
+        },
+        {
+          "label": "Take the rope alone",
+          "to": "ending_waking",
+          "requires": {
+            "not": {
+              "all": [
+                {
+                  "flag": "ashgrove_yielded"
+                },
+                {
+                  "relation": "ashgrove",
+                  "gte": 1
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ending_waking_together": {
+      "id": "ending_waking_together",
+      "title": "Everyone wakes",
+      "mood": "cozy",
+      "visual": {
+        "preset": "ending-dawn",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dawn",
+        "sfx": [
+          "jingle_good"
+        ]
+      },
+      "text": [
+        "You and Ashgrove take hold of the rope at the same moment. The bell strikes one clean note, and the mist in the tower lifts like a heavy cloak. One by one the students open their eyes in their beds.",
+        {
+          "if": {
+            "flag": "tried_wake_pip"
+          },
+          "text": "In the dormitory Pip sits up and asks, confused, if it’s breakfast yet. Then he looks at you and says, “I heard you. You said my name.”"
+        },
+        {
+          "if": {
+            "not": {
+              "flag": "tried_wake_pip"
+            }
+          },
+          "text": "In the dormitory Pip sits up and asks, confused, if it’s breakfast yet."
+        },
+        {
+          "if": {
+            "flag": "sat_with_pip"
+          },
+          "text": "He adds that he dreamed someone was sitting beside him, and that it was warm."
+        },
+        {
+          "if": {
+            "flag": "mirela_asleep"
+          },
+          "text": "Mirela wakes too. It takes her three days to be herself again, and she refuses to say what she dreamed."
+        },
+        {
+          "if": {
+            "flag": "mirela_awake"
+          },
+          "text": "Mirela stands at the tower door with tears in her eyes and a notebook torn in half. She smiles anyway."
+        },
+        "Vale remains in the music room, but he sings now every evening, softly, and the Hush sleeps. Quill puts the pages on display in the archive, behind glass.",
+        {
+          "if": {
+            "bond": "ashgrove|cantor",
+            "gte": 1
+          },
+          "text": "Before sunrise Ashgrove goes to the music room and asks Vale’s forgiveness. Vale answers with a note, and the two of them sing together for the first time in three hundred years."
+        },
+        "Ashgrove goes to the headmaster that same morning and tells him everything. He keeps his post, but he must apologise to every student, one by one.",
+        "You sleep well tonight, {name}."
+      ],
+      "ending": {
+        "id": "waking_together",
+        "title": "Everyone wakes, together",
+        "kind": "good"
+      }
+    },
+    "ending_waking": {
+      "id": "ending_waking",
+      "title": "The song",
+      "mood": "magic",
+      "visual": {
+        "preset": "ending-dawn",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dawn",
+        "sfx": [
+          "jingle_good"
+        ]
+      },
+      "text": [
+        "You take the rope alone and ring the last stroke in time with Vale’s voice. The bell answers with a note so pure that the glass in the tower sings. The Hush sinks, and the day comes.",
+        "Ashgrove sits on the floor, broken. He looks at the bell and understands, too late, what he almost did. He leaves without a word, and nobody sees him again until autumn.",
+        {
+          "if": {
+            "flag": "tried_wake_pip"
+          },
+          "text": "In the dormitory Pip sits up. “I heard you,” he says. “I just couldn’t answer.”"
+        },
+        {
+          "if": {
+            "not": {
+              "flag": "tried_wake_pip"
+            }
+          },
+          "text": "In the dormitory Pip sits up and asks if it’s breakfast yet."
+        },
+        {
+          "if": {
+            "flag": "sat_with_pip"
+          },
+          "text": "He says he dreamed someone sat beside him, and that it was warm."
+        },
+        {
+          "if": {
+            "flag": "mirela_asleep"
+          },
+          "text": "Mirela wakes too, after three days. She no longer trusts anyone who smiles too much."
+        },
+        {
+          "if": {
+            "bond": "ashgrove|harrow",
+            "gte": 2
+          },
+          "text": "Harrow sits beside Ashgrove all night, saying nothing. It is enough."
+        },
+        "Vale stays in the music room and sings the Hush to rest each evening. The castle wakes, but you will always remember how close it was."
+      ],
+      "ending": {
+        "id": "waking",
+        "title": "The song that closed the bell",
+        "kind": "good"
+      }
+    },
+    "ending_cantors_rest": {
+      "id": "ending_cantors_rest",
+      "title": "Vale’s rest",
+      "mood": "magic",
+      "visual": {
+        "preset": "ending-dawn",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dawn",
+        "sfx": [
+          "jingle_good"
+        ]
+      },
+      "text": [
+        "Vale sings from memory. His voice is weaker than you expected, but it is true. The bell answers, and with every note he grows a little more transparent.",
+        "At the last note he smiles. “Three hundred years,” he says. “At last I am finished.” He fades into the light that comes through the windows.",
+        "The students wake, one by one. Pip asks if it’s breakfast yet. The castle is safe, but the song is gone for ever.",
+        {
+          "if": {
+            "flag": "mirela_asleep"
+          },
+          "text": "Mirela wakes too, but it takes three days."
+        },
+        {
+          "if": {
+            "flag": "ashgrove_beaten"
+          },
+          "text": "Ashgrove sits in the tower long afterwards. He says nothing, but you see that he is weeping."
+        },
+        {
+          "if": {
+            "flag": "vale_stopped"
+          },
+          "text": "“I should have stopped sooner,” Vale says in the last moment. “Thank you for letting me do it right this time.”"
+        },
+        {
+          "if": {
+            "flag": "vale_keeps_singing"
+          },
+          "text": "“I sang to protect them,” Vale whispers. “It is all I ever wanted.”"
+        }
+      ],
+      "ending": {
+        "id": "cantors_rest",
+        "title": "Vale’s rest",
+        "kind": "good"
+      }
+    },
+    "ending_broken_bell": {
+      "id": "ending_broken_bell",
+      "title": "The crack",
+      "mood": "dark",
+      "visual": {
+        "preset": "ending-dark",
+        "particles": [
+          "sparks",
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dark_drone",
+        "sfx": [
+          "bell_crack",
+          "glass_shatter",
+          "jingle_neutral"
+        ]
+      },
+      "text": [
+        "You and Mirela raise your wands together. The bell shatters with a sound that makes the whole castle shake. The Hush is loose. The walls tremble, the lights die, and far below something opens its eyes.",
+        "The students wake that night, every one, in a castle evacuated before dawn. Hogwarts is closed for months.",
+        "What lives beneath Hollow Tower now, nobody knows. It does not sing. It only listens.",
+        {
+          "if": {
+            "flag": "tried_wake_pip"
+          },
+          "text": "Pip is awake and well. He has not forgotten that you tried to wake him."
+        },
+        {
+          "if": {
+            "flag": "mirela_waits"
+          },
+          "text": "Mirela looks away. “You wanted us to wait,” she says quietly. She says no more, but you know she hasn’t forgiven herself."
+        },
+        {
+          "if": {
+            "flag": "mirela_plan_smash"
+          },
+          "text": "Mirela smiles for the first time in days. “I told you,” she says. Then she looks down into the hole in the floor, and the smile fades."
+        },
+        {
+          "if": {
+            "bond": "harrow|mirela",
+            "gte": 2
+          },
+          "text": "Harrow and Mirela stand together at the gate, receiving the evacuated students. It is the first time you have seen the caretaker laugh."
+        }
+      ],
+      "ending": {
+        "id": "broken_bell",
+        "title": "The bell that broke",
+        "kind": "neutral"
+      }
+    },
+    "ending_last_toll": {
+      "id": "ending_last_toll",
+      "title": "Thirteen strokes",
+      "mood": "dark",
+      "visual": {
+        "preset": "ending-dark",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dark_drone",
+        "sfx": [
+          "bell_near",
+          "bell_near",
+          "bell_near",
+          "jingle_bad"
+        ]
+      },
+      "text": [
+        "You take the rope beside Ashgrove. Thirteen strokes. Each is heavier than the last, and after the final one you hear it: nothing. Not wind, not song, not breath.",
+        "The Hush is sealed. The castle is safe. But the dormitories are full of students who will never wake.",
+        {
+          "if": {
+            "flag": "tried_wake_pip"
+          },
+          "text": "Pip lies in the bed beside yours. You know he heard you. It doesn’t help."
+        },
+        {
+          "if": {
+            "not": {
+              "flag": "tried_wake_pip"
+            }
+          },
+          "text": "Pip lies in the bed beside yours, dreaming on."
+        },
+        {
+          "if": {
+            "flag": "sat_with_pip"
+          },
+          "text": "You sat with him that evening. It is all you got."
+        },
+        {
+          "if": {
+            "flag": "mirela_asleep"
+          },
+          "text": "Mirela sleeps among them."
+        },
+        "You drift through the rest of your school years as if in a dream. Every night you hear the bell, though it never rings."
+      ],
+      "ending": {
+        "id": "last_toll",
+        "title": "The Last Toll",
+        "kind": "bad"
+      }
+    },
+    "ending_silence": {
+      "id": "ending_silence",
+      "title": "The Hush",
+      "mood": "dark",
+      "visual": {
+        "preset": "ending-silence",
+        "particles": [
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "silence_swallow",
+          "jingle_bad"
+        ]
+      },
+      "text": [
+        "There is no pain. The sound goes first, then the light, and finally your thoughts. You dream that you are standing in the belfry, ringing a bell that nobody can hear.",
+        "The next morning there is one more student who does not wake.",
+        {
+          "if": {
+            "not": {
+              "flag": "looped"
+            }
+          },
+          "text": "But inside the dream you remember everything. Perhaps you can find a way out."
+        }
+      ],
+      "choices": [
+        {
+          "label": "Wake again, in the middle of the night",
+          "to": "p01_midnight",
+          "requires": {
+            "not": {
+              "flag": "looped"
+            }
+          },
+          "resetState": {
+            "keep": [
+              "stats"
+            ]
+          },
+          "effects": [
+            {
+              "flag": "looped",
+              "set": true
+            },
+            {
+              "flag": "knows_pact",
+              "set": true
+            },
+            {
+              "stat": "wit",
+              "add": 1
+            }
+          ],
+          "ripple": "You remember. The world doesn’t."
+        }
+      ],
+      "ending": {
+        "id": "silence",
+        "title": "The Hush",
+        "kind": "bad"
+      }
+    },
+    "ending_expelled": {
+      "id": "ending_expelled",
+      "title": "Sent home",
+      "mood": "dark",
+      "visual": {
+        "preset": "ending-dark",
+        "particles": []
+      },
+      "audio": {
+        "ambience": "amb_dark_drone",
+        "sfx": [
+          "door_slam",
+          "jingle_bad"
+        ]
+      },
+      "text": [
+        "The headmaster reads the slip in silence. “Two warnings in two days, {name}. I am sorry.”",
+        "You pack your trunk that evening. From the carriage you see Hollow Tower against the sky, the light at its top pulsing in time with your heart.",
+        "At home you hear the bell in your dreams. You never learn whether anyone was ever saved."
+      ],
+      "ending": {
+        "id": "expelled",
+        "title": "Sent home",
+        "kind": "bad"
+      }
+    },
+    "ending_quiet_bargain": {
+      "id": "ending_quiet_bargain",
+      "title": "The bell-keeper",
+      "mood": "magic",
+      "visual": {
+        "preset": "ending-dark",
+        "particles": [
+          "fireflies",
+          "fog"
+        ]
+      },
+      "audio": {
+        "ambience": "amb_dark_drone",
+        "sfx": [
+          "jingle_secret"
+        ]
+      },
+      "text": [
+        "You say yes. The bell sings through you, and the pact moves from Vale to you. The Cantor smiles, almost embarrassed, and dissolves into light.",
+        "The students wake, every one. Nobody knows why.",
+        "From that night you are the castle’s bell-keeper. Every midnight you stand in the tower and sing the Hush to rest. You are never tired, never alone, and never quite awake.",
+        {
+          "if": {
+            "flag": "tried_wake_pip"
+          },
+          "text": "Pip notices that you never sleep. He says nothing, but he leaves a cup of tea on the stairs every evening."
+        }
+      ],
+      "ending": {
+        "id": "quiet_bargain",
+        "title": "The Bell-Keeper",
+        "kind": "secret"
+      }
+    }
+  }
+}

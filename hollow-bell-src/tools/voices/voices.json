@@ -1,0 +1,9 @@
+{
+  "_note": "Piper voice per speaker (free, offline, MIT). Download models from https://huggingface.co/rhasspy/piper-voices . length_scale >1 = slower. Pitch/effects applied by ffmpeg in gen-voices.py.",
+  "Mirela":      { "model": "en_GB-jenny_dioco-medium", "length_scale": 0.9,  "fx": "" },
+  "Quill":       { "model": "en_GB-alan-medium",        "length_scale": 1.1,  "fx": "" },
+  "Ashgrove":    { "model": "en_GB-northern_english_male-medium", "length_scale": 1.0, "fx": "" },
+  "Vale":        { "model": "en_GB-alan-medium",        "length_scale": 1.25, "fx": "aecho=0.8:0.7:60:0.4,asetrate=44100*0.92,aresample=44100" },
+  "Harrow":      { "model": "en_GB-northern_english_male-medium", "length_scale": 0.9, "fx": "asetrate=44100*0.9,aresample=44100" },
+  "Matron Hale": { "model": "en_GB-jenny_dioco-medium", "length_scale": 1.05, "fx": "" }
+}

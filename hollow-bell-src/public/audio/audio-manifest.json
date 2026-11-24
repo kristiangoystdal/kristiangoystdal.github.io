@@ -1,0 +1,278 @@
+{
+  "bell_far": {
+    "file": "audio/sfx/bell_far.ogg",
+    "loop": false,
+    "seconds": 5,
+    "volume": 0.8
+  },
+  "bell_near": {
+    "file": "audio/sfx/bell_near.ogg",
+    "loop": false,
+    "seconds": 6,
+    "volume": 0.8
+  },
+  "bell_crack": {
+    "file": "audio/sfx/bell_crack.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "heartbeat": {
+    "file": "audio/sfx/heartbeat.ogg",
+    "loop": false,
+    "seconds": 2.4,
+    "volume": 0.8
+  },
+  "footsteps": {
+    "file": "audio/sfx/footsteps.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "keys_chime": {
+    "file": "audio/sfx/keys_chime.ogg",
+    "loop": false,
+    "seconds": 2,
+    "volume": 0.8
+  },
+  "door_creak": {
+    "file": "audio/sfx/door_creak.ogg",
+    "loop": false,
+    "seconds": 1.6,
+    "volume": 0.8
+  },
+  "door_slam": {
+    "file": "audio/sfx/door_slam.ogg",
+    "loop": false,
+    "seconds": 1,
+    "volume": 0.8
+  },
+  "door_splinter": {
+    "file": "audio/sfx/door_splinter.ogg",
+    "loop": false,
+    "seconds": 1,
+    "volume": 0.8
+  },
+  "glass_shatter": {
+    "file": "audio/sfx/glass_shatter.ogg",
+    "loop": false,
+    "seconds": 1.5,
+    "volume": 0.8
+  },
+  "cough": {
+    "file": "audio/sfx/cough.ogg",
+    "loop": false,
+    "seconds": 0.6,
+    "volume": 0.8
+  },
+  "hum_low": {
+    "file": "audio/sfx/hum_low.ogg",
+    "loop": false,
+    "seconds": 4,
+    "volume": 0.8
+  },
+  "whisper": {
+    "file": "audio/sfx/whisper.ogg",
+    "loop": false,
+    "seconds": 2.5,
+    "volume": 0.8
+  },
+  "lantern_swing": {
+    "file": "audio/sfx/lantern_swing.ogg",
+    "loop": false,
+    "seconds": 1.5,
+    "volume": 0.8
+  },
+  "whoosh": {
+    "file": "audio/sfx/whoosh.ogg",
+    "loop": false,
+    "seconds": 1,
+    "volume": 0.8
+  },
+  "spell": {
+    "file": "audio/sfx/spell.ogg",
+    "loop": false,
+    "seconds": 1.2,
+    "volume": 0.8
+  },
+  "page_rustle": {
+    "file": "audio/sfx/page_rustle.ogg",
+    "loop": false,
+    "seconds": 1.2,
+    "volume": 0.8
+  },
+  "chime_soft": {
+    "file": "audio/sfx/chime_soft.ogg",
+    "loop": false,
+    "seconds": 2.5,
+    "volume": 0.8
+  },
+  "hum_voice": {
+    "file": "audio/sfx/hum_voice.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "frost_crackle": {
+    "file": "audio/sfx/frost_crackle.ogg",
+    "loop": false,
+    "seconds": 2,
+    "volume": 0.8
+  },
+  "choir_hum": {
+    "file": "audio/sfx/choir_hum.ogg",
+    "loop": false,
+    "seconds": 5,
+    "volume": 0.8
+  },
+  "fork_ring": {
+    "file": "audio/sfx/fork_ring.ogg",
+    "loop": false,
+    "seconds": 4,
+    "volume": 0.8
+  },
+  "clock_tick": {
+    "file": "audio/sfx/clock_tick.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "drawer_slide": {
+    "file": "audio/sfx/drawer_slide.ogg",
+    "loop": false,
+    "seconds": 0.8,
+    "volume": 0.8
+  },
+  "silence_swallow": {
+    "file": "audio/sfx/silence_swallow.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "sleep_fall": {
+    "file": "audio/sfx/sleep_fall.ogg",
+    "loop": false,
+    "seconds": 2,
+    "volume": 0.8
+  },
+  "wind_gust": {
+    "file": "audio/sfx/wind_gust.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "chain_snap": {
+    "file": "audio/sfx/chain_snap.ogg",
+    "loop": false,
+    "seconds": 1.2,
+    "volume": 0.8
+  },
+  "chime_success": {
+    "file": "audio/sfx/chime_success.ogg",
+    "loop": false,
+    "seconds": 3,
+    "volume": 0.8
+  },
+  "jingle_good": {
+    "file": "audio/sfx/jingle_good.ogg",
+    "loop": false,
+    "seconds": 4,
+    "volume": 0.8
+  },
+  "jingle_neutral": {
+    "file": "audio/sfx/jingle_neutral.ogg",
+    "loop": false,
+    "seconds": 4,
+    "volume": 0.8
+  },
+  "jingle_bad": {
+    "file": "audio/sfx/jingle_bad.ogg",
+    "loop": false,
+    "seconds": 5,
+    "volume": 0.8
+  },
+  "jingle_secret": {
+    "file": "audio/sfx/jingle_secret.ogg",
+    "loop": false,
+    "seconds": 5,
+    "volume": 0.8
+  },
+  "amb_dorm": {
+    "file": "audio/sfx/amb_dorm.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_night_wind": {
+    "file": "audio/sfx/amb_night_wind.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_corridor": {
+    "file": "audio/sfx/amb_corridor.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_tower_stairs": {
+    "file": "audio/sfx/amb_tower_stairs.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_hall": {
+    "file": "audio/sfx/amb_hall.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_courtyard": {
+    "file": "audio/sfx/amb_courtyard.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_archive": {
+    "file": "audio/sfx/amb_archive.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_music_room": {
+    "file": "audio/sfx/amb_music_room.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_office": {
+    "file": "audio/sfx/amb_office.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_belfry": {
+    "file": "audio/sfx/amb_belfry.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_dawn": {
+    "file": "audio/sfx/amb_dawn.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_dark_drone": {
+    "file": "audio/sfx/amb_dark_drone.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  },
+  "amb_silence": {
+    "file": "audio/sfx/amb_silence.ogg",
+    "loop": true,
+    "seconds": 13.6,
+    "volume": 0.4
+  }
+}

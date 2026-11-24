@@ -1,0 +1,394 @@
+[
+  {
+    "key": "e280b781ec",
+    "scene": "r1_quill_meet",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "Oh. Oh, you hear it too. Forgive me, I’m— Quill. Night archivist. Nobody asks what an archivist does at night, which is lucky, because mostly it’s listening. ... I have waited fifty years for someone else to hear it."
+  },
+  {
+    "key": "18aba7efa1",
+    "scene": "r1_quill_meet",
+    "index": 2,
+    "speaker": "Quill",
+    "text": "Not tonight. The bell is hungry, and you are rather small to feed it. Come to the archive tomorrow. Bring questions. Bring tea, if you can steal any."
+  },
+  {
+    "key": "c266e8df4b",
+    "scene": "r1_detention",
+    "index": 0,
+    "speaker": "Harrow",
+    "text": "Sleepwalkers don’t carry wands."
+  },
+  {
+    "key": "8da78c61e4",
+    "scene": "r2_mirela",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "Four last night. Six tonight, ... Asleep, all of them. Calm as lambs, cold as slate. The staff are calling it a stomach bug. ... I call it something else."
+  },
+  {
+    "key": "fd4436ea8c",
+    "scene": "r2_mirela",
+    "index": 2,
+    "speaker": "Mirela",
+    "text": "You heard the bell. Most people don’t. That makes you either very useful or very unlucky. Possibly both."
+  },
+  {
+    "key": "726377be10",
+    "scene": "r2_walk",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "Tolls every eleven minutes, sometimes ten. It’s speeding up. ... I’d like to know if it’s locked or just unwelcoming."
+  },
+  {
+    "key": "90b3d6193d",
+    "scene": "r2_felt",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "Interesting, ... You held on longer than I would have."
+  },
+  {
+    "key": "69cde8f453",
+    "scene": "r2_dragged",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "That, ... is not a lock."
+  },
+  {
+    "key": "5ed8958c75",
+    "scene": "r2_spell",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "Well, ... It listens, at least."
+  },
+  {
+    "key": "67a3b451ed",
+    "scene": "r4_wing",
+    "index": 1,
+    "speaker": "Matron Hale",
+    "text": "Sleeping sickness, ... Nothing to be done but rest and fluids. Professor Ashgrove has been very kind about it."
+  },
+  {
+    "key": "ad48dcea9c",
+    "scene": "r3_ashgrove",
+    "index": 1,
+    "speaker": "Ashgrove",
+    "text": "I need your word that you won’t go after that bell on your own, and that you won’t draw other students into this. For their safety. And yours."
+  },
+  {
+    "key": "7c3849a0db",
+    "scene": "r3_mirela",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "The tower was sealed fifty years ago and there’s not a line in the school records about why, ... I think I know how to stop it. I need someone with nerve. ... Congratulations. You volunteered."
+  },
+  {
+    "key": "3cd410775e",
+    "scene": "d_harrow_accuse",
+    "index": 0,
+    "speaker": "Harrow",
+    "text": "You followed someone with keys, ... And you think it was me."
+  },
+  {
+    "key": "9e810e294b",
+    "scene": "d_harrow_accuse",
+    "index": 1,
+    "speaker": "Harrow",
+    "text": "It was me, ... Every night since the first sleeper. Because if somebody doesn’t watch that door, somebody worse than me will."
+  },
+  {
+    "key": "f2b8788335",
+    "scene": "d_harrow_forgive",
+    "index": 0,
+    "speaker": "Harrow",
+    "text": "We’ll say no more about it, ... You’ve got enough on your plate."
+  },
+  {
+    "key": "6dce4bf54c",
+    "scene": "d_harrow_story",
+    "index": 0,
+    "speaker": "Harrow",
+    "text": "I was a junior caretaker the night it started, fifty years back. I saw a boy in an archive coat carry music out of the east wing and lock the door behind him. He was crying. I never asked who it was."
+  },
+  {
+    "key": "bf6099027f",
+    "scene": "d_harrow_key",
+    "index": 0,
+    "speaker": "Harrow",
+    "text": "Opens most doors in the east and west wings. You never had it, understand?"
+  },
+  {
+    "key": "20e0509b4c",
+    "scene": "mirela_talk",
+    "index": 0,
+    "speaker": "Mirela",
+    "text": "I’ve done the arithmetic, ... It’s speeding up. At this rate the whole castle is asleep in four days."
+  },
+  {
+    "key": "687f0e1764",
+    "scene": "mirela_talk",
+    "index": 1,
+    "speaker": "Mirela",
+    "text": "I have a plan, and you won’t like it. I found a counter-spell in an old book that can break metal like this. We take the bell. ... But I don’t know what lies under that tower. I only know I can’t watch one more person fall asleep."
+  },
+  {
+    "key": "d788f2cbca",
+    "scene": "mirela_wait",
+    "index": 0,
+    "speaker": "Mirela",
+    "text": "Fine. But if there’s nothing else by tonight, we take the bell. No more talking."
+  },
+  {
+    "key": "4521cb24eb",
+    "scene": "a1_archive",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "Ah! My night visitor. Sit. Mind the cat; she bites scholars."
+  },
+  {
+    "key": "feaf59f03f",
+    "scene": "a1_archive",
+    "index": 2,
+    "speaker": "Quill",
+    "text": "You’re late, ... Or early. It rather depends what you’re looking for."
+  },
+  {
+    "key": "985e51bfb4",
+    "scene": "a2_truth",
+    "index": 0,
+    "speaker": "Quill",
+    "text": "Hollow Bell. Cast three hundred years ago by Cantor Eadric Vale, who led the castle choir. It was never meant to warn anyone. It was meant to hold something down."
+  },
+  {
+    "key": "4a72e29087",
+    "scene": "a2_truth",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "Beneath the tower lies what we call the Hush. It eats sound, and it eats sleep. Vale sang it to rest every night with a song that closes the bell. Then the song was lost, and the bell began to ring by itself. Now it feeds on whoever sleeps."
+  },
+  {
+    "key": "c45fbfaa36",
+    "scene": "a2_truth",
+    "index": 2,
+    "speaker": "Quill",
+    "text": "The song was written on two pages. I know where one of them is."
+  },
+  {
+    "key": "4c62e8ca44",
+    "scene": "a2_sneak",
+    "index": 0,
+    "speaker": "Quill",
+    "text": "The bell will ring itself if the song is forgotten. Remember that the song is written on two pages."
+  },
+  {
+    "key": "bf3b8d357f",
+    "scene": "a2_sneak",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "You’re looking for the bell, aren’t you? ... You look so innocent that you very nearly fooled me."
+  },
+  {
+    "key": "5da7b92183",
+    "scene": "a_quill_past",
+    "index": 0,
+    "speaker": "Quill",
+    "text": "I wasn’t always an archivist. Fifty years ago I was Vale’s last student, seventeen years old. The night the bell began ringing by itself, I panicked. I tore out the page with the song and locked the music room. I thought that would stop it."
+  },
+  {
+    "key": "26c6d503fd",
+    "scene": "a_quill_past",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "It did the opposite. Since then I have been an archivist, a watchman and a coward, all at once."
+  },
+  {
+    "key": "fc295f9638",
+    "scene": "a3_search",
+    "index": 0,
+    "speaker": "Quill",
+    "text": "It’s in there somewhere, ... I can’t search any more. My eyes aren’t what they were."
+  },
+  {
+    "key": "211e855cac",
+    "scene": "a4_found",
+    "index": 0,
+    "speaker": "Quill",
+    "text": "The Cantor’s close. To be sung from the tower, and the bell shall be stilled."
+  },
+  {
+    "key": "09e795d95d",
+    "scene": "a4_found",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "Take it. And for heaven’s sake, don’t lose it."
+  },
+  {
+    "key": "7ccbc8d6c2",
+    "scene": "a4_hum",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "That is as much as I have, ... Mind it well."
+  },
+  {
+    "key": "f3ae3408d6",
+    "scene": "a4_missed",
+    "index": 1,
+    "speaker": "Quill",
+    "text": "Somebody got here first, ... It’s not the first time something has disappeared from here."
+  },
+  {
+    "key": "4d931ac3cc",
+    "scene": "b2_soft",
+    "index": 1,
+    "speaker": "Vale",
+    "text": "No one has knocked here in a very long time, ... You are kind. Come in. I am Eadric Vale."
+  },
+  {
+    "key": "1d0baa303d",
+    "scene": "b2_hard",
+    "index": 1,
+    "speaker": "Vale",
+    "text": "You come to take more! ... I have nothing left to give!"
+  },
+  {
+    "key": "071acbae1e",
+    "scene": "b_flash3",
+    "index": 1,
+    "speaker": "Vale",
+    "text": "Now you know why I cannot sing alone, ... The song is true only if someone shares the price with me. I remember it all, child. The melody still lives in me. I merely cannot hold it up by myself."
+  },
+  {
+    "key": "65f8e86fb0",
+    "scene": "b3_gift",
+    "index": 1,
+    "speaker": "Vale",
+    "text": "My tuning fork. With it you can tune the bell to the lullaby. And if you find the pages, perhaps we can give them peace together."
+  },
+  {
+    "key": "5f2a210c3a",
+    "scene": "b_vale_ash",
+    "index": 0,
+    "speaker": "Vale",
+    "text": "There has been another here, ... The professor. Three times. He wants the song, but not to close the bell. He wants to use it to ring thirteen."
+  },
+  {
+    "key": "32abbee6eb",
+    "scene": "b_vale_ash",
+    "index": 1,
+    "speaker": "Vale",
+    "text": "I said no. But he promises me my freedom if I sing. I am tired, child. I am so very tired."
+  },
+  {
+    "key": "af36a71640",
+    "scene": "c_ashgrove_past",
+    "index": 0,
+    "speaker": "Ashgrove",
+    "text": "My sister Lenora climbed Hollow Tower when she was twelve, to prove she was brave. She fell asleep up there. She never woke."
+  },
+  {
+    "key": "47b434e7cc",
+    "scene": "c_ashgrove_past",
+    "index": 1,
+    "speaker": "Ashgrove",
+    "text": "I was sixteen. I have spent the rest of my life trying to understand why."
+  },
+  {
+    "key": "f45b4d69fc",
+    "scene": "c4_leave",
+    "index": 0,
+    "speaker": "Ashgrove",
+    "text": "Come to me whenever you’re worried."
+  },
+  {
+    "key": "5da3c342cd",
+    "scene": "n1b_mirela",
+    "index": 0,
+    "speaker": "Mirela",
+    "text": "What do we do if Ashgrove is up there? ... If he’s the one ringing, he’s the enemy."
+  },
+  {
+    "key": "afcf57e186",
+    "scene": "n3_belfry",
+    "index": 2,
+    "speaker": "Ashgrove",
+    "text": "You gave me your word,"
+  },
+  {
+    "key": "6a6126c1a5",
+    "scene": "n3_belfry",
+    "index": 3,
+    "speaker": "Ashgrove",
+    "text": "I did not ask you to come, ... But now that you are here, I can at least explain."
+  },
+  {
+    "key": "f0d6b50be5",
+    "scene": "n3_vale_breaks",
+    "index": 1,
+    "speaker": "Vale",
+    "text": "I am sorry, ... But this is what I owe them."
+  },
+  {
+    "key": "5f5a7c28fa",
+    "scene": "n4_talk",
+    "index": 0,
+    "speaker": "Ashgrove",
+    "text": "The Hush beneath us is the only reason this castle still stands, ... Every night it grows stronger. The bell holds it down, but it feeds on the sleepers. If I ring thirteen strokes, it seals for ever. The price is those who already sleep."
+  },
+  {
+    "key": "f838859017",
+    "scene": "n4_talk",
+    "index": 1,
+    "speaker": "Ashgrove",
+    "text": "Forty-one students for a thousand. I have done the arithmetic for ten years. I am not proud of it."
+  },
+  {
+    "key": "4e05a3468b",
+    "scene": "n4_quill",
+    "index": 0,
+    "speaker": "Quill",
+    "text": "Corvin, ... It was I who tore out the page. It was I who locked the door. This is my responsibility. Don’t make it your students’."
+  },
+  {
+    "key": "8440540097",
+    "scene": "n4_quill",
+    "index": 2,
+    "speaker": "Quill",
+    "text": "You let them sleep for fifty years,"
+  },
+  {
+    "key": "e6043ba726",
+    "scene": "n4_quill",
+    "index": 3,
+    "speaker": "Quill",
+    "text": "You? ... All these years?"
+  },
+  {
+    "key": "d410c731c7",
+    "scene": "n5_yields",
+    "index": 0,
+    "speaker": "Ashgrove",
+    "text": "I have been set on this for ten years, ... And a child comes and shows me I stopped looking for anything else."
+  },
+  {
+    "key": "31ef596449",
+    "scene": "n5_yields",
+    "index": 2,
+    "speaker": "Ashgrove",
+    "text": "I should have given you this long ago, ... The other half."
+  },
+  {
+    "key": "64fafa7c2a",
+    "scene": "n5_cantor",
+    "index": 0,
+    "speaker": "Vale",
+    "text": "If you ask me to sing, I bind myself to the bell once more. I do it gladly. But I need something to sing from."
+  },
+  {
+    "key": "df507d7178",
+    "scene": "n6_bargain",
+    "index": 0,
+    "speaker": "Vale",
+    "text": "What are you doing?"
+  }
+]
