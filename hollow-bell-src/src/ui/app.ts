@@ -18,7 +18,7 @@ import { HOUSE_COLORS } from '../visuals/actors';
 import { getPreset } from '../visuals/presets';
 import { castFor, Stage } from '../visuals/stage';
 import { add, clear, fill, h } from './dom';
-import { STRINGS, type Strings } from './i18n';
+import { T, type Strings } from './i18n';
 import { loadSettings, storeSettings, type Settings } from './settings';
 import type { Remote, RemoteView } from '../remote/host';
 
@@ -72,12 +72,11 @@ export class App {
   }
 
   get t(): Strings {
-    return STRINGS[this.settings.lang];
+    return T;
   }
 
   private applySettings() {
     const s = this.settings;
-    document.documentElement.lang = s.lang === 'no' ? 'nb' : 'en';
     document.body.dataset.theme = s.theme;
     document.body.dataset.motion = s.animation;
     document.documentElement.style.setProperty('--text-size', s.textSize + 'rem');
@@ -111,25 +110,6 @@ export class App {
         {},
         h('h1.game-title', {}, this.story.title),
         h('p.tagline', {}, this.story.tagline),
-        STORIES.length > 1 &&
-          h(
-            'div.story-pick',
-            { role: 'radiogroup', 'aria-label': t.story },
-            STORIES.map((s) =>
-              h(
-                'button.pill',
-                {
-                  role: 'radio',
-                  'aria-checked': String(s.id === this.story.id),
-                  onclick: () => {
-                    this.story = s;
-                    this.showTitle();
-                  },
-                },
-                `${s.language === 'no' ? 'Norsk' : 'English'}${s.id.endsWith('-no') ? ` (${t.storyOlder})` : ''}`,
-              ),
-            ),
-          ),
         h('p.meta', {}, `${this.story.estimatedMinutes} ${t.minutes} · ${'●'.repeat(this.story.difficulty)}${'○'.repeat(3 - this.story.difficulty)}`),
         h(
           'nav.title-buttons',
@@ -300,7 +280,6 @@ export class App {
     const sc = currentScene(this.story, s);
     const token = ++this.sceneToken;
     this.clearScene();
-    this.audio.lang = this.story.language === 'no' ? 'nb-NO' : 'en-GB';
     this.audio.scene(sc);
     const titleEl = this.ui.querySelector('.scene-title');
     if (titleEl) {
@@ -606,18 +585,17 @@ export class App {
     const t = this.t;
     const s = this.game;
     if (!s) return;
-    const lang = this.story.language ?? 'en';
     add(body, 
       h('h2', {}, `${s.player.name} · ${s.player.house}`),
       h('h3', {}, t.stats),
       h('ul.stat-list', {}, STAT_NAMES.map((k) => h('li', {}, h('span.stat-name', {}, t[k]), h('span.stat-dots', {}, dots(s.stats[k], 10))))),
       h('h3', {}, t.items),
-      s.items.length ? h('ul.items', {}, s.items.map((i) => h('li', {}, displayName(i, lang)))) : h('p.muted', {}, t.nothing),
+      s.items.length ? h('ul.items', {}, s.items.map((i) => h('li', {}, displayName(i)))) : h('p.muted', {}, t.nothing),
       h('h3', {}, t.relations),
       h(
         'ul.relations',
         {},
-        Object.entries(s.relations).map(([id, v]) => h('li', {}, h('span', {}, displayName(id, lang)), h('span.rel', { 'data-sign': Math.sign(v) }, v > 0 ? '♥'.repeat(Math.min(v, 6)) : v < 0 ? '✕'.repeat(Math.min(-v, 6)) : '·'))),
+        Object.entries(s.relations).map(([id, v]) => h('li', {}, h('span', {}, displayName(id)), h('span.rel', { 'data-sign': Math.sign(v) }, v > 0 ? '♥'.repeat(Math.min(v, 6)) : v < 0 ? '✕'.repeat(Math.min(-v, 6)) : '·'))),
       ),
     );
   }
@@ -647,7 +625,7 @@ export class App {
   private renderSaves(body: HTMLElement, mode: 'save' | 'load') {
     const t = this.t;
     const list = h('ul.slots');
-    const fmt = (d: number) => new Date(d).toLocaleString(this.settings.lang === 'no' ? 'nb-NO' : 'en-GB', { dateStyle: 'short', timeStyle: 'short' });
+    const fmt = (d: number) => new Date(d).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
     const slots: SlotId[] = ['auto', ...SLOTS];
     for (const slot of slots) {
       const f = readSave(slot);
@@ -718,7 +696,6 @@ export class App {
       this.settings = { ...this.settings, ...patch };
       this.applySettings();
       this.openOverlay('settings');
-      if (patch.lang && this.screen === 'title') this.showTitle();
     };
     const radio = <K extends keyof Settings>(label: string, key: K, opts: [Settings[K], string][]) =>
       h(
@@ -746,7 +723,6 @@ export class App {
       );
     add(body, 
       h('h2', {}, t.settings),
-      radio(t.language, 'lang', [['en', 'English'], ['no', 'Norsk']]),
       radio(t.animation, 'animation', [['full', t.animFull], ['reduced', t.animReduced], ['off', t.animOff]]),
       radio(t.transitions, 'transitions', [['auto', t.transAuto], ['cut', t.transCut]]),
       radio(t.theme, 'theme', [['paper', t.themePaper], ['ink', t.themeInk]]),
@@ -803,7 +779,7 @@ export class App {
   /** What the phone shows: title, choices once they are on screen, and the ending. */
   private publishRemote() {
     if (!this.remote) return;
-    const view: RemoteView = { rev: ++this.remoteRev, screen: this.screen, title: '', choices: [], canAdvance: false, ending: null, lang: this.settings.lang };
+    const view: RemoteView = { rev: ++this.remoteRev, screen: this.screen, title: '', choices: [], canAdvance: false, ending: null };
     if (this.game && (this.screen === 'play' || this.screen === 'end')) {
       const sc = currentScene(this.story, this.game);
       view.title = interpolate(sc.title ?? '', playerVars(this.game));

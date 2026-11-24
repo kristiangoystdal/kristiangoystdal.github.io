@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 
 const root = new URL('../', import.meta.url).pathname;
-const stories = ['src/stories/hollow-bell.json', 'src/stories/hollow-bell.no.json'];
+const stories = ['src/stories/hollow-bell.json'];
 const manifest = JSON.parse(readFileSync(root + 'public/audio/audio-manifest.json', 'utf8'));
 let failed = false;
 

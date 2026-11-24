@@ -1,18 +1,16 @@
 // The phone page (remote.html): joins a room by code and shows the choices as big buttons.
 import { onValue, ref, set } from 'firebase/database';
 import { fill, h } from '../ui/dom';
-import { STRINGS } from '../ui/i18n';
+import { T as UI } from '../ui/i18n';
 import { cleanCode, CODE_LENGTH, connect, firebaseConfigured, MAX_AGE_MS, ROOT } from './firebase';
 import type { RemoteView } from './host';
 import '../styles/remote.css';
 
 const app = document.getElementById('app')!;
-let lang: 'en' | 'no' = /^(nb|nn|no)\b/i.test(navigator.language) ? 'no' : 'en';
 const T = {
   en: { join: 'Join', code: 'Room code from the game', waiting: 'Waiting for the game…', reconnect: 'Reconnecting…', next: 'Next', all: 'Show all', reading: 'Read on the big screen', gone: 'The game has closed this room.', notSetUp: 'The phone remote is not set up in this build.', ended: 'The end' },
-  no: { join: 'Bli med', code: 'Romkode fra spillet', waiting: 'Venter på spillet…', reconnect: 'Kobler til på nytt…', next: 'Neste', all: 'Vis alt', reading: 'Les på den store skjermen', gone: 'Spillet har lukket rommet.', notSetUp: 'Mobilfjernkontrollen er ikke satt opp i denne utgaven.', ended: 'Slutt' },
 };
-const t = () => T[lang];
+const t = () => T.en;
 
 let wakeLock: { release: () => Promise<void> } | null = null;
 async function keepAwake() {
@@ -56,7 +54,6 @@ async function join(code: string) {
       } catch {
         return;
       }
-      if (view.lang) lang = view.lang;
       render(view, (choiceId) => {
         navigator.vibrate?.(15);
         void set(ref(db, `${ROOT}/${code}/input`), { choiceId, rev: view.rev, from: uid, at: Date.now() });
@@ -67,7 +64,7 @@ async function join(code: string) {
 }
 
 function render(v: RemoteView, send: (id: string) => void) {
-  const s = STRINGS[lang];
+  const s = UI;
   fill(app, 
     h('header', {}, h('p.code', {}, new URLSearchParams(location.search).get('room') ?? ''), h('h1', {}, v.title || '—'), h('p.reconnect', {}, t().reconnect)),
     v.ending && h('div.ending', { 'data-kind': v.ending.kind }, h('p', {}, s.kinds[v.ending.kind] ?? t().ended), h('h2', {}, v.ending.title)),

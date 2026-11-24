@@ -1,8 +1,6 @@
 import { readJSON, writeJSON } from '../engine/save';
-import type { Lang } from './i18n';
 
 export type Settings = {
-  lang: Lang;
   animation: 'full' | 'reduced' | 'off';
   transitions: 'auto' | 'cut';
   theme: 'paper' | 'ink';
@@ -14,11 +12,9 @@ export type Settings = {
 };
 
 const prefersReducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const browserLang = (): Lang => (/^(nb|nn|no)\b/i.test(navigator.language ?? '') ? 'no' : 'en');
 
 export function defaults(): Settings {
   return {
-    lang: browserLang(),
     animation: prefersReducedMotion() ? 'reduced' : 'full',
     transitions: prefersReducedMotion() ? 'cut' : 'auto',
     theme: 'paper',

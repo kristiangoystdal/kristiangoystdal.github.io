@@ -12,7 +12,6 @@ export type RemoteView = {
   choices: RemoteChoice[];
   canAdvance: boolean;
   ending: { id: string; title: string; kind: string } | null;
-  lang: 'en' | 'no';
 };
 export type RemoteInput = { choiceId: string; rev: number; from: string; at: number };
 

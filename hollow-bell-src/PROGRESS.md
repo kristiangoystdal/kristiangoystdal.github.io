@@ -1,68 +1,64 @@
-# Fremdrift: The Hollow Bell
+# Progress: The Hollow Bell
 
-Les denne i starten av hver økt, og oppdater den ved slutten. Kun milepæler, tall og tekniske detaljer.
-Ingen gjengivelse av historien (scener, slutter, figurer, replikker): brukeren skal oppleve den som en overraskelse.
+Read this at the start of every session and update it at the end. Milestones, numbers and technical details only.
+Never retell the story (scenes, endings, characters, lines): the user wants to experience it as a surprise.
 
-Sist oppdatert: 2026-11-24. Gren: `hollow-bell` (committet, ikke pushet).
+Last updated: 2026-11-24. Branch: `hollow-bell` (committed, not pushed).
 
-## Status nå
+## Now
 
-Verktøy er satt opp (se «Verktøy»), og byggingen er gjenopptatt. Første spillbare versjon er committet på grenen.
+First playable version is committed on the branch. English only: the Norwegian story and UI were dropped.
 
-## Milepæler fra PLAN.md
+## Milestones from PLAN.md
 
-| # | Milepæl | Status |
+| # | Milestone | Status |
 |---|---|---|
-| 1 | Oppsett: Vite + TS, Vitest, `npm run play`, deploy som underside, CLAUDE.md | Ferdig: `pages.yml` bygger til `hollow-bell/`, `start-game.sh`, CLAUDE.md, README, kort på forsiden |
-| 2 | Motor: types, state, conditions, effects, tester | Ferdig (inkl. counters, bonds, direktør/hendelser, løkke, betinget tekst) |
-| 3 | Minimal UI: tekst og valg | Ferdig |
-| 4 | Karakter, lagring, meny | Ferdig (3 plasser + autolagring, eksport/import, innstillinger) |
-| 5 | Sjekker og relasjoner i UI | Ferdig (terningkort, låste valg med hint, statuspanel) |
-| 6 | Design-pass | Første versjon (akvarell/papir, to skrifter, papir/blekk-tema, redusert bevegelse) |
-| 7 | SceneStage nivå A | Første versjon: 13 malte steder i kode, parallakse, kamera, lys, partikler, figurer, snakkebobler, klipp/gå-overganger, `?gallery` |
-| 8 | Videospiller | Ikke startet (valgfritt i planen) |
-| 9 | Validator + bot i CI | Ferdig: validate, enhetstester, nettlesertester og fjernkontroll-test kjøres i CI når `hollow-bell-src` endres |
-| 10 | Historie 1 ferdig | Historiedata er på plass (fra zip). Polering gjenstår |
-| 10b | 3D-prototype | Droppet (PLAN 6.3) |
-| 11 | Videopipeline | Ikke startet |
-| 6.4 | Lyd og stemmer | Lyd ferdig (46 lyder). Stemmer: Web Speech som reserve; Piper-verktøy med, ikke kjørt |
-| 6.6 | Mobil som fjernkontroll | Ferdig mot emulator. Bruker Jetlag Hide and Seek-prosjektet, mappe `hollowbell/`. Reglene må publiseres i Firebase-konsollen |
-| 12 | Historie 2 og 3 | Ikke startet |
-| 13 | Sluttskjerm, funne slutter | Ferdig (rutenett, sti med «?», rulletekst) |
-| 14 | Lansering | Ikke startet |
+| 1 | Setup: Vite + TS, Vitest, `npm run play`, deploy as sub-page, CLAUDE.md | Done: `pages.yml` builds into `hollow-bell/`, `start-game.sh`, CLAUDE.md, README, card on the front page |
+| 2 | Engine: types, state, conditions, effects, tests | Done (counters, bonds, director/storylets, loop, conditional text) |
+| 3 | Minimal UI: text and choices | Done |
+| 4 | Character, saving, menu | Done (3 slots + autosave, export/import, settings) |
+| 5 | Checks and relations in the UI | Done (dice card, locked choices with hints, status panel) |
+| 6 | Design pass | First version (watercolour/paper, two typefaces, paper/ink theme, reduced motion) |
+| 7 | SceneStage level A | First version: 13 locations painted in code, parallax, camera, lights, particles, characters, speech bubbles, cut/walk transitions, `?gallery` |
+| 8 | Video player | Not started (optional in the plan) |
+| 9 | Validator + bot in CI | Done: validate, unit tests, browser tests and remote test run in CI when `hollow-bell-src` changes |
+| 10 | Story 1 finished | Story data in place (from the zip). Polish remains |
+| 10b | 3D prototype | Dropped (PLAN 6.3) |
+| 11 | Video pipeline | Not started |
+| 6.4 | Sound and voices | Sound done (46 sounds). Voices: Web Speech fallback; Piper tools included, not run |
+| 6.6 | Phone as remote | Done against the emulator. Uses the Jetlag Hide and Seek project, folder `hollowbell/`. Rules must be published in the Firebase console |
+| 12 | Stories 2 and 3 | Not started |
+| 13 | End screen, endings found | Done (grid, path with "?", credits) |
+| 14 | Launch | Not started |
 
-## Tall (fra `npm run validate`, spoilerfritt)
+## Numbers (spoiler-free, from `npm run validate`)
 
-- Engelsk: 98 scener, 8 slutter, 0 feil, 0 advarsler, 0 blindveier i 3000 bot-spill.
-- Norsk (eldre): 79 scener, 8 slutter, 0 feil, 0 advarsler, 0 blindveier.
-- Én slutt er sjelden ved tilfeldig spill (ca. 0,1 %), men nåbar.
-- Enhetstester: 19/19. Databaseregler: 23/23 (emulator).
-- Nettlesertester (`npm run e2e`): 3 tilfeldige gjennomspillinger til slutt, lagre/laste, autolagring: alle består.
-- Fjernkontroll mot emulator (`npm run e2e:remote`): 4/4.
+- 98 scenes, 8 endings, 0 errors, 0 warnings, 0 dead ends in 3000 bot games.
+- One ending is rare in random play (about 0.1 %) but reachable.
+- Unit tests: 19/19. Database rules: 23/23 (emulator).
+- Browser tests (`npm run e2e`): 3 random playthroughs to an ending, save/load, autosave continue: all pass.
+- Remote against the emulator (`npm run e2e:remote`): 4/4.
 
-## Gjenstår (når bygging gjenopptas)
+## Next
 
-1. Publiser databasereglene for `hollowbell/` (brukeren, i Firebase-konsollen, eller med Firebase MCP etter godkjenning).
-2. Push grenen og lag PR når brukeren ber om det. CI kjører da alle testene.
-3. Brukeren spiller gjennom og gir tilbakemelding på utseende og flyt.
-4. Polering: figurposer (redd, trylle, sove), flere animasjoner, «walk» bare mellom naboområder (områdekart).
-5. Valgfritt senere: stemmer med Piper, videoklipp (milepæl 8/11), historie 2 og 3.
+1. Publish the `hollowbell/` database rules (the user, in the Firebase console, or with Firebase MCP after approval).
+2. Push the branch and open a PR when the user asks. CI then runs all tests.
+3. The user plays through and gives feedback on look and flow.
+4. Polish: character poses (scared, casting, asleep), more animation, walk only between neighbouring areas (area map).
+5. Optional later: Piper voices, video clips (milestones 8/11), stories 2 and 3.
 
-## Verktøy
+## Tools
 
-| Verktøy | Status |
+| Tool | Status |
 |---|---|
-| `gh` | Innlogget, har `repo` og `workflow` |
-| frontend-design | Var allerede installert (`~/.claude/skills/frontend-design`) |
-| Playwright MCP | Installert (local scope, `@playwright/mcp@0.0.86 --headless --isolated`). Testet: åpner side, tar skjermbilde. Filer havner i `.playwright-mcp/` (git-ignorert) |
-| Firebase MCP | Installert (local scope, `firebase-tools@15.34.2 mcp --only core,database`, `--dir hide-and-seek-src`). Testet: innlogget, ser `jetlag-hide-and-seek-norway`. Ingen aktiv prosjekt-alias satt. Spør før `firebase_deploy` eller skriving til databasen |
-| game-design / game-art | Droppet (brukerens valg) |
-| team-narrative | Droppet (brukerens valg) |
-| sprite-forge | Droppet (brukerens valg) |
-| svg-illustration | Ikke installert (ingen offisiell kilde funnet) |
+| `gh` | Logged in, has `repo` and `workflow` |
+| frontend-design | Already installed (`~/.claude/skills/frontend-design`) |
+| Playwright MCP | Installed (local scope, `@playwright/mcp@0.0.86 --headless --isolated`). Tested: opens a page, takes a screenshot. Files go to `.playwright-mcp/` (git-ignored) |
+| Firebase MCP | Installed (local scope, `firebase-tools@15.34.2 mcp --only core,database`, `--dir hide-and-seek-src`). Tested: logged in, sees `jetlag-hide-and-seek-norway`. No active project alias. Ask before `firebase_deploy` or writing to the database |
+| team-narrative, game-design/game-art, sprite-forge | Dropped (user's choice) |
+| svg-illustration | Not installed (no official source found) |
 
-## Filplassering (avvik fra brukerens beskrivelse)
+## File locations
 
-Brukeren nevner `story/hollow-bell.json`, `story/hollow-bell.no.json`, `story/SPOILERS/` og `story/check.mjs`.
-I dag ligger de i `hollow-bell-src/src/stories/`, `hollow-bell-src/story-src/SPOILERS/` og `hollow-bell-src/tools/check.mjs`
-(spoilerfri sjekk: `npm run check` i `hollow-bell-src`). Flyttes hvis brukeren vil.
+The story is in `src/stories/hollow-bell.json`, its source in `story-src/SPOILERS/`, and the spoiler-free check is
+`tools/check.mjs` (`npm run check`).

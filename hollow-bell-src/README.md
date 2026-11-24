@@ -1,20 +1,20 @@
 # The Hollow Bell
 
-Et choose-your-own-adventure i nettleseren, malt i akvarell. Fanprosjekt, ikke tilknyttet J.K. Rowling,
-Warner Bros. eller Wizarding World. All tekst, grafikk og lyd er laget for prosjektet.
+A choose-your-own-adventure in the browser, painted in watercolour. Fan project, not affiliated with
+J.K. Rowling, Warner Bros. or Wizarding World. All text, art and sound were made for this project.
 
-Spill: https://kristiangoystdal.github.io/hollow-bell/
+Play: https://kristiangoystdal.github.io/hollow-bell/
 
-## Spille lokalt
-`./start-game.sh` (eller `npm install && npm run play`) bygger spillet og åpner http://localhost:4173.
-Ikke åpne `index.html` direkte fra disk; nettleseren blokkerer da lyd og moduler.
+## Play locally
+`./start-game.sh` (or `npm install && npm run play`) builds the game and opens http://localhost:4173.
+Don't open `index.html` straight from disk; the browser then blocks modules and sound.
 
-Taster: 1–9 velg · mellomrom neste · H skjul tekst · L logg · I status · F fullskjerm · Esc meny.
+Keys: 1–9 choose · Space next · H hide text · L log · I status · F fullscreen · Esc menu.
 
-## Mobil som fjernkontroll
-Meny → «Phone remote» viser en QR-kode og en romkode. Mobilen viser valgene, historien vises på PC-en.
-Krever Firebase-nøklene (`.env.local`, se `.env.example`; i GitHub Actions brukes hemmelighetene til Hide and Seek)
-og at reglene for `hollowbell/` i `../hide-and-seek-src/database.rules.json` er publisert i Firebase-konsollen.
+## Phone as remote
+Menu → "Phone remote" shows a QR code and a room code. The phone shows the choices; the story stays on the PC.
+Needs the Firebase keys (`.env.local`, see `.env.example`; GitHub Actions uses the Hide and Seek secrets)
+and the `hollowbell/` rules in `../hide-and-seek-src/database.rules.json` published in the Firebase console.
 
-## Utvikling
-Se `CLAUDE.md` for kommandoer og mappestruktur, `PROGRESS.md` for status og `PLAN.md` for planen.
+## Development
+See `CLAUDE.md` for commands and layout, `PROGRESS.md` for status and `PLAN.md` for the plan.

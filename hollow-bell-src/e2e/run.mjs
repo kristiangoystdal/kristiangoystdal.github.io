@@ -68,7 +68,7 @@ try {
     const p = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     watch('game', p);
     // fast settings: no animation, so scene changes are instant
-    await p.addInitScript(() => localStorage.setItem('hp-cyoa:v1:settings', JSON.stringify({ animation: 'off', transitions: 'cut', lang: 'en', sound: false })));
+    await p.addInitScript(() => localStorage.setItem('hp-cyoa:v1:settings', JSON.stringify({ animation: 'off', transitions: 'cut', sound: false })));
     for (let run = 1; run <= 3; run++) {
       await startGame(p);
       const picks = await playToEnd(p);

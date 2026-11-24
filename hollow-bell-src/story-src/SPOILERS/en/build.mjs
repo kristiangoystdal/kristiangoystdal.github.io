@@ -1,17 +1,12 @@
 // Builds ../hollow-bell.json (English) from part files.
 // Adds visual/audio/speaker metadata so the engine and the audio layer are data-driven.
-import { writeFileSync, existsSync, renameSync, readFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import p0 from './part0.mjs';
 import p1 from './part1.mjs';
 import p2 from './part2.mjs';
 import p3 from './part3.mjs';
 
 const out = new URL('../../../src/stories/hollow-bell.json', import.meta.url).pathname;
-const oldNo = new URL('../../../src/stories/hollow-bell.no.json', import.meta.url).pathname;
-if (existsSync(out) && !existsSync(oldNo)) {
-  const prev = JSON.parse(readFileSync(out, 'utf8'));
-  if (prev.title && prev.scenes?.p01_midnight?.text?.[0]?.includes('Klokken')) renameSync(out, oldNo);
-}
 
 const raw = { ...p0, ...p1, ...p2, ...p3 };
 

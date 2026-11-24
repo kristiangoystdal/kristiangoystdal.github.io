@@ -9,14 +9,14 @@ into `../hollow-bell/` (not in git) and served at `/hollow-bell/` on github.io. 
   Report only numbers and technical details. Use `npm run check` (masks scene and ending names) for QA output.
 - Story changes only when the user asks; never change existing scenes without approval; run `npm run check` after each change.
 - Ask before installing any skill, plugin or MCP server, and before `firebase deploy` or writing to the live database.
-- Game text and UI: English story with Norwegian UI translation (`src/ui/i18n.ts`); proper nouns stay English.
+- English only: story, UI (`src/ui/i18n.ts`), phone page and docs. The Norwegian version was dropped on purpose.
   Code, comments and commit messages in English. Write everything original; nothing from the books or films.
 
 ## Commands
 - `npm run dev`: dev server. `?debug` shows a spoiler-free state panel and a bot quick test; `?gallery` shows every location and character.
 - `npm run play` (or `./start-game.sh`): build and open http://localhost:4173 (fixed port keeps saves).
-- `npm test`: unit tests + 1000 bot games per story through the real engine.
-- `npm run validate`: graph check, bot and sound check for both stories (prints only summary lines).
+- `npm test`: unit tests + 1000 bot games through the real engine.
+- `npm run validate`: graph check, bot and sound check for the story (prints only summary lines).
 - `npm run check`: spoiler-free validator report (10000 runs).
 - `npm run e2e`: browser playthroughs + save/load (Playwright, `PW_CHROMIUM` can point at a local Chromium).
 - `npm run e2e:remote`: phone remote against the Firebase emulator (needs Java).

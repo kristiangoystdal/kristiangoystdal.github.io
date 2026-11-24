@@ -74,7 +74,7 @@ export type WorldState = {
 export type Story = {
   id: string;
   title: string;
-  language?: 'en' | 'no';
+  language?: string;
   tagline: string;
   difficulty: 1 | 2 | 3;
   estimatedMinutes: number;
