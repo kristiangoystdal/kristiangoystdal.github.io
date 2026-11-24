@@ -193,3 +193,36 @@ describe('hollowbell', () => {
     await assertSucceeds(remove(ref(ada(), HB)))
   })
 })
+
+describe('hollowbell, two players', () => {
+  // ada is the PC (owns the room and may manage it), bo and cy are phones
+  const cy = () => env.authenticatedContext('cy').database();
+  const seat = (who: string) => `${HB}/players/${who}`;
+  it('each phone claims one seat for itself, and cannot take a seat that is taken', async () => {
+    await assertFails(set(ref(bo(), seat('ingerid')), 'bo'));
+    await set(ref(ada(), HB), hbRoom('ada'));
+    await assertSucceeds(set(ref(bo(), seat('ingerid')), 'bo'));
+    await assertFails(set(ref(nobody(), seat('kristian')), 'x'));
+    await assertFails(set(ref(cy(), seat('ingerid')), 'cy'));
+    await assertFails(set(ref(bo(), seat('kristian')), 'ada'));
+    await assertSucceeds(set(ref(cy(), seat('kristian')), 'cy'));
+    await assertFails(set(ref(bo(), `${HB}/players/someone`), 'bo'));
+  });
+  it('only the seat holder can send that seat\'s setup and choices', async () => {
+    await set(ref(ada(), HB), hbRoom('ada'));
+    await set(ref(bo(), seat('ingerid')), 'bo');
+    await assertSucceeds(set(ref(bo(), `${HB}/setup/ingerid`), '{"house":"Ravenclaw"}'));
+    await assertFails(set(ref(cy(), `${HB}/setup/ingerid`), '{}'));
+    await assertFails(set(ref(bo(), `${HB}/setup/kristian`), '{}'));
+    await assertFails(set(ref(bo(), `${HB}/setup/ingerid`), 'x'.repeat(400)));
+    await assertSucceeds(set(ref(bo(), `${HB}/inputs/ingerid`), hbInput('bo')));
+    await assertFails(set(ref(cy(), `${HB}/inputs/ingerid`), hbInput('cy')));
+    await assertFails(set(ref(bo(), `${HB}/inputs/kristian`), hbInput('bo')));
+    await assertFails(set(ref(bo(), `${HB}/inputs/ingerid`), hbInput('bo', { extra: 1 })));
+  });
+  it('the host can clear the room with all seats', async () => {
+    await set(ref(ada(), HB), hbRoom('ada'));
+    await set(ref(bo(), seat('ingerid')), 'bo');
+    await assertSucceeds(remove(ref(ada(), HB)));
+  });
+});

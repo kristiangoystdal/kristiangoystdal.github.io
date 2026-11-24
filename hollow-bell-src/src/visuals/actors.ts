@@ -33,7 +33,20 @@ export const LOOKS: Record<string, Look> = {
   Ashgrove: { height: 288, robe: '#4a2a46', accent: '#8a6a8a', hair: '#3a3030', hairStyle: 'short' },
   Vale: { height: 270, robe: '#9fc4ff', hair: '#c8dcff', hairStyle: 'long', ghost: true },
   'Matron Hale': { height: 238, robe: '#ded8cc', accent: '#ffffff', hair: '#8a6a50', hairStyle: 'cap' },
+  // The Other Side of the Glass
+  ingerid: { height: 220, robe: '#2a2638', hair: '#e6cf8e', hairStyle: 'long', skin: '#f2d4b8' },
+  kristian: { height: 220, robe: '#24283a', hair: '#8a3e22', hairStyle: 'short', skin: '#f2d4b8' },
+  Gloam: { height: 236, robe: '#c8d0e0', accent: '#5a6a9a', hair: '#e8ecf4', hairStyle: 'short', ghost: true },
+  'Madam Pell': { height: 232, robe: '#3a4a3a', accent: '#c8b47a', hair: '#9a9a9a', hairStyle: 'bun', prop: 'book' },
+  Echo: { height: 232, robe: '#dfe6f4', hair: '#ffffff', hairStyle: 'bun', ghost: true },
+  'Sir Aldous': { height: 270, robe: '#2f4a3a', accent: '#c8a24a', hair: '#e8e2d0', hairStyle: 'bald', width: 1.15 },
+  'Sister Wren': { height: 240, robe: '#9aa0b0', accent: '#e8e8f0', hair: '#c8ccd8', hairStyle: 'cap', ghost: true },
 };
+
+/** The same look seen through the glass: silver and translucent. */
+export function mirrored(look: Look): Look {
+  return { ...look, robe: '#aeb8cc', accent: look.accent ? '#dfe6f4' : undefined, hair: '#e6ebf4', ghost: true };
+}
 
 /** Maps a speaker / pov name in the story to a look. */
 export function lookFor(name: string): Look | undefined {

@@ -219,3 +219,25 @@ body[data-motion='reduced'] *, body[data-motion='off'] * { animation-duration: 0
 .gallery { position: absolute; top: 0.5rem; left: 0.5rem; right: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .gallery-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .gallery button { background: rgba(20, 18, 42, 0.6); color: #f3ead7; font-size: 0.8rem; padding: 0.2em 0.7em; }
+
+/* ---------- two players ---------- */
+.duo-lobby { width: min(760px, 94vw); }
+.duo-seats { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.duo-seats li { border: 1px dashed var(--box-line); border-radius: 14px; padding: 0.7rem 1rem; display: flex; flex-direction: column; }
+.duo-seats li.ready { border-style: solid; border-color: #3f7a4a; }
+.duo-local { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.duo-player h3 { margin-bottom: 0.4rem; }
+.duo-player .houses { grid-template-columns: 1fr; }
+.duo-player .stat-row { grid-template-columns: 5.5em auto 1fr auto; }
+.choices li.turn { display: flex; align-items: center; gap: 0.6rem; font-style: italic; color: var(--box-muted); padding: 0.4em 0.2em; }
+.turn-dot { width: 0.8em; height: 0.8em; border-radius: 50%; background: #c89a5a; animation: nudge 1.4s ease-in-out infinite; }
+.turn-dot[data-player='kristian'] { background: #6a8ad8; }
+.roll-who { font-family: var(--display); font-size: 1.2rem; color: var(--ink-soft); }
+.duo-paths { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 700px) {
+  .duo-seats, .duo-local, .duo-paths { grid-template-columns: 1fr; }
+}
+.looks { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.4rem; }
+.look-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.swatch { width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 50%; background: var(--c); border: 2px solid var(--box-line); }
+.swatch[aria-pressed='true'] { outline: 3px solid var(--gold); outline-offset: 2px; }

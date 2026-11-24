@@ -12,6 +12,15 @@ into `../hollow-bell/` (not in git) and served at `/hollow-bell/` on github.io. 
 - English only: story, UI (`src/ui/i18n.ts`), phone page and docs. The Norwegian version was dropped on purpose.
   Code, comments and commit messages in English. Write everything original; nothing from the books or films.
 
+## Two-player story (The Other Side of the Glass)
+- Source: `story-src/SPOILERS/mirror/story.mjs` -> `node story-src/SPOILERS/mirror/build.mjs` -> `src/stories/mirror.json` (spoilers: same rules).
+- Engine: `src/engine/duo.ts`. Players take turns: each scene has choices for at most one player (tests enforce it);
+  `next` rules pick the way on from the combined state (flags, relations such as `bond` between the players and how each
+  side character feels). Big screen: `src/ui/duo.ts`. Phones: `src/remote/phone.ts` (seat, look, house, qualities, own choices)
+  via `src/remote/duoHost.ts`; database paths `hollowbell/<CODE>/players|setup|inputs` (rules in hide-and-seek-src).
+- Default looks (players can change them in setup): Ingerid long blonde hair, Kristian short auburn hair, same height (`src/visuals/appearance.ts`).
+- Balance targets: each player about 12 choices per game; best ending about 5-6 % of random games.
+
 ## Commands
 - `npm run dev`: dev server. `?debug` shows a spoiler-free state panel and a bot quick test; `?gallery` shows every location and character.
 - `npm run play` (or `./start-game.sh`): build and open http://localhost:4173 (fixed port keeps saves).
@@ -20,7 +29,7 @@ into `../hollow-bell/` (not in git) and served at `/hollow-bell/` on github.io. 
 - `npm run check`: spoiler-free validator report (10000 runs).
 - `npm run e2e`: browser playthroughs + save/load (Playwright, `PW_CHROMIUM` can point at a local Chromium).
 - `npm run e2e:remote`: phone remote against the Firebase emulator (needs Java).
-- `npm run story:build`: rebuild `src/stories/hollow-bell.json` from `story-src/SPOILERS/en/*.mjs`.
+- `npm run story:build`: rebuild `src/stories/hollow-bell.json` from `story-src/SPOILERS/en/*.mjs` (two-player story: see above).
 - `npm run sfx`: re-render the procedural sounds into `public/audio/`.
 - Voices (offline, Piper in `tools/voices/.venv`): `node tools/voices/extract-lines.mjs && tools/voices/.venv/bin/python tools/voices/gen-voices.py`.
   Every paragraph is split into narrator and character segments (`src/engine/segments.ts`, shared with the game); who speaks each

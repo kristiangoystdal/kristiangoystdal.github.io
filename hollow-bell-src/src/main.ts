@@ -9,8 +9,18 @@ import { App } from './ui/app';
 import { paperTexture } from './visuals/paint';
 import { Stage } from './visuals/stage';
 import { showGallery } from './ui/gallery';
+import { DuoApp } from './ui/duo';
 
 document.getElementById('paper')!.style.backgroundImage = `url(${paperTexture()})`;
 const stage = new Stage(document.getElementById('stage') as HTMLCanvasElement);
 if (new URLSearchParams(location.search).has('gallery')) showGallery(stage, document.getElementById('ui')!);
-else new App(stage, new AudioEngine()).showTitle();
+else {
+  const audio = new AudioEngine();
+  const app = new App(stage, audio);
+  // the two-player game shares the stage and the sound with the single-player game
+  app.onDuo = () => {
+    app.closeOverlay();
+    void new DuoApp(stage, audio, document.getElementById('ui')!, () => app.showTitle()).open();
+  };
+  app.showTitle();
+}

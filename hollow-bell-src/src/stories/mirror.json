@@ -1,0 +1,4888 @@
+{
+  "id": "mirror",
+  "title": "The Other Side of the Glass",
+  "tagline": "A story for two. One night, one ball, one mirror, and two people on opposite sides of it.",
+  "estimatedMinutes": 20,
+  "startScene": "m_ball",
+  "players": [
+    {
+      "id": "ingerid",
+      "name": "Ingerid"
+    },
+    {
+      "id": "kristian",
+      "name": "Kristian"
+    }
+  ],
+  "houses": [
+    "Gryffindor",
+    "Slytherin",
+    "Ravenclaw",
+    "Hufflepuff"
+  ],
+  "bonusPoints": 6,
+  "initialState": {
+    "stats": {
+      "courage": 2,
+      "wit": 2,
+      "kindness": 2,
+      "cunning": 2
+    },
+    "flags": {},
+    "relations": {
+      "gloam": 0
+    },
+    "counters": {}
+  },
+  "credits": {
+    "title": "The Other Side of the Glass",
+    "lines": [
+      "A story for two",
+      "Written for Ingerid and Kristian"
+    ]
+  },
+  "scenes": {
+    "m_ball": {
+      "id": "m_ball",
+      "title": "The Winter Ball",
+      "mood": "cozy",
+      "visual": {
+        "preset": "ballroom-night",
+        "particles": [
+          "candles",
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian"
+      ],
+      "text": [
+        "Snow has been falling on the castle since lunch, and the Great Hall has given up pretending to be a dining room. Tonight it is a ballroom: four hundred floating candles, a ceiling full of slow snow that never lands, and a string quartet of enchanted instruments that plays a little faster whenever a teacher walks past.",
+        "{ingerid} of {ingeridHouse} and {kristian} of {kristianHouse} have danced exactly one dance, badly, and are now hiding by the drinks table with two cups of something that fizzes the wrong colour.",
+        "It is {ingerid} who notices it first. Behind the tapestry of the dancing trolls, where there has always been stone, there is a corridor. Its floor is polished like ice. At the far end, something catches the candlelight and throws it back.",
+        "Madam Ottoline Pell, the librarian, is chaperoning tonight from a chair by the door with a book in her lap. She has not looked up in an hour."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Take {kristian}'s hand and walk into the corridor",
+            "effects": [
+              {
+                "flag": "i_bold",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Tell {kristian} to wait while you take a careful look",
+            "effects": [
+              {
+                "flag": "i_careful",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Tell Madam Pell about the corridor first",
+            "effects": [
+              {
+                "flag": "i_help",
+                "set": true
+              },
+              {
+                "flag": "pell_knows",
+                "set": true
+              },
+              {
+                "relation": "pell",
+                "add": 1
+              }
+            ],
+            "ripple": "Madam Pell will remember who told her."
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_ball_k"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": [
+          "chime_soft"
+        ]
+      }
+    },
+    "m_ball_k": {
+      "id": "m_ball_k",
+      "title": "The corridor that was not there",
+      "mood": "tense",
+      "visual": {
+        "preset": "ballroom-night",
+        "particles": [
+          "candles"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "i_bold"
+          },
+          "text": "{ingerid} takes {kristian}'s hand without a word and pulls. The tapestry trolls stop dancing to watch them go."
+        },
+        {
+          "if": {
+            "flag": "i_careful"
+          },
+          "text": "“Wait here,” says {ingerid}, and takes three careful steps onto the icy floor, testing it like a frozen pond."
+        },
+        {
+          "if": {
+            "flag": "i_help"
+          },
+          "text": "{ingerid} crosses the hall to Madam Pell, who listens, closes her book on one finger, and looks at the tapestry for a long moment. “That corridor,” she says quietly, “was bricked up in 1923. Do not go far. I will be right behind you.”"
+        },
+        "The music behind them goes thin, as if it is being played in another room. The corridor smells of cold glass and old roses."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Stride ahead of {ingerid}, first into the dark",
+            "effects": [
+              {
+                "flag": "k_bold",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "courage",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Stay half a step behind and keep your eyes open",
+            "effects": [
+              {
+                "flag": "k_careful",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "wit",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Make a joke about haunted corridors to steady your nerves",
+            "effects": [
+              {
+                "flag": "k_joke",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "kindness",
+                "add": 1
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_hall"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": []
+      }
+    },
+    "m_hall": {
+      "id": "m_hall",
+      "title": "The Hall of Glass",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "dust",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian",
+        "Gloam"
+      ],
+      "speaker": "Gloam",
+      "text": [
+        "The corridor opens into a long gallery of mirrors, floor to ceiling, each one taller than a door. Moonlight comes in from nowhere. In every mirror there are two of them, and then four, and then a hundred, all the way down into silver.",
+        {
+          "if": {
+            "flag": "k_joke"
+          },
+          "text": "{kristian}'s joke about haunted corridors echoes back from the glass a moment too late, in a voice that is almost his."
+        },
+        "Between two mirrors hangs a portrait of an old wizard asleep in an armchair, snoring gently. The brass plate reads: Sir Aldous Vane, Keeper of the Hall.",
+        "Then one of the reflections of {kristian} does not move when he moves. It tilts its head. It smiles, politely, the way a stranger smiles across a train carriage.",
+        "“Good evening,” it says to {ingerid}. “You have no idea how long it has been since anyone came to the ball.”"
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Ask the reflection who it really is",
+            "effects": [
+              {
+                "flag": "knows_name",
+                "set": true
+              }
+            ],
+            "ripple": "The reflection will remember that you asked."
+          },
+          {
+            "label": "Wake the snoring portrait",
+            "effects": [
+              {
+                "flag": "portrait_awake",
+                "set": true
+              },
+              {
+                "relation": "aldous",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Grab {kristian}'s sleeve and do not let go",
+            "effects": [
+              {
+                "flag": "held",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "item": "scarf",
+                "give": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_hall_k"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "whisper"
+        ]
+      }
+    },
+    "m_hall_k": {
+      "id": "m_hall_k",
+      "title": "The reflection",
+      "mood": "tense",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian",
+        "Gloam"
+      ],
+      "speaker": "Gloam",
+      "text": [
+        {
+          "if": {
+            "flag": "knows_name"
+          },
+          "text": "“Who are you?” asks {ingerid}. The reflection bows. “Leander Gloam,” it says. “Fifth year. Ravenclaw, once. I came to a ball like this one and I never quite left.”"
+        },
+        {
+          "if": {
+            "flag": "portrait_awake"
+          },
+          "text": "{ingerid} raps on the frame of the portrait. Sir Aldous wakes with a snort, sees the smiling reflection and goes white under his paint. “Do not give it your name!” he cries. “Whatever it offers, girl, it must never have your name!”"
+        },
+        {
+          "if": {
+            "flag": "held"
+          },
+          "text": "{ingerid} grabs {kristian}'s sleeve and holds on. In the confusion her scarf ends up wound around his wrist."
+        },
+        "The reflection turns to {kristian}. “And you,” it says warmly. “You look like someone who would understand. Come closer. The glass is cold, but it is honest.”"
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Reach out and touch the glass",
+            "effects": [
+              {
+                "flag": "k_touched",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Step back from the mirror",
+            "check": {
+              "stat": "courage",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "k_resisted",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "k_touched",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Say good evening back, politely",
+            "effects": [
+              {
+                "flag": "k_polite",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 2
+              }
+            ],
+            "ripple": "The reflection will remember your manners."
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_split"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "hum_low"
+        ]
+      }
+    },
+    "m_split": {
+      "id": "m_split",
+      "title": "Through",
+      "mood": "dark",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "k_touched"
+          },
+          "text": "{kristian}'s fingertips meet the glass, and the glass does not stop them. It gives, like the skin of cold water."
+        },
+        {
+          "if": {
+            "flag": "k_resisted"
+          },
+          "text": "{kristian} steps back, hard. It makes no difference. The floor tilts like the deck of a ship, and he slides toward the mirror as if the whole hall has decided it."
+        },
+        {
+          "if": {
+            "flag": "k_polite"
+          },
+          "text": "“Good evening,” says {kristian}, because his grandmother raised him properly. The reflection looks genuinely touched. Then the mirror opens like a door, and {kristian} is on the other side of it."
+        },
+        "There is no sound. There is no flash. One moment {kristian} is standing next to {ingerid}; the next he is standing next to her in the mirror, and nowhere else.",
+        {
+          "if": {
+            "flag": "held"
+          },
+          "text": "{ingerid}'s scarf has gone with him. She can see the end of it trailing from his wrist, in the glass."
+        },
+        "He presses his hands to the glass from the inside. His mouth moves. {ingerid} cannot hear a single word."
+      ],
+      "next": [
+        {
+          "to": "m_k_silver"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "glass_shatter",
+          "whoosh"
+        ]
+      }
+    },
+    "m_k_silver": {
+      "id": "m_k_silver",
+      "title": "The silver castle",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fog",
+          "dust"
+        ]
+      },
+      "cast": [
+        "kristian@mirror"
+      ],
+      "text": [
+        "On the other side of the glass the castle is exactly the same and completely wrong. The candles burn downward. The tapestry trolls dance backwards. Every word on every sign is written the wrong way round, and the snow outside the windows falls up.",
+        "There is no colour here, only silver and grey and the deep blue of moonlight. {kristian}'s own footsteps reach his ears a heartbeat before he takes them.",
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "He still has {ingerid}'s scarf around his wrist. It is the only warm colour in the whole world."
+        },
+        "Through the mirror he can see {ingerid}, small and real and very far away, in a hall full of ordinary candlelight.",
+        "At the end of the silver gallery, a figure in old-fashioned school robes beckons to him, and then slips round a corner."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Search the silver gallery for a way back",
+            "check": {
+              "stat": "wit",
+              "difficulty": 5,
+              "success": [
+                {
+                  "player": "kristian",
+                  "item": "shard",
+                  "give": true
+                },
+                {
+                  "flag": "k_found_shard",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "k_lost",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Follow the figure round the corner",
+            "effects": [
+              {
+                "flag": "met_gloam_early",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Breathe on the glass and write a message to {ingerid}",
+            "effects": [
+              {
+                "flag": "k_wrote",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ],
+            "ripple": "{ingerid} will see whatever you write."
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_i_glass"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "wind_gust"
+        ]
+      }
+    },
+    "m_i_glass": {
+      "id": "m_i_glass",
+      "title": "Writing on the glass",
+      "mood": "tense",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror"
+      ],
+      "speaker": "Sir Aldous",
+      "text": [
+        "{ingerid} stands alone in the Hall of Glass. The quartet in the Great Hall has started a waltz. Nobody has noticed that two students are missing.",
+        {
+          "if": {
+            "flag": "k_found_shard"
+          },
+          "text": "In the mirror, {kristian} is crouching, picking something up from the silver floor: a long, sharp sliver of glass that glows faintly. He holds it up so she can see."
+        },
+        {
+          "if": {
+            "flag": "k_lost"
+          },
+          "text": "In the mirror, {kristian} walks the length of the silver gallery and back again, twice, and each time ends up exactly where he started. He looks very tired of it."
+        },
+        {
+          "if": {
+            "flag": "met_gloam_early"
+          },
+          "text": "In the mirror, {kristian} hurries after a figure in old school robes, and the two of them vanish round a corner. A minute later {kristian} comes back alone, looking thoughtful."
+        },
+        {
+          "if": {
+            "flag": "k_wrote"
+          },
+          "text": "In the mirror, {kristian} breathes on the glass and writes in the mist with one finger. The letters come out backwards on her side, but she can read them: ARE YOU OK? HOW DO I GET BACK?"
+        },
+        {
+          "if": {
+            "flag": "portrait_awake"
+          },
+          "text": "“The hall opens at midnight,” mutters Sir Aldous from his frame, “on the last stroke, and only if both sides turn together. That is all I know, and it is a great deal more than I should.”"
+        },
+        "The great clock above the ballroom says a quarter past eleven. Every story {ingerid} has ever heard about this castle's lost hall ends the same way: whoever is still inside at the last stroke of midnight stays inside for a hundred years.",
+        "She has three quarters of an hour to get {kristian} back."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Breathe on the glass and write back",
+            "effects": [
+              {
+                "flag": "i_wrote",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ],
+            "ripple": "{kristian} will see whatever you write."
+          },
+          {
+            "label": "Run to Madam Pell for help",
+            "effects": [
+              {
+                "flag": "i_help",
+                "set": true
+              },
+              {
+                "flag": "pell_knows",
+                "set": true
+              },
+              {
+                "relation": "pell",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Watch the other side closely, without blinking",
+            "effects": [
+              {
+                "flag": "i_watch",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "wit",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "i_wrote"
+              },
+              {
+                "flag": "k_wrote"
+              }
+            ]
+          },
+          "to": "m_code"
+        },
+        {
+          "to": "m_k_gallery"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "page_rustle"
+        ]
+      }
+    },
+    "m_code": {
+      "id": "m_code",
+      "title": "Twelve",
+      "mood": "cozy",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror"
+      ],
+      "onEnter": [
+        {
+          "flag": "code",
+          "set": true
+        },
+        {
+          "relation": "bond",
+          "add": 1
+        }
+      ],
+      "text": [
+        "For a few minutes the mirror becomes a slate. {ingerid} writes, {kristian} writes back. It is slow, and every word has to be read backwards, and it is the best conversation either of them has had all year.",
+        "They agree on one thing, in capitals, underlined twice: whatever happens, they will act together on the twelfth stroke of midnight. TWELVE, writes {kristian}. TWELVE, writes {ingerid}."
+      ],
+      "next": [
+        {
+          "to": "m_k_gallery"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": []
+      }
+    },
+    "m_k_gallery": {
+      "id": "m_k_gallery",
+      "title": "The silver gallery",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fog",
+          "dust"
+        ]
+      },
+      "cast": [
+        "kristian@mirror"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "i_help"
+          },
+          "text": "In the real hall, {ingerid} is gone, running. {kristian} watches her go and feels, for the first time, properly alone."
+        },
+        {
+          "if": {
+            "flag": "i_watch"
+          },
+          "text": "In the real hall, {ingerid} stands perfectly still and watches him, not blinking, like a cat at a window. It helps more than he would have guessed."
+        },
+        {
+          "if": {
+            "flag": "i_wrote"
+          },
+          "text": "On the glass, in her handwriting, backwards from his side: HOLD ON. I'M HERE."
+        },
+        "The silver castle goes on and on. {kristian} walks into a gallery of portraits, every one of them the reflection of a painting he has walked past a hundred times. Here, the painted people are awake, and they are all looking at him.",
+        "At the far end, somewhere beyond the portraits, a music box is playing a waltz, very slowly, as if it is running down. Above him, a door stands open onto a balcony where the snow is falling the wrong way."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Question the silver portraits",
+            "effects": [
+              {
+                "flag": "kb_portraits",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Follow the sound of the music box",
+            "effects": [
+              {
+                "flag": "kb_room",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Climb out onto the upside-down balcony",
+            "effects": [
+              {
+                "flag": "kb_balcony",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "courage",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_i_corridors"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_i_corridors": {
+      "id": "m_i_corridors",
+      "title": "The castle at night",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "text": [
+        "{ingerid} leaves the Hall of Glass and the music of the ball behind her. The real castle at a quarter to midnight is all moving staircases and sleepy portraits, and every corridor seems longer than it is in daylight.",
+        {
+          "if": {
+            "flag": "kb_portraits"
+          },
+          "text": "In a window as she passes, she catches a glimpse of {kristian} in a silver gallery, deep in conversation with a row of paintings."
+        },
+        {
+          "if": {
+            "flag": "kb_room"
+          },
+          "text": "In a window as she passes, she catches a glimpse of {kristian}, hurrying down a silver corridor as though he is following a tune."
+        },
+        {
+          "if": {
+            "flag": "kb_balcony"
+          },
+          "text": "In a window as she passes, she catches a glimpse of {kristian} climbing out onto a balcony, into snow that is falling up."
+        },
+        "Three ways lie open. Up the spiral stair to the clock tower, where the great clock of the ballroom keeps its works. Along the east corridor, where the castle ghost called Sister Wren is said to walk on winter nights. Or down to Madam Pell's office, which is never locked, because nobody would dare."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Climb the stair to the clock tower",
+            "effects": [
+              {
+                "flag": "ib_tower",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Look for Sister Wren in the east corridor",
+            "effects": [
+              {
+                "flag": "ib_ghost",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Slip into Madam Pell's office",
+            "effects": [
+              {
+                "flag": "ib_office",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "cunning",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "kb_portraits"
+          },
+          "to": "m_k_portraits"
+        },
+        {
+          "if": {
+            "flag": "kb_room"
+          },
+          "to": "m_k_room"
+        },
+        {
+          "to": "m_k_balcony"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": []
+      }
+    },
+    "m_k_portraits": {
+      "id": "m_k_portraits",
+      "title": "The painted witnesses",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "dust"
+        ]
+      },
+      "cast": [
+        "kristian@mirror"
+      ],
+      "speaker": "Sir Aldous",
+      "text": [
+        "The silver portraits whisper among themselves as {kristian} comes closer. The reflection of Sir Aldous Vane is here too, awake and much braver than the original.",
+        "“A living boy, on this side!” he says. “We have not had one of those since the twenties. Ask, lad, ask. We have been dying to be asked anything at all for a hundred years.”"
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Ask how the door between the sides opens",
+            "effects": [
+              {
+                "flag": "k_hint",
+                "set": true
+              },
+              {
+                "flag": "k_portraits",
+                "set": true
+              },
+              {
+                "relation": "aldous",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Ask about the boy in old school robes",
+            "effects": [
+              {
+                "flag": "k_knows_gloam",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Ask whether a voice can pass through the glass",
+            "effects": [
+              {
+                "flag": "whisper_link",
+                "set": true
+              }
+            ],
+            "ripple": "Once tonight, {ingerid} may hear you."
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "ib_tower"
+          },
+          "to": "m_i_tower"
+        },
+        {
+          "if": {
+            "flag": "ib_ghost"
+          },
+          "to": "m_i_ghost"
+        },
+        {
+          "to": "m_i_office"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_k_room": {
+      "id": "m_k_room",
+      "title": "Room 1923",
+      "mood": "cozy",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "dust",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "kristian@mirror"
+      ],
+      "text": [
+        "The music box is in a dormitory that has not changed in a hundred years: one bed made with hospital corners, a school trunk with a name painted on the lid, a wireless set, a single photograph propped against the lamp. The box is still turning, slower and slower.",
+        "The name on the trunk is L. GLOAM."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Read the diary lying open on the bed",
+            "effects": [
+              {
+                "flag": "k_diary",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "kindness",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Wind the music box before it stops",
+            "effects": [
+              {
+                "flag": "k_music",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 2
+              }
+            ],
+            "ripple": "Somebody will notice the music start again."
+          },
+          {
+            "label": "Take the photograph",
+            "effects": [
+              {
+                "flag": "k_photo",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "item": "photo",
+                "give": true
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "ib_tower"
+          },
+          "to": "m_i_tower"
+        },
+        {
+          "if": {
+            "flag": "ib_ghost"
+          },
+          "to": "m_i_ghost"
+        },
+        {
+          "to": "m_i_office"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_k_balcony": {
+      "id": "m_k_balcony",
+      "title": "Snow falling up",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "kristian@mirror"
+      ],
+      "text": [
+        "The balcony hangs over a silver courtyard. Snow rises past {kristian} in slow flakes and vanishes into a black sky with no stars, only one enormous moon. Across the courtyard, the backwards clock tower shows its face: the hands are creeping toward twelve, from the wrong side.",
+        "Below him, through a window that is a mirror on the other side, he can see straight into the real castle: warm corridors, candles, and somewhere in there, {ingerid}."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Wave, in case {ingerid} is looking",
+            "effects": [
+              {
+                "flag": "k_waved",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "kindness",
+                "add": 1
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Study the backwards clock until you understand it",
+            "effects": [
+              {
+                "flag": "k_saw_clock",
+                "set": true
+              },
+              {
+                "flag": "k_hint",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Leap to the next window ledge",
+            "check": {
+              "stat": "courage",
+              "difficulty": 6,
+              "success": [
+                {
+                  "player": "kristian",
+                  "item": "shard",
+                  "give": true
+                },
+                {
+                  "flag": "k_found_shard",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "player": "kristian",
+                  "stat": "courage",
+                  "add": -1
+                },
+                {
+                  "flag": "k_slipped",
+                  "set": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "ib_tower"
+          },
+          "to": "m_i_tower"
+        },
+        {
+          "if": {
+            "flag": "ib_ghost"
+          },
+          "to": "m_i_ghost"
+        },
+        {
+          "to": "m_i_office"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_i_tower": {
+      "id": "m_i_tower",
+      "title": "The clockworks",
+      "mood": "tense",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "dust",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "k_waved"
+          },
+          "text": "Through a narrow window on the stair, {ingerid} sees a silver figure on a balcony in a sky that is not there, waving. She waves back before she can feel silly about it."
+        },
+        {
+          "if": {
+            "flag": "k_music"
+          },
+          "text": "Somewhere in the walls, very faintly, a music box starts playing a waltz."
+        },
+        "At the top of the spiral stair the clock tower is one great machine: wheels the size of cartwheels, a pendulum as long as a boat, and the back of the ballroom clock's face, glowing like a moon from behind.",
+        "A small portrait hangs among the gears, of a clockmaker with a jeweller's glass screwed into one eye. He is fast asleep, and ticking."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Study the mechanism",
+            "check": {
+              "stat": "wit",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "i_clock_knowledge",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_confused",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Wake the clockmaker and ask him",
+            "effects": [
+              {
+                "flag": "i_clock_knowledge",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Free the gear that is sticking",
+            "check": {
+              "stat": "courage",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "i_gear",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "player": "ingerid",
+                  "stat": "courage",
+                  "add": -1
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_k_library"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": []
+      }
+    },
+    "m_i_ghost": {
+      "id": "m_i_ghost",
+      "title": "Sister Wren",
+      "mood": "magic",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "fog",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "Sister Wren"
+      ],
+      "speaker": "Sister Wren",
+      "text": [
+        {
+          "if": {
+            "flag": "k_music"
+          },
+          "text": "As {ingerid} turns into the east corridor, a music box starts to play somewhere inside the walls, and the air goes cold."
+        },
+        "Sister Wren is exactly where the stories say: drifting along the east corridor in a nun's grey habit, humming. She has been dead for four hundred years and says she has never been bored once.",
+        "“A living girl, out of bed, on the night of the ball,” she says. “You have come about the Hall of Glass. Everybody always does, eventually. Ask your question, dear. I have time.”"
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Ask her about Leander Gloam",
+            "effects": [
+              {
+                "flag": "i_knows_gloam",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              },
+              {
+                "relation": "wren",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Ask how anyone comes back through the glass",
+            "effects": [
+              {
+                "flag": "i_rule",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Ask her to keep watch over the Hall of Glass",
+            "effects": [
+              {
+                "flag": "wren_watch",
+                "set": true
+              },
+              {
+                "relation": "wren",
+                "add": 2
+              }
+            ],
+            "ripple": "Sister Wren will be watching."
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_k_library"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": []
+      }
+    },
+    "m_i_office": {
+      "id": "m_i_office",
+      "title": "Madam Pell's office",
+      "mood": "cozy",
+      "visual": {
+        "preset": "office-study",
+        "particles": [
+          "dust",
+          "candles"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "k_waved"
+          },
+          "text": "In the dark window of the office, {ingerid} glimpses a silver boy on a silver balcony, waving. She waves back."
+        },
+        "Madam Pell's office smells of tea and glue. There are books on every surface, including the chair, and a cat asleep in the in-tray who opens one eye and closes it again.",
+        "On the desk: a filing cabinet drawer marked INCIDENTS 1900-1950, a pair of odd spectacles with silver lenses, and a pad of paper for leaving notes."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Read the incident report from 1923",
+            "effects": [
+              {
+                "flag": "i_records",
+                "set": true
+              },
+              {
+                "flag": "i_suspects",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "wit",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Borrow the silver spectacles",
+            "effects": [
+              {
+                "player": "ingerid",
+                "item": "spectacles",
+                "give": true
+              },
+              {
+                "flag": "i_watch",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Leave Madam Pell a note telling her everything",
+            "effects": [
+              {
+                "flag": "pell_knows",
+                "set": true
+              },
+              {
+                "flag": "i_help",
+                "set": true
+              },
+              {
+                "relation": "pell",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_k_library"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": []
+      }
+    },
+    "m_k_library": {
+      "id": "m_k_library",
+      "title": "The backwards library",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "dust"
+        ]
+      },
+      "cast": [
+        "kristian@mirror",
+        "Echo"
+      ],
+      "speaker": "Echo",
+      "text": [
+        "The silver library is silent in the way only libraries and graves are. Behind the desk sits a librarian made of moonlight: Madam Pell's shape, Madam Pell's spectacles, and no face at all. The plaque on the desk says ECHO.",
+        "On the desk lies a book bound in mirror. Its title runs backwards: The Charm of the Two Sides. Half its pages are blank. The other half are written in a hand so reversed that it hurts to look at.",
+        "“Two halves,” says the Echo, in a voice like a spoon against a glass. “Two hands. The last word.”"
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Read the backwards pages in your shard of mirror",
+            "requires": {
+              "player": "kristian",
+              "item": "shard"
+            },
+            "lockedHint": "You have nothing to read mirror-writing with.",
+            "effects": [
+              {
+                "flag": "k_half",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Puzzle out the mirror-writing by yourself",
+            "check": {
+              "stat": "wit",
+              "difficulty": 6,
+              "success": [
+                {
+                  "flag": "k_half",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "k_puzzled",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Ask the Echo politely what it means",
+            "effects": [
+              {
+                "flag": "k_hint",
+                "set": true
+              },
+              {
+                "relation": "echo",
+                "add": 2
+              }
+            ]
+          },
+          {
+            "label": "Grab the book and run",
+            "effects": [
+              {
+                "flag": "k_half",
+                "set": true
+              },
+              {
+                "flag": "echo_angry",
+                "set": true
+              },
+              {
+                "relation": "echo",
+                "add": -2
+              }
+            ],
+            "ripple": "The Echo will not forget this."
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_i_library"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "hum_voice"
+        ]
+      }
+    },
+    "m_i_library": {
+      "id": "m_i_library",
+      "title": "The real library",
+      "mood": "tense",
+      "visual": {
+        "preset": "library-basement",
+        "particles": [
+          "dust",
+          "candles"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "Madam Pell"
+      ],
+      "speaker": "Madam Pell",
+      "text": [
+        "The castle library at half past eleven on the night of the ball is dark and smells of candle smoke. {ingerid} has never been here alone after hours.",
+        {
+          "if": {
+            "flag": "pell_knows"
+          },
+          "text": "Madam Pell is here before her, already pulling a ladder along the shelves. “1923,” she says, without turning round. “A boy went into that hall and did not come out, and the headmaster of the day bricked it up and told everyone it was a draught. I have always hated that story.”"
+        },
+        {
+          "if": {
+            "not": {
+              "flag": "pell_knows"
+            }
+          },
+          "text": "Madam Pell's chair at the front desk is empty; she is still at the ball. The restricted section is behind a little iron gate with a lock that looks bored."
+        },
+        {
+          "if": {
+            "flag": "k_half"
+          },
+          "text": "Somewhere on the other side of the glass, {ingerid} feels rather than knows that {kristian} has found something."
+        }
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Ask Madam Pell for the book about the Hall of Glass",
+            "requires": {
+              "flag": "pell_knows"
+            },
+            "lockedHint": "Madam Pell does not know what is happening.",
+            "effects": [
+              {
+                "flag": "i_half",
+                "set": true
+              },
+              {
+                "flag": "pell_helped",
+                "set": true
+              },
+              {
+                "relation": "pell",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Sneak into the restricted section",
+            "check": {
+              "stat": "cunning",
+              "difficulty": 6,
+              "success": [
+                {
+                  "flag": "i_half",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_caught",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Search the ordinary shelves for anything about mirrors",
+            "check": {
+              "stat": "wit",
+              "difficulty": 6,
+              "success": [
+                {
+                  "flag": "i_half",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_searched",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Look up the name Gloam in the old yearbooks",
+            "effects": [
+              {
+                "flag": "i_records",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "kindness",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "to": "m_k_echo_chase"
+        },
+        {
+          "to": "m_k_stair"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_archive",
+        "sfx": [
+          "page_rustle"
+        ]
+      }
+    },
+    "m_k_echo_chase": {
+      "id": "m_k_echo_chase",
+      "title": "The Echo follows",
+      "mood": "dark",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Echo"
+      ],
+      "speaker": "Echo",
+      "text": [
+        {
+          "if": {
+            "flag": "i_half"
+          },
+          "text": "In the real library, {ingerid} finds a thin book with a mirror for a cover, the twin of one she has never seen. Half its pages are blank. The other half hold the first half of a charm."
+        },
+        {
+          "if": {
+            "flag": "i_caught"
+          },
+          "text": "In the real library, the iron gate squeals, and a prefect on patrol sends {ingerid} back to the corridor with a warning and nothing in her hands."
+        },
+        {
+          "if": {
+            "flag": "i_searched"
+          },
+          "text": "In the real library, {ingerid} pulls down every book with “mirror” in the title and finds hand mirrors, shaving charms and a very long poem, but nothing about a hall of glass."
+        },
+        {
+          "if": {
+            "flag": "i_records"
+          },
+          "text": "In the real library, {ingerid} finds him in the 1923 yearbook: Leander Gloam, fifth year, “most likely to be overlooked”. Someone has written in pencil beside his photograph: he only wanted somebody to notice him. Underneath, a staff note: last seen in the Hall of Glass, in the company of the Keeper of the Hall, Sir Aldous Vane."
+        },
+        "In the silver castle, {kristian} runs with the mirror-bound book under his arm, and behind him comes the Echo: no feet, no face, only the sound of a library's worth of shushing, getting louder.",
+        "“Return,” it says, from everywhere at once. “Return what is borrowed.”"
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Hide among the backwards shelves",
+            "check": {
+              "stat": "cunning",
+              "difficulty": 6,
+              "success": [
+                {
+                  "flag": "k_hidden",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "k_cornered",
+                  "set": true
+                },
+                {
+                  "player": "kristian",
+                  "stat": "courage",
+                  "add": -1
+                }
+              ]
+            }
+          },
+          {
+            "label": "Apologise, and give the book back after learning your half by heart",
+            "check": {
+              "stat": "kindness",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "echo_calmed",
+                  "set": true
+                },
+                {
+                  "relation": "echo",
+                  "add": 3
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "k_half",
+                  "set": false
+                },
+                {
+                  "flag": "echo_took_book",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Run up the backwards stairs",
+            "check": {
+              "stat": "courage",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "k_escaped",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "k_cornered",
+                  "set": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "i_caught"
+          },
+          "to": "m_i_prefect"
+        },
+        {
+          "to": "m_i_stairs"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_k_stair": {
+      "id": "m_k_stair",
+      "title": "Catching his breath",
+      "mood": "cozy",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "dust",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "i_half"
+          },
+          "text": "In the real library, {ingerid} finds a thin book with a mirror for a cover, the twin of one she has never seen. Half its pages are blank. The other half hold the first half of a charm."
+        },
+        {
+          "if": {
+            "flag": "i_caught"
+          },
+          "text": "In the real library, the iron gate squeals, and a prefect on patrol sends {ingerid} back to the corridor with a warning and nothing in her hands."
+        },
+        {
+          "if": {
+            "flag": "i_searched"
+          },
+          "text": "In the real library, {ingerid} pulls down every book with “mirror” in the title and finds hand mirrors, shaving charms and a very long poem, but nothing about a hall of glass."
+        },
+        {
+          "if": {
+            "flag": "i_records"
+          },
+          "text": "In the real library, {ingerid} finds him in the 1923 yearbook: Leander Gloam, fifth year, “most likely to be overlooked”. Someone has written in pencil beside his photograph: he only wanted somebody to notice him. Underneath, a staff note: last seen in the Hall of Glass, in the company of the Keeper of the Hall, Sir Aldous Vane."
+        },
+        "In the silver castle, {kristian} sits down on a staircase that goes downward to go up, and lets himself breathe for a minute. The quiet here is enormous. He can hear his own heart, and, very far away, the waltz from the ball, playing backwards."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Write to {ingerid} on the nearest pane of glass",
+            "effects": [
+              {
+                "flag": "k_wrote2",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "kindness",
+                "add": 1
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Go looking for the boy in old robes",
+            "effects": [
+              {
+                "flag": "met_gloam_early",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Practise your half of the charm under your breath",
+            "requires": {
+              "flag": "k_half"
+            },
+            "lockedHint": "You have no charm to practise.",
+            "effects": [
+              {
+                "flag": "k_practised",
+                "set": true
+              },
+              {
+                "player": "kristian",
+                "stat": "wit",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Close your eyes and gather your courage",
+            "effects": [
+              {
+                "player": "kristian",
+                "stat": "courage",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "flag": "i_caught"
+          },
+          "to": "m_i_prefect"
+        },
+        {
+          "to": "m_i_stairs"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_i_prefect": {
+      "id": "m_i_prefect",
+      "title": "The prefect",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "speaker": "Prefect",
+      "text": [
+        {
+          "if": {
+            "any": [
+              {
+                "flag": "k_hidden"
+              },
+              {
+                "flag": "k_escaped"
+              }
+            ]
+          },
+          "text": "In a dark window, {ingerid} sees {kristian} slip away from something made of moonlight. Good."
+        },
+        {
+          "if": {
+            "flag": "k_cornered"
+          },
+          "text": "In a dark window, {ingerid} sees {kristian} backed against a silver shelf by something made of moonlight. Her heart jumps."
+        },
+        {
+          "if": {
+            "flag": "k_wrote2"
+          },
+          "text": "On the dark window, backwards: STILL OK. YOU?"
+        },
+        "The prefect who caught her has a badge so polished it could be used for signalling ships, and the expression of a boy who has read the school rules for pleasure. He would get on, {ingerid} thinks, with a certain Percy she has read about.",
+        "“Out of bed, out of the ball, out of bounds,” he says. “That's three things. I'm going to have to write all three down.”"
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Talk your way out of it",
+            "check": {
+              "stat": "cunning",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "i_free",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_detained",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Tell him the truth, all of it",
+            "check": {
+              "stat": "kindness",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "pell_knows",
+                  "set": true
+                },
+                {
+                  "flag": "i_help",
+                  "set": true
+                },
+                {
+                  "flag": "prefect_helped",
+                  "set": true
+                },
+                {
+                  "relation": "pell",
+                  "add": 1
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_detained",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Run for it",
+            "check": {
+              "stat": "courage",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "i_free",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_detained",
+                  "set": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_talk1"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": []
+      }
+    },
+    "m_i_stairs": {
+      "id": "m_i_stairs",
+      "title": "The moving staircases",
+      "mood": "tense",
+      "visual": {
+        "preset": "tower-stairs",
+        "particles": [
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "text": [
+        {
+          "if": {
+            "any": [
+              {
+                "flag": "k_hidden"
+              },
+              {
+                "flag": "k_escaped"
+              }
+            ]
+          },
+          "text": "In a dark window, {ingerid} sees {kristian} slip away from something made of moonlight. Good."
+        },
+        {
+          "if": {
+            "flag": "k_cornered"
+          },
+          "text": "In a dark window, {ingerid} sees {kristian} backed against a silver shelf by something made of moonlight. Her heart jumps."
+        },
+        {
+          "if": {
+            "flag": "k_wrote2"
+          },
+          "text": "On the dark window, backwards: STILL OK. YOU?"
+        },
+        "On her way back to the Hall of Glass, the great staircases start to move, the way they do when they are bored. One swings away into the dark. One offers itself, creaking, like a dog wanting a walk."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Take the shortcut the staircase offers",
+            "check": {
+              "stat": "wit",
+              "difficulty": 5,
+              "success": [
+                {
+                  "flag": "i_early",
+                  "set": true
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "i_detour",
+                  "set": true
+                }
+              ]
+            }
+          },
+          {
+            "label": "Practise your half of the charm while you wait",
+            "requires": {
+              "flag": "i_half"
+            },
+            "lockedHint": "You have no charm to practise.",
+            "effects": [
+              {
+                "flag": "i_practised",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "wit",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Write back on the dark window",
+            "effects": [
+              {
+                "flag": "i_wrote2",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "kindness",
+                "add": 1
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_talk1"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": []
+      }
+    },
+    "m_talk1": {
+      "id": "m_talk1",
+      "title": "Leander Gloam",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fog",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "speaker": "Gloam",
+      "text": [
+        "In the silver castle, the boy in old robes is waiting for {kristian} on the backwards staircase. He is pale and thin and perfectly polite, and his edges shimmer like heat over a road.",
+        {
+          "if": {
+            "flag": "met_gloam_early"
+          },
+          "text": "“We meet again,” he says. “You followed me. Nobody ever follows me.”"
+        },
+        {
+          "if": {
+            "flag": "k_polite"
+          },
+          "text": "“You said good evening,” he says. “In a hundred years, you are the first.”"
+        },
+        {
+          "if": {
+            "flag": "k_knows_gloam"
+          },
+          "text": "{kristian} remembers how the silver portraits went quiet when he asked about this boy, and how quickly Sir Aldous changed the subject."
+        },
+        "“Not so loud,” the boy whispers, glancing up the staircase. “He listens through every frame.”",
+        "On the landing above them hangs an empty silver frame. As {kristian} looks up, it is not empty any more. The reflection of Sir Aldous Vane settles into it, beaming, kindly, like a favourite grandfather.",
+        "“The living boy!” says Sir Aldous. “Splendid. I am the Keeper of this Hall, lad, and I can have you home by midnight. One small formality. Tell me your name, your whole name, and I will write it in the register of the living, and the door will open for you.”",
+        "Behind the frame, where only {kristian} can see, the pale boy shakes his head, very slightly, again and again."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Ignore the portrait and ask the boy why he has been alone for so long",
+            "effects": [
+              {
+                "flag": "k_listened",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 2
+              },
+              {
+                "relation": "aldous",
+                "add": -1
+              }
+            ]
+          },
+          {
+            "label": "Refuse the Keeper, kindly but firmly",
+            "effects": [
+              {
+                "flag": "k_refused",
+                "set": true
+              },
+              {
+                "relation": "aldous",
+                "add": -1
+              }
+            ]
+          },
+          {
+            "label": "Tell the Keeper your name",
+            "effects": [
+              {
+                "flag": "name_offered",
+                "set": true
+              },
+              {
+                "relation": "aldous",
+                "add": 2
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_talk2"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "whisper"
+        ]
+      }
+    },
+    "m_talk2": {
+      "id": "m_talk2",
+      "title": "A message in the mist",
+      "mood": "tense",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "text": [
+        "{ingerid} is back in the Hall of Glass. In the biggest mirror she can see them: {kristian} and a pale boy on a staircase that goes the wrong way, and above them, in a silver frame, the beaming face of Sir Aldous Vane.",
+        {
+          "if": {
+            "flag": "k_listened"
+          },
+          "text": "{kristian} is listening. The boy is talking with his hands, quickly, like someone who has saved up a hundred years of things to say."
+        },
+        {
+          "if": {
+            "flag": "k_refused"
+          },
+          "text": "{kristian} shakes his head. The boy's smile does not change, but his edges flicker."
+        },
+        {
+          "if": {
+            "flag": "name_offered"
+          },
+          "text": "{kristian} turns to the portrait and opens his mouth to say something, and Sir Aldous leans so far out of his frame to hear it that his painted fingers curl over the edge."
+        },
+        "There is still a little mist on the glass. Enough for a few words."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Write: DON'T TELL IT YOUR NAME",
+            "requires": {
+              "any": [
+                {
+                  "flag": "i_watch"
+                },
+                {
+                  "flag": "i_wrote"
+                },
+                {
+                  "flag": "portrait_awake"
+                },
+                {
+                  "flag": "knows_name"
+                }
+              ]
+            },
+            "lockedHint": "You don't know enough about the reflection to warn him.",
+            "effects": [
+              {
+                "flag": "i_warned",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Write: ASK HIM ABOUT 1923",
+            "requires": {
+              "flag": "i_records"
+            },
+            "lockedHint": "You don't know anything about 1923.",
+            "effects": [
+              {
+                "flag": "i_hint_story",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Write: DON'T TRUST THE PORTRAIT",
+            "requires": {
+              "any": [
+                {
+                  "flag": "i_suspects"
+                },
+                {
+                  "flag": "i_records"
+                }
+              ]
+            },
+            "lockedHint": "You have no reason to doubt the portrait.",
+            "effects": [
+              {
+                "flag": "aldous_exposed",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              },
+              {
+                "relation": "aldous",
+                "add": -2
+              }
+            ]
+          },
+          {
+            "label": "Try to crack the mirror with a spell",
+            "check": {
+              "stat": "courage",
+              "difficulty": 6,
+              "success": [
+                {
+                  "flag": "cracked",
+                  "set": true
+                },
+                {
+                  "player": "kristian",
+                  "item": "shard",
+                  "give": true
+                },
+                {
+                  "relation": "gloam",
+                  "add": -2
+                },
+                {
+                  "relation": "bond",
+                  "add": -1
+                }
+              ],
+              "fail": [
+                {
+                  "flag": "spell_failed",
+                  "set": true
+                },
+                {
+                  "relation": "bond",
+                  "add": -1
+                }
+              ]
+            }
+          },
+          {
+            "label": "Write nothing, and trust {kristian}",
+            "effects": [
+              {
+                "flag": "i_trusted",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "kindness",
+                "add": 1
+              },
+              {
+                "relation": "bond",
+                "add": 2
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_talk3"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "frost_crackle"
+        ]
+      }
+    },
+    "m_talk3": {
+      "id": "m_talk3",
+      "title": "The Keeper of the Hall",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fireflies",
+          "fog"
+        ]
+      },
+      "cast": [
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "speaker": "Gloam",
+      "onEnter": [],
+      "text": [
+        {
+          "if": {
+            "flag": "i_warned"
+          },
+          "text": "Over the boy's shoulder, {kristian} sees letters bloom in the mist on the glass: DON'T TELL IT YOUR NAME."
+        },
+        {
+          "if": {
+            "flag": "aldous_exposed"
+          },
+          "text": "Over the portrait's shoulder, letters bloom in the mist: DON'T TRUST THE PORTRAIT."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "any": [
+                  {
+                    "flag": "i_warned"
+                  },
+                  {
+                    "flag": "aldous_exposed"
+                  }
+                ]
+              },
+              {
+                "flag": "name_offered"
+              }
+            ]
+          },
+          "text": "{kristian} shuts his mouth on the first syllable. Sir Aldous's smile freezes. For one moment the painted face is not kind at all."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "name_offered"
+              },
+              {
+                "not": {
+                  "flag": "i_warned"
+                }
+              },
+              {
+                "not": {
+                  "flag": "aldous_exposed"
+                }
+              }
+            ]
+          },
+          "text": "{kristian} says his name, all of it. Sir Aldous closes his painted eyes as if he is tasting it. “Thank you, {kristian},” he says, and then he does something portraits cannot do: he steps out of his frame, tall and grey and smiling, and his smile is {kristian}'s smile."
+        },
+        {
+          "if": {
+            "not": {
+              "all": [
+                {
+                  "flag": "name_offered"
+                },
+                {
+                  "not": {
+                    "flag": "i_warned"
+                  }
+                },
+                {
+                  "not": {
+                    "flag": "aldous_exposed"
+                  }
+                }
+              ]
+            }
+          },
+          "text": "“A pity,” says Sir Aldous softly, and the frame is empty again. Somewhere in the silver castle, a door closes."
+        },
+        "The boy lets out a breath he seems to have been holding for a hundred years. “Now you know,” he says. “He is the Keeper of the Hall. In 1923 he took my name, the same way, so that he could go on living in his frame. A name buys a portrait a hundred years. Two names would buy him a body. He has been waiting at that door for someone like you.”",
+        {
+          "if": {
+            "relation": "aldous",
+            "gte": 2
+          },
+          "text": "{kristian} thinks of how friendly the portrait was, how helpful. He was counting on that."
+        },
+        {
+          "if": {
+            "flag": "i_hint_story"
+          },
+          "text": "ASK HIM ABOUT 1923, says the mist. {kristian} does. And the boy tells him: a ball, a girl he never dared ask to dance, a wish made to a mirror to be seen, just once. The mirror saw him. It has not stopped seeing him since."
+        },
+        {
+          "if": {
+            "flag": "cracked"
+          },
+          "text": "A spell from the other side hits the mirror like a thrown stone. A crack runs across the glass, and a long shard of it drops at {kristian}'s feet. The boy's face goes cold. “That,” he says, “was not kind.”"
+        },
+        {
+          "if": {
+            "flag": "i_trusted"
+          },
+          "text": "On the other side of the glass, {ingerid} simply stands and waits, and {kristian} can feel it: she trusts him to get this right."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "name_offered"
+              },
+              {
+                "not": {
+                  "flag": "i_warned"
+                }
+              },
+              {
+                "relation": "bond",
+                "gte": 5
+              }
+            ]
+          },
+          "text": "And yet, with his name gone, {kristian} finds he can still remember exactly how {ingerid} laughs at his jokes. Some things the glass cannot take. Not if you hold on to them."
+        },
+        "“Midnight is coming,” says Leander Gloam. “At midnight the hall opens, only for a moment, and only if both sides turn their clocks together. If you are not through by the last stroke, it will not open again for a hundred years. And he will be waiting at the door.”"
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Promise to take him with you if you can",
+            "effects": [
+              {
+                "flag": "pact_fair",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 2
+              }
+            ],
+            "ripple": "Gloam will remember your promise."
+          },
+          {
+            "label": "Ask for your name back",
+            "requires": {
+              "all": [
+                {
+                  "flag": "name_offered"
+                },
+                {
+                  "not": {
+                    "flag": "i_warned"
+                  }
+                }
+              ]
+            },
+            "check": {
+              "stat": "kindness",
+              "difficulty": 6,
+              "success": [
+                {
+                  "flag": "name_returned",
+                  "set": true
+                }
+              ],
+              "fail": []
+            }
+          },
+          {
+            "label": "Think of {ingerid}, and take your name back",
+            "requires": {
+              "all": [
+                {
+                  "flag": "name_offered"
+                },
+                {
+                  "not": {
+                    "flag": "i_warned"
+                  }
+                },
+                {
+                  "relation": "bond",
+                  "gte": 5
+                }
+              ]
+            },
+            "effects": [
+              {
+                "flag": "name_returned",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Promise nothing, and go to find the clock",
+            "effects": [
+              {
+                "flag": "k_alone",
+                "set": true
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_talk4"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "hum_low"
+        ]
+      }
+    },
+    "m_talk4": {
+      "id": "m_talk4",
+      "title": "Her turn to speak",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "speaker": "Gloam",
+      "text": [
+        {
+          "if": {
+            "flag": "pact_fair"
+          },
+          "text": "{ingerid} watches {kristian} say something to the pale boy, and the boy's whole face changes, as though nobody has promised him anything in a very long time."
+        },
+        {
+          "if": {
+            "flag": "k_alone"
+          },
+          "text": "{ingerid} watches {kristian} turn away from the pale boy without a word. The boy watches him go."
+        },
+        {
+          "if": {
+            "flag": "name_returned"
+          },
+          "text": "{ingerid} sees the pale boy hand something back to {kristian}, something she cannot see, and {kristian} looks suddenly more like himself."
+        },
+        "Then Leander Gloam turns to the glass and looks straight at {ingerid}, as if he has known she was there all along.",
+        "“And you,” he says. She can hear him. His voice comes through the mirror like a voice through ice. “The one on the warm side. What do you say?”"
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "“We'll take you with us, if we can.”",
+            "effects": [
+              {
+                "flag": "pact_fair_i",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 2
+              }
+            ]
+          },
+          {
+            "label": "“Who are you, really?”",
+            "requires": {
+              "any": [
+                {
+                  "flag": "i_records"
+                },
+                {
+                  "flag": "i_knows_gloam"
+                }
+              ]
+            },
+            "lockedHint": "You don't know enough about him to ask the right way.",
+            "effects": [
+              {
+                "flag": "i_understood",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "“Give him back, and then we'll talk.”",
+            "effects": [
+              {
+                "flag": "i_stern",
+                "set": true
+              },
+              {
+                "player": "ingerid",
+                "stat": "courage",
+                "add": 1
+              },
+              {
+                "relation": "bond",
+                "add": 1
+              },
+              {
+                "relation": "gloam",
+                "add": -1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_k_prepare"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": []
+      }
+    },
+    "m_k_prepare": {
+      "id": "m_k_prepare",
+      "title": "Before midnight",
+      "mood": "tense",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "pact_fair_i"
+          },
+          "text": "“She said they'd take me with them,” says Gloam, very quietly, almost to himself."
+        },
+        {
+          "if": {
+            "flag": "i_understood"
+          },
+          "text": "“She asked who I really am,” says Gloam. He sounds amazed. “Nobody has asked me that since 1923.” And he tells them both, through the glass: a ball, a girl he never dared ask to dance, a wish made to a mirror to be seen, just once."
+        },
+        {
+          "if": {
+            "flag": "i_stern"
+          },
+          "text": "Gloam looks at {ingerid} through the glass for a long moment and bows, very slightly, as one does to a worthy opponent."
+        },
+        "Five minutes to midnight. The backwards clock of the silver ballroom is somewhere above them. {kristian} has time to do one more thing before he climbs to it."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Ask Gloam to come with you to the clock",
+            "effects": [
+              {
+                "flag": "gloam_with",
+                "set": true
+              },
+              {
+                "relation": "gloam",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Write one last message on the glass: TWELVE",
+            "effects": [
+              {
+                "flag": "k_wrote_twelve",
+                "set": true
+              }
+            ],
+            "ripple": "{ingerid} will see it before midnight."
+          },
+          {
+            "label": "Go alone, and quickly",
+            "effects": [
+              {
+                "player": "kristian",
+                "stat": "courage",
+                "add": 1
+              },
+              {
+                "flag": "k_quick",
+                "set": true
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_i_prepare"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": []
+      }
+    },
+    "m_i_prepare": {
+      "id": "m_i_prepare",
+      "title": "Five to midnight",
+      "mood": "tense",
+      "visual": {
+        "preset": "ballroom-night",
+        "particles": [
+          "candles",
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "k_wrote_twelve"
+          },
+          "text": "On the mirror by the ballroom door, in backwards letters: TWELVE."
+        },
+        {
+          "if": {
+            "flag": "gloam_with"
+          },
+          "text": "In the glass, {kristian} and the pale boy climb a silver stair together."
+        },
+        {
+          "if": {
+            "flag": "i_early"
+          },
+          "text": "The shortcut was a good one. {ingerid} is back at the ballroom with minutes to spare."
+        },
+        {
+          "if": {
+            "flag": "i_detour"
+          },
+          "text": "The staircase dumped her two floors too low. {ingerid} arrives at the ballroom breathless, with almost no time left."
+        },
+        {
+          "if": {
+            "flag": "i_detained"
+          },
+          "text": "It took ages to get away from the prefect. {ingerid} arrives at the ballroom breathless, with almost no time left."
+        },
+        "The great clock above the ballroom doors says five to midnight. Nobody else has noticed anything at all."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Fetch Madam Pell to the clock",
+            "requires": {
+              "flag": "pell_knows"
+            },
+            "lockedHint": "Madam Pell doesn't know what is happening.",
+            "effects": [
+              {
+                "flag": "pell_at_clock",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Write one last message on the glass: TWELVE",
+            "effects": [
+              {
+                "flag": "i_wrote_twelve",
+                "set": true
+              }
+            ],
+            "ripple": "{kristian} will see it before midnight."
+          },
+          {
+            "label": "Tell Madam Pell who Leander Gloam really was",
+            "requires": {
+              "all": [
+                {
+                  "flag": "pell_knows"
+                },
+                {
+                  "any": [
+                    {
+                      "flag": "i_records"
+                    },
+                    {
+                      "flag": "i_knows_gloam"
+                    },
+                    {
+                      "flag": "i_understood"
+                    }
+                  ]
+                }
+              ]
+            },
+            "lockedHint": "You don't know his story, or Madam Pell isn't with you.",
+            "effects": [
+              {
+                "flag": "pell_for_gloam",
+                "set": true
+              },
+              {
+                "relation": "pell_gloam",
+                "add": 3
+              },
+              {
+                "relation": "pell",
+                "add": 1
+              }
+            ]
+          },
+          {
+            "label": "Go up to the clock alone, quietly",
+            "effects": [
+              {
+                "player": "ingerid",
+                "stat": "cunning",
+                "add": 1
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_clock_k"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": []
+      }
+    },
+    "m_clock_k": {
+      "id": "m_clock_k",
+      "title": "The backwards clock",
+      "mood": "tense",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "sparks",
+          "fog"
+        ]
+      },
+      "cast": [
+        "kristian@mirror"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "pell_at_clock"
+          },
+          "text": "In the glass of the clock face, {kristian} can see the real ballroom clock from behind, and two people climbing to it: {ingerid}, and Madam Pell."
+        },
+        {
+          "if": {
+            "flag": "i_wrote_twelve"
+          },
+          "text": "On the inside of the clock face, backwards, in {ingerid}'s handwriting: TWELVE."
+        },
+        "In the silver ballroom the clock runs backwards, and its strokes arrive before they are struck. {kristian} climbs to it and puts both hands on the minute hand.",
+        {
+          "if": {
+            "flag": "k_hint"
+          },
+          "text": "Two halves. Two hands. The last word. The riddle goes round and round in his head."
+        },
+        {
+          "if": {
+            "flag": "k_saw_clock"
+          },
+          "text": "He has studied this clock from the balcony. He knows which way its hands really go."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "relation": "aldous",
+                "gte": 1
+              },
+              {
+                "not": {
+                  "flag": "i_wrote_twelve"
+                }
+              }
+            ]
+          },
+          "text": "And then, from the glass of the clock face, a voice that sounds exactly like {ingerid}'s: “Now, {kristian}! The sixth stroke! Turn it now!”"
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "relation": "aldous",
+                "gte": 1
+              },
+              {
+                "not": {
+                  "flag": "i_wrote_twelve"
+                }
+              },
+              {
+                "relation": "bond",
+                "gte": 6
+              }
+            ]
+          },
+          "text": "He almost does. Then he stops. {ingerid} would never rush. That is not her. That is him."
+        },
+        {
+          "if": {
+            "relation": "echo",
+            "gte": 2
+          },
+          "text": "The Echo drifts up beside him, a librarian made of moonlight, no longer angry. “The last word,” it says, quite kindly. “Always the last word.”"
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 6
+          },
+          "text": "He knows {ingerid}. She always makes sure, and then makes sure again. She will wait for the very last stroke."
+        },
+        {
+          "if": {
+            "flag": "code"
+          },
+          "text": "He remembers the word in the mist, underlined twice."
+        },
+        {
+          "if": {
+            "flag": "gloam_with"
+          },
+          "text": "Gloam stands at his shoulder. “Whenever you are ready,” he says. “I will hold the door for as long as I can.”"
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "echo_angry"
+              },
+              {
+                "not": {
+                  "flag": "echo_calmed"
+                }
+              }
+            ]
+          },
+          "text": "Behind him, in the dark of the silver hall, something made of moonlight is following him, and it does not sound pleased."
+        },
+        "The first stroke of midnight rolls through both castles. {kristian} has to choose his moment now. {ingerid} will choose hers on the other side, without knowing his."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Turn it on the first stroke",
+            "effects": [
+              {
+                "flag": "k_stroke_1",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Turn it on the sixth stroke",
+            "effects": [
+              {
+                "flag": "k_stroke_6",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Turn it on the twelfth stroke",
+            "effects": [
+              {
+                "flag": "k_stroke_12",
+                "set": true
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_clock_i"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "clock_tick"
+        ]
+      }
+    },
+    "m_clock_i": {
+      "id": "m_clock_i",
+      "title": "The ballroom clock",
+      "mood": "tense",
+      "visual": {
+        "preset": "ballroom-night",
+        "particles": [
+          "candles",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "speaker": "Madam Pell",
+      "text": [
+        "The ball is still going. The great clock above the doors is striking midnight, and its hands are as long as broomsticks. {ingerid} has both hands on the minute hand.",
+        {
+          "if": {
+            "any": [
+              {
+                "flag": "pell_at_clock"
+              },
+              {
+                "flag": "pell_helped"
+              },
+              {
+                "relation": "pell",
+                "gte": 3
+              }
+            ]
+          },
+          "text": "“The old clocks only listen on the last stroke,” says Madam Pell, puffing, at her elbow. “Everything else is just noise.”"
+        },
+        {
+          "if": {
+            "flag": "pell_for_gloam"
+          },
+          "text": "“And bring that boy home,” she adds, fiercely. “A hundred years is long enough.” {ingerid} has never heard her voice shake before."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "relation": "aldous",
+                "gte": 1
+              },
+              {
+                "not": {
+                  "flag": "whisper_link"
+                }
+              }
+            ]
+          },
+          "text": "And from the frame by the ballroom doors, a voice that sounds exactly like {kristian}'s: “The first stroke, {ingerid}! Now, before it's too late!”"
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "relation": "aldous",
+                "gte": 1
+              },
+              {
+                "not": {
+                  "flag": "whisper_link"
+                }
+              },
+              {
+                "relation": "bond",
+                "gte": 6
+              }
+            ]
+          },
+          "text": "She doesn't move. {kristian} has never been early for anything in his life. That is not him."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 6
+          },
+          "text": "She knows {kristian}. He always waits until the very last moment for everything: homework, apologies, the end of a song. He will wait for this."
+        },
+        {
+          "if": {
+            "flag": "portrait_awake"
+          },
+          "text": "She remembers what Sir Aldous muttered from his frame: on the last stroke, and only if both sides turn together."
+        },
+        {
+          "if": {
+            "flag": "i_clock_knowledge"
+          },
+          "text": "She has seen this clock's works from the inside. The latch that lets the hall open only drops on the final stroke."
+        },
+        {
+          "if": {
+            "flag": "k_wrote_twelve"
+          },
+          "text": "On the mirror by the doors, backwards, in {kristian}'s handwriting: TWELVE."
+        },
+        {
+          "if": {
+            "flag": "whisper_link"
+          },
+          "text": "And very faintly, through the glass of the clock face, she hears a voice that can only be {kristian}'s, whispering a single word: “twelve”."
+        },
+        {
+          "if": {
+            "flag": "code"
+          },
+          "text": "She remembers the word they both wrote in the mist, underlined twice."
+        },
+        "She cannot know when {kristian} turned his clock. She can only choose her own moment and hope it is the same."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Turn it on the first stroke",
+            "effects": [
+              {
+                "flag": "i_stroke_1",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Turn it on the sixth stroke",
+            "effects": [
+              {
+                "flag": "i_stroke_6",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Turn it on the twelfth stroke",
+            "effects": [
+              {
+                "flag": "i_stroke_12",
+                "set": true
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "flag": "i_stroke_1"
+                  },
+                  {
+                    "flag": "k_stroke_1"
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "flag": "i_stroke_6"
+                  },
+                  {
+                    "flag": "k_stroke_6"
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "flag": "i_stroke_12"
+                  },
+                  {
+                    "flag": "k_stroke_12"
+                  }
+                ]
+              }
+            ]
+          },
+          "to": "m_door"
+        },
+        {
+          "to": "m_door_miss"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": [
+          "clock_tick",
+          "bell_far"
+        ]
+      }
+    },
+    "m_door": {
+      "id": "m_door",
+      "title": "The door",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "sparks",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "onEnter": [
+        {
+          "flag": "synced",
+          "set": true
+        }
+      ],
+      "text": [
+        "Two clocks turn in two castles at the same instant. Somewhere between them, something clicks, like a key that has waited a hundred years for the right hand.",
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "i_stroke_12"
+              },
+              {
+                "flag": "k_stroke_12"
+              }
+            ]
+          },
+          "text": "The twelfth stroke rings out in both worlds at once, and for the first time it sounds like one bell instead of two."
+        },
+        "In the Hall of Glass the biggest mirror opens like a door. {ingerid} stands on one side of it and {kristian} on the other, close enough to touch. Between them, on the threshold, stands Leander Gloam."
+      ],
+      "next": [
+        {
+          "to": "m_offer_k"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "bell_near",
+          "chime_success"
+        ]
+      }
+    },
+    "m_door_miss": {
+      "id": "m_door_miss",
+      "title": "Out of step",
+      "mood": "dark",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "onEnter": [
+        {
+          "flag": "missed",
+          "set": true
+        }
+      ],
+      "text": [
+        "Two clocks turn, a heartbeat apart. The hall shudders. The biggest mirror opens a crack, a hand's width, and starts to close again, slowly, like a heavy door on a cold night.",
+        "{ingerid} and {kristian} can see each other through the gap. Between them, holding the door open with both hands and visibly straining, is Leander Gloam.",
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "Up in the clock tower, the gear {ingerid} freed earlier keeps turning a moment longer than it should, and the door stops closing."
+        },
+        {
+          "if": {
+            "relation": "echo",
+            "gte": 2
+          },
+          "text": "On the silver side, the Echo puts its moonlight hands against the glass and pushes, holding the door from behind."
+        },
+        {
+          "if": {
+            "relation": "gloam",
+            "lte": -1
+          },
+          "text": "Gloam is holding the door, but he is looking at {kristian}, and his face is very still. He has not forgotten how they treated him."
+        },
+        "“Quickly,” he gasps. “I cannot hold this for long.”"
+      ],
+      "next": [
+        {
+          "to": "m_offer_k"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "bell_crack"
+        ]
+      }
+    },
+    "m_offer_k": {
+      "id": "m_offer_k",
+      "title": "Only two can pass",
+      "mood": "dark",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Sir Aldous"
+      ],
+      "speaker": "Sir Aldous",
+      "text": [
+        "Sir Aldous Vane is standing in the doorway, outside his frame at last, tall and grey and smiling.",
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "name_offered"
+              },
+              {
+                "not": {
+                  "flag": "i_warned"
+                }
+              },
+              {
+                "not": {
+                  "flag": "aldous_exposed"
+                }
+              },
+              {
+                "not": {
+                  "flag": "name_returned"
+                }
+              }
+            ]
+          },
+          "text": "He is wearing {kristian}'s face, very nearly. It is getting harder to tell which of them is the reflection."
+        },
+        "“Here is the rule of the glass,” says the Keeper pleasantly. “Two may pass. Three is one too many. Someone stays. I do so hope it is not you, my dear.”",
+        "“That is his rule,” says Leander Gloam quietly. “Not the glass's. He made it in 1923. A rule like that can be broken, if you know the words.”",
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "i_half"
+              },
+              {
+                "flag": "k_half"
+              }
+            ]
+          },
+          "text": "{ingerid} has half a charm in a mirror-bound book. {kristian} has the other half in his head. The Charm of the Two Sides: two halves, two hands, the last word."
+        },
+        {
+          "if": {
+            "flag": "pact_fair"
+          },
+          "text": "“You promised,” says Gloam to {kristian}, quietly. It is not an accusation. It sounds like hope."
+        },
+        "{kristian} speaks first."
+      ],
+      "choices": {
+        "kristian": [
+          {
+            "label": "Speak your half of the charm",
+            "requires": {
+              "flag": "k_half"
+            },
+            "lockedHint": "You never learned your half of the charm.",
+            "effects": [
+              {
+                "flag": "k_charm",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Step through, and leave Gloam behind",
+            "effects": [
+              {
+                "flag": "k_leave",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Stay, so that {ingerid} does not have to choose",
+            "effects": [
+              {
+                "flag": "k_stay",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 2
+              }
+            ],
+            "ripple": "{ingerid} will have to decide what this means."
+          }
+        ]
+      },
+      "next": [
+        {
+          "to": "m_offer_i"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "heartbeat"
+        ]
+      }
+    },
+    "m_offer_i": {
+      "id": "m_offer_i",
+      "title": "The last word",
+      "mood": "dark",
+      "visual": {
+        "preset": "mirror-hall",
+        "particles": [
+          "fog",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian@mirror",
+        "Gloam"
+      ],
+      "text": [
+        {
+          "if": {
+            "flag": "k_charm"
+          },
+          "text": "{kristian} speaks his half of the charm into the glass. The words come out backwards and right at the same time, and the mirror begins to hum."
+        },
+        {
+          "if": {
+            "flag": "k_leave"
+          },
+          "text": "{kristian} steps toward the door. Gloam does not stop him. He only watches, like someone who has watched a hundred people leave."
+        },
+        {
+          "if": {
+            "flag": "k_stay"
+          },
+          "text": "{kristian} steps back from the door. “Go,” he says to {ingerid}, through the gap. “One of us gets home tonight. Make it you.”"
+        },
+        "Now it is {ingerid}'s turn. The last word is hers."
+      ],
+      "choices": {
+        "ingerid": [
+          {
+            "label": "Speak your half of the charm",
+            "requires": {
+              "flag": "i_half"
+            },
+            "lockedHint": "You never found your half of the charm.",
+            "effects": [
+              {
+                "flag": "i_charm",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Seal the mirror the moment {kristian} is through",
+            "effects": [
+              {
+                "flag": "i_seal",
+                "set": true
+              }
+            ]
+          },
+          {
+            "label": "Offer to stay in {kristian}'s place",
+            "requires": {
+              "not": {
+                "flag": "k_charm"
+              }
+            },
+            "effects": [
+              {
+                "flag": "i_stay",
+                "set": true
+              },
+              {
+                "relation": "bond",
+                "add": 2
+              }
+            ]
+          }
+        ]
+      },
+      "next": [
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "i_stay"
+              },
+              {
+                "flag": "k_stay"
+              },
+              {
+                "flag": "synced"
+              },
+              {
+                "relation": "bond",
+                "gte": 6
+              }
+            ]
+          },
+          "to": "ending_two_sides"
+        },
+        {
+          "if": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "flag": "name_offered"
+                  },
+                  {
+                    "not": {
+                      "flag": "i_warned"
+                    }
+                  },
+                  {
+                    "not": {
+                      "flag": "aldous_exposed"
+                    }
+                  },
+                  {
+                    "not": {
+                      "flag": "name_returned"
+                    }
+                  },
+                  {
+                    "not": {
+                      "all": [
+                        {
+                          "flag": "i_charm"
+                        },
+                        {
+                          "flag": "k_charm"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "flag": "missed"
+                  },
+                  {
+                    "relation": "gloam",
+                    "lte": -2
+                  },
+                  {
+                    "not": {
+                      "all": [
+                        {
+                          "flag": "i_charm"
+                        },
+                        {
+                          "flag": "k_charm"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "to": "ending_swapped"
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "missed"
+              },
+              {
+                "not": {
+                  "any": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "flag": "i_stay"
+                }
+              },
+              {
+                "not": {
+                  "flag": "k_stay"
+                }
+              },
+              {
+                "not": {
+                  "flag": "gloam_with"
+                }
+              },
+              {
+                "not": {
+                  "flag": "i_gear"
+                }
+              },
+              {
+                "relation": "echo",
+                "lte": 1
+              },
+              {
+                "relation": "gloam",
+                "lte": 2
+              }
+            ]
+          },
+          "to": "ending_midnight"
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "i_charm"
+              },
+              {
+                "flag": "k_charm"
+              },
+              {
+                "relation": "gloam",
+                "gte": 1
+              },
+              {
+                "any": [
+                  {
+                    "flag": "synced"
+                  },
+                  {
+                    "any": [
+                      {
+                        "flag": "k_listened"
+                      },
+                      {
+                        "flag": "i_hint_story"
+                      },
+                      {
+                        "flag": "pact_fair"
+                      },
+                      {
+                        "flag": "pact_fair_i"
+                      },
+                      {
+                        "flag": "k_diary"
+                      },
+                      {
+                        "flag": "k_knows_gloam"
+                      },
+                      {
+                        "flag": "i_knows_gloam"
+                      },
+                      {
+                        "flag": "i_understood"
+                      },
+                      {
+                        "flag": "k_music"
+                      },
+                      {
+                        "flag": "pell_for_gloam"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "to": "ending_all_free"
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "i_charm"
+              },
+              {
+                "flag": "k_charm"
+              }
+            ]
+          },
+          "to": "ending_two_halves"
+        },
+        {
+          "if": {
+            "flag": "i_stay"
+          },
+          "to": "ending_ingerid_stays"
+        },
+        {
+          "if": {
+            "flag": "k_stay"
+          },
+          "to": "ending_kristian_stays"
+        },
+        {
+          "to": "ending_sealed"
+        }
+      ],
+      "audio": {
+        "ambience": "amb_music_room",
+        "sfx": [
+          "heartbeat"
+        ]
+      }
+    },
+    "ending_all_free": {
+      "id": "ending_all_free",
+      "title": "Three come home",
+      "mood": "cozy",
+      "visual": {
+        "preset": "ballroom-night",
+        "particles": [
+          "candles",
+          "fireflies"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian",
+        "Gloam"
+      ],
+      "ending": {
+        "id": "all_free",
+        "title": "Three come home",
+        "kind": "good"
+      },
+      "text": [
+        "{ingerid} speaks the last word. Two halves of the charm meet in the middle of the glass, and the rule of two breaks like a held breath let go.",
+        "Sir Aldous Vane screams. The bargain he made in 1923 comes undone, and the glass takes back what it lent him: he is pulled backwards, out of the doorway and into the mirror, until he is only a reflection, very small and very far away, shouting at nobody.",
+        "{kristian} steps through. So does Leander Gloam, blinking, into ordinary candlelight, a hundred years late for the ball and dressed for it.",
+        "The quartet is still playing. Gloam stands at the edge of the dance floor and stares at the colours as if he has forgotten that the world has any.",
+        {
+          "if": {
+            "flag": "pell_knows"
+          },
+          "text": "And then Madam Pell comes in from the corridor, and stops. Her book falls out of her hand. “Leander?” she says. He turns, and his face does something it has not done in a hundred years. “Ottoline,” he says. “You came to the ball after all.” She was the girl he never dared ask to dance. She has been the librarian here ever since, waiting, and she never told anyone why."
+        },
+        {
+          "if": {
+            "relation": "echo",
+            "gte": 2
+          },
+          "text": "Behind her, in the dark glass of the window, a figure made of moonlight bows to the old librarian, and quietly becomes her reflection again. Some part of her had been waiting on the other side all along."
+        },
+        {
+          "if": {
+            "flag": "k_listened"
+          },
+          "text": "“You listened,” he says to {kristian}. “That was the whole trick, I think. Somebody only had to listen.”"
+        },
+        {
+          "if": {
+            "flag": "i_hint_story"
+          },
+          "text": "He finds {ingerid} by the drinks table. “You knew about 1923,” he says. “You looked me up.” He seems more moved by that than by anything else."
+        },
+        {
+          "if": {
+            "flag": "k_music"
+          },
+          "text": "“Somebody wound my music box,” he says, to nobody in particular. “I heard it from the other end of the castle. I knew then.”"
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "photo"
+          },
+          "text": "{kristian} gives him back his photograph. Gloam looks at it for a long time: a girl in a 1923 ball gown, laughing at something out of frame."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 7
+          },
+          "text": "{ingerid} and {kristian} never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says “twelve”, the other one smiles."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "lte": 2
+          },
+          "text": "Afterwards, {ingerid} and {kristian} find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+        },
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "The Hall of Glass is just a hall again by morning. The mirrors show what is in front of them, and nothing else. Every now and then, though, {ingerid} and {kristian} catch each other's reflection in a window and wave, just to check."
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": [
+          "jingle_good"
+        ]
+      }
+    },
+    "ending_two_halves": {
+      "id": "ending_two_halves",
+      "title": "Two halves",
+      "mood": "magic",
+      "visual": {
+        "preset": "ballroom-night",
+        "particles": [
+          "candles",
+          "fog"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian"
+      ],
+      "ending": {
+        "id": "two_halves",
+        "title": "Two halves of a charm",
+        "kind": "good"
+      },
+      "text": [
+        "The charm works. The rule of two bends, and {kristian} steps through into the real castle, warm and loud and smelling of candle smoke.",
+        "But Leander Gloam does not follow. He stands on the threshold, and the charm passes through him like light through glass. “It needed more than words,” he says gently. “It needed someone to know me. Never mind. You two go.”",
+        "Behind him, Sir Aldous Vane steps back into his frame, straightens his painted collar, and smiles. He has waited a hundred years. He can wait another.",
+        {
+          "if": {
+            "not": {
+              "flag": "synced"
+            }
+          },
+          "text": "The clocks were out of step. The door could only hold so long."
+        },
+        "The mirror closes. For a moment {ingerid} sees him in it, waving, and then only their own faces.",
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 7
+          },
+          "text": "{ingerid} and {kristian} never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says “twelve”, the other one smiles."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "lte": 2
+          },
+          "text": "Afterwards, {ingerid} and {kristian} find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+        },
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "They go back to the ball, because there is nothing else to do. Afterwards, neither of them can stop wondering what they would have needed to know."
+      ],
+      "audio": {
+        "ambience": "amb_hall",
+        "sfx": [
+          "jingle_good"
+        ]
+      }
+    },
+    "ending_sealed": {
+      "id": "ending_sealed",
+      "title": "The sealed hall",
+      "mood": "tense",
+      "visual": {
+        "preset": "corridor-torch",
+        "particles": [
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian"
+      ],
+      "ending": {
+        "id": "sealed",
+        "title": "The sealed hall",
+        "kind": "neutral"
+      },
+      "text": [
+        "{kristian} comes through the door and falls into {ingerid}'s arms, and the mirror slams shut behind him like a book.",
+        "Leander Gloam is left on the other side. He does not shout. He only watches until the glass is ordinary again.",
+        {
+          "if": {
+            "flag": "i_seal"
+          },
+          "text": "{ingerid} seals it. A charm from the back of a textbook, cast with shaking hands, and a crust of frost spreads over every mirror in the hall."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 7
+          },
+          "text": "{ingerid} and {kristian} never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says “twelve”, the other one smiles."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "lte": 2
+          },
+          "text": "Afterwards, {ingerid} and {kristian} find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+        },
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "On Monday the corridor behind the tapestry is gone again, bricked up as if it had never been. They are both safe. The castle has one more story that nobody tells.",
+        "Only the portrait of Sir Aldous Vane has been moved, somehow, to the corridor outside the ballroom. When {ingerid} walks past it, he wakes, and winks."
+      ],
+      "audio": {
+        "ambience": "amb_corridor",
+        "sfx": [
+          "jingle_neutral"
+        ]
+      }
+    },
+    "ending_ingerid_stays": {
+      "id": "ending_ingerid_stays",
+      "title": "{ingerid} stays",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fireflies",
+          "fog"
+        ]
+      },
+      "cast": [
+        "ingerid@mirror",
+        "kristian",
+        "Gloam"
+      ],
+      "ending": {
+        "id": "ingerid_stays",
+        "title": "The other side, for now",
+        "kind": "neutral"
+      },
+      "text": [
+        "“Go,” says {ingerid}. She steps through to the silver side as {kristian} steps out of it, and for one second they pass each other in the doorway.",
+        "Leander Gloam goes out too, into the candlelight, a hundred years late. He looks back at her, astonished. Nobody has ever traded places with him on purpose.",
+        "The mirror closes. {kristian} stands in the Hall of Glass with {ingerid} on the other side of it, and this time it is his breath on the glass, and his finger writing: I WILL GET YOU OUT.",
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 7
+          },
+          "text": "{ingerid} and {kristian} never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says “twelve”, the other one smiles."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "lte": 2
+          },
+          "text": "Afterwards, {ingerid} and {kristian} find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+        },
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "He means it. Next year's Winter Ball is three hundred and sixty-four days away, and he has already started counting."
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "jingle_neutral"
+        ]
+      }
+    },
+    "ending_kristian_stays": {
+      "id": "ending_kristian_stays",
+      "title": "{kristian} stays",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fireflies",
+          "fog"
+        ]
+      },
+      "cast": [
+        "kristian@mirror",
+        "ingerid",
+        "Gloam"
+      ],
+      "ending": {
+        "id": "kristian_stays",
+        "title": "The boy in the glass",
+        "kind": "neutral"
+      },
+      "text": [
+        "{kristian} stays where he is. He pushes Gloam gently toward the door instead. “You've waited longer,” he says.",
+        "Leander Gloam stumbles out into the real castle and stands beside {ingerid}, staring at his own hands as if they might vanish.",
+        "The mirror closes. {kristian} raises one hand on the other side. {ingerid} raises hers to meet it, and the glass is cold between them.",
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 7
+          },
+          "text": "{ingerid} and {kristian} never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says “twelve”, the other one smiles."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "lte": 2
+          },
+          "text": "Afterwards, {ingerid} and {kristian} find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+        },
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "She visits the Hall of Glass every evening after that. They write to each other in the mist. It is a strange way to be friends, but it is still a way."
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "jingle_neutral"
+        ]
+      }
+    },
+    "ending_swapped": {
+      "id": "ending_swapped",
+      "title": "The wrong reflection",
+      "mood": "dark",
+      "visual": {
+        "preset": "ending-dark",
+        "particles": [
+          "fog"
+        ]
+      },
+      "cast": [
+        "ingerid",
+        "kristian"
+      ],
+      "ending": {
+        "id": "swapped",
+        "title": "The wrong reflection",
+        "kind": "bad"
+      },
+      "text": [
+        "Someone comes through the mirror wearing {kristian}'s face. He hugs {ingerid}, says the right things in the right voice, and walks her back to the ball. In the Hall of Glass, the frame of Sir Aldous Vane hangs empty.",
+        "It is only later, by the drinks table, that she notices he reaches for the cup with the wrong hand. And that when he looks into the punch bowl, there is no reflection looking back.",
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren drifts straight through him on the stairs, stops, and turns. “You,” she says, “are not that boy.” He smiles {kristian}'s smile at her and walks on."
+        },
+        "In every mirror in the castle, very faintly, a boy is knocking on the glass. Two boys, now.",
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        }
+      ],
+      "audio": {
+        "ambience": "amb_dark_drone",
+        "sfx": [
+          "jingle_bad"
+        ]
+      }
+    },
+    "ending_midnight": {
+      "id": "ending_midnight",
+      "title": "After midnight",
+      "mood": "dark",
+      "visual": {
+        "preset": "ending-dark",
+        "particles": [
+          "fog",
+          "dust"
+        ]
+      },
+      "cast": [
+        "ingerid"
+      ],
+      "ending": {
+        "id": "midnight",
+        "title": "After midnight",
+        "kind": "bad"
+      },
+      "text": [
+        "The last stroke of midnight dies away, and the door in the glass closes with it, gently and completely.",
+        "{ingerid} is alone in the Hall of Glass. In the mirror, {kristian} and the pale boy stand side by side, as quiet as photographs.",
+        "In his frame, Sir Aldous Vane is smiling. He has another hundred years, and two more names to keep him company.",
+        "The ball ends. The candles go out one by one. By Monday the corridor has been bricked up again, and when {ingerid} tells the staff what happened, they say it must have been a draught.",
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "She goes back to the tapestry of the dancing trolls every night, all year, and waits for the Winter Ball."
+      ],
+      "audio": {
+        "ambience": "amb_dark_drone",
+        "sfx": [
+          "jingle_bad"
+        ]
+      }
+    },
+    "ending_two_sides": {
+      "id": "ending_two_sides",
+      "title": "Both sides",
+      "mood": "magic",
+      "visual": {
+        "preset": "mirror-world",
+        "particles": [
+          "fireflies",
+          "sparks"
+        ]
+      },
+      "cast": [
+        "ingerid@mirror",
+        "kristian@mirror"
+      ],
+      "ending": {
+        "id": "two_sides",
+        "title": "Two of everything",
+        "kind": "secret"
+      },
+      "text": [
+        "{kristian} says he will stay. {ingerid} says she will stay. They say it at almost the same moment, and then look at each other through the gap in the glass with identical expressions of outrage.",
+        "Leander Gloam starts to laugh, and cannot stop. “Two,” he says. “Two may pass. Go on, then.” And he steps out of the glass himself, into the candlelight, while {ingerid} steps in.",
+        "The mirror closes on the two of them, together, on the silver side.",
+        "It is not so bad, the backwards castle, with company. The snow falls up. The library is very quiet. They have a whole year to find the other half of every charm in it.",
+        "Sir Aldous Vane, on the silver side, discovers that two stubborn people in his hall are far worse company than one lonely boy. They have already started looking for his frame.",
+        {
+          "if": {
+            "relation": "bond",
+            "gte": 7
+          },
+          "text": "{ingerid} and {kristian} never quite explain to anyone what happened that night. They don't need to. From then on, whenever one of them says “twelve”, the other one smiles."
+        },
+        {
+          "if": {
+            "relation": "bond",
+            "lte": 2
+          },
+          "text": "Afterwards, {ingerid} and {kristian} find it oddly hard to talk about that night. Something happened on the glass between them that neither of them has quite forgiven."
+        },
+        {
+          "if": {
+            "relation": "pell_gloam",
+            "gte": 3
+          },
+          "text": "Madam Pell has the 1923 records reopened, and puts Leander Gloam's name back in the school register, in ink, where it belongs."
+        },
+        {
+          "if": {
+            "relation": "wren",
+            "gte": 2
+          },
+          "text": "Sister Wren takes to humming the waltz from the ball on winter nights. Nobody knows where she learned it."
+        },
+        {
+          "if": {
+            "flag": "pell_helped"
+          },
+          "text": "Madam Pell writes the whole thing down that same night, in the library ledger, in ink, so that this time nobody can call it a draught."
+        },
+        {
+          "if": {
+            "player": "kristian",
+            "item": "scarf"
+          },
+          "text": "{ingerid}'s scarf comes back with a faint silver sheen that never washes out. She decides she likes it."
+        },
+        {
+          "if": {
+            "flag": "echo_angry"
+          },
+          "text": "For the rest of the year, every library book {kristian} borrows comes back with one page written backwards."
+        },
+        {
+          "if": {
+            "all": [
+              {
+                "flag": "portrait_awake"
+              },
+              {
+                "not": {
+                  "all": [
+                    {
+                      "flag": "i_charm"
+                    },
+                    {
+                      "flag": "k_charm"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "text": "Sir Aldous Vane tells his version of the story to every portrait in the castle. In his version, he is the hero."
+        },
+        {
+          "if": {
+            "flag": "wren_watch"
+          },
+          "text": "Sister Wren keeps watch over the Hall of Glass for the rest of the winter, humming, and nobody else goes missing from a ball again."
+        },
+        {
+          "if": {
+            "flag": "prefect_helped"
+          },
+          "text": "The prefect never does write anything down. He does, however, start saying good evening to every mirror he passes."
+        },
+        {
+          "if": {
+            "flag": "i_gear"
+          },
+          "text": "The great clock runs two seconds fast for the rest of the year. Nobody but {ingerid} knows why."
+        },
+        "And in the real castle, a boy from 1923 asks a girl to dance, a hundred years late, and she says yes."
+      ],
+      "audio": {
+        "ambience": "amb_silence",
+        "sfx": [
+          "jingle_secret"
+        ]
+      }
+    }
+  }
+}

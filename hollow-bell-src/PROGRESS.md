@@ -3,7 +3,7 @@
 Read this at the start of every session and update it at the end. Milestones, numbers and technical details only.
 Never retell the story (scenes, endings, characters, lines): the user wants to experience it as a surprise.
 
-Last updated: 2026-11-24. Branch: `hollow-bell`, pushed, pull request open (merge to main publishes).
+Last updated: 2026-11-24. Two-player version merged to `main` (branch `two-players`); CI on `main` decides whether it goes live.
 
 ## Now
 
@@ -76,3 +76,14 @@ The story is in `src/stories/hollow-bell.json`, its source in `story-src/SPOILER
 but are not named anywhere on the published site. Shown now: Kortbok, Hide and Seek Oslo, The Hollow Bell,
 Rangeringshatten. Hidden: Pokédex Tracker, Countdown, Pokémon Bulk-pakker. `jeopardy/` is untracked and left alone.
 
+## Two-player story (in progress)
+
+"The Other Side of the Glass", for Ingerid and Kristian, each on their own phone (or one screen, taking turns).
+Spoiler-free numbers: 42 scenes, 8 endings, players alternate turns; per game about 27 scenes and 12 choices each.
+Best ending about 6 % of random games, reachable without dice. Relationships (between the two players, with the side
+characters, and between side characters) change hints, who helps at midnight, endings and epilogues.
+Characters drawn in code; players choose hair style, hair colour, skin tone and height on their phone.
+
+Done: engine + tests, story, big screen, phone flow with seats/looks/setup, database rules + emulator tests (26, published),
+voices for all 429 new segments (836 total, 25 MB, levels checked). Merged straight to `main` at the user's request; the
+two-player browser tests run in CI on `main` (and were still running locally at merge time).

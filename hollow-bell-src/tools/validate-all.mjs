@@ -31,25 +31,36 @@ for (const f of stories) {
 // Every spoken segment should have a recorded voice (tools/voices). Missing ones fall back to the browser's speech.
 {
   const { segmentParagraph, fillVars, speakable, voiceKey } = await import('../src/engine/segments.ts');
-  const story = JSON.parse(readFileSync(root + stories[0], 'utf8'));
-  const map = JSON.parse(readFileSync(root + 'src/stories/hollow-bell.voices.json', 'utf8'));
   const voiceManifest = existsSync(root + 'public/voices/manifest.json') ? JSON.parse(readFileSync(root + 'public/voices/manifest.json', 'utf8')) : {};
-  const name = story.characterCreation?.nameInput?.default;
-  let total = 0, missing = 0;
-  for (const [id, sc] of Object.entries(story.scenes)) {
-    for (const [index, p] of (sc.text ?? []).entries()) {
-      const raw = typeof p === 'string' ? p : p.text;
-      for (const [seg, s] of segmentParagraph(raw, map.lines[`${id}#${index}`], sc.speaker).entries()) {
-        for (const house of /\{house\}/.test(s.text) ? story.characterCreation.houseChoice : [story.characterCreation.houseChoice[0]]) {
-          total++;
-          const key = await voiceKey(id, index, seg, speakable(fillVars(s.text, { name, house })));
-          const file = voiceManifest[key];
-          if (!file || !existsSync(root + 'public/' + file)) missing++;
+  const single = JSON.parse(readFileSync(root + stories[0], 'utf8'));
+  const duo = JSON.parse(readFileSync(root + 'src/stories/mirror.json', 'utf8'));
+  const checks = [
+    { story: single, map: 'src/stories/hollow-bell.voices.json', vars: (t) => (/\{house\}/.test(t) ? single.characterCreation.houseChoice : [single.characterCreation.houseChoice[0]]).map((house) => ({ name: single.characterCreation.nameInput.default, house })) },
+    { story: duo, map: 'src/stories/mirror.voices.json', vars: (t) => {
+      const base = Object.fromEntries(duo.players.map((p) => [p.id, p.name]));
+      const iH = /\{ingeridHouse\}/.test(t) ? duo.houses : [duo.houses[0]];
+      const kH = /\{kristianHouse\}/.test(t) ? duo.houses : [duo.houses[0]];
+      return iH.flatMap((ingeridHouse) => kH.map((kristianHouse) => ({ ...base, ingeridHouse, kristianHouse })));
+    } },
+  ];
+  for (const c of checks) {
+    const map = JSON.parse(readFileSync(root + c.map, 'utf8'));
+    let total = 0, missing = 0;
+    for (const [id, sc] of Object.entries(c.story.scenes)) {
+      for (const [index, p] of (sc.text ?? []).entries()) {
+        const raw = typeof p === 'string' ? p : p.text;
+        for (const [seg, s] of segmentParagraph(raw, map.lines[`${id}#${index}`], sc.speaker).entries()) {
+          const texts = new Set(c.vars(s.text).map((v) => speakable(fillVars(s.text, v))));
+          for (const text of texts) {
+            total++;
+            const file = voiceManifest[await voiceKey(id, index, seg, text)];
+            if (!file || !existsSync(root + 'public/' + file)) missing++;
+          }
         }
       }
     }
+    console.log(`\nVoices (${c.story.id}): ${total - missing} of ${total} segments recorded${missing ? ` (${missing} missing: run tools/voices, see CLAUDE.md)` : ''}`);
+    if (missing) failed = true;
   }
-  console.log(`\nVoices: ${total - missing} of ${total} segments recorded${missing ? ` (${missing} missing: run tools/voices, see CLAUDE.md)` : ''}`);
-  if (missing) failed = true;
 }
 process.exit(failed ? 1 : 0);

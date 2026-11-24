@@ -104,6 +104,34 @@ try {
     await v.waitForTimeout(2500);
     check(fetched.length > 0 && fetched.every((s) => s === 200), `the narrator's voice is fetched when a game starts (${fetched.length} file(s))`);
     await v.close();
+
+    // two players on one screen: setup with looks, then a whole game, taking turns
+    const d = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    watch('duo', d);
+    await d.addInitScript(() => localStorage.setItem('hp-cyoa:v1:settings', JSON.stringify({ animation: 'off', transitions: 'cut', sound: false })));
+    await d.goto(BASE);
+    await d.getByRole('button', { name: 'Two players' }).click();
+    await d.getByRole('button', { name: 'Play on this screen instead' }).click({ timeout: 20000 });
+    for (const sec of await d.locator('.duo-player').all()) {
+      await sec.getByRole('button', { name: 'Bun' }).click();
+      for (const k of ['Courage', 'Wit', 'Kindness', 'Cunning', 'Wit', 'Courage']) await sec.locator('.stat-row', { hasText: k }).getByRole('button', { name: '+' }).click();
+    }
+    await d.getByRole('button', { name: 'Begin' }).click();
+    let turns = 0;
+    const seen = new Set();
+    for (let i = 0; i < 600 && !(await d.locator('.panel.end').count()); i++) {
+      if (await d.locator('.roll').count()) { await d.locator('.roll').click().catch(() => {}); await d.waitForTimeout(300); continue; }
+      const turn = await d.locator('li.turn').textContent().catch(() => null);
+      if (turn) seen.add(turn.split("'")[0]);
+      const ch = d.locator('button.choice:not([disabled])');
+      const n = await ch.count();
+      if (n) { await ch.nth(Math.floor(Math.random() * n)).click().catch(() => {}); turns++; await d.waitForTimeout(250); }
+      else { await d.locator('button.link', { hasText: 'Show all' }).click({ timeout: 500 }).catch(() => {}); await d.waitForTimeout(150); }
+    }
+    check(await d.locator('.panel.end').count() > 0, `two players on one screen reach an ending (${turns} turns)`);
+    check(seen.has('Ingerid') && seen.has('Kristian'), 'both players get turns');
+    check((await d.locator('.duo-paths details').count()) === 2, "the end screen shows both players' paths");
+    await d.close();
   } else {
     const pc = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -131,6 +159,46 @@ try {
       .waitForFunction((t) => document.querySelector('.scene-title')?.textContent.trim() !== t, before, { timeout: 10000 })
       .then(() => true, () => false);
     check(moved, 'a choice tapped on the phone is played on the PC');
+
+    // two players, each on their own phone
+    const big = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    watch('duo-pc', big);
+    await big.addInitScript(() => localStorage.setItem('hp-cyoa:v1:settings', JSON.stringify({ animation: 'off', transitions: 'cut', sound: false })));
+    await big.goto(BASE);
+    await big.getByRole('button', { name: 'Two players' }).click();
+    await big.locator('.duo-lobby .code').waitFor({ timeout: 20000 });
+    const duoUrl = (await big.locator('.duo-lobby .url').textContent()).trim();
+    const phones = {};
+    for (const [who, seat] of [['i', 'Ingerid'], ['k', 'Kristian']]) {
+      const ph = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      watch('phone-' + who, ph);
+      await ph.goto(duoUrl);
+      await ph.getByRole('button', { name: seat, exact: true }).click({ timeout: 15000 });
+      await ph.getByRole('button', { name: 'Long' }).click({ timeout: 15000 });
+      for (const k of ['Courage', 'Wit', 'Kindness', 'Cunning', 'Wit', 'Courage']) await ph.locator('.stat', { hasText: k }).getByRole('button', { name: '+' }).click();
+      await ph.getByRole('button', { name: 'Ready' }).click();
+      phones[seat] = ph;
+    }
+    const taken = await phones.Kristian.getByRole('button', { name: 'Ingerid (taken)' }).count();
+    await big.getByRole('button', { name: 'Begin' }).click({ timeout: 15000 });
+    check(true, 'both phones take a seat, choose a look and get ready');
+    let phoneTurns = { Ingerid: 0, Kristian: 0 };
+    for (let i = 0; i < 400 && !(await big.locator('.panel.end').count()); i++) {
+      let acted = false;
+      for (const [seat, ph] of Object.entries(phones)) {
+        const ch = ph.locator('button.choice:not([disabled]):not(.sent)');
+        const n = await ch.count();
+        if (n) { await ch.nth(Math.floor(Math.random() * n)).click().catch(() => {}); phoneTurns[seat]++; acted = true; await big.waitForTimeout(400); break; }
+      }
+      if (acted) continue;
+      if (await big.locator('.roll').count()) { await big.locator('.roll').click().catch(() => {}); await big.waitForTimeout(300); continue; }
+      const cont = big.locator('button.choice:not([disabled])');
+      if (await cont.count()) { await cont.first().click().catch(() => {}); await big.waitForTimeout(300); continue; }
+      await big.locator('button.link', { hasText: 'Show all' }).click({ timeout: 500 }).catch(() => {});
+      await big.waitForTimeout(200);
+    }
+    check(await big.locator('.panel.end').count() > 0, `two phones play a whole game to an ending (Ingerid ${phoneTurns.Ingerid}, Kristian ${phoneTurns.Kristian} choices)`);
+    check(phoneTurns.Ingerid > 5 && phoneTurns.Kristian > 5, 'each phone gets its own turns');
   }
 } catch (e) {
   check(false, String(e));

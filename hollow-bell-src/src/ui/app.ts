@@ -49,6 +49,8 @@ export class App {
   private sceneToken = 0;
   private storageOk = storageWorks();
   private remote: Remote | null = null;
+  /** Opens the two-player game (set by main.ts). */
+  onDuo: (() => void) | null = null;
   private remoteRev = 0;
   private debug = new URLSearchParams(location.search).has('debug');
   private debugEl: HTMLElement | null = null;
@@ -130,6 +132,7 @@ export class App {
               `${t.continue}: ${auto!.sceneTitle}`,
             ),
           h('button', { class: autoStory ? '' : 'primary', onclick: () => this.showCreate() }, t.newGame),
+          this.onDuo && h('button', { onclick: () => this.onDuo?.() }, 'Two players'),
           h('button', { onclick: () => this.openOverlay('saves') }, t.load),
           h('button', { onclick: () => this.openOverlay('settings') }, t.settings),
         ),

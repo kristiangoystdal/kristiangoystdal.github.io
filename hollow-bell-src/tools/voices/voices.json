@@ -1,13 +1,103 @@
 {
   "_note": "Piper voice per speaker. Models from https://huggingface.co/rhasspy/piper-voices (all 22050 Hz). speaker = id in a multi-speaker model (VCTK). length_scale > 1 = slower. pitch < 1 = deeper (tempo is kept). fx = extra ffmpeg filters. Licences and credits: public/voices/CREDITS.md.",
-  "Narrator":    { "model": "en_GB-cori-high", "length_scale": 1.0 },
-  "Mirela":      { "model": "en_GB-jenny_dioco-medium", "length_scale": 0.95 },
-  "Ashgrove":    { "model": "en_GB-northern_english_male-medium", "length_scale": 1.0 },
-  "Harrow":      { "model": "en_GB-northern_english_male-medium", "length_scale": 0.95, "pitch": 0.88 },
-  "Quill":       { "model": "en_GB-vctk-medium", "speaker": "p227", "length_scale": 1.1, "pitch": 0.92 },
-  "Vale":        { "model": "en_GB-vctk-medium", "speaker": "p232", "length_scale": 1.2, "pitch": 0.9, "fx": "aecho=0.8:0.7:60:0.4" },
-  "Matron Hale": { "model": "en_GB-vctk-medium", "speaker": "p276", "length_scale": 1.05 },
-  "Pip":         { "model": "en_GB-vctk-medium", "speaker": "p258", "length_scale": 1.0, "pitch": 1.06 },
-  "Headmaster":  { "model": "en_GB-vctk-medium", "speaker": "p273", "length_scale": 1.1, "pitch": 0.86 },
-  "Wall voice":  { "model": "en_GB-vctk-medium", "speaker": "p237", "length_scale": 1.25, "pitch": 0.75, "fx": "aecho=0.8:0.85:90|180:0.5|0.3" }
+  "Narrator": {
+    "model": "en_GB-cori-high",
+    "length_scale": 1.0
+  },
+  "Mirela": {
+    "model": "en_GB-jenny_dioco-medium",
+    "length_scale": 0.95
+  },
+  "Ashgrove": {
+    "model": "en_GB-northern_english_male-medium",
+    "length_scale": 1.0
+  },
+  "Harrow": {
+    "model": "en_GB-northern_english_male-medium",
+    "length_scale": 0.95,
+    "pitch": 0.88
+  },
+  "Quill": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p227",
+    "length_scale": 1.1,
+    "pitch": 0.92
+  },
+  "Vale": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p232",
+    "length_scale": 1.2,
+    "pitch": 0.9,
+    "fx": "aecho=0.8:0.7:60:0.4"
+  },
+  "Matron Hale": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p276",
+    "length_scale": 1.05
+  },
+  "Pip": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p258",
+    "length_scale": 1.0,
+    "pitch": 1.06
+  },
+  "Headmaster": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p273",
+    "length_scale": 1.1,
+    "pitch": 0.86
+  },
+  "Wall voice": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p237",
+    "length_scale": 1.25,
+    "pitch": 0.75,
+    "fx": "aecho=0.8:0.85:90|180:0.5|0.3"
+  },
+  "Ingerid": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p228",
+    "length_scale": 1.0
+  },
+  "Kristian": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p254",
+    "length_scale": 1.0
+  },
+  "Gloam": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p226",
+    "length_scale": 1.1,
+    "pitch": 0.97,
+    "fx": "aecho=0.8:0.6:40:0.25"
+  },
+  "Sir Aldous": {
+    "model": "en_GB-northern_english_male-medium",
+    "length_scale": 1.12,
+    "pitch": 0.84
+  },
+  "Madam Pell": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p262",
+    "length_scale": 1.05,
+    "pitch": 0.95
+  },
+  "Echo": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p262",
+    "length_scale": 1.2,
+    "pitch": 1.04,
+    "fx": "aecho=0.8:0.9:70|140:0.5|0.35"
+  },
+  "Sister Wren": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p253",
+    "length_scale": 1.1,
+    "fx": "aecho=0.8:0.7:55:0.3"
+  },
+  "Prefect": {
+    "model": "en_GB-vctk-medium",
+    "speaker": "p243",
+    "length_scale": 0.95
+  }
 }
