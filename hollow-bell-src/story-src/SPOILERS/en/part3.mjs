@@ -245,8 +245,8 @@ S.n7_reseal = {
     `Only the last stroke remains. Someone must take the rope and ring it in time with the song.`
   ],
   choices: [
-    { label: `Take the rope together with Ashgrove`, to: 'ending_waking_together', requires: { all: [{ flag: 'ashgrove_yielded' }, { relation: 'ashgrove', gte: 1 }] } },
-    { label: `Take the rope alone`, to: 'ending_waking', requires: { not: { all: [{ flag: 'ashgrove_yielded' }, { relation: 'ashgrove', gte: 1 }] } } }
+    { label: `Take the rope together with Ashgrove`, to: 'ending_waking_together', requires: { all: [{ flag: 'ashgrove_yielded' }, { relation: 'ashgrove', gte: 3 }] } },
+    { label: `Take the rope alone`, to: 'ending_waking', requires: { not: { all: [{ flag: 'ashgrove_yielded' }, { relation: 'ashgrove', gte: 3 }] } } }
   ]
 };
 

@@ -3,3 +3,5 @@ node_modules/
 tools/voices/models/
 dist-e2e/
 *-debug.log
+tools/voices/.venv/
+tools/voices/cache/

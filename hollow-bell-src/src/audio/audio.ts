@@ -1,4 +1,4 @@
-// Web Audio: ambience crossfades between scenes, one-shot sound effects, and voice lines.
+// Web Audio: ambience crossfades between scenes, one-shot sound effects, and voices (narrator and characters).
 // Voices: a pre-generated file from public/voices/manifest.json (Piper, see tools/voices), else Web Speech, else nothing.
 import type { Scene } from '../engine/types';
 
@@ -9,6 +9,10 @@ const base = import.meta.env.BASE_URL;
 
 // Web Speech settings per speaker, used when there is no recorded line.
 const SPEECH: Record<string, { pitch: number; rate: number }> = {
+  Narrator: { pitch: 1, rate: 1 },
+  Pip: { pitch: 1.2, rate: 1.05 },
+  Headmaster: { pitch: 0.75, rate: 0.9 },
+  'Wall voice': { pitch: 0.5, rate: 0.8 },
   Mirela: { pitch: 1.15, rate: 1.05 },
   Quill: { pitch: 0.9, rate: 0.92 },
   Ashgrove: { pitch: 0.85, rate: 0.98 },
@@ -23,12 +27,15 @@ export class AudioEngine {
   private cache = new Map<string, Promise<AudioBuffer>>();
   private amb: { id: string; src: AudioBufferSourceNode; gain: GainNode } | null = null;
   private manifest: Record<string, SfxEntry> = {};
-  private voices: Record<string, string> = {};
+  private voiceFiles: Record<string, string> = {};
   private voiceSrc: AudioBufferSourceNode | null = null;
+  private speakToken = 0;
   private timers: number[] = [];
   vol: Volumes = { master: 0.8, ambience: 0.5, sfx: 0.8, voice: 1 };
   enabled = true;
-  voiceEnabled = false;
+  /** Character voices and the narrator can be switched separately. */
+  voices = true;
+  narrator = true;
   lang = 'en-GB';
 
   /** Must be called from a user gesture (a click). Safe to call many times. */
@@ -47,7 +54,7 @@ export class AudioEngine {
       }
       try {
         const r = await fetch(base + 'voices/manifest.json');
-        if (r.ok) this.voices = await r.json();
+        if (r.ok) this.voiceFiles = await r.json();
       } catch {
         /* no recorded voices */
       }
@@ -132,37 +139,73 @@ export class AudioEngine {
     (sc.audio?.sfx ?? []).forEach((id, i) => this.timers.push(window.setTimeout(() => void this.sfx(id), 400 + i * 1200)));
   }
 
-  /** Speaks a line. `key` is the voice manifest key (see tools/voices/extract-lines.mjs). */
-  async say(key: string | null, text: string, speaker: string) {
+  /**
+   * Speaks the parts of a paragraph one after another. Resolves true when everything was spoken,
+   * false when it was interrupted (stopVoice, or a new paragraph) or nothing was spoken.
+   */
+  async speak(parts: { key: string; text: string; speaker: string }[]): Promise<boolean> {
     this.stopVoice();
-    if (!this.voiceEnabled || !this.enabled) return;
-    const file = key ? this.voices[key] : undefined;
+    const token = ++this.speakToken;
+    const wanted = parts.filter((p) => (p.speaker === 'Narrator' ? this.narrator : this.voices));
+    if (!this.enabled || !wanted.length) return false;
+    this.duck(true);
+    try {
+      for (const p of wanted) {
+        if (token !== this.speakToken) return false;
+        const ok = await this.speakOne(p, token);
+        if (!ok) return false;
+      }
+      return token === this.speakToken;
+    } finally {
+      if (token === this.speakToken) this.duck(false);
+    }
+  }
+
+  private async speakOne(p: { key: string; text: string; speaker: string }, token: number): Promise<boolean> {
+    const file = this.voiceFiles[p.key];
     if (file && this.ctx && this.master) {
       try {
+        const buf = await this.load(file);
+        if (token !== this.speakToken) return false;
         const src = this.ctx.createBufferSource();
-        src.buffer = await this.load(file);
+        src.buffer = buf;
         const g = this.ctx.createGain();
         g.gain.value = this.vol.voice;
         src.connect(g).connect(this.master);
-        src.start();
         this.voiceSrc = src;
-        return;
+        await new Promise<void>((done) => {
+          src.onended = () => done();
+          src.start();
+        });
+        return token === this.speakToken;
       } catch {
         /* fall through to speech */
       }
     }
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(text);
-      const cfg = SPEECH[speaker] ?? { pitch: 1, rate: 1 };
-      u.pitch = cfg.pitch;
-      u.rate = cfg.rate;
-      u.lang = this.lang;
-      u.volume = this.vol.voice * this.vol.master;
+    if (!('speechSynthesis' in window)) return true;
+    const u = new SpeechSynthesisUtterance(p.text);
+    const cfg = SPEECH[p.speaker] ?? { pitch: 1, rate: 1 };
+    u.pitch = cfg.pitch;
+    u.rate = cfg.rate;
+    u.lang = this.lang;
+    u.volume = Math.min(1, this.vol.voice * this.vol.master);
+    await new Promise<void>((done) => {
+      u.onend = () => done();
+      u.onerror = () => done();
       speechSynthesis.speak(u);
-    }
+    });
+    return token === this.speakToken;
+  }
+
+  /** Lowers the ambience while someone speaks. */
+  private duck(on: boolean) {
+    if (!this.amb || !this.ctx) return;
+    const base = (this.manifest[this.amb.id]?.volume ?? 0.4) * this.vol.ambience;
+    this.amb.gain.gain.setTargetAtTime(on ? base * 0.45 : base, this.ctx.currentTime, 0.25);
   }
 
   stopVoice() {
+    this.speakToken++;
     try {
       this.voiceSrc?.stop();
     } catch {
@@ -171,16 +214,4 @@ export class AudioEngine {
     this.voiceSrc = null;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
   }
-}
-
-/** Same key as tools/voices/extract-lines.mjs: sha1(sceneId + paragraphIndex + quotedText), 10 hex chars. */
-export async function voiceKey(sceneId: string, index: number, raw: string): Promise<string | null> {
-  if (/\{name\}|\{house\}/.test(raw)) return null;
-  const q = [...raw.matchAll(/“([^”]+)”/g)].map((m) => m[1]).join(' ... ');
-  if (!q || !crypto.subtle) return null;
-  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(sceneId + index + q));
-  return [...new Uint8Array(buf)]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-    .slice(0, 10);
 }

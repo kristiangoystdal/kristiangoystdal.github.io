@@ -195,6 +195,8 @@ textarea.export { width: 100%; font-family: ui-monospace, monospace; font-size: 
 .step-others i { font-style: normal; display: inline-block; width: 1.2em; text-align: center; border: 1px dashed var(--box-line); border-radius: 50%; margin-right: 2px; font-size: 0.75em; color: var(--box-muted); }
 .credits { text-align: center; color: var(--box-muted); font-style: italic; }
 .credits h3 { color: var(--box-text); }
+.voice-credits { font-size: 0.8rem; margin-top: 0.6rem; }
+.voice-credits a { color: inherit; }
 
 #debug { position: fixed; left: 0.5rem; bottom: 0.5rem; z-index: 40; background: rgba(0, 0, 0, 0.75); color: #9f9; font: 12px ui-monospace, monospace; padding: 0.5rem; border-radius: 6px; max-width: 26rem; display: flex; flex-direction: column; gap: 0.3rem; }
 #debug button { color: #9f9; border-color: #4a4; font-size: 12px; }

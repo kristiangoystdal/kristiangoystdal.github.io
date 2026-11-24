@@ -143,11 +143,15 @@ jobs:
         working-directory: hollow-bell-src
         run: npm run e2e:remote
 
+      - name: Forsiden stemmer med homepage/pages.json
+        working-directory: .
+        run: node homepage/build.mjs --check
+
       - name: Sett sammen nettsiden
         working-directory: .
         run: |
           mkdir _site
-          rsync -a --exclude '.git' --exclude '.github' --exclude '.claude' --exclude 'hide-and-seek-src' --exclude 'hollow-bell-src' --exclude '_site' --exclude '.DS_Store' ./ _site/
+          rsync -a --exclude '.git' --exclude '.github' --exclude '.claude' --exclude 'hide-and-seek-src' --exclude 'hollow-bell-src' --exclude 'homepage' --exclude '_site' --exclude '.DS_Store' ./ _site/
           # Uten Jekyll: filer som begynner med understrek (f.eks. assets/_gameId_-*.js) publiseres også.
           touch _site/.nojekyll
 

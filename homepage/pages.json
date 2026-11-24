@@ -1,0 +1,69 @@
+{
+  "_how": "Which pages are listed on the homepage, and how their tile looks. show: false hides a page (it still works by its link, it just isn't listed, and it is not named anywhere on the published site). icon: binder, route, bell, hat, book, train or coins (drawn in homepage/build.mjs). color: the tile, ink: text and lines on it. After editing: node homepage/build.mjs (CI checks that index.html matches). This folder is not published.",
+  "pages": [
+    {
+      "href": "pokemon-tracker/",
+      "title": "Kortbok",
+      "desc": "Spor Pokémon-kortsamlingen din og hvor mye du har tjent på salg, importert fra en Collectr-eksport.",
+      "show": true,
+      "icon": "binder",
+      "color": "#f2c14e",
+      "ink": "#3b2a08"
+    },
+    {
+      "href": "hide-and-seek/",
+      "title": "Hide and Seek Oslo",
+      "desc": "Spørsmålstracker for Jetlag Hide and Seek på Oslo T-bane: kart, spørsmålslogg og mulige stasjoner.",
+      "show": true,
+      "icon": "route",
+      "color": "#e8664a",
+      "ink": "#2e0d06"
+    },
+    {
+      "href": "hollow-bell/",
+      "title": "The Hollow Bell",
+      "desc": "A choose-your-own-adventure in watercolour, with choices, dice and many endings. Your phone can be the remote.",
+      "show": true,
+      "icon": "bell",
+      "color": "#7d7fd6",
+      "ink": "#141238"
+    },
+    {
+      "href": "rangeringshatten/",
+      "title": "Rangeringshatten",
+      "desc": "Rangér Harry Potter sammen: hver på sin mobil, og så sammenligner dere på TV-en.",
+      "show": true,
+      "icon": "hat",
+      "color": "#b48ad8",
+      "ink": "#2a1340"
+    },
+    {
+      "href": "pokedex/",
+      "title": "Pokédex Tracker",
+      "desc": "Track which Pokémon you've caught, grouped by generation, with cloud sync.",
+      "show": false,
+      "icon": "book",
+      "color": "#e26a6a",
+      "ink": "#3a0e0e"
+    },
+    {
+      "href": "countdown/",
+      "title": "Countdown",
+      "desc": "Countdown to a video from an Interrail trip across Europe.",
+      "show": false,
+      "countdown": true,
+      "icon": "train",
+      "color": "#6cc3d5",
+      "ink": "#0c2c33"
+    },
+    {
+      "href": "pokemon_sales/",
+      "title": "Pokémon Bulk-pakker",
+      "desc": "Internal tool for planning and pricing Pokémon bulk sale packs from a Collectr export.",
+      "show": false,
+      "icon": "coins",
+      "color": "#9fcf7b",
+      "ink": "#16300a"
+    }
+  ]
+}

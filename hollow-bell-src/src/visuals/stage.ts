@@ -1,15 +1,15 @@
 // SceneStage: draws the painted location (parallax layers), lights, characters and particles on one canvas,
 // with a slow camera pan, mouse parallax, and cut/walk transitions between scenes.
 import type { Mood, Particle } from '../engine/types';
-import { lanternOffset, lookFor, LOOKS, sprite, SPRITE, type Look } from './actors';
+import { drawRig, handPos, lookFor, LOOKS, POSES, rig, type Joints, type Look, type Pose } from './actors';
 import { Particles } from './particles';
 import { FLOOR, getPreset, H, paintPreset, VIEW_H, W, type Light } from './presets';
 
 export type Motion = 'full' | 'reduced' | 'off';
-export type ActorSpec = { id: string; look: Look; accent?: string; x: number; facing: 1 | -1 };
+export type ActorSpec = { id: string; look: Look; accent?: string; x: number; facing: 1 | -1; pose?: Pose };
 export type StageScene = { preset?: string; particles?: Particle[]; mood?: Mood; actors: ActorSpec[] };
 
-type Actor = ActorSpec & { cx: number; tx: number; walking: boolean; phase: number; alpha: number; leaving: boolean };
+type Actor = ActorSpec & { cx: number; tx: number; walking: boolean; phase: number; alpha: number; leaving: boolean; posedAt: number; j: Joints };
 
 const ACTOR_DEPTH = 0.85;
 export const ACTOR_SCALE = 1.35;
@@ -131,15 +131,24 @@ export class Stage {
         existing.walking = animate && Math.abs(existing.cx - s.x) > 0.01;
         if (!animate) existing.cx = s.x;
         existing.facing = s.facing;
+        if (s.pose && s.pose !== (existing.pose ?? 'idle')) this.setPose(existing.id, s.pose);
         continue;
       }
       const from = s.x > 0.5 ? 1.15 : -0.15;
-      this.actors.push({ ...s, cx: animate ? from : s.x, tx: s.x, walking: animate, phase: Math.random() * 6, alpha: 1, leaving: false });
+      this.actors.push({ ...s, cx: animate ? from : s.x, tx: s.x, walking: animate, phase: Math.random() * 6, alpha: 1, leaving: false, posedAt: -10, j: { ...POSES[s.pose ?? 'idle'] } });
     }
   }
 
   setTalking(id: string | null) {
     this.talking = id;
+  }
+
+  /** Changes a character's pose (a small hop marks the change). */
+  setPose(id: string, pose: Pose) {
+    const a = this.actors.find((x) => x.id === id && !x.leaving);
+    if (!a || (a.pose ?? 'idle') === pose) return;
+    a.pose = pose;
+    a.posedAt = this.t;
   }
 
   /** Screen position (CSS px) above an actor's head, for speech bubbles. */
@@ -183,6 +192,7 @@ export class Stage {
     this.mouse.sy += (this.mouse.y - this.mouse.sy) * ease;
     if (this.motion !== 'off') this.particles.update(dt);
     this.updateWalk(dt);
+    this.updateJoints(dt);
     this.draw(now);
     requestAnimationFrame((t) => this.frame(t));
   }
@@ -199,6 +209,35 @@ export class Stage {
       }
     }
     this.actors = this.actors.filter((a) => !(a.leaving && (a.cx < -0.15 || a.cx > 1.15 || a.alpha === 0)));
+  }
+
+  /** Where each joint wants to be: the pose, plus arm swing when walking, gestures when talking, and breathing. */
+  private targetJoints(a: Actor): Joints {
+    const t = this.t + a.phase;
+    const pose = a.pose ?? 'idle';
+    const j = { ...POSES[pose] };
+    if (this.motion !== 'full') return j;
+    if (a.walking) {
+      j.upper = Math.sin(t * 9) * 0.45;
+      j.elbow = 0.45;
+    } else if (pose === 'idle' && this.talking === a.id) {
+      j.upper = 0.4 + Math.sin(t * 3.1) * 0.25 + Math.sin(t * 1.3) * 0.1;
+      j.elbow = 0.95 + Math.sin(t * 2.3) * 0.35;
+      j.head += Math.sin(t * 6.2) * 0.05;
+    } else {
+      j.upper += Math.sin(t * 1.7) * 0.03;
+      j.head += Math.sin(t * 0.8) * 0.02;
+    }
+    if (pose === 'scared') j.upper += Math.sin(t * 23) * 0.015; // a small tremble
+    return j;
+  }
+
+  private updateJoints(dt: number) {
+    const k = this.motion === 'full' ? 1 - Math.exp(-dt * 7) : 1;
+    for (const a of this.actors) {
+      const target = this.targetJoints(a);
+      for (const key of ['upper', 'elbow', 'head', 'lean'] as const) a.j[key] += (target[key] - a.j[key]) * k;
+    }
   }
 
   private draw(now: number) {
@@ -240,10 +279,15 @@ export class Stage {
     const s = this.scale;
     const lights: Light[] = [...this.lights];
     for (const a of this.actors) {
-      if (a.look.prop === 'lantern') {
-        const o = lanternOffset(a.look);
-        const wx = Math.max(0, W - this.viewW) / 2 + a.cx * this.viewW + o.x * a.facing * ACTOR_SCALE;
-        lights.push({ x: wx, y: FLOOR + o.y * ACTOR_SCALE, r: 150, color: '#ffc46a', flicker: 0.3, depth: ACTOR_DEPTH });
+      const prop = this.propOf(a);
+      if (prop === 'lantern' || prop === 'wand') {
+        const hand = handPos(rig(a.look, a.accent), a.j);
+        const fa = a.j.upper + a.j.elbow;
+        const tip = prop === 'wand' ? { x: hand.x + Math.sin(fa) * 30, y: hand.y + Math.cos(fa) * 30 } : { x: hand.x, y: hand.y + 23 };
+        const wx = Math.max(0, W - this.viewW) / 2 + a.cx * this.viewW + tip.x * a.facing * ACTOR_SCALE;
+        lights.push(prop === 'wand'
+          ? { x: wx, y: FLOOR + tip.y * ACTOR_SCALE, r: 70, color: '#fff1b0', flicker: 0.6, depth: ACTOR_DEPTH }
+          : { x: wx, y: FLOOR + tip.y * ACTOR_SCALE, r: 150, color: '#ffc46a', flicker: 0.3, depth: ACTOR_DEPTH });
       }
       if (a.look.ghost) {
         const wx = Math.max(0, W - this.viewW) / 2 + a.cx * this.viewW;
@@ -266,30 +310,38 @@ export class Stage {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  /** What the figure holds: a wand when casting, otherwise its own prop while the arm is at rest. */
+  private propOf(a: Actor): 'lantern' | 'book' | 'wand' | null {
+    const pose = a.pose ?? 'idle';
+    if (pose === 'cast') return 'wand';
+    if (pose !== 'idle' || !a.look.prop || a.look.prop === 'none') return null;
+    return a.look.prop;
+  }
+
   private drawActors(yOff: number) {
     const { ctx } = this;
     const s = this.scale;
     for (const a of this.actors) {
-      const img = sprite(a.look, a.accent);
+      const rg = rig(a.look, a.accent);
       const x = this.actorScreenX(a);
       const t = this.t + a.phase;
       const full = this.motion === 'full';
-      const bob = full ? (a.walking ? Math.abs(Math.sin(t * 9)) * 7 : 0) + (a.look.ghost ? Math.sin(t * 1.3) * 10 + 14 : 0) : 0;
-      const breathe = full ? 1 + Math.sin(t * 2.1) * 0.012 + (this.talking === a.id ? Math.abs(Math.sin(t * 7)) * 0.012 : 0) : 1;
-      const tilt = full && a.walking ? Math.sin(t * 9) * 0.03 : 0;
+      const bob = full ? (a.walking ? Math.abs(Math.sin(t * 9)) * 6 : 0) + (a.look.ghost ? Math.sin(t * 1.3) * 10 + 14 : 0) : 0;
+      const breathe = full ? 1 + Math.sin(t * 2.1) * 0.01 : 1;
+      const since = this.t - a.posedAt;
+      const hop = full && since < 0.3 ? Math.sin((since / 0.3) * Math.PI) * 4 : 0;
+      const sway = full ? Math.sin(t * 1.4) * 0.012 + (a.walking ? Math.sin(t * 9) * 0.025 : 0) : 0;
       ctx.save();
       ctx.globalAlpha = a.alpha * (a.look.ghost ? 0.75 + Math.sin(t * 0.9) * 0.15 : 1);
-      ctx.translate(x, yOff + (FLOOR + 6 - bob) * s);
-      ctx.rotate(tilt);
+      ctx.translate(x, yOff + (FLOOR + 6 - bob - hop) * s);
       ctx.scale(a.facing * s * ACTOR_SCALE, s * ACTOR_SCALE * breathe);
-      // a soft shadow
       if (!a.look.ghost) {
         ctx.fillStyle = 'rgba(10,8,20,0.25)';
         ctx.beginPath();
         ctx.ellipse(0, 0, 46, 8, 0, 0, 7);
         ctx.fill();
       }
-      ctx.drawImage(img, -SPRITE.w / 2, -SPRITE.h + 6, SPRITE.w, SPRITE.h);
+      drawRig(ctx, rg, a.look, a.j, sway, this.propOf(a));
       ctx.restore();
     }
   }

@@ -22,7 +22,11 @@ into `../hollow-bell/` (not in git) and served at `/hollow-bell/` on github.io. 
 - `npm run e2e:remote`: phone remote against the Firebase emulator (needs Java).
 - `npm run story:build`: rebuild `src/stories/hollow-bell.json` from `story-src/SPOILERS/en/*.mjs`.
 - `npm run sfx`: re-render the procedural sounds into `public/audio/`.
-- Voices (optional, offline): `node tools/voices/extract-lines.mjs && python tools/voices/gen-voices.py` (Piper) writes `public/voices/`.
+- Voices (offline, Piper in `tools/voices/.venv`): `node tools/voices/extract-lines.mjs && tools/voices/.venv/bin/python tools/voices/gen-voices.py`.
+  Every paragraph is split into narrator and character segments (`src/engine/segments.ts`, shared with the game); who speaks each
+  quote is the scene's `speaker` unless `src/stories/hollow-bell.voices.json` says otherwise. Tones (whisper, shout, ...) come from
+  cues in the narration. Output: `public/voices/out/*.m4a` + `manifest.json`; `npm run validate` fails if a segment has no recording.
+  Voice models and licences: `tools/voices/voices.json`, `public/voices/CREDITS.md`. Default player name: Kringer (lines with the name are recorded with it).
 
 ## Layout
 - `src/engine/`: pure game logic (types, conditions, effects, seeded rng, state machine with director/storylets and the loop, saves, meta, bot). No DOM.

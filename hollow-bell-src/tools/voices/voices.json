@@ -1,9 +1,13 @@
 {
-  "_note": "Piper voice per speaker (free, offline, MIT). Download models from https://huggingface.co/rhasspy/piper-voices . length_scale >1 = slower. Pitch/effects applied by ffmpeg in gen-voices.py.",
-  "Mirela":      { "model": "en_GB-jenny_dioco-medium", "length_scale": 0.9,  "fx": "" },
-  "Quill":       { "model": "en_GB-alan-medium",        "length_scale": 1.1,  "fx": "" },
-  "Ashgrove":    { "model": "en_GB-northern_english_male-medium", "length_scale": 1.0, "fx": "" },
-  "Vale":        { "model": "en_GB-alan-medium",        "length_scale": 1.25, "fx": "aecho=0.8:0.7:60:0.4,asetrate=44100*0.92,aresample=44100" },
-  "Harrow":      { "model": "en_GB-northern_english_male-medium", "length_scale": 0.9, "fx": "asetrate=44100*0.9,aresample=44100" },
-  "Matron Hale": { "model": "en_GB-jenny_dioco-medium", "length_scale": 1.05, "fx": "" }
+  "_note": "Piper voice per speaker. Models from https://huggingface.co/rhasspy/piper-voices (all 22050 Hz). speaker = id in a multi-speaker model (VCTK). length_scale > 1 = slower. pitch < 1 = deeper (tempo is kept). fx = extra ffmpeg filters. Licences and credits: public/voices/CREDITS.md.",
+  "Narrator":    { "model": "en_GB-cori-high", "length_scale": 1.0 },
+  "Mirela":      { "model": "en_GB-jenny_dioco-medium", "length_scale": 0.95 },
+  "Ashgrove":    { "model": "en_GB-northern_english_male-medium", "length_scale": 1.0 },
+  "Harrow":      { "model": "en_GB-northern_english_male-medium", "length_scale": 0.95, "pitch": 0.88 },
+  "Quill":       { "model": "en_GB-vctk-medium", "speaker": "p227", "length_scale": 1.1, "pitch": 0.92 },
+  "Vale":        { "model": "en_GB-vctk-medium", "speaker": "p232", "length_scale": 1.2, "pitch": 0.9, "fx": "aecho=0.8:0.7:60:0.4" },
+  "Matron Hale": { "model": "en_GB-vctk-medium", "speaker": "p276", "length_scale": 1.05 },
+  "Pip":         { "model": "en_GB-vctk-medium", "speaker": "p258", "length_scale": 1.0, "pitch": 1.06 },
+  "Headmaster":  { "model": "en_GB-vctk-medium", "speaker": "p273", "length_scale": 1.1, "pitch": 0.86 },
+  "Wall voice":  { "model": "en_GB-vctk-medium", "speaker": "p237", "length_scale": 1.25, "pitch": 0.75, "fx": "aecho=0.8:0.85:90|180:0.5|0.3" }
 }

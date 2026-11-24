@@ -16,5 +16,9 @@ Menu → "Phone remote" shows a QR code and a room code. The phone shows the cho
 Needs the Firebase keys (`.env.local`, see `.env.example`; GitHub Actions uses the Hide and Seek secrets)
 and the `hollowbell/` rules in `../hide-and-seek-src/database.rules.json` published in the Firebase console.
 
+## Voices
+Narrator and characters are voiced with Piper (offline TTS). Credits and licences: `public/voices/CREDITS.md`.
+Settings let you switch the narrator and character voices separately, and turn the page when a voice ends.
+
 ## Development
 See `CLAUDE.md` for commands and layout, `PROGRESS.md` for status and `PLAN.md` for the plan.

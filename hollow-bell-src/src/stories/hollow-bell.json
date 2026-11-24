@@ -9,7 +9,7 @@
   "characterCreation": {
     "nameInput": {
       "label": "What is your name?",
-      "default": "Alex",
+      "default": "Kringer",
       "maxLength": 16,
       "placeholder": "Type your name"
     },
@@ -4781,7 +4781,7 @@
               },
               {
                 "relation": "ashgrove",
-                "gte": 1
+                "gte": 3
               }
             ]
           }
@@ -4797,7 +4797,7 @@
                 },
                 {
                   "relation": "ashgrove",
-                  "gte": 1
+                  "gte": 3
                 }
               ]
             }

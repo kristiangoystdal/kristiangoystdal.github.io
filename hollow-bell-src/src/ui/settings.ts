@@ -7,7 +7,11 @@ export type Settings = {
   textSize: number; // rem
   autoAdvance: boolean;
   sound: boolean;
-  voice: boolean;
+  /** Character voices and the narrator, switched separately. */
+  voices: boolean;
+  narrator: boolean;
+  /** Turn the page by itself when the voice has finished (listen without reading). */
+  advanceAfterVoice: boolean;
   volumes: { master: number; ambience: number; sfx: number; voice: number };
 };
 
@@ -21,7 +25,9 @@ export function defaults(): Settings {
     textSize: 1.2,
     autoAdvance: false,
     sound: true,
-    voice: false,
+    voices: true,
+    narrator: true,
+    advanceAfterVoice: false,
     volumes: { master: 0.8, ambience: 0.5, sfx: 0.8, voice: 1 },
   };
 }

@@ -72,7 +72,7 @@ const story = {
   estimatedMinutes: 15,
   startScene: 'intro_title',
   characterCreation: {
-    nameInput: { label: 'What is your name?', default: 'Alex', maxLength: 16, placeholder: 'Type your name' },
+    nameInput: { label: 'What is your name?', default: 'Kringer', maxLength: 16, placeholder: 'Type your name' },
     houseChoice: ['Gryffindor', 'Slytherin', 'Ravenclaw', 'Hufflepuff'],
     bonusPoints: 6,
     note: '{name} and {house} are used throughout the text. The name is stored in GameState.player.name.'

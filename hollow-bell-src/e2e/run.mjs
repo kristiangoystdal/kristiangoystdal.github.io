@@ -93,6 +93,17 @@ try {
     check((await p.locator('.scene-title').textContent()).trim() === title, 'a saved game loads back into the same scene');
     await p.reload();
     check(await p.getByRole('button', { name: /^Continue/ }).isVisible(), 'the title screen offers to continue the autosave');
+
+    // voices: with sound on, starting a game fetches and decodes recorded lines
+    const v = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    watch('voices', v);
+    await v.addInitScript(() => localStorage.setItem('hp-cyoa:v1:settings', JSON.stringify({ animation: 'off', transitions: 'cut', sound: true, narrator: true, voices: true })));
+    const fetched = [];
+    v.on('response', (r) => /voices\/out\/.+\.m4a$/.test(r.url()) && fetched.push(r.status()));
+    await startGame(v);
+    await v.waitForTimeout(2500);
+    check(fetched.length > 0 && fetched.every((s) => s === 200), `the narrator's voice is fetched when a game starts (${fetched.length} file(s))`);
+    await v.close();
   } else {
     const pc = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

@@ -1,9 +1,14 @@
 import type { Story } from '../engine/types';
 import hollowBellEn from './hollow-bell.json';
+import voiceMap from './hollow-bell.voices.json';
+import type { VoiceMap } from '../engine/segments';
 
 const en = hollowBellEn as unknown as Story;
 
 export const STORIES: Story[] = [en];
+
+/** Who speaks each quoted piece where it differs from the scene's speaker (see tools/voices). */
+export const VOICES: VoiceMap = voiceMap as VoiceMap;
 export const storyById = (id: string) => STORIES.find((s) => s.id === id);
 
 /** Display names for relation ids and items. Ids without an entry are shown humanised. */

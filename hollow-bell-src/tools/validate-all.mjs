@@ -28,4 +28,28 @@ for (const f of stories) {
   console.log(`Sounds used: ${used.size}, missing: ${missing.join(', ') || 'none'}`);
   if (missing.length) failed = true;
 }
+// Every spoken segment should have a recorded voice (tools/voices). Missing ones fall back to the browser's speech.
+{
+  const { segmentParagraph, fillVars, speakable, voiceKey } = await import('../src/engine/segments.ts');
+  const story = JSON.parse(readFileSync(root + stories[0], 'utf8'));
+  const map = JSON.parse(readFileSync(root + 'src/stories/hollow-bell.voices.json', 'utf8'));
+  const voiceManifest = existsSync(root + 'public/voices/manifest.json') ? JSON.parse(readFileSync(root + 'public/voices/manifest.json', 'utf8')) : {};
+  const name = story.characterCreation?.nameInput?.default;
+  let total = 0, missing = 0;
+  for (const [id, sc] of Object.entries(story.scenes)) {
+    for (const [index, p] of (sc.text ?? []).entries()) {
+      const raw = typeof p === 'string' ? p : p.text;
+      for (const [seg, s] of segmentParagraph(raw, map.lines[`${id}#${index}`], sc.speaker).entries()) {
+        for (const house of /\{house\}/.test(s.text) ? story.characterCreation.houseChoice : [story.characterCreation.houseChoice[0]]) {
+          total++;
+          const key = await voiceKey(id, index, seg, speakable(fillVars(s.text, { name, house })));
+          const file = voiceManifest[key];
+          if (!file || !existsSync(root + 'public/' + file)) missing++;
+        }
+      }
+    }
+  }
+  console.log(`\nVoices: ${total - missing} of ${total} segments recorded${missing ? ` (${missing} missing: run tools/voices, see CLAUDE.md)` : ''}`);
+  if (missing) failed = true;
+}
 process.exit(failed ? 1 : 0);

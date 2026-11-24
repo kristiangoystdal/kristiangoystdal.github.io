@@ -1,4 +1,5 @@
-import { AudioEngine, voiceKey } from '../audio/audio';
+import { AudioEngine } from '../audio/audio';
+import { fillVars, segmentParagraph, speakable, voiceKey } from '../engine/segments';
 import { runBot } from '../engine/bot';
 import { allEndings, endingsFound, recordEnding } from '../engine/meta';
 import {
@@ -13,8 +14,9 @@ import {
 import { choose, currentScene, newGame, visibleChoices, type ChoiceView } from '../engine/state';
 import { interpolate, playerVars, sceneParagraphs, unquote, type ShownParagraph } from '../engine/text';
 import { STAT_NAMES, type GameState, type RollResult, type Scene, type StatName, type Story } from '../engine/types';
-import { displayName, STORIES, storyById } from '../stories';
-import { HOUSE_COLORS } from '../visuals/actors';
+import { displayName, STORIES, storyById, VOICES } from '../stories';
+import { HOUSE_COLORS, type Pose } from '../visuals/actors';
+import { adjacent } from '../visuals/areas';
 import { getPreset } from '../visuals/presets';
 import { castFor, Stage } from '../visuals/stage';
 import { add, clear, fill, h } from './dom';
@@ -83,7 +85,8 @@ export class App {
     this.stage.motion = s.animation;
     this.audio.setVolumes(s.volumes);
     this.audio.setEnabled(s.sound);
-    this.audio.voiceEnabled = s.voice;
+    this.audio.voices = s.voices;
+    this.audio.narrator = s.narrator;
     storeSettings(s);
   }
 
@@ -144,7 +147,7 @@ export class App {
     const cc = this.story.characterCreation ?? {};
     const houses = cc.houseChoice ?? Object.keys(HOUSE_COLORS);
     const total = cc.bonusPoints ?? 6;
-    let name = prev?.name ?? cc.nameInput?.default ?? 'Alex';
+    let name = prev?.name ?? cc.nameInput?.default ?? 'Kringer';
     let house = prev?.house ?? houses[0];
     const bonus: Record<StatName, number> = { courage: 0, wit: 0, kindness: 0, cunning: 0 };
     const base = this.story.initialState.stats;
@@ -159,7 +162,7 @@ export class App {
     const beginBtn = h('button.primary', {
       onclick: async () => {
         await this.wake();
-        const s = newGame(this.story, { name: name.trim() || cc.nameInput?.default || 'Alex', house }, bonus);
+        const s = newGame(this.story, { name: name.trim() || cc.nameInput?.default || 'Kringer', house }, bonus);
         this.startFromState(s, true);
       },
     }, t.begin);
@@ -323,12 +326,11 @@ export class App {
     const sc = currentScene(this.story, this.game);
     const p = this.paras[this.paraIdx++];
     const actor = sc.speaker ? 'speaker:' + sc.speaker : null;
+    this.poseFor(p.text, actor);
     if (p.dialogue && actor && this.stage.headPos(actor)) {
       this.showBubble(actor, unquote(p.text));
-      void voiceKey(sc.id, p.index, p.raw).then((key) => this.audio.say(key, unquote(p.text), sc.speaker!));
     } else {
       this.hideBubble();
-      this.audio.stopVoice();
       this.narration!.querySelectorAll('p.current').forEach((x) => x.classList.remove('current'));
       this.narration!.append(h('p.current', { class: p.dialogue ? 'speech' : '' }, p.text));
       this.narration!.scrollTop = this.narration!.scrollHeight;
@@ -341,7 +343,39 @@ export class App {
       );
       if (this.settings.autoAdvance) this.autoTimer = window.setTimeout(() => this.advance(), 1600 + p.text.length * 45);
     }
+    void this.speakParagraph(sc, p);
     this.publishRemote();
+  }
+
+  /** Poses from cues in the paragraph: the player casts or is scared; the speaker throws up a hand at an outburst. */
+  private poseFor(text: string, speaker: string | null) {
+    const t = text.toLowerCase();
+    const player: Pose = /\b(wand|spell|incantation|counter-spell|you cast|you raise)\b/.test(t)
+      ? 'cast'
+      : /\b(afraid|fear|terror|trembl\w*|shiver\w*|dread|your heart|freez\w*|scream\w*|panic\w*)\b/.test(t)
+        ? 'scared'
+        : 'idle';
+    this.stage.setPose('player', player);
+    if (speaker) this.stage.setPose(speaker, /!”|\b(cries|shouts|roars|snaps)\b/.test(text) ? 'surprised' : 'idle');
+  }
+
+  /** Reads a paragraph aloud (narrator and characters), and turns the page afterwards if that is switched on. */
+  private async speakParagraph(sc: Scene, p: ShownParagraph) {
+    const s = this.game!;
+    const vars = { name: s.player.name, house: s.player.house };
+    const segs = segmentParagraph(p.raw, VOICES.lines[`${sc.id}#${p.index}`], sc.speaker);
+    const parts = await Promise.all(
+      segs.map(async (seg, i) => {
+        const text = speakable(fillVars(seg.text, vars));
+        return { key: await voiceKey(sc.id, p.index, i, text), text, speaker: seg.speaker };
+      }),
+    );
+    const idx = this.paraIdx;
+    const finished = await this.audio.speak(parts);
+    // only if nothing else moved the text on meanwhile
+    if (finished && this.settings.advanceAfterVoice && this.paraIdx === idx && this.paraIdx < this.paras.length && !this.overlay) {
+      this.autoTimer = window.setTimeout(() => this.advance(), 500);
+    }
   }
 
   private showAll() {
@@ -408,11 +442,12 @@ export class App {
     if (this.settings.transitions === 'cut' || this.settings.animation !== 'full') return 'cut';
     if (explicit === 'walk') return 'walk';
     if (explicit) return 'cut';
-    // cut on time jumps, pov changes, endings and the loop; walk between ordinary places
+    // walk only between neighbouring places at the same time of day; cut on time jumps, pov changes,
+    // endings, the loop and anything far apart
     const a = getPreset(from.visual?.preset);
     const b = getPreset(to.visual?.preset);
-    if (looped || to.ending || !!from.pov !== !!to.pov || a.night !== b.night || a.area === b.area) return 'cut';
-    return 'walk';
+    if (looped || to.ending || !!from.pov !== !!to.pov || a.night !== b.night) return 'cut';
+    return adjacent(a.area, b.area) ? 'walk' : 'cut';
   }
 
   private showRoll(r: RollResult): Promise<void> {
@@ -525,7 +560,13 @@ export class App {
           allEndings(this.story).map((e) => h('li', { class: found.ids.has(e.id) ? 'got' : '', 'data-kind': found.ids.has(e.id) ? e.kind : '' }, found.ids.has(e.id) ? e.title : '? ? ?')),
         ),
         h('details.path', {}, h('summary', {}, t.yourPath), h('ol', {}, path)),
-        h('div.credits', {}, h('h3', {}, cr.title ?? this.story.title), (cr.lines ?? []).map((l) => h('p', {}, interpolate(l, vars)))),
+        h(
+          'div.credits',
+          {},
+          h('h3', {}, cr.title ?? this.story.title),
+          (cr.lines ?? []).map((l) => h('p', {}, interpolate(l, vars))),
+          h('p.voice-credits', {}, 'Voices made with Piper: Cori (LibriVox), Jenny (Dioco), Northern English Male (OpenSLR 83, CC BY-SA 4.0) and the CSTR VCTK Corpus (University of Edinburgh, CC BY 4.0). ', h('a', { href: 'voices/CREDITS.md', target: '_blank' }, 'Details')),
+        ),
         h(
           'div.row',
           {},
@@ -732,7 +773,9 @@ export class App {
       slider(t.master, 'master'),
       slider(t.ambience, 'ambience'),
       slider(t.effects, 'sfx'),
-      radio(t.voiceOn, 'voice', [[false, t.off], [true, t.on]]),
+      radio(t.narratorOn, 'narrator', [[true, t.on], [false, t.off]]),
+      radio(t.voiceOn, 'voices', [[true, t.on], [false, t.off]]),
+      radio(t.advanceAfterVoice, 'advanceAfterVoice', [[false, t.off], [true, t.on]]),
       slider(t.voice, 'voice'),
       h('p.keys', {}, t.keys),
     );
