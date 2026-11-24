@@ -125,7 +125,8 @@ try {
     const seen = new Set();
     for (let i = 0; i < 600 && !(await d.locator('.panel.end').count()); i++) {
       if (await d.locator('.roll').count()) { await d.locator('.roll').click().catch(() => {}); await d.waitForTimeout(300); continue; }
-      const turn = await d.locator('li.turn').textContent().catch(() => null);
+      // only read whose turn it is when there is one (textContent would otherwise wait for it)
+      const turn = (await d.locator('li.turn').count()) ? await d.locator('li.turn').textContent() : null;
       if (turn) seen.add(turn.split("'")[0]);
       const ch = d.locator('button.choice:not([disabled])');
       const n = await ch.count();
