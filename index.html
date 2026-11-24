@@ -6,220 +6,214 @@
 		<title>Kristian Gøystdal</title>
 		<link
 			rel="icon"
-			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128640;</text></svg>"
+			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#127922;</text></svg>"
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap"
 		/>
 		<style>
+			/* A games table: dark green felt, each page its own coloured tile with a drawn icon. */
 			:root {
-				--bg: #101317;
-				--panel: #171b21;
-				--panel-2: #1d2229;
-				--border: #2a303a;
-				--text: #e9edf2;
-				--muted: #8b95a3;
-				--accent: #e3350d;
-				--accent-2: #3b6ceb;
+				--felt: #123a2f;
+				--felt-deep: #0b2620;
+				--chalk: #eef3e8;
+				--chalk-soft: #a9c2b4;
+				--focus: #ffe08a;
 			}
 			* {
 				margin: 0;
 				padding: 0;
 				box-sizing: border-box;
 			}
-			html,
-			body {
-				height: 100%;
+			html {
+				min-height: 100%;
+				background: var(--felt-deep);
 			}
 			body {
-				background: var(--bg);
-				color: var(--text);
-				font-family:
-					system-ui,
-					-apple-system,
-					"Segoe UI",
-					Roboto,
-					sans-serif;
+				min-height: 100vh;
+				color: var(--chalk);
+				font-family: "Bricolage Grotesque", system-ui, sans-serif;
+				font-optical-sizing: auto;
+				/* felt: a soft light in the middle and a fine woven grain */
+				background:
+					radial-gradient(120% 80% at 50% 0%, #1c5443 0%, transparent 60%),
+					repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 2px, transparent 2px 5px),
+					var(--felt);
+				padding: clamp(28px, 7vh, 80px) clamp(18px, 5vw, 48px) 32px;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				padding: clamp(32px, 8vh, 90px) 20px 40px;
 			}
-
+			main {
+				width: 100%;
+				max-width: 880px;
+			}
 			header {
-				text-align: center;
-				margin-bottom: clamp(28px, 6vh, 56px);
+				margin-bottom: clamp(24px, 5vh, 48px);
 			}
 			h1 {
-				font-size: clamp(26px, 5vw, 38px);
-				letter-spacing: 0.3px;
-			}
-			h1 span {
-				color: var(--accent);
+				font-size: clamp(2.6rem, 8vw, 4.6rem);
+				font-weight: 800;
+				line-height: 0.95;
+				letter-spacing: -0.03em;
+				font-variation-settings: "opsz" 96;
 			}
 			.subtitle {
-				color: var(--muted);
-				margin-top: 8px;
-				font-size: 15px;
+				margin-top: 0.7rem;
+				color: var(--chalk-soft);
+				font-size: 1.1rem;
+				max-width: 34em;
 			}
-
-			.pages {
-				width: 100%;
-				max-width: 640px;
-				display: flex;
-				flex-direction: column;
-				gap: 14px;
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+				gap: clamp(14px, 2.4vw, 22px);
 			}
-
-			.page-card {
-				display: flex;
-				align-items: center;
-				gap: 16px;
-				background: var(--panel);
-				border: 1px solid var(--border);
-				border-radius: 12px;
-				padding: 18px 20px;
+			.tile {
+				position: relative;
+				display: grid;
+				grid-template-rows: auto auto 1fr;
+				align-content: start;
+				min-height: 230px;
+				padding: 22px 24px 24px;
+				border-radius: 22px 22px 22px 6px;
+				background: var(--tile);
+				color: var(--ink);
 				text-decoration: none;
-				color: var(--text);
-				transition:
-					transform 0.15s ease,
-					border-color 0.15s ease,
-					background 0.15s ease;
+				/* the tile sits on the felt: a hard offset edge rather than a soft shadow */
+				box-shadow:
+					inset 0 1px 0 rgba(255, 255, 255, 0.35),
+					0 6px 0 rgba(0, 0, 0, 0.28);
+				transition: transform 0.18s ease, box-shadow 0.18s ease;
 			}
-			.page-card:hover {
-				transform: translateY(-2px);
-				border-color: var(--accent-2);
-				background: var(--panel-2);
+			.icon {
+				width: 72px;
+				height: 72px;
+				fill: none;
+				stroke: var(--ink);
+				stroke-width: 3;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+				transform-origin: 50% 60%;
+				transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
 			}
-			.page-emoji {
-				font-size: 30px;
-				line-height: 1;
-				flex-shrink: 0;
+			.icon .hi {
+				fill: color-mix(in srgb, var(--tile) 55%, white);
 			}
-			.page-info {
-				flex: 1;
-				min-width: 0;
+			.icon .dot,
+			.icon .spark {
+				fill: var(--ink);
 			}
-			.page-title {
-				font-size: 17px;
-				font-weight: 600;
+			.icon .spark {
+				stroke-width: 1.5;
 			}
-			.page-desc {
-				color: var(--muted);
-				font-size: 13.5px;
-				margin-top: 3px;
+			.icon .dash {
+				stroke-dasharray: 2 6;
 			}
-			.page-arrow {
-				color: var(--muted);
-				font-size: 18px;
-				flex-shrink: 0;
+			.tile-title {
+				margin-top: 18px;
+				font-size: clamp(1.5rem, 3.2vw, 1.9rem);
+				font-weight: 800;
+				letter-spacing: -0.015em;
+				line-height: 1.05;
 			}
-
+			.tile-desc {
+				margin-top: 0.5rem;
+				font-size: 1rem;
+				line-height: 1.45;
+				max-width: 32em;
+				opacity: 0.82;
+			}
+			.tile:hover,
+			.tile:focus-visible {
+				transform: translateY(-3px);
+				box-shadow:
+					inset 0 1px 0 rgba(255, 255, 255, 0.35),
+					0 9px 0 rgba(0, 0, 0, 0.28);
+			}
+			.tile:hover .icon,
+			.tile:focus-visible .icon {
+				transform: rotate(-8deg) scale(1.08);
+			}
+			.tile:active {
+				transform: translateY(2px);
+				box-shadow:
+					inset 0 1px 0 rgba(255, 255, 255, 0.35),
+					0 3px 0 rgba(0, 0, 0, 0.28);
+			}
+			.tile:focus-visible {
+				outline: 3px solid var(--focus);
+				outline-offset: 4px;
+			}
 			footer {
 				margin-top: auto;
-				padding-top: 50px;
-				color: var(--muted);
-				font-size: 12.5px;
-				text-align: center;
+				padding-top: 48px;
+				font-size: 0.95rem;
 			}
 			footer a {
-				color: var(--accent-2);
-				text-decoration: none;
+				color: var(--chalk-soft);
+				text-underline-offset: 3px;
 			}
-			footer a:hover {
-				text-decoration: underline;
+			footer a:hover,
+			footer a:focus-visible {
+				color: var(--chalk);
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.tile,
+				.icon {
+					transition: none;
+				}
+				.tile:hover .icon,
+				.tile:focus-visible .icon {
+					transform: none;
+				}
 			}
 		</style>
 	</head>
 	<body>
-		<header>
-			<h1>Kristian <span>Gøystdal</span></h1>
-			<p class="subtitle">A small collection of pages</p>
-		</header>
+		<main>
+			<header>
+				<h1>Kristian Gøystdal</h1>
+				<p class="subtitle">Games and tools I've made, mostly for playing with friends.</p>
+			</header>
 
-		<div class="pages">
-			<a class="page-card" href="pokedex/">
-				<span class="page-emoji">📕</span>
-				<span class="page-info">
-					<span class="page-title">Pokédex Tracker</span>
-					<span class="page-desc"
-						>Track which Pokémon you've caught, grouped by generation, with
-						cloud sync.</span
-					>
-				</span>
-				<span class="page-arrow">→</span>
+			<div class="grid">
+		<!-- pages:start (generated by homepage/build.mjs from homepage/pages.json) -->
+			<a class="tile" href="pokemon-tracker/" style="--tile:#f2c14e;--ink:#3b2a08">
+				<svg class="icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="44" height="50" rx="5"/><path d="M18 8v50"/><circle cx="14" cy="18" r="1.6" class="dot"/><circle cx="14" cy="33" r="1.6" class="dot"/><circle cx="14" cy="48" r="1.6" class="dot"/><rect x="24" y="15" width="11" height="15" rx="2"/><rect x="39" y="15" width="11" height="15" rx="2" class="hi"/><rect x="24" y="35" width="11" height="15" rx="2"/><rect x="39" y="35" width="11" height="15" rx="2"/><path d="M44.5 19.5l1.3 2.7 3 .4-2.2 2 .5 2.9-2.6-1.4-2.6 1.4.5-2.9-2.2-2 3-.4z" class="spark"/></svg>
+				<span class="tile-title">Kortbok</span>
+				<span class="tile-desc">Spor Pokémon-kortsamlingen din og hvor mye du har tjent på salg, importert fra en Collectr-eksport.</span>
 			</a>
 
-			<a class="page-card" href="pokemon-tracker/">
-				<span class="page-emoji">📚</span>
-				<span class="page-info">
-					<span class="page-title">Kortbok</span>
-					<span class="page-desc"
-						>Spor Pokémon-kortsamlingen din og hvor mye du har tjent på
-						salg, importert fra en Collectr-eksport.</span
-					>
-				</span>
-				<span class="page-arrow">→</span>
+			<a class="tile" href="hide-and-seek/" style="--tile:#e8664a;--ink:#2e0d06">
+				<svg class="icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 50c8 0 10-12 18-12s9 10 17 10 8-22 13-30" class="dash"/><circle cx="8" cy="50" r="4"/><circle cx="26" cy="38" r="4"/><circle cx="43" cy="48" r="4"/><path d="M38 15c3-5 8-7 12-7s9 2 12 7c-3 5-8 7-12 7s-9-2-12-7z" class="hi"/><circle cx="50" cy="15" r="3" class="dot"/></svg>
+				<span class="tile-title">Hide and Seek Oslo</span>
+				<span class="tile-desc">Spørsmålstracker for Jetlag Hide and Seek på Oslo T-bane: kart, spørsmålslogg og mulige stasjoner.</span>
 			</a>
 
-			<a class="page-card" href="hide-and-seek/">
-				<span class="page-emoji">🙈</span>
-				<span class="page-info">
-					<span class="page-title">Hide and Seek Oslo</span>
-					<span class="page-desc"
-						>Spørsmålstracker for Jetlag Hide and Seek på Oslo T-bane:
-						kart, spørsmålslogg og mulige stasjoner.</span
-					>
-				</span>
-				<span class="page-arrow">→</span>
+			<a class="tile" href="hollow-bell/" style="--tile:#7d7fd6;--ink:#141238">
+				<svg class="icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8v5"/><path d="M20 40V28a12 12 0 0124 0v12l5 7H15z" class="hi"/><path d="M27 52a5 5 0 0010 0"/><path d="M8 24c-2 5-2 11 0 16M56 24c2 5 2 11 0 16M3 20c-4 8-4 16 0 24M61 20c4 8 4 16 0 24"/></svg>
+				<span class="tile-title">The Hollow Bell</span>
+				<span class="tile-desc">A choose-your-own-adventure in watercolour, with choices, dice and many endings. Your phone can be the remote.</span>
 			</a>
 
-			<a class="page-card" href="countdown/">
-				<span class="page-emoji">🚂</span>
-				<span class="page-info">
-					<span class="page-title" id="countdownTitle">Countdown</span>
-					<span class="page-desc" id="countdownDesc"
-						>Countdown to a video from an Interrail trip across Europe.</span
-					>
-				</span>
-				<span class="page-arrow">→</span>
+			<a class="tile" href="rangeringshatten/" style="--tile:#b48ad8;--ink:#2a1340">
+				<svg class="icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M14 36c5-1 9-12 13-20s9-10 12-9c-2 4-1 9 1 14s5 11 10 15z" class="hi"/><path d="M8 38c8 3 40 3 48 0"/><rect x="25" y="44" width="14" height="14" rx="1"/><rect x="11" y="49" width="14" height="9" rx="1"/><rect x="39" y="52" width="14" height="6" rx="1"/><path d="M32 48v5"/></svg>
+				<span class="tile-title">Rangeringshatten</span>
+				<span class="tile-desc">Rangér Harry Potter sammen: hver på sin mobil, og så sammenligner dere på TV-en.</span>
 			</a>
-
-			<a class="page-card" href="pokemon_sales/">
-				<span class="page-emoji">💰</span>
-				<span class="page-info">
-					<span class="page-title">Pokémon Bulk-pakker</span>
-					<span class="page-desc"
-						>Internal tool for planning and pricing Pokémon bulk sale
-						packs from a Collectr export.</span
-					>
-				</span>
-				<span class="page-arrow">→</span>
-			</a>
-		</div>
+			<!-- pages:end -->
+			</div>
+		</main>
 
 		<footer>
-			<a href="https://github.com/kristiangoystdal" target="_blank" rel="noopener"
-				>github.com/kristiangoystdal</a
-			>
+			<a href="https://github.com/kristiangoystdal" target="_blank" rel="noopener">github.com/kristiangoystdal</a>
 		</footer>
 
-		<script>
-			fetch("countdown/config.json")
-				.then((res) => (res.ok ? res.json() : null))
-				.then((config) => {
-					if (!config) return;
-					const plainHeadline = config.headline.replace(/<[^>]+>/g, "");
-					document.getElementById("countdownTitle").textContent =
-						plainHeadline;
-					const target = new Date(config.target);
-					const dateLabel = isNaN(target)
-						? config.footerLabel
-						: target.toLocaleString(undefined, {
-								dateStyle: "medium",
-								timeStyle: "short",
-							});
-					document.getElementById("countdownDesc").textContent =
-						`Counting down to ${dateLabel}.`;
-				})
-				.catch(() => {});
-		</script>
+		<!-- scripts:start (generated by homepage/build.mjs from homepage/pages.json) -->
+		<!-- scripts:end -->
 	</body>
 </html>

@@ -154,3 +154,42 @@ describe('rangeringshatten', () => {
     await assertFails(get(ref(ada(), 'rangeringshatten')))
   })
 })
+
+/**
+ * The Hollow Bell (../hollow-bell-src) shares the database. The PC writes the room in hollowbell/<CODE>,
+ * the phone remote only writes hollowbell/<CODE>/input.
+ */
+const HB = 'hollowbell/K7QM2P'
+const hbRoom = (host: string) => ({ host, created: 1, state: '{"rev":1}' })
+const hbInput = (from: string, extra: Record<string, unknown> = {}) => ({ choiceId: '2', rev: 1, from, at: 1, ...extra })
+
+describe('hollowbell', () => {
+  it('the PC creates and owns its room', async () => {
+    await assertFails(set(ref(nobody(), HB), hbRoom('ada')))
+    await assertFails(set(ref(ada(), HB), hbRoom('bo')))
+    await assertSucceeds(set(ref(ada(), HB), hbRoom('ada')))
+    await assertFails(set(ref(bo(), HB + '/state'), '{}'))
+    await assertSucceeds(set(ref(ada(), HB + '/state'), '{"rev":2}'))
+    await assertFails(set(ref(ada(), 'hollowbell/abc'), hbRoom('ada')))
+  })
+  it('a phone can only write input, as itself, in a room that exists', async () => {
+    await assertFails(set(ref(bo(), HB + '/input'), hbInput('bo')))
+    await set(ref(ada(), HB), hbRoom('ada'))
+    await assertSucceeds(set(ref(bo(), HB + '/input'), hbInput('bo')))
+    await assertFails(set(ref(bo(), HB + '/input'), hbInput('ada')))
+    await assertFails(set(ref(bo(), HB + '/input'), hbInput('bo', { extra: 1 })))
+    await assertFails(set(ref(bo(), HB + '/input'), hbInput('bo', { choiceId: 'x'.repeat(40) })))
+    await assertFails(set(ref(nobody(), HB + '/input'), hbInput('bo')))
+  })
+  it('only signed-in users can read a room, and rooms cannot be listed', async () => {
+    await set(ref(ada(), HB), hbRoom('ada'))
+    await assertSucceeds(get(ref(bo(), HB)))
+    await assertFails(get(ref(nobody(), HB)))
+    await assertFails(get(ref(ada(), 'hollowbell')))
+  })
+  it('the host can remove the room when the game closes', async () => {
+    await set(ref(ada(), HB), hbRoom('ada'))
+    await assertFails(remove(ref(bo(), HB)))
+    await assertSucceeds(remove(ref(ada(), HB)))
+  })
+})

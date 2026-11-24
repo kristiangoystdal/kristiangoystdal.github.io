@@ -1,0 +1,30 @@
+{
+  "_note": "Who speaks each quoted piece, by sceneId#paragraphIndex, where it differs from the scene's speaker. Narrator = read by the narrator (quoted writing or a single quoted word). Voices per speaker: tools/voices/voices.json.",
+  "lines": {
+    "r3_morning#0": ["Narrator"],
+    "a2_sneak#0": ["Narrator"],
+    "a4_found#0": ["Narrator"],
+    "b_flash2#1": ["Wall voice"],
+    "c2_ledger#0": ["Narrator"],
+    "c2_caught#0": ["Ashgrove", "Ashgrove"],
+    "ev_mirela_ashgrove#0": ["Mirela"],
+    "ev_mirela_ashgrove#1": ["Ashgrove"],
+    "ev_quill_mirela#1": ["Mirela", "Mirela"],
+    "ev_harrow_quill#0": ["Harrow", "Quill"],
+    "ev_vale_ashgrove#0": ["Ashgrove", "Ashgrove"],
+    "ev_quill_ashgrove#0": ["Quill"],
+    "ev_mirela_key#0": ["Mirela", "Mirela"],
+    "ev_harrow_ashgrove#0": ["Harrow", "Harrow"],
+    "n4_clapper#1": ["Ashgrove", "Ashgrove"],
+    "n4_quill#2": ["Mirela"],
+    "n4_quill#3": ["Ashgrove", "Ashgrove"],
+    "ending_waking_together#1": ["Pip"],
+    "ending_waking#2": ["Pip", "Pip"],
+    "ending_cantors_rest#1": ["Vale", "Vale"],
+    "ending_cantors_rest#5": ["Vale", "Vale"],
+    "ending_cantors_rest#6": ["Vale", "Vale"],
+    "ending_broken_bell#4": ["Mirela"],
+    "ending_broken_bell#5": ["Mirela"],
+    "ending_expelled#0": ["Headmaster"]
+  }
+}

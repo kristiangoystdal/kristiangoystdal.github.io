@@ -1,0 +1,3665 @@
+[
+ {
+  "key": "5bb713df27f9",
+  "scene": "intro_title",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Rain on old glass. A castle of a thousand windows, and only a few of them lit."
+ },
+ {
+  "key": "85a790a2d830",
+  "scene": "intro_title",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Every old school keeps a secret. This one keeps it under a tower, and the secret has begun to ring."
+ },
+ {
+  "key": "daf39c552f52",
+  "scene": "intro_arrival",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You, Kringer, of Gryffindor, have been at the castle long enough to stop getting lost on the way to breakfast, and not nearly long enough to know where it keeps its shadows."
+ },
+ {
+  "key": "fbc22b36f707",
+  "scene": "intro_arrival",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You, Kringer, of Slytherin, have been at the castle long enough to stop getting lost on the way to breakfast, and not nearly long enough to know where it keeps its shadows."
+ },
+ {
+  "key": "7965711051d6",
+  "scene": "intro_arrival",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You, Kringer, of Ravenclaw, have been at the castle long enough to stop getting lost on the way to breakfast, and not nearly long enough to know where it keeps its shadows."
+ },
+ {
+  "key": "74408c94d318",
+  "scene": "intro_arrival",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You, Kringer, of Hufflepuff, have been at the castle long enough to stop getting lost on the way to breakfast, and not nearly long enough to know where it keeps its shadows."
+ },
+ {
+  "key": "b46e5ac467b5",
+  "scene": "intro_arrival",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Dinner tonight was loud and warm, the way it always is. You laughed at something. You fell asleep to the sound of rain."
+ },
+ {
+  "key": "95abf6c67eef",
+  "scene": "intro_arrival",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Whatever happens next, you will remember this as the last ordinary evening."
+ },
+ {
+  "key": "dc50eba02957",
+  "scene": "p01_midnight",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The clock above the Gryffindor dormitory fireplace shows a few minutes past midnight when you wake. Something has pulled you out of sleep, and it takes a moment to understand that it is a sound: a deep, hollow note, like a bell rung at the bottom of a lake."
+ },
+ {
+  "key": "ed379db35001",
+  "scene": "p01_midnight",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The clock above the Slytherin dormitory fireplace shows a few minutes past midnight when you wake. Something has pulled you out of sleep, and it takes a moment to understand that it is a sound: a deep, hollow note, like a bell rung at the bottom of a lake."
+ },
+ {
+  "key": "dd6fd2ed5d84",
+  "scene": "p01_midnight",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The clock above the Ravenclaw dormitory fireplace shows a few minutes past midnight when you wake. Something has pulled you out of sleep, and it takes a moment to understand that it is a sound: a deep, hollow note, like a bell rung at the bottom of a lake."
+ },
+ {
+  "key": "ca06d0ff9f79",
+  "scene": "p01_midnight",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The clock above the Hufflepuff dormitory fireplace shows a few minutes past midnight when you wake. Something has pulled you out of sleep, and it takes a moment to understand that it is a sound: a deep, hollow note, like a bell rung at the bottom of a lake."
+ },
+ {
+  "key": "cac6720b90f7",
+  "scene": "p01_midnight",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Nobody else stirs. In the next bed Pip Marlowe lies with his mouth slightly open, breathing slow and even, one hand curled around the wrapper of a chocolate frog he must have fallen asleep eating."
+ },
+ {
+  "key": "0f2bc0eee8df",
+  "scene": "p01_midnight",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You have stood in this room before. You remember how this night ends, and you remember what it cost."
+ },
+ {
+  "key": "a73ef7f50ada",
+  "scene": "p01_midnight",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The note comes again. This time you feel it in your breastbone, as if the castle has a pulse and has just skipped a beat."
+ },
+ {
+  "key": "d6c6e0f7802a",
+  "scene": "p02_pip",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You shake Pip by the shoulder. His skin is cold as a stone in a stream, and he does not respond. His eyes move fast beneath the lids, the way eyes do when someone is dreaming something they cannot climb out of."
+ },
+ {
+  "key": "107564a9ab3e",
+  "scene": "p02_pip",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You whisper his name three times. Nothing. But when the bell tolls again, his fingers tighten on the chocolate frog wrapper, as if something has taken hold of him and he is holding on."
+ },
+ {
+  "key": "f03d5ed6cc1d",
+  "scene": "p03_window",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Beyond the window the grounds lie silver under the moon. High above the rooftops, at the top of Hollow Tower, the old clock tower that has been sealed for fifty years, a pale light flickers."
+ },
+ {
+  "key": "b5222537cbdc",
+  "scene": "p03_window",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Each time the bell tolls the light pulses, and a thin mist seeps out of the tower windows and drifts down toward the dormitories like breath on cold glass."
+ },
+ {
+  "key": "2069588ae383",
+  "scene": "p03_window",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You count the tolls. Seven. Then silence. Then it begins again, and you notice that the gaps are getting shorter."
+ },
+ {
+  "key": "59614ff1f0ec",
+  "scene": "p04_choice",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Pip does not wake. The whole castle sleeps too deeply, too evenly, and somewhere above it the bell keeps its patient time. You have three options, and none of them is safe."
+ },
+ {
+  "key": "ca21d94c7d9b",
+  "scene": "r1_stairs",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You slip into the corridors with your wand in your fist and no light. The castle is another place at night. Portraits breathe in their frames, suits of armour seem to be listening, and the air tastes of cold iron."
+ },
+ {
+  "key": "538a8500ce13",
+  "scene": "r1_stairs",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "At the foot of the tower stairs the silence thickens. The sound of your footsteps leaves your feet and does not arrive at your ears, as if something is eating it."
+ },
+ {
+  "key": "ea76e5a36752",
+  "scene": "r1_stairs",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ahead, around the corner, a light swings. Someone is coming."
+ },
+ {
+  "key": "6a4a8eda89fa",
+  "scene": "r1_split",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "From the shadow of an alcove you watch two lights part ways. One is a warm, swinging lantern heading down toward the kitchen stairs. The other is no light at all: a hooded figure with a ring of keys that chimes faintly, crossing the courtyard arch toward the tower."
+ },
+ {
+  "key": "85947ef230fe",
+  "scene": "r1_split",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You have time to follow only one. Or to go straight to the door they’re both avoiding."
+ },
+ {
+  "key": "e9cadaf60cf1",
+  "scene": "r1_quill_meet",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The lantern belongs to an old man in a patched coat, a brass spyglass hanging on a cord around his neck. He stops as though he had been expecting you, then seems embarrassed to be caught expecting."
+ },
+ {
+  "key": "8d39d82c4074",
+  "scene": "r1_quill_meet",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Quill",
+  "tone": "quiet",
+  "text": "Oh. Oh, you hear it too. Forgive me, I’m, Quill. Night archivist. Nobody asks what an archivist does at night, which is lucky, because mostly it’s listening."
+ },
+ {
+  "key": "0c3013b47f38",
+  "scene": "r1_quill_meet",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He lowers his voice."
+ },
+ {
+  "key": "028f0c172567",
+  "scene": "r1_quill_meet",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Quill",
+  "tone": "quiet",
+  "text": "I have waited fifty years for someone else to hear it."
+ },
+ {
+  "key": "6a4313609a2d",
+  "scene": "r1_quill_meet",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He takes your elbow with surprising firmness and steers you away from the tower."
+ },
+ {
+  "key": "8fa8a1877530",
+  "scene": "r1_quill_meet",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Not tonight. The bell is hungry, and you are rather small to feed it. Come to the archive tomorrow. Bring questions. Bring tea, if you can steal any."
+ },
+ {
+  "key": "dff8223e8f75",
+  "scene": "r1_figure",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You keep to the shadows and follow the chiming keys. The figure unlocks the tower door without hesitation, slips inside, and pulls it shut behind them. You wait. The bell tolls above you, twice, and the door opens again."
+ },
+ {
+  "key": "6f22b8c63db4",
+  "scene": "r1_figure",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The figure comes out coughing into a sleeve, a hard dry cough you almost recognise, and locks up. They pass your hiding place close enough that you smell pipe smoke and lamp oil. You never see a face."
+ },
+ {
+  "key": "e66788e7ae00",
+  "scene": "r1_door",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The tower door is black oak banded with iron, and cold radiates from it like winter from a cellar. Your hand is on the handle before you decide to move it."
+ },
+ {
+  "key": "35b1ac323540",
+  "scene": "r1_door",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Beneath your palm the wood hums, low and patient, and the hum finds the bones of your wrist. For a moment you hear something that is not the bell. A voice, almost: a lullaby with its words worn smooth. Then you snatch your hand away and the silence rushes back in."
+ },
+ {
+  "key": "d763f8623e12",
+  "scene": "r1_caught",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "A lantern beam catches you square in the chest."
+ },
+ {
+  "key": "6361bd764806",
+  "scene": "r1_caught",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "Well, well."
+ },
+ {
+  "key": "cc11bbfd53cc",
+  "scene": "r1_caught",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "It’s Harrow, the caretaker, lamp in one hand and a face that hasn’t smiled since before you were born. His coat smells of pipe smoke."
+ },
+ {
+  "key": "c58858339f62",
+  "scene": "r1_caught",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "Out of bed past midnight, Kringer. Explain yourself."
+ },
+ {
+  "key": "6eba3313841a",
+  "scene": "r1_truth",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You tell him everything: Pip, the bell, the light on the tower. Harrow listens without a word, his jaw working. When you finish he lets out a long breath through his nose."
+ },
+ {
+  "key": "c264bda487b9",
+  "scene": "r1_truth",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "The bell has rung before,"
+ },
+ {
+  "key": "cdef9e8bccc9",
+  "scene": "r1_truth",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "92be5f481c4e",
+  "scene": "r1_truth",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "I was young. I told myself I dreamed it."
+ },
+ {
+  "key": "f4906ea6b005",
+  "scene": "r1_truth",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He jerks his head toward the stairs."
+ },
+ {
+  "key": "467b36356321",
+  "scene": "r1_truth",
+  "index": 1,
+  "seg": 4,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "Get to bed, Kringer. And when you can, talk to Quill in the archive before you talk to anyone else with a title."
+ },
+ {
+  "key": "48208dcab276",
+  "scene": "r1_detention",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Harrow looks straight through you."
+ },
+ {
+  "key": "b69a58fda154",
+  "scene": "r1_detention",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "Sleepwalkers don’t carry wands."
+ },
+ {
+  "key": "07434129c76e",
+  "scene": "r1_detention",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You spend the rest of the night polishing brass plaques in the trophy room while the bell tolls faintly through the walls."
+ },
+ {
+  "key": "c4cdd65d1161",
+  "scene": "r1_detention",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "By dawn your name is in his book: first warning. One more, and a letter goes home."
+ },
+ {
+  "key": "b2f0b4b3ba94",
+  "scene": "r2_mirela",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela Voss, sixth-year prefect, opens her door in a dressing gown, hair wild, a book already open in one hand. She does not tell you to go back to bed. She listens to every word with her eyebrows slowly rising."
+ },
+ {
+  "key": "b94891fc0abb",
+  "scene": "r2_mirela",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "Four last night. Six tonight,"
+ },
+ {
+  "key": "df5605de410d",
+  "scene": "r2_mirela",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says."
+ },
+ {
+  "key": "a7dbabfe17d0",
+  "scene": "r2_mirela",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "Asleep, all of them. Calm as lambs, cold as slate. The staff are calling it a stomach bug."
+ },
+ {
+  "key": "95509c24b5e1",
+  "scene": "r2_mirela",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Her mouth thins."
+ },
+ {
+  "key": "99586e3d8589",
+  "scene": "r2_mirela",
+  "index": 1,
+  "seg": 4,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I call it something else."
+ },
+ {
+  "key": "54c7a59e6beb",
+  "scene": "r2_mirela",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She looks at you properly for the first time."
+ },
+ {
+  "key": "1e6d2ed0d63a",
+  "scene": "r2_mirela",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "You heard the bell. Most people don’t. That makes you either very useful or very unlucky. Possibly both."
+ },
+ {
+  "key": "556981d7ebf5",
+  "scene": "r2_walk",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "She takes you the long way, through the library gallery and down the servants’ stair, because she has already mapped which corridors the portraits gossip in. At the foot of Hollow Tower a door of black oak waits, banded with iron."
+ },
+ {
+  "key": "64522c25a64c",
+  "scene": "r2_walk",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela opens her notebook and reads off times in a flat voice."
+ },
+ {
+  "key": "654fe7476c68",
+  "scene": "r2_walk",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "dry",
+  "text": "Tolls every eleven minutes, sometimes ten. It’s speeding up."
+ },
+ {
+  "key": "021e12ec430e",
+  "scene": "r2_walk",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "She studies the door."
+ },
+ {
+  "key": "383e6cec8bbb",
+  "scene": "r2_walk",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I’d like to know if it’s locked or just unwelcoming."
+ },
+ {
+  "key": "9d6301cd7fde",
+  "scene": "r2_felt",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Your fingers close on the iron ring and the door hums through your arm. Something pulls, gently, like a current under smooth water. You stand there and do not let go for far too long, and then you do."
+ },
+ {
+  "key": "d606c006da61",
+  "scene": "r2_felt",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "quiet",
+  "text": "Interesting,"
+ },
+ {
+  "key": "b0ec0bf1e9f4",
+  "scene": "r2_felt",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Mirela quietly, though her face has lost its colour."
+ },
+ {
+  "key": "e97e8595d597",
+  "scene": "r2_felt",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "quiet",
+  "text": "You held on longer than I would have."
+ },
+ {
+  "key": "b52ee41f2e0b",
+  "scene": "r2_dragged",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The hum finds you before you have finished reaching for the handle. The edges of the corridor blur and your knees go soft. Mirela catches you by the collar and hauls you from the door like a kitten from a pond."
+ },
+ {
+  "key": "8edd96dd91da",
+  "scene": "r2_dragged",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "That,"
+ },
+ {
+  "key": "c1d624729e7d",
+  "scene": "r2_dragged",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "she says through her teeth,"
+ },
+ {
+  "key": "0e9e7d0a8736",
+  "scene": "r2_dragged",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "is not a lock."
+ },
+ {
+  "key": "03114fbb0966",
+  "scene": "r2_spell",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela whispers a lock-breaker and the air before the door sours. The spell comes back on itself as a puff of cold dust, and her wand hand goes numb. She flexes her fingers, quiet and calculating."
+ },
+ {
+  "key": "598868630b31",
+  "scene": "r2_spell",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "Well,"
+ },
+ {
+  "key": "abaf6b76bdef",
+  "scene": "r2_spell",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says."
+ },
+ {
+  "key": "a1296b0d8d48",
+  "scene": "r2_spell",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "It listens, at least."
+ },
+ {
+  "key": "898f5e91fc64",
+  "scene": "r4_wing",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "At dawn you stand in the doorway of the hospital wing and stop. Every bed is full, and every sleeper is peaceful. Matron Hale moves between them with a clipboard and an expression like a closed door."
+ },
+ {
+  "key": "c75b76aa1971",
+  "scene": "r4_wing",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Matron Hale",
+  "tone": "neutral",
+  "text": "Sleeping sickness,"
+ },
+ {
+  "key": "f4d3d8491821",
+  "scene": "r4_wing",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says before you can ask."
+ },
+ {
+  "key": "0e5258d139ee",
+  "scene": "r4_wing",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Matron Hale",
+  "tone": "neutral",
+  "text": "Nothing to be done but rest and fluids. Professor Ashgrove has been very kind about it."
+ },
+ {
+  "key": "0d7ddc04077e",
+  "scene": "r4_wing",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Her eyes flick away on the last word."
+ },
+ {
+  "key": "731700fe31de",
+  "scene": "r4_chart",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Names, dates, times. And in the margin, in a neat professor’s hand, a column of numbers that climbs by two each night: 4, 6, 8. Beside it, circled twice, the number 13."
+ },
+ {
+  "key": "ee3356e5645c",
+  "scene": "r4_matron",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Matron Hale",
+  "tone": "quiet",
+  "text": "I’m afraid,"
+ },
+ {
+  "key": "9c43418763e0",
+  "scene": "r4_matron",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says at last, very quietly,"
+ },
+ {
+  "key": "6bc90319b28d",
+  "scene": "r4_matron",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Matron Hale",
+  "tone": "quiet",
+  "text": "that I’ve seen this before. Fifty years ago. I was a junior nurse in this wing. Nobody wrote it down. Nobody said a word."
+ },
+ {
+  "key": "7c9650ca8f33",
+  "scene": "r4_matron",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She straightens."
+ },
+ {
+  "key": "2e8f13793b27",
+  "scene": "r4_matron",
+  "index": 0,
+  "seg": 4,
+  "speaker": "Matron Hale",
+  "tone": "neutral",
+  "text": "Go and eat, Kringer. And find someone who remembers."
+ },
+ {
+  "key": "36da9df1c364",
+  "scene": "r4_shooed",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Matron Hale",
+  "tone": "dry",
+  "text": "Out,"
+ },
+ {
+  "key": "76205fd08879",
+  "scene": "r4_shooed",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Matron Hale, tight-lipped, and she steers you into the corridor with a hand between your shoulder blades. Her hand is shaking."
+ },
+ {
+  "key": "2403b4df1390",
+  "scene": "r3_morning",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Day two. The Great Hall is half empty. Eight chairs stand unused along the house tables, and nobody talks at full voice. The staff say the word illness often enough to make it sound rehearsed."
+ },
+ {
+  "key": "061f412742ab",
+  "scene": "r3_morning",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Pip’s chair is one of the empty ones. Someone has left his spoon beside the plate, as if he might be back for it."
+ },
+ {
+  "key": "ed622ff0b546",
+  "scene": "r3_morning",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "At the staff table Professor Corvin Ashgrove, who teaches Defence Against the Dark Arts, sits with a cup of tea and a face you would like to trust. He catches your eye and nods, mild and kind."
+ },
+ {
+  "key": "f53ae8989c82",
+  "scene": "r3_watch",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You pretend to read and watch the staff table over the edge of the page. Ashgrove’s tea has not been touched. His eyes keep drifting to the ceiling. Matron Hale isn’t eating either. And one chair stands empty: the caretaker’s. Harrow, who never misses a meal, is somewhere else."
+ },
+ {
+  "key": "82c914f09e41",
+  "scene": "r3_ashgrove",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Professor Ashgrove listens with his whole face, nodding in all the right places, and when you finish he lays a hand on your shoulder."
+ },
+ {
+  "key": "1b07fdf68fdb",
+  "scene": "r3_ashgrove",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "You were right to come to me, Kringer. This is something for adults to handle."
+ },
+ {
+  "key": "ed4f1f30a7f2",
+  "scene": "r3_ashgrove",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "His gaze drifts upward for a heartbeat, to the ceiling, to the tower beyond it, and returns."
+ },
+ {
+  "key": "4435893460de",
+  "scene": "r3_ashgrove",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "I need your word that you won’t go after that bell on your own, and that you won’t draw other students into this. For their safety. And yours."
+ },
+ {
+  "key": "f680c5fabef7",
+  "scene": "r3_mirela",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela sits alone on the courtyard wall with a notebook full of times and the look of a person who has not slept since Monday. She raises an eyebrow as you tell her, then writes something down."
+ },
+ {
+  "key": "44b1c3c98a67",
+  "scene": "r3_mirela",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "The tower was sealed fifty years ago and there’s not a line in the school records about why,"
+ },
+ {
+  "key": "96af95dcb63c",
+  "scene": "r3_mirela",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says."
+ },
+ {
+  "key": "f22f687c3233",
+  "scene": "r3_mirela",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I think I know how to stop it. I need someone with nerve."
+ },
+ {
+  "key": "08b863c9479b",
+  "scene": "r3_mirela",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She considers you."
+ },
+ {
+  "key": "03c8ab61a7b8",
+  "scene": "r3_mirela",
+  "index": 1,
+  "seg": 4,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "Congratulations. You volunteered."
+ },
+ {
+  "key": "5de176ab7035",
+  "scene": "d_harrow",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "On your way out of the Great Hall Harrow steps into your path. He has dark rings under his eyes and the look of a man who has not slept in days."
+ },
+ {
+  "key": "a406a9d5c5e8",
+  "scene": "d_harrow",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Harrow",
+  "tone": "dry",
+  "text": "You’re in my book, Kringer,"
+ },
+ {
+  "key": "f40a5098aed2",
+  "scene": "d_harrow",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says dryly."
+ },
+ {
+  "key": "ba7ce67b2089",
+  "scene": "d_harrow",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Harrow",
+  "tone": "dry",
+  "text": "One warning."
+ },
+ {
+  "key": "d5601194fac7",
+  "scene": "d_harrow",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He nods to you, almost as to an equal."
+ },
+ {
+  "key": "fe18a919d47b",
+  "scene": "d_harrow",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "His coat smells of pipe smoke and lamp oil, and when he clears his throat it is a hard, dry cough you have heard before."
+ },
+ {
+  "key": "041a1346554c",
+  "scene": "d_harrow_accuse",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Harrow goes very still."
+ },
+ {
+  "key": "a95ea4162ed5",
+  "scene": "d_harrow_accuse",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "shout",
+  "text": "You followed someone with keys,"
+ },
+ {
+  "key": "e0ac2cf7e34b",
+  "scene": "d_harrow_accuse",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "a43ac44085d7",
+  "scene": "d_harrow_accuse",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Harrow",
+  "tone": "shout",
+  "text": "And you think it was me."
+ },
+ {
+  "key": "63f6a4607007",
+  "scene": "d_harrow_accuse",
+  "index": 0,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The old man does not shout, and that is worse."
+ },
+ {
+  "key": "2e976c9ad2e5",
+  "scene": "d_harrow_accuse",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "It was me,"
+ },
+ {
+  "key": "1bb0728dd413",
+  "scene": "d_harrow_accuse",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says finally."
+ },
+ {
+  "key": "321d2539d112",
+  "scene": "d_harrow_accuse",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "Every night since the first sleeper. Because if somebody doesn’t watch that door, somebody worse than me will."
+ },
+ {
+  "key": "66a7814d1956",
+  "scene": "d_harrow_forgive",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Harrow looks at you for a long time. Then he draws out his book, tears the page free, and folds it into his pocket."
+ },
+ {
+  "key": "60e766d6cd14",
+  "scene": "d_harrow_forgive",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "We’ll say no more about it,"
+ },
+ {
+  "key": "f6a37211e895",
+  "scene": "d_harrow_forgive",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "533d5773d313",
+  "scene": "d_harrow_forgive",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "You’ve got enough on your plate."
+ },
+ {
+  "key": "2ac1667c1c36",
+  "scene": "d_harrow_story",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Harrow glances up and down the corridor and lowers his voice."
+ },
+ {
+  "key": "74868b1d7444",
+  "scene": "d_harrow_story",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "quiet",
+  "text": "I was a junior caretaker the night it started, fifty years back. I saw a boy in an archive coat carry music out of the east wing and lock the door behind him. He was crying. I never asked who it was."
+ },
+ {
+  "key": "0270d807627b",
+  "scene": "d_harrow_story",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "I’ve watched that tower ever since. If you need something, Kringer, you come to me."
+ },
+ {
+  "key": "a42ee3fb7d6c",
+  "scene": "d_harrow_key",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Harrow unhooks a heavy ring from his belt and twists a brass key free."
+ },
+ {
+  "key": "2220f747926a",
+  "scene": "d_harrow_key",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "neutral",
+  "text": "Opens most doors in the east and west wings. You never had it, understand?"
+ },
+ {
+  "key": "19df36e666d9",
+  "scene": "d_harrow_key",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He presses it into your palm and walks away without waiting for an answer."
+ },
+ {
+  "key": "27186359d156",
+  "scene": "hub",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "It is early afternoon. The bell will toll again tonight; everyone knows it, and everyone is pretending not to. You have until dusk, and time for two leads, not three."
+ },
+ {
+  "key": "4a5a6076b26f",
+  "scene": "hub",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Harrow’s warning sits in your pocket like a small cold stone."
+ },
+ {
+  "key": "341d6f8bd561",
+  "scene": "hub",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Across the courtyard Mirela catches your eye and taps her wrist, once: time."
+ },
+ {
+  "key": "53fa2f3b3045",
+  "scene": "mirela_talk",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela is waiting behind the greenhouses with a map of the castle and a long column of numbers: the times the bell has rung."
+ },
+ {
+  "key": "ca99cf4e2be8",
+  "scene": "mirela_talk",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I’ve done the arithmetic,"
+ },
+ {
+  "key": "564a5e2c596b",
+  "scene": "mirela_talk",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says."
+ },
+ {
+  "key": "78ea1206af2d",
+  "scene": "mirela_talk",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "It’s speeding up. At this rate the whole castle is asleep in four days."
+ },
+ {
+  "key": "8d5c9a2da59d",
+  "scene": "mirela_talk",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I have a plan, and you won’t like it. I found a counter-spell in an old book that can break metal like this. We take the bell."
+ },
+ {
+  "key": "16e8cf5bdd31",
+  "scene": "mirela_talk",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She looks at you."
+ },
+ {
+  "key": "94cdf1271fbd",
+  "scene": "mirela_talk",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "But I don’t know what lies under that tower. I only know I can’t watch one more person fall asleep."
+ },
+ {
+  "key": "874d42dc7fbd",
+  "scene": "mirela_wait",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela bites her lip. Then, reluctantly, she nods."
+ },
+ {
+  "key": "8bab673d4e3a",
+  "scene": "mirela_wait",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "Fine. But if there’s nothing else by tonight, we take the bell. No more talking."
+ },
+ {
+  "key": "49a139f9dcdd",
+  "scene": "mirela_wait",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "She folds the map into her pocket, and you realise she was relieved. She never wanted to be the one deciding."
+ },
+ {
+  "key": "f4d80391a0bc",
+  "scene": "mirela_hurt",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "shaky",
+  "text": "Careful,"
+ },
+ {
+  "key": "34bc29c2c267",
+  "scene": "mirela_hurt",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Mirela bitterly."
+ },
+ {
+  "key": "53e5438a2a0d",
+  "scene": "mirela_hurt",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "shaky",
+  "text": "We’ve had five careful days."
+ },
+ {
+  "key": "af8179a30070",
+  "scene": "mirela_hurt",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "She folds up the map, and her eyes are hard."
+ },
+ {
+  "key": "ba3b7336a179",
+  "scene": "mirela_hurt",
+  "index": 0,
+  "seg": 4,
+  "speaker": "Mirela",
+  "tone": "shaky",
+  "text": "I’ll do it with you or without you, Kringer."
+ },
+ {
+  "key": "e0c234bdceb7",
+  "scene": "mirela_hurt",
+  "index": 0,
+  "seg": 5,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "She walks away and leaves you standing between the greenhouses."
+ },
+ {
+  "key": "16813d32211e",
+  "scene": "a1_archive",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The archive lies three flights beneath the kitchens: shelves to the ceiling, dust that glows in lantern light, a smell of old paper and cold stone. Behind an oak desk sits Quill, spectacles pushed up into his hair, apparently in the middle of an argument with a cat."
+ },
+ {
+  "key": "be1109812057",
+  "scene": "a1_archive",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He looks up and beams."
+ },
+ {
+  "key": "45481983beca",
+  "scene": "a1_archive",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Ah! My night visitor. Sit. Mind the cat; she bites scholars."
+ },
+ {
+  "key": "ea56a2cda421",
+  "scene": "a1_archive",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "You’re late,"
+ },
+ {
+  "key": "a77d1b3cd5d1",
+  "scene": "a1_archive",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "56d03850ebe7",
+  "scene": "a1_archive",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Or early. It rather depends what you’re looking for."
+ },
+ {
+  "key": "677be4ed690e",
+  "scene": "a2_truth",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Quill sets down his pen and draws out a folder sealed with brown wax."
+ },
+ {
+  "key": "a8f5c5f4ead5",
+  "scene": "a2_truth",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Hollow Bell. Cast three hundred years ago by Cantor Eadric Vale, who led the castle choir. It was never meant to warn anyone. It was meant to hold something down."
+ },
+ {
+  "key": "b26a6f0903a4",
+  "scene": "a2_truth",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Beneath the tower lies what we call the Hush. It eats sound, and it eats sleep. Vale sang it to rest every night with a song that closes the bell. Then the song was lost, and the bell began to ring by itself. Now it feeds on whoever sleeps."
+ },
+ {
+  "key": "661aaf126111",
+  "scene": "a2_truth",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He peers at you over the folder."
+ },
+ {
+  "key": "544a17547c94",
+  "scene": "a2_truth",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "The song was written on two pages. I know where one of them is."
+ },
+ {
+  "key": "47fc8941b060",
+  "scene": "a2_sneak",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "While you leaf innocently through a crate of nineteenth-century accounts, you find a letter from Cantor Vale to the headmaster: The bell will ring itself if the song is forgotten. Remember that the song is written on two pages."
+ },
+ {
+  "key": "88d3bbdf2725",
+  "scene": "a2_sneak",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Quill has been standing behind you the entire time."
+ },
+ {
+  "key": "a7b815124671",
+  "scene": "a2_sneak",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "You’re looking for the bell, aren’t you?"
+ },
+ {
+  "key": "92f381d75e83",
+  "scene": "a2_sneak",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He smiles thinly."
+ },
+ {
+  "key": "3b9fac22200a",
+  "scene": "a2_sneak",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "You look so innocent that you very nearly fooled me."
+ },
+ {
+  "key": "877781be6ddf",
+  "scene": "a_quill_past",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Quill takes off his spectacles and rubs his eyes."
+ },
+ {
+  "key": "65228b7a028a",
+  "scene": "a_quill_past",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "I wasn’t always an archivist. Fifty years ago I was Vale’s last student, seventeen years old. The night the bell began ringing by itself, I panicked. I tore out the page with the song and locked the music room. I thought that would stop it."
+ },
+ {
+  "key": "981de907ea44",
+  "scene": "a_quill_past",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "It did the opposite. Since then I have been an archivist, a watchman and a coward, all at once."
+ },
+ {
+  "key": "b267e3d0e441",
+  "scene": "a_quill_past",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He puts the spectacles back on, and his hands are not quite steady."
+ },
+ {
+  "key": "e58e4b499709",
+  "scene": "a3_search",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Behind Quill the shelves hold a thousand folders, and some are dustier than others."
+ },
+ {
+  "key": "8f8c9b63591d",
+  "scene": "a3_search",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "It’s in there somewhere,"
+ },
+ {
+  "key": "7e2577cfe229",
+  "scene": "a3_search",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says."
+ },
+ {
+  "key": "dd03605d50c3",
+  "scene": "a3_search",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "I can’t search any more. My eyes aren’t what they were."
+ },
+ {
+  "key": "4f2d07351b34",
+  "scene": "a4_found",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Under a stack of old accounts you find a single page in neat, faded ink: the notes of a lullaby. Over them Vale has written: The Cantor’s close. To be sung from the tower, and the bell shall be stilled."
+ },
+ {
+  "key": "b148a1d29845",
+  "scene": "a4_found",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The page is cold in your hand, but you feel it wants something. Quill nods."
+ },
+ {
+  "key": "40afa54fbe56",
+  "scene": "a4_found",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Take it. And for heaven’s sake, don’t lose it."
+ },
+ {
+  "key": "f4abf4cc06d4",
+  "scene": "a4_hum",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Quill closes his eyes. For a long moment nothing happens. Then, in a thin, cracked voice that has not sung in fifty years, he begins to hum. The melody is simple and very sad, and you find you already know where it is going."
+ },
+ {
+  "key": "70087a67debe",
+  "scene": "a4_hum",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "When he finishes he is crying and pretending not to."
+ },
+ {
+  "key": "876b8ea01607",
+  "scene": "a4_hum",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "shaky",
+  "text": "That is as much as I have,"
+ },
+ {
+  "key": "3582df560229",
+  "scene": "a4_hum",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "eba2b5683a16",
+  "scene": "a4_hum",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Quill",
+  "tone": "shaky",
+  "text": "Mind it well."
+ },
+ {
+  "key": "c1728dfb4fe3",
+  "scene": "a4_missed",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You search for hours. The paper crumbles between your fingers, and the ink has run where it is worst. In the end you find only an empty cover and the ragged edge of something torn out long ago."
+ },
+ {
+  "key": "5ff6cc8bad06",
+  "scene": "a4_missed",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Quill",
+  "tone": "quiet",
+  "text": "Somebody got here first,"
+ },
+ {
+  "key": "e8e876ee3bab",
+  "scene": "a4_missed",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Quill mutters."
+ },
+ {
+  "key": "f127346810bc",
+  "scene": "a4_missed",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Quill",
+  "tone": "quiet",
+  "text": "It’s not the first time something has disappeared from here."
+ },
+ {
+  "key": "245b477a22d9",
+  "scene": "b1_door",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The music room in the east wing has been locked for longer than anyone can say. The door is covered in frost flowers, though the day is mild. From behind it comes a hum: a very old melody, almost too faint to be real."
+ },
+ {
+  "key": "5ba498b48c2f",
+  "scene": "b2_soft",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The door swings open on its own. In the middle of the room, among overturned stools and a closed grand piano, stands a transparent man in a choir cassock, hands folded before him as if in prayer."
+ },
+ {
+  "key": "f9e2c452143a",
+  "scene": "b2_soft",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "No one has knocked here in a very long time,"
+ },
+ {
+  "key": "3d9e2ca46eb8",
+  "scene": "b2_soft",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says, and his voice carries a strange harmonic, as though two people are speaking."
+ },
+ {
+  "key": "0d0d6c32a988",
+  "scene": "b2_soft",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "You are kind. Come in. I am Eadric Vale."
+ },
+ {
+  "key": "2bfa3db855e7",
+  "scene": "b2_hard",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The door splinters on its hinges, and cold pours out of the room. In the middle of it a transparent figure shoots up toward the ceiling, shrieking without sound."
+ },
+ {
+  "key": "3be72f0a58ee",
+  "scene": "b2_hard",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "shout",
+  "text": "You come to take more!"
+ },
+ {
+  "key": "86cb880ccfdf",
+  "scene": "b2_hard",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he cries."
+ },
+ {
+  "key": "a93f11976316",
+  "scene": "b2_hard",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Vale",
+  "tone": "shout",
+  "text": "I have nothing left to give!"
+ },
+ {
+  "key": "24bf40e69768",
+  "scene": "b_flash1",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You are Eadric Vale, three hundred years ago. It is night and the castle sleeps. Beneath the belfry floor you feel the Hush stirring like a hungry dog."
+ },
+ {
+  "key": "e6a06ff811c3",
+  "scene": "b_flash1",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You have cast a bell of black metal and written a song on two pages. You know it will work. You do not yet know what it will cost."
+ },
+ {
+  "key": "46a594a9f9a7",
+  "scene": "b_flash2",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The bell answers. The Hush sinks. But with every night you sing, you notice the power must come from somewhere: the students you teach sleep more heavily, and some of them never quite wake."
+ },
+ {
+  "key": "4d554a87d10e",
+  "scene": "b_flash2",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Wall voice",
+  "tone": "neutral",
+  "text": "Every pact has a price,"
+ },
+ {
+  "key": "bdaba4cd6ec0",
+  "scene": "b_flash2",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says a calm voice from the wall. It is not hostile. It is only honest."
+ },
+ {
+  "key": "b164ac75bc6b",
+  "scene": "b_flash3",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You blink, and the music room is back. Vale stands before you, and in his eyes you can see that he knows what you have seen."
+ },
+ {
+  "key": "17daf9e00119",
+  "scene": "b_flash3",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "quiet",
+  "text": "Now you know why I cannot sing alone,"
+ },
+ {
+  "key": "1198ae1b9645",
+  "scene": "b_flash3",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says quietly."
+ },
+ {
+  "key": "f2478534f070",
+  "scene": "b_flash3",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Vale",
+  "tone": "quiet",
+  "text": "The song is true only if someone shares the price with me. I remember it all, child. The melody still lives in me. I merely cannot hold it up by myself."
+ },
+ {
+  "key": "8a8fe543a226",
+  "scene": "b3_gift",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale speaks softly. He saved the castle once by making a pact: he would sing the Hush to rest every night, and the bell would hold it down. When he died the song stayed in him and bound him to this room. Then someone broke in and took half of the notes. Ever since, he has not been able to sing alone."
+ },
+ {
+  "key": "8226cd8550d4",
+  "scene": "b3_gift",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He offers you a small silver fork that glows faintly."
+ },
+ {
+  "key": "f4ed93a11cf0",
+  "scene": "b3_gift",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "My tuning fork. With it you can tune the bell to the lullaby. And if you find the pages, perhaps we can give them peace together."
+ },
+ {
+  "key": "0307a556fdab",
+  "scene": "b3_press",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale turns away. As you press him, he tells it shortly and bitterly: the pact, the bell, the Hush, and the half of the notes that was stolen."
+ },
+ {
+  "key": "56f2ec7d75f1",
+  "scene": "b3_press",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Vale",
+  "tone": "shaky",
+  "text": "Now go,"
+ },
+ {
+  "key": "eede20e678ba",
+  "scene": "b3_press",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says, and the door closes behind you."
+ },
+ {
+  "key": "70435a390162",
+  "scene": "b_vale_ash",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale looks toward the door."
+ },
+ {
+  "key": "4801f11a6c6d",
+  "scene": "b_vale_ash",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "There has been another here,"
+ },
+ {
+  "key": "22800759c8b6",
+  "scene": "b_vale_ash",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "25520dc15519",
+  "scene": "b_vale_ash",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "The professor. Three times. He wants the song, but not to close the bell. He wants to use it to ring thirteen."
+ },
+ {
+  "key": "238bcbecb326",
+  "scene": "b_vale_ash",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "I said no. But he promises me my freedom if I sing. I am tired, child. I am so very tired."
+ },
+ {
+  "key": "47ba2de41304",
+  "scene": "c1_office",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Professor Ashgrove’s office is in the west wing behind a door of dark wood with a small brass nameplate. It is lunchtime, and the room beyond is dark: nobody is home."
+ },
+ {
+  "key": "70278a8ae6b4",
+  "scene": "c1_office",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Through the keyhole you see a tidy desk, a glass cabinet of silver instruments, and an open book."
+ },
+ {
+  "key": "5ab4db0eefa5",
+  "scene": "c2_talk",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ashgrove comes up the corridor with his cloak over his arm and greets you with a warm smile. He lets you in, puts the kettle on, and listens. He is courteous, nearly too courteous."
+ },
+ {
+  "key": "2a814fafa411",
+  "scene": "c2_talk",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "As he pours, you notice that the book on his desk lies open to a number circled in pencil: 13."
+ },
+ {
+  "key": "d56a88624eaa",
+  "scene": "c_ashgrove_past",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ashgrove looks down into his cup for a long time."
+ },
+ {
+  "key": "9cf86119865a",
+  "scene": "c_ashgrove_past",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "My sister Lenora climbed Hollow Tower when she was twelve, to prove she was brave. She fell asleep up there. She never woke."
+ },
+ {
+  "key": "b256e640b24a",
+  "scene": "c_ashgrove_past",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "I was sixteen. I have spent the rest of my life trying to understand why."
+ },
+ {
+  "key": "87ac13b42ce5",
+  "scene": "c3_hints",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "His smile tightens."
+ },
+ {
+  "key": "4cd47cf6d5c6",
+  "scene": "c3_hints",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "An old arithmetic exercise,"
+ },
+ {
+  "key": "3925c0910f39",
+  "scene": "c3_hints",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says, but his finger drums against the desk. After a long moment he adds, more quietly:"
+ },
+ {
+  "key": "90831f09a22d",
+  "scene": "c3_hints",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Ashgrove",
+  "tone": "quiet",
+  "text": "Some doors should stay closed, Kringer. Trust me. I am trying to protect you."
+ },
+ {
+  "key": "0f6df6150985",
+  "scene": "c3_hints",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You see how afraid he is beneath the calm. It is not a villain’s fear. It is the fear of a man who has decided on something terrible."
+ },
+ {
+  "key": "a6a09d75ece9",
+  "scene": "c4_leave",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He walks you to the door, still smiling."
+ },
+ {
+  "key": "35875cf98a68",
+  "scene": "c4_leave",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "Come to me whenever you’re worried."
+ },
+ {
+  "key": "ae733c45dda7",
+  "scene": "c4_leave",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The door closes behind you, and you feel he was relieved that you did not ask."
+ },
+ {
+  "key": "6aea4372a1da",
+  "scene": "c2_ledger",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You slip inside and open the book. It is not a book. It is a ledger: rows of names, and beside each the date a student fell asleep. At the bottom, in the professor’s tidy hand: The Last Toll. Thirteen strokes. When the Hush is full, it seals for ever. The price: the sleepers’ sleep. They will not wake."
+ },
+ {
+  "key": "c28415bea0c9",
+  "scene": "c2_ledger",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "A desk drawer is slightly ajar."
+ },
+ {
+  "key": "483a02843e7a",
+  "scene": "c2_out",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You tuck the ledger under your cloak and are gone before anyone comes."
+ },
+ {
+  "key": "e11a32b70784",
+  "scene": "c2_drawer",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Under a stack of letters lies a single sheet of music, brittle at the creases, written in Vale’s own hand. The other half of the song. He has had it all along."
+ },
+ {
+  "key": "88e39c312b5e",
+  "scene": "c2_drawer",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You take it, and the ledger, and leave the door exactly as you found it."
+ },
+ {
+  "key": "749ecc9fca6b",
+  "scene": "c2_caught",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You have barely opened the book when the door swings wide. Ashgrove stands in the opening, and his gaze is suddenly not warm any more."
+ },
+ {
+  "key": "b77d98795d3d",
+  "scene": "c2_caught",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "quiet",
+  "text": "Interesting,"
+ },
+ {
+  "key": "40a07dd5157b",
+  "scene": "c2_caught",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says quietly."
+ },
+ {
+  "key": "141d07263bf3",
+  "scene": "c2_caught",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Ashgrove",
+  "tone": "quiet",
+  "text": "Out."
+ },
+ {
+  "key": "b9d1c5d13246",
+  "scene": "c2_caught",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He writes something on a slip of paper. You are reported to the headmaster."
+ },
+ {
+  "key": "efee48032e0e",
+  "scene": "ev_mirela_ashgrove",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Outside the staff room you hear Mirela’s voice, hard and controlled."
+ },
+ {
+  "key": "5c48b2846e31",
+  "scene": "ev_mirela_ashgrove",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "You know more than you say, Professor. Fifteen students have fallen asleep since Monday."
+ },
+ {
+  "key": "0612a09542ad",
+  "scene": "ev_mirela_ashgrove",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ashgrove answers calmly, but his hands are white."
+ },
+ {
+  "key": "1d06e02797c3",
+  "scene": "ev_mirela_ashgrove",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "dry",
+  "text": "You do not understand what you are saying, Miss Voss."
+ },
+ {
+  "key": "a2b337d61921",
+  "scene": "ev_mirela_ashgrove",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You are the only one who sees them."
+ },
+ {
+  "key": "bed5fa9f3777",
+  "scene": "ev_quill_mirela",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "At the archive door you hear Quill tell Mirela what he told you: that he tore out the page fifty years ago. Mirela goes quiet. Then she goes white."
+ },
+ {
+  "key": "44876d6e09c8",
+  "scene": "ev_quill_mirela",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "You knew why,"
+ },
+ {
+  "key": "37b99dfd968e",
+  "scene": "ev_quill_mirela",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says."
+ },
+ {
+  "key": "a41a57d912e2",
+  "scene": "ev_quill_mirela",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "All this time?"
+ },
+ {
+  "key": "c4e0ff048a4d",
+  "scene": "ev_harrow_quill",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Harrow and Quill stand in the corridor, snarling at each other in low voices."
+ },
+ {
+  "key": "d43dc011fa5a",
+  "scene": "ev_harrow_quill",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "shout",
+  "text": "You locked the door and let us think it was an accident,"
+ },
+ {
+  "key": "e95692d3e821",
+  "scene": "ev_harrow_quill",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Harrow."
+ },
+ {
+  "key": "2b386ce4696e",
+  "scene": "ev_harrow_quill",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Quill",
+  "tone": "shout",
+  "text": "I was seventeen!"
+ },
+ {
+  "key": "275c7fa9c6b0",
+  "scene": "ev_harrow_quill",
+  "index": 0,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Quill retorts. Both look up as you appear."
+ },
+ {
+  "key": "7e0cbf58b89a",
+  "scene": "ev_vale_ashgrove",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Passing the music room you see the door standing ajar. Ashgrove is inside, his back to you."
+ },
+ {
+  "key": "8e21856e362b",
+  "scene": "ev_vale_ashgrove",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "quiet",
+  "text": "One more time,"
+ },
+ {
+  "key": "c260b4d2e046",
+  "scene": "ev_vale_ashgrove",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says softly."
+ },
+ {
+  "key": "2638ad37c6d4",
+  "scene": "ev_vale_ashgrove",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Ashgrove",
+  "tone": "quiet",
+  "text": "Sing it, and I will set you free."
+ },
+ {
+  "key": "0a6eed5fa844",
+  "scene": "ev_vale_ashgrove",
+  "index": 0,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Vale does not answer. He looks at you through the gap."
+ },
+ {
+  "key": "4620cc1f41b0",
+  "scene": "ev_quill_ashgrove",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Quill hands you a sealed envelope."
+ },
+ {
+  "key": "434f4baeeb11",
+  "scene": "ev_quill_ashgrove",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "neutral",
+  "text": "Give this to Corvin. He will understand."
+ },
+ {
+  "key": "fce3e1b224f0",
+  "scene": "ev_quill_ashgrove",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "It is heavier than paper should be."
+ },
+ {
+  "key": "c1ad7270701d",
+  "scene": "ev_mirela_key",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela has spoken to Harrow and is full of questions."
+ },
+ {
+  "key": "684819a43290",
+  "scene": "ev_mirela_key",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "You must have a way into the tower,"
+ },
+ {
+  "key": "59346c120a0d",
+  "scene": "ev_mirela_key",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she says."
+ },
+ {
+  "key": "f9b696e68b7b",
+  "scene": "ev_mirela_key",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I want to check the tower door before tonight."
+ },
+ {
+  "key": "0c82f5d43657",
+  "scene": "ev_harrow_ashgrove",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Harrow holds you back in a doorway."
+ },
+ {
+  "key": "b1a6cf02ff43",
+  "scene": "ev_harrow_ashgrove",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Harrow",
+  "tone": "quiet",
+  "text": "Tell Professor Ashgrove I can see he isn’t sleeping,"
+ },
+ {
+  "key": "a1fca0b333d5",
+  "scene": "ev_harrow_ashgrove",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he says quietly."
+ },
+ {
+  "key": "6a8cb69b4a44",
+  "scene": "ev_harrow_ashgrove",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Harrow",
+  "tone": "quiet",
+  "text": "And that I would rather have an honest man in that tower than a clever one."
+ },
+ {
+  "key": "ba95779bff57",
+  "scene": "ev_suspect",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Somewhere below you someone coughs, a dry hard cough, and you realise you have been wondering all day who owns it. Harrow is two floors down, polishing a doorknob that does not need polishing."
+ },
+ {
+  "key": "d2ac3f8c3933",
+  "scene": "n0_dusk",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "The sun sets behind Hollow Tower, and the tower throws a long shadow across the courtyard. In an hour the bell will toll. You go up to the dormitory to fetch what you need."
+ },
+ {
+  "key": "e6bde33bcac4",
+  "scene": "n0_dusk",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Pip lies as he did last night: calm, cold, far away. On the bedside table sit a half-eaten chocolate frog and an unopened letter from his mother."
+ },
+ {
+  "key": "3b4847e7a59a",
+  "scene": "n1_evening",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Tonight the bell tolls earlier than yesterday, almost during supper. In two days more than thirty students have fallen asleep in their beds. The castle is closing its eyes."
+ },
+ {
+  "key": "781a5fdd795c",
+  "scene": "n1_evening",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You go over what you know and what is in your pockets. What you did today decides what you must manage now."
+ },
+ {
+  "key": "368c54aff41a",
+  "scene": "n1b_mirela",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela waits at the stairs with her wand in hand. She has not slept, and her gaze is sharp."
+ },
+ {
+  "key": "4be2cf961d03",
+  "scene": "n1b_mirela",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "quiet",
+  "text": "What do we do if Ashgrove is up there?"
+ },
+ {
+  "key": "1a4cc3507b9f",
+  "scene": "n1b_mirela",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "she asks quietly."
+ },
+ {
+  "key": "6b76a1740426",
+  "scene": "n1b_mirela",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Mirela",
+  "tone": "quiet",
+  "text": "If he’s the one ringing, he’s the enemy."
+ },
+ {
+  "key": "4871d2f3939b",
+  "scene": "m1_door",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You are Mirela. At the foot of the tower the silence has taken a shape: a tall, soundless shadow across the door. It turns toward you, though it has no head."
+ },
+ {
+  "key": "230dbddf5bf2",
+  "scene": "m1_door",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Kringer has to get up the stairs. Your job is to hold it back. The notebook shakes in your hand."
+ },
+ {
+  "key": "797813866567",
+  "scene": "m2_holds",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The shadow writhes, chokes, and draws back into the walls. You breathe out, shaking, and feel that something has changed: it does not fear you, but it respects you."
+ },
+ {
+  "key": "226b07700225",
+  "scene": "m2_holds",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You run up the stairs after Kringer."
+ },
+ {
+  "key": "de9dfef2c249",
+  "scene": "m2_falls",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The spell dies in your mouth. The shadow swallows the sound, and your thoughts with it. You watch Kringer vanish up the stairs and want to shout, but you have no voice."
+ },
+ {
+  "key": "603365722543",
+  "scene": "m2_falls",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The last thing you feel is the floor against your cheek. Then it goes very, very quiet."
+ },
+ {
+  "key": "dea7bf3281f4",
+  "scene": "m2_retreats",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You slam the door and put your back against it. The shadow pounds, but it does not get through. You are safe, but you are going nowhere tonight."
+ },
+ {
+  "key": "2ced9278f461",
+  "scene": "m2_retreats",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Kringer is alone up there."
+ },
+ {
+  "key": "d6b935a688a5",
+  "scene": "n2_stairs",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The Hollow Tower stair twists upward in the dark. The higher you climb, the thicker the silence grows: first your footsteps go, then your breath, then your thoughts. It is like wading through black wool."
+ },
+ {
+  "key": "63d1a27ecd45",
+  "scene": "n2_stairs",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You hold on to the memory of sitting beside Pip, the warmth of his hand. It is something to keep hold of."
+ },
+ {
+  "key": "d0d1d648b53f",
+  "scene": "n2_stairs",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "A hundred steps remain. Somewhere above, the bell is waiting."
+ },
+ {
+  "key": "6f13325523d5",
+  "scene": "n2_setback",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The silence seizes you. You can no longer hear yourself. Your knees give way and the steps blur together. You are about to become part of it."
+ },
+ {
+  "key": "07dcacf752a1",
+  "scene": "n3_belfry",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "At the top the stair opens into a round belfry with windows that have no glass, letting in night wind and mist. In the middle hangs the Hollow Bell: black, bigger than a cart, and humming so faintly that you feel it in your teeth."
+ },
+ {
+  "key": "9eec1934e2ef",
+  "scene": "n3_belfry",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Professor Ashgrove stands by the ropes. He does not look surprised. In the corner, bound to the bell’s shadow by chains you cannot see, hangs Eadric Vale, almost lost in the light."
+ },
+ {
+  "key": "16eea852ab84",
+  "scene": "n3_belfry",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Ashgrove",
+  "tone": "quiet",
+  "text": "You gave me your word,"
+ },
+ {
+  "key": "59469283f97d",
+  "scene": "n3_belfry",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Ashgrove, not unkindly."
+ },
+ {
+  "key": "68e6a8810110",
+  "scene": "n3_belfry",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "I did not ask you to come,"
+ },
+ {
+  "key": "3485ee29679a",
+  "scene": "n3_belfry",
+  "index": 3,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "fa2328c0d4c5",
+  "scene": "n3_belfry",
+  "index": 3,
+  "seg": 2,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "But now that you are here, I can at least explain."
+ },
+ {
+  "key": "15dd8142fbed",
+  "scene": "n3_vale_breaks",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "shout",
+  "text": "I promised,"
+ },
+ {
+  "key": "eac2bbad9964",
+  "scene": "n3_vale_breaks",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Vale, and for the first time in three hundred years his chains snap. He flings himself between Ashgrove and the bell, and a cold wave throws the professor to the floor."
+ },
+ {
+  "key": "8ff532433b64",
+  "scene": "n3_vale_breaks",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "I am sorry,"
+ },
+ {
+  "key": "cc5d601da00a",
+  "scene": "n3_vale_breaks",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "says Vale."
+ },
+ {
+  "key": "6ed1caddde8e",
+  "scene": "n3_vale_breaks",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "But this is what I owe them."
+ },
+ {
+  "key": "88ba43795b48",
+  "scene": "n4_talk",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "The Hush beneath us is the only reason this castle still stands,"
+ },
+ {
+  "key": "9ba42ce15697",
+  "scene": "n4_talk",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "says Ashgrove."
+ },
+ {
+  "key": "c65076e78d97",
+  "scene": "n4_talk",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "Every night it grows stronger. The bell holds it down, but it feeds on the sleepers. If I ring thirteen strokes, it seals for ever. The price is those who already sleep."
+ },
+ {
+  "key": "979b2d4fe01c",
+  "scene": "n4_talk",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "His voice cracks."
+ },
+ {
+  "key": "ff4881ac0923",
+  "scene": "n4_talk",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "shaky",
+  "text": "Forty-one students for a thousand. I have done the arithmetic for ten years. I am not proud of it."
+ },
+ {
+  "key": "db1dbea8fa0e",
+  "scene": "n4_talk",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He does not look at you as an enemy. He looks at you as someone who could stop him, and whom he hopes will not."
+ },
+ {
+  "key": "dc832ab3433f",
+  "scene": "n4_fight",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ashgrove is faster than you thought. His wand sends light and shadow flaring against the walls, and the silence takes the words out of your mouth. You wrestle for the rope while the bell hums in time with your heart."
+ },
+ {
+  "key": "67867a130945",
+  "scene": "n4_clapper",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You seize the clapper in both hands and haul it down. Ashgrove falls to his knees, spent. The bell whines one last time and goes still."
+ },
+ {
+  "key": "6c5b072db999",
+  "scene": "n4_clapper",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Ashgrove",
+  "tone": "whisper",
+  "text": "Don’t,"
+ },
+ {
+  "key": "0474f546b1d3",
+  "scene": "n4_clapper",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "he whispers."
+ },
+ {
+  "key": "ef9c6b9e0480",
+  "scene": "n4_clapper",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Ashgrove",
+  "tone": "whisper",
+  "text": "You don’t know what’s waiting below."
+ },
+ {
+  "key": "71f502c8a184",
+  "scene": "n4_clapper",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "But from the corner you hear Vale humming, thin and trembling. He needs you."
+ },
+ {
+  "key": "fb5815f08409",
+  "scene": "n4_quill",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The footsteps behind you are Quill’s. He has followed, pale and out of breath, lantern in hand."
+ },
+ {
+  "key": "205d0f7bf945",
+  "scene": "n4_quill",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Quill",
+  "tone": "quiet",
+  "text": "Corvin,"
+ },
+ {
+  "key": "ddcb2d8c4588",
+  "scene": "n4_quill",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says quietly."
+ },
+ {
+  "key": "6af08efb6444",
+  "scene": "n4_quill",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Quill",
+  "tone": "quiet",
+  "text": "It was I who tore out the page. It was I who locked the door. This is my responsibility. Don’t make it your students’."
+ },
+ {
+  "key": "dadfc56b3b82",
+  "scene": "n4_quill",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela lays a hand on Quill’s shoulder. She says nothing, but she stands there."
+ },
+ {
+  "key": "5a239781ac33",
+  "scene": "n4_quill",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela has drawn her wand."
+ },
+ {
+  "key": "36b3c3fd4b5f",
+  "scene": "n4_quill",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "shaky",
+  "text": "You let them sleep for fifty years,"
+ },
+ {
+  "key": "318195397199",
+  "scene": "n4_quill",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "she says to Quill, and her voice shakes."
+ },
+ {
+  "key": "9afbf028deec",
+  "scene": "n4_quill",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ashgrove stares at him. It is the first time you have seen him stop being calm."
+ },
+ {
+  "key": "21f11a88d6f9",
+  "scene": "n4_quill",
+  "index": 3,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "whisper",
+  "text": "You?"
+ },
+ {
+  "key": "226bb6440acf",
+  "scene": "n4_quill",
+  "index": 3,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he whispers."
+ },
+ {
+  "key": "39bede353cba",
+  "scene": "n4_quill",
+  "index": 3,
+  "seg": 3,
+  "speaker": "Ashgrove",
+  "tone": "whisper",
+  "text": "All these years?"
+ },
+ {
+  "key": "b1fe6ad17e00",
+  "scene": "n5_yields",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ashgrove lowers his hand. He sits in silence for a long moment."
+ },
+ {
+  "key": "76e0bc83c1c9",
+  "scene": "n5_yields",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "I have been set on this for ten years,"
+ },
+ {
+  "key": "a0b755ae58fd",
+  "scene": "n5_yields",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says at last."
+ },
+ {
+  "key": "17ad0fc6aaeb",
+  "scene": "n5_yields",
+  "index": 0,
+  "seg": 3,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "And a child comes and shows me I stopped looking for anything else."
+ },
+ {
+  "key": "af175821e696",
+  "scene": "n5_yields",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He steps aside, and for the first time Vale looks at you with hope."
+ },
+ {
+  "key": "04a69ce6465f",
+  "scene": "n5_yields",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "From inside his coat Ashgrove takes a folded sheet, brittle at the creases."
+ },
+ {
+  "key": "3406d4c88e59",
+  "scene": "n5_yields",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "I should have given you this long ago,"
+ },
+ {
+  "key": "0d182f706d90",
+  "scene": "n5_yields",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "13dbe5549548",
+  "scene": "n5_yields",
+  "index": 2,
+  "seg": 3,
+  "speaker": "Ashgrove",
+  "tone": "neutral",
+  "text": "The other half."
+ },
+ {
+  "key": "6f0a6441f764",
+  "scene": "n5_cantor",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Eadric Vale drifts out of the bell’s shadow."
+ },
+ {
+  "key": "4b799360554e",
+  "scene": "n5_cantor",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "If you ask me to sing, I bind myself to the bell once more. I do it gladly. But I need something to sing from."
+ },
+ {
+  "key": "84efa1bca925",
+  "scene": "n5_cantor",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He no longer hides what he remembers. The melody is plainly in him, only waiting for something to hold it up."
+ },
+ {
+  "key": "8294911ababf",
+  "scene": "n6_bargain",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You walk toward the bell’s shadow. Vale looks up, afraid."
+ },
+ {
+  "key": "7622dd0f630c",
+  "scene": "n6_bargain",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "What are you doing?"
+ },
+ {
+  "key": "ab7831247573",
+  "scene": "n6_bargain",
+  "index": 0,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You know the words from the archive and from his story, and you say them aloud: the old pact, with your name on the Cantor’s line."
+ },
+ {
+  "key": "81fd57105d2c",
+  "scene": "n6_bargain",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The bell answers not with a toll but with something worse and kinder: attention. It knows who you are. The pact is waiting only for a yes."
+ },
+ {
+  "key": "39fa47786ec8",
+  "scene": "n7_reseal",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale takes the note from the fork, and his voice, old and clear, fills the belfry. As he sings you read the pages aloud, and the bell begins to answer: not with a hollow toll but with a calm, clear tone that you feel down to your toes."
+ },
+ {
+  "key": "769cda097d84",
+  "scene": "n7_reseal",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Beneath you the Hush turns in its sleep and sinks deeper. And for the first time in two days a real light comes through the windows: dawn."
+ },
+ {
+  "key": "740f35b4f873",
+  "scene": "n7_reseal",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Only the last stroke remains. Someone must take the rope and ring it in time with the song."
+ },
+ {
+  "key": "07a40b3dfbad",
+  "scene": "ending_waking_together",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You and Ashgrove take hold of the rope at the same moment. The bell strikes one clean note, and the mist in the tower lifts like a heavy cloak. One by one the students open their eyes in their beds."
+ },
+ {
+  "key": "d3157dd49bfe",
+  "scene": "ending_waking_together",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the dormitory Pip sits up and asks, confused, if it’s breakfast yet. Then he looks at you and says,"
+ },
+ {
+  "key": "4a629f34b4bc",
+  "scene": "ending_waking_together",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Pip",
+  "tone": "neutral",
+  "text": "I heard you. You said my name."
+ },
+ {
+  "key": "dfd58b8408f5",
+  "scene": "ending_waking_together",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "In the dormitory Pip sits up and asks, confused, if it’s breakfast yet."
+ },
+ {
+  "key": "73efd90bf563",
+  "scene": "ending_waking_together",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "He adds that he dreamed someone was sitting beside him, and that it was warm."
+ },
+ {
+  "key": "50c2ff401b6b",
+  "scene": "ending_waking_together",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela wakes too. It takes her three days to be herself again, and she refuses to say what she dreamed."
+ },
+ {
+  "key": "50bdb0d87d4e",
+  "scene": "ending_waking_together",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Mirela stands at the tower door with tears in her eyes and a notebook torn in half. She smiles anyway."
+ },
+ {
+  "key": "ed3ba8bc5db1",
+  "scene": "ending_waking_together",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Vale remains in the music room, but he sings now every evening, softly, and the Hush sleeps. Quill puts the pages on display in the archive, behind glass."
+ },
+ {
+  "key": "49776fd2e92a",
+  "scene": "ending_waking_together",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Before sunrise Ashgrove goes to the music room and asks Vale’s forgiveness. Vale answers with a note, and the two of them sing together for the first time in three hundred years."
+ },
+ {
+  "key": "c6590ad6e581",
+  "scene": "ending_waking_together",
+  "index": 8,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "Ashgrove goes to the headmaster that same morning and tells him everything. He keeps his post, but he must apologise to every student, one by one."
+ },
+ {
+  "key": "76c6fe0b490e",
+  "scene": "ending_waking_together",
+  "index": 9,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "neutral",
+  "text": "You sleep well tonight, Kringer."
+ },
+ {
+  "key": "fdcbb594a2d2",
+  "scene": "ending_waking",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You take the rope alone and ring the last stroke in time with Vale’s voice. The bell answers with a note so pure that the glass in the tower sings. The Hush sinks, and the day comes."
+ },
+ {
+  "key": "abe9fa676133",
+  "scene": "ending_waking",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ashgrove sits on the floor, broken. He looks at the bell and understands, too late, what he almost did. He leaves without a word, and nobody sees him again until autumn."
+ },
+ {
+  "key": "58f5c0f1f99c",
+  "scene": "ending_waking",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the dormitory Pip sits up."
+ },
+ {
+  "key": "d26338cebd83",
+  "scene": "ending_waking",
+  "index": 2,
+  "seg": 1,
+  "speaker": "Pip",
+  "tone": "neutral",
+  "text": "I heard you,"
+ },
+ {
+  "key": "05400913bbfd",
+  "scene": "ending_waking",
+  "index": 2,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "9cacd3479659",
+  "scene": "ending_waking",
+  "index": 2,
+  "seg": 3,
+  "speaker": "Pip",
+  "tone": "neutral",
+  "text": "I just couldn’t answer."
+ },
+ {
+  "key": "7700f14f095b",
+  "scene": "ending_waking",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "In the dormitory Pip sits up and asks if it’s breakfast yet."
+ },
+ {
+  "key": "a58fbecce265",
+  "scene": "ending_waking",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He says he dreamed someone sat beside him, and that it was warm."
+ },
+ {
+  "key": "6804453c6ce9",
+  "scene": "ending_waking",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela wakes too, after three days. She no longer trusts anyone who smiles too much."
+ },
+ {
+  "key": "604ad6d8b120",
+  "scene": "ending_waking",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Harrow sits beside Ashgrove all night, saying nothing. It is enough."
+ },
+ {
+  "key": "6efcc5567377",
+  "scene": "ending_waking",
+  "index": 7,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale stays in the music room and sings the Hush to rest each evening. The castle wakes, but you will always remember how close it was."
+ },
+ {
+  "key": "d3f5bb18410d",
+  "scene": "ending_cantors_rest",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale sings from memory. His voice is weaker than you expected, but it is true. The bell answers, and with every note he grows a little more transparent."
+ },
+ {
+  "key": "114481adb338",
+  "scene": "ending_cantors_rest",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "At the last note he smiles."
+ },
+ {
+  "key": "88d61f28d832",
+  "scene": "ending_cantors_rest",
+  "index": 1,
+  "seg": 1,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "Three hundred years,"
+ },
+ {
+  "key": "2df8fbffefb0",
+  "scene": "ending_cantors_rest",
+  "index": 1,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "he says."
+ },
+ {
+  "key": "4e2b72ed26c4",
+  "scene": "ending_cantors_rest",
+  "index": 1,
+  "seg": 3,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "At last I am finished."
+ },
+ {
+  "key": "b3999f1bbcc5",
+  "scene": "ending_cantors_rest",
+  "index": 1,
+  "seg": 4,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "He fades into the light that comes through the windows."
+ },
+ {
+  "key": "87a61d57cfbd",
+  "scene": "ending_cantors_rest",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The students wake, one by one. Pip asks if it’s breakfast yet. The castle is safe, but the song is gone for ever."
+ },
+ {
+  "key": "4e5530c58802",
+  "scene": "ending_cantors_rest",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela wakes too, but it takes three days."
+ },
+ {
+  "key": "db31062c12b1",
+  "scene": "ending_cantors_rest",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Ashgrove sits in the tower long afterwards. He says nothing, but you see that he is weeping."
+ },
+ {
+  "key": "64cc84ba514d",
+  "scene": "ending_cantors_rest",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "I should have stopped sooner,"
+ },
+ {
+  "key": "c95b475f7968",
+  "scene": "ending_cantors_rest",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale says in the last moment."
+ },
+ {
+  "key": "285bef2ff6fb",
+  "scene": "ending_cantors_rest",
+  "index": 5,
+  "seg": 2,
+  "speaker": "Vale",
+  "tone": "neutral",
+  "text": "Thank you for letting me do it right this time."
+ },
+ {
+  "key": "f218d45721fe",
+  "scene": "ending_cantors_rest",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Vale",
+  "tone": "whisper",
+  "text": "I sang to protect them,"
+ },
+ {
+  "key": "1c5a8cfec954",
+  "scene": "ending_cantors_rest",
+  "index": 6,
+  "seg": 1,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Vale whispers."
+ },
+ {
+  "key": "e783767698c5",
+  "scene": "ending_cantors_rest",
+  "index": 6,
+  "seg": 2,
+  "speaker": "Vale",
+  "tone": "whisper",
+  "text": "It is all I ever wanted."
+ },
+ {
+  "key": "61aa95c1f1a0",
+  "scene": "ending_broken_bell",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You and Mirela raise your wands together. The bell shatters with a sound that makes the whole castle shake. The Hush is loose. The walls tremble, the lights die, and far below something opens its eyes."
+ },
+ {
+  "key": "a7cda53f07dc",
+  "scene": "ending_broken_bell",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The students wake that night, every one, in a castle evacuated before dawn. Hogwarts is closed for months."
+ },
+ {
+  "key": "ec3b4876dc2a",
+  "scene": "ending_broken_bell",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "What lives beneath Hollow Tower now, nobody knows. It does not sing. It only listens."
+ },
+ {
+  "key": "3e6c4c752925",
+  "scene": "ending_broken_bell",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Pip is awake and well. He has not forgotten that you tried to wake him."
+ },
+ {
+  "key": "9dfd9b77d010",
+  "scene": "ending_broken_bell",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela looks away."
+ },
+ {
+  "key": "da718e5543ad",
+  "scene": "ending_broken_bell",
+  "index": 4,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "quiet",
+  "text": "You wanted us to wait,"
+ },
+ {
+  "key": "646e3d79156e",
+  "scene": "ending_broken_bell",
+  "index": 4,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "she says quietly. She says no more, but you know she hasn’t forgiven herself."
+ },
+ {
+  "key": "501ea7cb9ea8",
+  "scene": "ending_broken_bell",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela smiles for the first time in days."
+ },
+ {
+  "key": "1be7c27bf0db",
+  "scene": "ending_broken_bell",
+  "index": 5,
+  "seg": 1,
+  "speaker": "Mirela",
+  "tone": "neutral",
+  "text": "I told you,"
+ },
+ {
+  "key": "251b97e71793",
+  "scene": "ending_broken_bell",
+  "index": 5,
+  "seg": 2,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "she says. Then she looks down into the hole in the floor, and the smile fades."
+ },
+ {
+  "key": "56c187a6cf67",
+  "scene": "ending_broken_bell",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Harrow and Mirela stand together at the gate, receiving the evacuated students. It is the first time you have seen the caretaker laugh."
+ },
+ {
+  "key": "41edca214a0c",
+  "scene": "ending_last_toll",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You take the rope beside Ashgrove. Thirteen strokes. Each is heavier than the last, and after the final one you hear it: nothing. Not wind, not song, not breath."
+ },
+ {
+  "key": "664b5939a134",
+  "scene": "ending_last_toll",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The Hush is sealed. The castle is safe. But the dormitories are full of students who will never wake."
+ },
+ {
+  "key": "ebca117d3f9d",
+  "scene": "ending_last_toll",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Pip lies in the bed beside yours. You know he heard you. It doesn’t help."
+ },
+ {
+  "key": "4127a6b8b6f6",
+  "scene": "ending_last_toll",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Pip lies in the bed beside yours, dreaming on."
+ },
+ {
+  "key": "5559f801364c",
+  "scene": "ending_last_toll",
+  "index": 4,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You sat with him that evening. It is all you got."
+ },
+ {
+  "key": "6a111b3ed60a",
+  "scene": "ending_last_toll",
+  "index": 5,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Mirela sleeps among them."
+ },
+ {
+  "key": "911f46c5f85c",
+  "scene": "ending_last_toll",
+  "index": 6,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You drift through the rest of your school years as if in a dream. Every night you hear the bell, though it never rings."
+ },
+ {
+  "key": "98bc31768b5d",
+  "scene": "ending_silence",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "There is no pain. The sound goes first, then the light, and finally your thoughts. You dream that you are standing in the belfry, ringing a bell that nobody can hear."
+ },
+ {
+  "key": "c6dfe527a7d4",
+  "scene": "ending_silence",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The next morning there is one more student who does not wake."
+ },
+ {
+  "key": "c45f989c96cd",
+  "scene": "ending_silence",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "But inside the dream you remember everything. Perhaps you can find a way out."
+ },
+ {
+  "key": "392d1d4d2f67",
+  "scene": "ending_expelled",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The headmaster reads the slip in silence."
+ },
+ {
+  "key": "f6affc3755ba",
+  "scene": "ending_expelled",
+  "index": 0,
+  "seg": 1,
+  "speaker": "Headmaster",
+  "tone": "neutral",
+  "text": "Two warnings in two days, Kringer. I am sorry."
+ },
+ {
+  "key": "0089a2761d6e",
+  "scene": "ending_expelled",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You pack your trunk that evening. From the carriage you see Hollow Tower against the sky, the light at its top pulsing in time with your heart."
+ },
+ {
+  "key": "c5f9d9961869",
+  "scene": "ending_expelled",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "At home you hear the bell in your dreams. You never learn whether anyone was ever saved."
+ },
+ {
+  "key": "68d9383437b5",
+  "scene": "ending_quiet_bargain",
+  "index": 0,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "You say yes. The bell sings through you, and the pact moves from Vale to you. The Cantor smiles, almost embarrassed, and dissolves into light."
+ },
+ {
+  "key": "b2b69012be88",
+  "scene": "ending_quiet_bargain",
+  "index": 1,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "The students wake, every one. Nobody knows why."
+ },
+ {
+  "key": "3c6b44b2882c",
+  "scene": "ending_quiet_bargain",
+  "index": 2,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "From that night you are the castle’s bell-keeper. Every midnight you stand in the tower and sing the Hush to rest. You are never tired, never alone, and never quite awake."
+ },
+ {
+  "key": "61bc61721060",
+  "scene": "ending_quiet_bargain",
+  "index": 3,
+  "seg": 0,
+  "speaker": "Narrator",
+  "tone": "slow",
+  "text": "Pip notices that you never sleep. He says nothing, but he leaves a cup of tea on the stairs every evening."
+ }
+]

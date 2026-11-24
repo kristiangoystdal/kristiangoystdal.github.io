@@ -2,3 +2,9 @@
 
 # Bygges av GitHub Actions (hide-and-seek-src → npm run build)
 /hide-and-seek/
+
+# Screenshots and snapshots from the Playwright MCP server
+.playwright-mcp/
+
+# Bygges av GitHub Actions (hollow-bell-src → npm run build)
+/hollow-bell/
